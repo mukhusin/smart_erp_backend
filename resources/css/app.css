@@ -1,0 +1,330 @@
+/* Bootstrap 5 */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+/* Bootstrap Icons */
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* =========================================================
+   Smart ERP — Core Layout
+   ========================================================= */
+:root {
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 70px;
+    --topbar-height: 60px;
+    --primary: #0d6efd;
+    --sidebar-bg: #1a1f2e;
+    --sidebar-text: #ced4da;
+    --sidebar-hover: rgba(255,255,255,.08);
+    --sidebar-active-bg: #0d6efd;
+    --sidebar-active-text: #fff;
+    --sidebar-heading: #6c757d;
+}
+
+/* Layout skeleton */
+body {
+    background-color: #f0f2f5;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: .9rem;
+}
+
+#wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+#sidebar {
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width .25s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1040;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+}
+
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-thumb { background: #333; }
+
+#sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+/* Brand */
+.sidebar-brand {
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    flex-shrink: 0;
+    text-decoration: none;
+    gap: .6rem;
+}
+.sidebar-brand-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    color: #fff;
+}
+.sidebar-brand-text {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity .2s;
+}
+#sidebar.collapsed .sidebar-brand-text { opacity: 0; width: 0; }
+
+/* Nav sections */
+.sidebar-heading {
+    font-size: .67rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--sidebar-heading);
+    padding: 1.2rem 1rem .4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity .2s;
+}
+#sidebar.collapsed .sidebar-heading { opacity: 0; }
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+}
+
+/* Items */
+.sidebar-nav .nav-item { position: relative; }
+
+.sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .55rem 1rem;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    border-radius: 0;
+    transition: background .15s, color .15s;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.sidebar-nav .nav-link:hover {
+    background: var(--sidebar-hover);
+    color: #fff;
+}
+.sidebar-nav .nav-link.active {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+}
+.sidebar-nav .nav-link i {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+}
+.sidebar-nav .nav-link .nav-label {
+    flex: 1;
+    transition: opacity .2s;
+}
+#sidebar.collapsed .nav-label,
+#sidebar.collapsed .nav-arrow { opacity: 0; width: 0; overflow: hidden; }
+
+.nav-arrow {
+    font-size: .75rem;
+    transition: transform .2s, opacity .2s;
+    margin-left: auto;
+}
+.nav-link[aria-expanded="true"] .nav-arrow {
+    transform: rotate(90deg);
+}
+
+/* Sub-menu */
+.sidebar-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: rgba(0,0,0,.2);
+}
+.sidebar-submenu .nav-link {
+    padding-left: 2.8rem;
+    font-size: .855rem;
+}
+
+/* Locked nav items */
+.nav-item-locked .nav-link {
+    opacity: .45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.nav-lock-icon {
+    font-size: .6rem;
+    vertical-align: super;
+    margin-right: .15rem;
+}
+
+/* ── Top bar ──────────────────────────────────────────── */
+#main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left .25s ease;
+    min-width: 0;
+}
+#main-content.sidebar-collapsed {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+#topbar {
+    height: var(--topbar-height);
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    padding: 0 1.25rem;
+    gap: .75rem;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    flex-shrink: 0;
+}
+#topbar .toggle-btn {
+    background: none;
+    border: none;
+    color: #495057;
+    font-size: 1.2rem;
+    padding: .25rem .5rem;
+    cursor: pointer;
+    border-radius: 6px;
+    line-height: 1;
+}
+#topbar .toggle-btn:hover { background: #f0f2f5; }
+
+.topbar-breadcrumb { flex: 1; }
+.topbar-breadcrumb .breadcrumb { margin: 0; font-size: .82rem; }
+
+.topbar-actions { display: flex; align-items: center; gap: .5rem; }
+.topbar-company-badge {
+    font-size: .75rem;
+    background: #e9ecef;
+    border-radius: 20px;
+    padding: .25rem .75rem;
+    color: #495057;
+    font-weight: 500;
+}
+
+/* ── Page content ─────────────────────────────────────── */
+.page-content {
+    padding: 1.5rem;
+    flex: 1;
+}
+.page-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: .15rem;
+}
+.page-subtitle {
+    font-size: .82rem;
+    color: #6c757d;
+    margin-bottom: 1.25rem;
+}
+
+/* ── Cards ────────────────────────────────────────────── */
+.card { border: 1px solid #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.card-header-tabs-line {
+    border-bottom: 1px solid #dee2e6;
+    padding: .75rem 1.25rem 0;
+}
+
+/* ── Stat cards ───────────────────────────────────────── */
+.stat-card {
+    border: none;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.stat-body .stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+.stat-body .stat-label { font-size: .78rem; color: #6c757d; margin-top: .15rem; }
+
+/* ── Tables ───────────────────────────────────────────── */
+.table-sm td, .table-sm th { padding: .5rem .75rem; }
+.table thead th { font-weight: 600; font-size: .82rem; letter-spacing: .03em; }
+
+/* ── Badges ───────────────────────────────────────────── */
+.badge-status { font-size: .72rem; padding: .3em .65em; border-radius: 20px; }
+
+/* ── Forms ────────────────────────────────────────────── */
+.form-label { font-weight: 500; font-size: .85rem; }
+.required-star::after { content: ' *'; color: #dc3545; }
+
+/* ── Auth page ────────────────────────────────────────── */
+.auth-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1f2e 0%, #0d6efd 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.auth-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 991.98px) {
+    #sidebar {
+        transform: translateX(-100%);
+        transition: transform .25s ease, width .25s ease;
+    }
+    #sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    #main-content,
+    #main-content.sidebar-collapsed {
+        margin-left: 0;
+    }
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        z-index: 1039;
+    }
+    .sidebar-overlay.active { display: block; }
+}
