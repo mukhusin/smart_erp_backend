@@ -10,5 +10,6 @@
 <div class="auth-page">
     @yield('content')
 </div>
+@stack('scripts')
 </body>
 </html>

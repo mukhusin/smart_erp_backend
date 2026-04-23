@@ -42,16 +42,19 @@ class DatabaseSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'admin@smart-erp.local'],
             [
-                'name'              => 'System Administrator',
+                'username'          => 'admin',
                 'password'          => Hash::make('password'),
                 'company_id'        => $company->id,
                 'company_branch_id' => $branch->id,
-                'is_active'         => true,
+                'isActive'          => true,
             ]
         );
         $admin->assignRole($superAdmin);
 
         $this->command->info('Seeded: Company, Branch, Super Admin user');
-        $this->command->info('Login: admin@smart-erp.local / password');
+        $this->command->info('Login: admin@smart-erp.local  OR  username: admin  /  password: password');
+        $this->call([
+            ErpModuleSeeder::class,
+        ]);
     }
 }

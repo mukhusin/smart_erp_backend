@@ -1,5 +1,5 @@
 @extends('layouts.auth')
-@section('title', 'Login')
+@section('title', 'Sign In')
 
 @section('content')
 <div class="auth-card">
@@ -11,21 +11,22 @@
         <p class="text-muted small">Sign in to your account</p>
     </div>
 
+    @if(session('warning'))
+        <div class="alert alert-warning py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{{ session('warning') }}</div>
+    @endif
+
     @if ($errors->any())
-        <div class="alert alert-danger py-2">
-            <i class="bi bi-exclamation-triangle me-1"></i>
-            {{ $errors->first() }}
-        </div>
+        <div class="alert alert-danger py-2 small"><i class="bi bi-x-circle me-1"></i>{{ $errors->first() }}</div>
     @endif
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
         <div class="mb-3">
-            <label class="form-label" for="email">Email address</label>
-            <input id="email" type="email" name="email"
-                   class="form-control @error('email') is-invalid @enderror"
-                   value="{{ old('email') }}" required autofocus>
+            <label class="form-label" for="username">Username or Email</label>
+            <input id="username" type="text" name="username"
+                   class="form-control @error('username') is-invalid @enderror"
+                   value="{{ old('username') }}" required autofocus autocomplete="username">
         </div>
 
         <div class="mb-3">
@@ -37,17 +38,27 @@
             </div>
             <input id="password" type="password" name="password"
                    class="form-control @error('password') is-invalid @enderror"
-                   required>
-        </div>
-
-        <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="remember" id="remember">
-            <label class="form-check-label" for="remember">Remember me</label>
+                   required autocomplete="current-password">
+            <div id="capsLockWarning" class="text-warning small mt-1" style="display:none">
+                <i class="bi bi-exclamation-triangle me-1"></i>Caps Lock is ON
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100 py-2">
             <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
         </button>
+
+        <p class="text-center text-muted mt-3 mb-0" style="font-size:12px">
+            <i class="bi bi-shield-lock me-1"></i>Single device access — logging in will end sessions on other devices.
+        </p>
     </form>
 </div>
+
+@push('scripts')
+<script>
+document.getElementById('password').addEventListener('keyup', function(e) {
+    document.getElementById('capsLockWarning').style.display = e.getModifierState('CapsLock') ? 'block' : 'none';
+});
+</script>
+@endpush
 @endsection

@@ -160,6 +160,58 @@ class ErpModuleSeeder extends Seeder
                 'sort_order'  => 22,
                 'is_core'     => false,
             ],
+
+            // ── Assets ─────────────────────────────────────────────────
+            [
+                'slug'        => 'assets',
+                'name'        => 'Asset Management',
+                'description' => 'Track company assets, categories, locations, assignments and disposals.',
+                'icon'        => 'bi-laptop',
+                'color'       => 'secondary',
+                'route_name'  => 'assets.index',
+                'category'    => 'Assets',
+                'sort_order'  => 30,
+                'is_core'     => false,
+            ],
+
+            // ── Performance ────────────────────────────────────────────
+            [
+                'slug'        => 'appraisals',
+                'name'        => 'Appraisals',
+                'description' => 'Department appraisal templates, KPIs and employee performance evaluations.',
+                'icon'        => 'bi-star-half',
+                'color'       => 'warning',
+                'route_name'  => 'appraisals.templates.index',
+                'category'    => 'Performance',
+                'sort_order'  => 40,
+                'is_core'     => false,
+            ],
+
+            // ── Fleet ──────────────────────────────────────────────────
+            [
+                'slug'        => 'fleet',
+                'name'        => 'Fleet Management',
+                'description' => 'Vehicle registry, fuel consumption tracking, maintenance logs and driver assignments.',
+                'icon'        => 'bi-truck-front',
+                'color'       => 'primary',
+                'route_name'  => 'fleet.vehicles.index',
+                'category'    => 'Fleet',
+                'sort_order'  => 50,
+                'is_core'     => false,
+            ],
+
+            // ── Inventory ──────────────────────────────────────────────
+            [
+                'slug'        => 'inventory',
+                'name'        => 'Inventory',
+                'description' => 'Manage stock items, categories, stock-in/out movements and low-stock alerts.',
+                'icon'        => 'bi-boxes',
+                'color'       => 'success',
+                'route_name'  => 'inventory.items.index',
+                'category'    => 'Inventory',
+                'sort_order'  => 60,
+                'is_core'     => false,
+            ],
         ];
 
         foreach ($modules as $data) {

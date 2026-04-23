@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureSessionTimeout;
 use App\Http\Middleware\SetCompanyContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             SetCompanyContext::class,
+            EnsureSessionTimeout::class,
         ]);
 
         $middleware->alias([

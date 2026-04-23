@@ -404,6 +404,128 @@
                 </li>
             @endif
 
+            {{-- ── Assets ──────────────────────────────────── --}}
+            <li><span class="sidebar-heading">Assets</span></li>
+
+            @if($canAssets)
+                <li class="nav-item">
+                    <a class="nav-link"
+                       data-bs-toggle="collapse" data-bs-target="#subAssetsNav"
+                       aria-expanded="{{ request()->is('assets*') ? 'true' : 'false' }}">
+                        <i class="bi bi-laptop"></i>
+                        <span class="nav-label">Asset Management</span>
+                        <i class="bi bi-chevron-right nav-arrow"></i>
+                    </a>
+                    <ul class="collapse sidebar-submenu {{ request()->is('assets*') ? 'show' : '' }}" id="subAssetsNav">
+                        <li><a href="{{ route('assets.index') }}" class="nav-link {{ request()->routeIs('assets.index') || request()->routeIs('assets.show') || request()->routeIs('assets.create') || request()->routeIs('assets.edit') ? 'active' : '' }}">
+                            <i class="bi bi-laptop"></i><span class="nav-label">Assets</span></a></li>
+                        <li><a href="{{ route('assets.categories.index') }}" class="nav-link {{ request()->routeIs('assets.categories.*') ? 'active' : '' }}">
+                            <i class="bi bi-tags"></i><span class="nav-label">Categories</span></a></li>
+                        <li><a href="{{ route('assets.locations.index') }}" class="nav-link {{ request()->routeIs('assets.locations.*') ? 'active' : '' }}">
+                            <i class="bi bi-geo-alt"></i><span class="nav-label">Locations</span></a></li>
+                    </ul>
+                </li>
+            @else
+                <li class="nav-item nav-item-locked">
+                    <span class="nav-link" title="Assets module not enabled" data-bs-toggle="tooltip">
+                        <i class="bi bi-lock nav-lock-icon"></i>
+                        <i class="bi bi-laptop"></i>
+                        <span class="nav-label">Asset Management</span>
+                    </span>
+                </li>
+            @endif
+
+            {{-- ── Appraisals ───────────────────────────────── --}}
+            <li><span class="sidebar-heading">Performance</span></li>
+
+            @if($canAppraisals)
+                <li class="nav-item">
+                    <a class="nav-link"
+                       data-bs-toggle="collapse" data-bs-target="#subAppraisalNav"
+                       aria-expanded="{{ request()->is('appraisals*') ? 'true' : 'false' }}">
+                        <i class="bi bi-star-half"></i>
+                        <span class="nav-label">Appraisals</span>
+                        <i class="bi bi-chevron-right nav-arrow"></i>
+                    </a>
+                    <ul class="collapse sidebar-submenu {{ request()->is('appraisals*') ? 'show' : '' }}" id="subAppraisalNav">
+                        <li><a href="{{ route('appraisals.templates.index') }}" class="nav-link {{ request()->routeIs('appraisals.templates.*') ? 'active' : '' }}">
+                            <i class="bi bi-file-earmark-check"></i><span class="nav-label">Appraisal Templates</span></a></li>
+                        <li><a href="{{ route('appraisals.scales.index') }}" class="nav-link {{ request()->routeIs('appraisals.scales.*') ? 'active' : '' }}">
+                            <i class="bi bi-sliders2"></i><span class="nav-label">Rating Scales</span></a></li>
+                    </ul>
+                </li>
+            @else
+                <li class="nav-item nav-item-locked">
+                    <span class="nav-link" title="Appraisals module not enabled" data-bs-toggle="tooltip">
+                        <i class="bi bi-lock nav-lock-icon"></i>
+                        <i class="bi bi-star-half"></i>
+                        <span class="nav-label">Appraisals</span>
+                    </span>
+                </li>
+            @endif
+
+            {{-- ── Fleet ───────────────────────────────────── --}}
+            <li><span class="sidebar-heading">Fleet</span></li>
+
+            @if($canFleet)
+                <li class="nav-item">
+                    <a class="nav-link"
+                       data-bs-toggle="collapse" data-bs-target="#subFleetNav"
+                       aria-expanded="{{ request()->is('fleet*') ? 'true' : 'false' }}">
+                        <i class="bi bi-truck-front"></i>
+                        <span class="nav-label">Fleet Management</span>
+                        <i class="bi bi-chevron-right nav-arrow"></i>
+                    </a>
+                    <ul class="collapse sidebar-submenu {{ request()->is('fleet*') ? 'show' : '' }}" id="subFleetNav">
+                        <li><a href="{{ route('fleet.vehicles.index') }}" class="nav-link {{ request()->routeIs('fleet.vehicles.*') ? 'active' : '' }}">
+                            <i class="bi bi-car-front"></i><span class="nav-label">Vehicles</span></a></li>
+                        <li><a href="{{ route('fleet.fuel.index') }}" class="nav-link {{ request()->routeIs('fleet.fuel.*') ? 'active' : '' }}">
+                            <i class="bi bi-fuel-pump"></i><span class="nav-label">Fuel Records</span></a></li>
+                        <li><a href="{{ route('fleet.maintenance.index') }}" class="nav-link {{ request()->routeIs('fleet.maintenance.*') ? 'active' : '' }}">
+                            <i class="bi bi-tools"></i><span class="nav-label">Maintenance</span></a></li>
+                    </ul>
+                </li>
+            @else
+                <li class="nav-item nav-item-locked">
+                    <span class="nav-link" title="Fleet module not enabled" data-bs-toggle="tooltip">
+                        <i class="bi bi-lock nav-lock-icon"></i>
+                        <i class="bi bi-truck-front"></i>
+                        <span class="nav-label">Fleet Management</span>
+                    </span>
+                </li>
+            @endif
+
+            {{-- ── Inventory ───────────────────────────────── --}}
+            <li><span class="sidebar-heading">Inventory</span></li>
+
+            @if($canInventory)
+                <li class="nav-item">
+                    <a class="nav-link"
+                       data-bs-toggle="collapse" data-bs-target="#subInventoryNav"
+                       aria-expanded="{{ request()->is('inventory*') ? 'true' : 'false' }}">
+                        <i class="bi bi-boxes"></i>
+                        <span class="nav-label">Inventory</span>
+                        <i class="bi bi-chevron-right nav-arrow"></i>
+                    </a>
+                    <ul class="collapse sidebar-submenu {{ request()->is('inventory*') ? 'show' : '' }}" id="subInventoryNav">
+                        <li><a href="{{ route('inventory.items.index') }}" class="nav-link {{ request()->routeIs('inventory.items.*') ? 'active' : '' }}">
+                            <i class="bi bi-box-seam"></i><span class="nav-label">Items</span></a></li>
+                        <li><a href="{{ route('inventory.movements.index') }}" class="nav-link {{ request()->routeIs('inventory.movements.*') ? 'active' : '' }}">
+                            <i class="bi bi-arrow-left-right"></i><span class="nav-label">Stock Movements</span></a></li>
+                        <li><a href="{{ route('inventory.categories.index') }}" class="nav-link {{ request()->routeIs('inventory.categories.*') ? 'active' : '' }}">
+                            <i class="bi bi-tags"></i><span class="nav-label">Categories</span></a></li>
+                    </ul>
+                </li>
+            @else
+                <li class="nav-item nav-item-locked">
+                    <span class="nav-link" title="Inventory module not enabled" data-bs-toggle="tooltip">
+                        <i class="bi bi-lock nav-lock-icon"></i>
+                        <i class="bi bi-boxes"></i>
+                        <span class="nav-label">Inventory</span>
+                    </span>
+                </li>
+            @endif
+
             {{-- ── Administration (always visible) ────────── --}}
             <li><span class="sidebar-heading">Administration</span></li>
 
