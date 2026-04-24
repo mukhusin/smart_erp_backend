@@ -4,7 +4,7 @@
 **Source Reference:** `/home/mukhusin-siraji/Dev/outside/hrms` (live HRMS — read-only reference, never modify)  
 **ERP Path:** `/home/mukhusin-siraji/Dev/outside/smart-erp`  
 **Stack:** Laravel 11, Bootstrap 5, Bootstrap Icons (`bi-*`), Spatie Laravel Permission, Blade templates  
-**Last Updated:** 2026-04-22
+**Last Updated:** 2026-04-23
 
 ---
 
@@ -176,6 +176,13 @@ Migrate a live, production HRMS (`/hrms`) into a full Enterprise Resource Planni
 ### Admin
 `Admin/UserController`, `Admin/RoleController`, `Admin/PermissionController`,
 `Admin/CompanyController`, `Admin/SettingController`
+
+### Self-Service / HOD
+`SelfService/SelfServiceController` — dashboard, profile, my-leaves, request-leave, duty-roster, payslip
+`Hod/HodController` — dept leaves (HOD approve/reject), annual leaves, employees, roster
+
+### Reports
+`Reports/ReportController` — employees, leaves, contracts, attendance (all with filters + print)
 
 ### Accounting (ERP New)
 `Accounting/ChartOfAccountController` — Full CRUD, prevents deletion if journal lines exist
@@ -387,16 +394,50 @@ Authenticated group (middleware: auth):
 
 ---
 
+## What Was Built (2026-04-23 Session)
+
+### Phase 1 — Roles & Permissions
+- `RolePermissionSeeder` seeds 4 roles (super-admin, hr-officer, hod, employee) and 14 permissions
+- `User::employee()` hasOne relationship added
+- `DatabaseSeeder` calls `RolePermissionSeeder` before `ErpModuleSeeder`
+
+### Phase 2 — Employee Self-Service
+- `SelfServiceController` with dashboard, profile, my-leaves, request-leave, duty-roster, payslip
+- Views: `self-service/dashboard`, `profile`, `my-leaves`, `leave-request`, `duty-roster`, `payslip`, `no-profile`
+- Sidebar: Self-Service section visible to all authenticated users
+
+### Phase 3 — HR Approval Flows
+- `LeaveRequestController::approve()` + `reject()` — HR-level approval
+- `AnnualLeaveRosterController::approve()` + `reject()` — HR annual leave approval
+- `HodController` with dept leaves, annual leaves, employees, roster views
+- Leave index/show rewritten with HOD approval status and approval trail
+- Sidebar: HOD Management section role-gated with `@hasanyrole`
+
+### Phase 4 — Scheduled Commands
+- `contract:status` — activates pending contracts, expires ended ones
+- `leave:status` — activates approved leaves that started, marks ended leaves as reported (EmpLeave + AnnualLeaveRoster)
+- `leave:annual-balance` — recalculates actual balance for active annual leave entries
+- All 3 registered in `routes/console.php` via `Schedule::command()`
+
+### Phase 5 — Dashboard KPI Widgets
+- `DashboardController` queries 6 live KPIs: active employees, pending leaves, on leave, unpaid bills, pending PRs, low stock
+- Dashboard view: "My Portal" button + 6-card KPI bar with colored top borders linking to each module
+
+### Phase 6 — Reports Module
+- `ReportController` with 4 report endpoints (employees, leaves, contracts, attendance)
+- Views: `reports/index` (hub), `employees`, `leaves`, `contracts`, `attendance`
+- All reports print-ready with a Print button (no PDF library required)
+- `reports` module added to `ErpModuleSeeder` (category: HR, sort: 18)
+- Route group `/reports/*` with `module:reports` middleware
+- Sidebar: Reports section with sub-links for all 4 report types
+
 ## What Remains (Not Yet Built)
 
 | Feature | Notes |
 |---|---|
 | **Appraisal Scoring** | `DepartmentAppraisal` is templates only — actual employee appraisal instances (scoring per employee, results, history) not built |
-| **Reports Module** | ReportController exists in HRMS with various reports. Not yet migrated to ERP |
 | **Messaging / Notifications** | MessagingController in HRMS. Not yet migrated |
 | **Password Reset** | Route stub (`password.request`) exists but no controller/views created |
-| **Employee Self-Service Portal** | `self-service` module registered in seeder. Views not built |
-| **Dashboard Widgets** | Dashboard exists but shows generic content — no live KPI cards or charts yet |
 | **File Uploads** | Employee documents model exists; file upload/storage not wired in views |
 | **Payroll Computation Engine** | Sheet model exists; actual salary calculation logic not yet implemented |
 

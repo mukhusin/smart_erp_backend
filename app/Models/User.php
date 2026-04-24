@@ -48,6 +48,11 @@ class User extends Authenticatable
         return $this->belongsTo(CompanyBranch::class, 'company_branch_id');
     }
 
+    public function employee()
+    {
+        return $this->hasOne(Employee::class, 'user_id');
+    }
+
     public function getAvatarUrlAttribute(): string
     {
         return $this->avatar

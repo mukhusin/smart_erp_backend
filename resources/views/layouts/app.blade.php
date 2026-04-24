@@ -33,6 +33,58 @@
                 </a>
             </li>
 
+            {{-- ── Self-Service (all users) ─────────────────── --}}
+            <li><span class="sidebar-heading">Self-Service</span></li>
+            <li class="nav-item">
+                <a class="nav-link"
+                   data-bs-toggle="collapse" data-bs-target="#subSelfServiceNav"
+                   aria-expanded="{{ request()->is('self-service*') ? 'true' : 'false' }}">
+                    <i class="bi bi-person-circle"></i>
+                    <span class="nav-label">My Portal</span>
+                    <i class="bi bi-chevron-right nav-arrow"></i>
+                </a>
+                <ul class="collapse sidebar-submenu {{ request()->is('self-service*') ? 'show' : '' }}" id="subSelfServiceNav">
+                    <li><a href="{{ route('self-service.dashboard') }}" class="nav-link {{ request()->routeIs('self-service.dashboard') ? 'active' : '' }}">
+                        <i class="bi bi-house"></i><span class="nav-label">My Dashboard</span></a></li>
+                    <li><a href="{{ route('self-service.profile') }}" class="nav-link {{ request()->routeIs('self-service.profile') ? 'active' : '' }}">
+                        <i class="bi bi-person-badge"></i><span class="nav-label">My Profile</span></a></li>
+                    <li><a href="{{ route('self-service.my-leaves') }}" class="nav-link {{ request()->routeIs('self-service.my-leaves') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-x"></i><span class="nav-label">My Leaves</span></a></li>
+                    <li><a href="{{ route('self-service.request-leave') }}" class="nav-link {{ request()->routeIs('self-service.request-leave') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-plus"></i><span class="nav-label">Request Leave</span></a></li>
+                    <li><a href="{{ route('self-service.duty-roster') }}" class="nav-link {{ request()->routeIs('self-service.duty-roster') ? 'active' : '' }}">
+                        <i class="bi bi-calendar3-week"></i><span class="nav-label">My Duty Roster</span></a></li>
+                    <li><a href="{{ route('self-service.payslip') }}" class="nav-link {{ request()->routeIs('self-service.payslip') ? 'active' : '' }}">
+                        <i class="bi bi-receipt"></i><span class="nav-label">My Payslips</span></a></li>
+                </ul>
+            </li>
+
+            {{-- ── HOD (role-gated) ─────────────────────────── --}}
+            @hasanyrole('hod|hr-officer|super-admin')
+            <li><span class="sidebar-heading">Department</span></li>
+            <li class="nav-item">
+                <a class="nav-link"
+                   data-bs-toggle="collapse" data-bs-target="#subHodNav"
+                   aria-expanded="{{ request()->is('hod*') ? 'true' : 'false' }}">
+                    <i class="bi bi-building-gear"></i>
+                    <span class="nav-label">HOD Management</span>
+                    <i class="bi bi-chevron-right nav-arrow"></i>
+                </a>
+                <ul class="collapse sidebar-submenu {{ request()->is('hod*') ? 'show' : '' }}" id="subHodNav">
+                    <li><a href="{{ route('hod.dashboard') }}" class="nav-link {{ request()->routeIs('hod.dashboard') ? 'active' : '' }}">
+                        <i class="bi bi-speedometer2"></i><span class="nav-label">HOD Dashboard</span></a></li>
+                    <li><a href="{{ route('hod.employees') }}" class="nav-link {{ request()->routeIs('hod.employees') ? 'active' : '' }}">
+                        <i class="bi bi-people"></i><span class="nav-label">Dept Employees</span></a></li>
+                    <li><a href="{{ route('hod.leaves') }}" class="nav-link {{ request()->routeIs('hod.leaves*') ? 'active' : '' }}">
+                        <i class="bi bi-calendar-x"></i><span class="nav-label">Leave Requests</span></a></li>
+                    <li><a href="{{ route('hod.annual-leaves') }}" class="nav-link {{ request()->routeIs('hod.annual-leaves*') ? 'active' : '' }}">
+                        <i class="bi bi-calendar2-heart"></i><span class="nav-label">Annual Leaves</span></a></li>
+                    <li><a href="{{ route('hod.roster') }}" class="nav-link {{ request()->routeIs('hod.roster') ? 'active' : '' }}">
+                        <i class="bi bi-calendar3-week"></i><span class="nav-label">Dept Roster</span></a></li>
+                </ul>
+            </li>
+            @endhasanyrole
+
             @php
                 $modMap = ($erpModules ?? collect())->keyBy('slug');
                 $canHr          = $modMap->get('hr')?->has_access          ?? false;
@@ -50,6 +102,7 @@
                 $canAppraisals  = $modMap->get('appraisals')?->has_access   ?? false;
                 $canFleet       = $modMap->get('fleet')?->has_access        ?? false;
                 $canInventory   = $modMap->get('inventory')?->has_access    ?? false;
+                $canReports     = $modMap->get('reports')?->has_access      ?? false;
             @endphp
 
             {{-- ── HR ──────────────────────────────────────── --}}
@@ -315,6 +368,41 @@
                         <i class="bi bi-lock nav-lock-icon"></i>
                         <i class="bi bi-bank"></i>
                         <span class="nav-label">Loans & Advances</span>
+                    </span>
+                </li>
+            @endif
+
+            {{-- ── Reports ──────────────────────────────────── --}}
+            <li><span class="sidebar-heading">Reports</span></li>
+
+            @if($canReports)
+                <li class="nav-item">
+                    <a class="nav-link"
+                       data-bs-toggle="collapse" data-bs-target="#subReportsNav"
+                       aria-expanded="{{ request()->is('reports*') ? 'true' : 'false' }}">
+                        <i class="bi bi-bar-chart-line"></i>
+                        <span class="nav-label">Reports</span>
+                        <i class="bi bi-chevron-right nav-arrow"></i>
+                    </a>
+                    <ul class="collapse sidebar-submenu {{ request()->is('reports*') ? 'show' : '' }}" id="subReportsNav">
+                        <li><a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.index') ? 'active' : '' }}">
+                            <i class="bi bi-grid-1x2"></i><span class="nav-label">Report Hub</span></a></li>
+                        <li><a href="{{ route('reports.employees') }}" class="nav-link {{ request()->routeIs('reports.employees') ? 'active' : '' }}">
+                            <i class="bi bi-people"></i><span class="nav-label">Employee Report</span></a></li>
+                        <li><a href="{{ route('reports.leaves') }}" class="nav-link {{ request()->routeIs('reports.leaves') ? 'active' : '' }}">
+                            <i class="bi bi-calendar-x"></i><span class="nav-label">Leave Report</span></a></li>
+                        <li><a href="{{ route('reports.contracts') }}" class="nav-link {{ request()->routeIs('reports.contracts') ? 'active' : '' }}">
+                            <i class="bi bi-file-earmark-text"></i><span class="nav-label">Contract Report</span></a></li>
+                        <li><a href="{{ route('reports.attendance') }}" class="nav-link {{ request()->routeIs('reports.attendance') ? 'active' : '' }}">
+                            <i class="bi bi-fingerprint"></i><span class="nav-label">Attendance Summary</span></a></li>
+                    </ul>
+                </li>
+            @else
+                <li class="nav-item nav-item-locked">
+                    <span class="nav-link" title="Reports module not enabled" data-bs-toggle="tooltip">
+                        <i class="bi bi-lock nav-lock-icon"></i>
+                        <i class="bi bi-bar-chart-line"></i>
+                        <span class="nav-label">Reports</span>
                     </span>
                 </li>
             @endif

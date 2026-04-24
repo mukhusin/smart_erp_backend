@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\Roster;
 use App\Services\CompanyContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AnnualLeaveRosterController extends Controller
 {
@@ -16,15 +17,56 @@ class AnnualLeaveRosterController extends Controller
 
     public function index(Request $request)
     {
-        $query = AnnualLeaveRoster::with(['employee', 'roster'])
+        $query = AnnualLeaveRoster::with(['employee.department', 'roster'])
             ->where('company_id', $this->ctx->id());
 
         if ($request->filled('leave_year')) {
             $query->where('leave_year', $request->leave_year);
         }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
 
         $annualLeaves = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
-        return view('roster.annual-leave.index', compact('annualLeaves'));
+        $departments  = \App\Models\Department::where('company_id', $this->ctx->id())
+            ->whereNull('parent_id')->orderBy('name')->get();
+
+        return view('roster.annual-leave.index', compact('annualLeaves', 'departments'));
+    }
+
+    public function approve(Request $request, AnnualLeaveRoster $annualLeave)
+    {
+        $hrEmp = Employee::where('user_id', Auth::id())
+            ->where('company_id', $this->ctx->id())->first();
+
+        $annualLeave->update([
+            'hr_office_is_approved' => true,
+            'hr_id'                 => $hrEmp?->id,
+            'hr_office_remark'      => $request->remark,
+            'status'                => 'approved',
+            'is_active'             => true,
+        ]);
+
+        return back()->with('success', 'Annual leave approved.');
+    }
+
+    public function reject(Request $request, AnnualLeaveRoster $annualLeave)
+    {
+        $request->validate(['remark' => 'required|string|max:300']);
+        $hrEmp = Employee::where('user_id', Auth::id())
+            ->where('company_id', $this->ctx->id())->first();
+
+        $annualLeave->update([
+            'hr_office_is_approved' => false,
+            'hr_id'                 => $hrEmp?->id,
+            'hr_office_remark'      => $request->remark,
+            'status'                => 'rejected',
+        ]);
+
+        return back()->with('success', 'Annual leave rejected.');
     }
 
     public function create()

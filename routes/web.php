@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SelfService\SelfServiceController;
+use App\Http\Controllers\Hod\HodController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,6 +30,31 @@ Route::middleware(['auth'])->group(function () {
 
     // Profile (stub)
     Route::get('/profile', fn() => view('dashboard.index'))->name('profile.edit');
+
+    // ── Self-Service (all authenticated employees) ──────────────
+    Route::prefix('self-service')->name('self-service.')->group(function () {
+        Route::get('/',             [SelfServiceController::class, 'dashboard'])->name('dashboard');
+        Route::get('/profile',      [SelfServiceController::class, 'profile'])->name('profile');
+        Route::get('/my-leaves',    [SelfServiceController::class, 'myLeaves'])->name('my-leaves');
+        Route::get('/request-leave',[SelfServiceController::class, 'requestLeave'])->name('request-leave');
+        Route::post('/request-leave',[SelfServiceController::class, 'submitLeave'])->name('submit-leave');
+        Route::get('/duty-roster',  [SelfServiceController::class, 'dutyRoster'])->name('duty-roster');
+        Route::get('/payslip',      [SelfServiceController::class, 'payslip'])->name('payslip');
+    });
+
+    // ── HOD (Head of Department) ─────────────────────────────────
+    Route::prefix('hod')->name('hod.')->middleware('role:hod|hr-officer|super-admin')->group(function () {
+        Route::get('/',                                       [HodController::class, 'dashboard'])->name('dashboard');
+        Route::get('/employees',                              [HodController::class, 'employees'])->name('employees');
+        Route::get('/roster',                                 [HodController::class, 'roster'])->name('roster');
+        Route::get('/leaves',                                 [HodController::class, 'leaves'])->name('leaves');
+        Route::get('/leaves/{leave}',                         [HodController::class, 'showLeave'])->name('leaves.show');
+        Route::post('/leaves/{leave}/approve',                [HodController::class, 'approveLeave'])->name('leaves.approve');
+        Route::post('/leaves/{leave}/reject',                 [HodController::class, 'rejectLeave'])->name('leaves.reject');
+        Route::get('/annual-leaves',                          [HodController::class, 'annualLeaves'])->name('annual-leaves');
+        Route::post('/annual-leaves/{annualLeave}/approve',   [HodController::class, 'approveAnnualLeave'])->name('annual-leaves.approve');
+        Route::post('/annual-leaves/{annualLeave}/reject',    [HodController::class, 'rejectAnnualLeave'])->name('annual-leaves.reject');
+    });
 
     // ── HR ──────────────────────────────────────────────────────
     Route::prefix('hr')->name('hr.')->middleware('module:hr')->group(function () {
@@ -57,12 +84,16 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('duty', \App\Http\Controllers\Roster\DutyRosterController::class);
         Route::resource('timetables', \App\Http\Controllers\Roster\TimetableController::class);
         Route::resource('annual-leave', \App\Http\Controllers\Roster\AnnualLeaveRosterController::class);
+        Route::post('annual-leave/{annualLeave}/approve', [\App\Http\Controllers\Roster\AnnualLeaveRosterController::class, 'approve'])->name('annual-leave.approve');
+        Route::post('annual-leave/{annualLeave}/reject',  [\App\Http\Controllers\Roster\AnnualLeaveRosterController::class, 'reject'])->name('annual-leave.reject');
         Route::resource('codes', \App\Http\Controllers\Roster\RosterCodeController::class);
     });
 
     // ── Leave ────────────────────────────────────────────────────
     Route::prefix('leave')->name('leave.')->middleware('module:leave')->group(function () {
         Route::resource('requests', \App\Http\Controllers\Leave\LeaveRequestController::class);
+        Route::post('requests/{request_model}/approve', [\App\Http\Controllers\Leave\LeaveRequestController::class, 'approve'])->name('requests.approve');
+        Route::post('requests/{request_model}/reject',  [\App\Http\Controllers\Leave\LeaveRequestController::class, 'reject'])->name('requests.reject');
         Route::resource('types', \App\Http\Controllers\Leave\LeaveTypeController::class);
         Route::resource('absence', \App\Http\Controllers\Leave\AbsenceRequestController::class);
         Route::resource('public-holidays', \App\Http\Controllers\Leave\PublicHolidayController::class);
@@ -160,6 +191,15 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('categories', \App\Http\Controllers\Inventory\InventoryCategoryController::class);
         Route::resource('items',      \App\Http\Controllers\Inventory\InventoryItemController::class);
         Route::resource('movements',  \App\Http\Controllers\Inventory\StockMovementController::class)->only(['index','create','store','show']);
+    });
+
+    // ── Reports ──────────────────────────────────────────────────
+    Route::prefix('reports')->name('reports.')->middleware('module:reports')->group(function () {
+        Route::get('/',           [\App\Http\Controllers\Reports\ReportController::class, 'index'])->name('index');
+        Route::get('/employees',  [\App\Http\Controllers\Reports\ReportController::class, 'employees'])->name('employees');
+        Route::get('/leaves',     [\App\Http\Controllers\Reports\ReportController::class, 'leaves'])->name('leaves');
+        Route::get('/contracts',  [\App\Http\Controllers\Reports\ReportController::class, 'contracts'])->name('contracts');
+        Route::get('/attendance', [\App\Http\Controllers\Reports\ReportController::class, 'attendance'])->name('attendance');
     });
 
     // ── Administration ───────────────────────────────────────────

@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\LeaveType;
 use App\Services\CompanyContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestController extends Controller
 {
@@ -95,5 +96,39 @@ class LeaveRequestController extends Controller
     {
         $request->delete();
         return back()->with('success', 'Leave request deleted.');
+    }
+
+    public function approve(Request $request, EmpLeave $request_model)
+    {
+        $hrEmp = Employee::where('user_id', Auth::id())
+            ->where('company_id', $this->ctx->id())->first();
+
+        $request_model->update([
+            'hr_office_is_approved' => true,
+            'hr_id'                 => $hrEmp?->id,
+            'hr_office_remark'      => $request->remark,
+            'status'                => 'approved',
+            'is_active'             => true,
+            'start_date'            => $request_model->requested_start_date,
+            'end_date'              => $request_model->requested_end_date,
+        ]);
+
+        return back()->with('success', 'Leave request approved.');
+    }
+
+    public function reject(Request $request, EmpLeave $request_model)
+    {
+        $request->validate(['remark' => 'required|string|max:300']);
+        $hrEmp = Employee::where('user_id', Auth::id())
+            ->where('company_id', $this->ctx->id())->first();
+
+        $request_model->update([
+            'hr_office_is_approved' => false,
+            'hr_id'                 => $hrEmp?->id,
+            'hr_office_remark'      => $request->remark,
+            'status'                => 'rejected',
+        ]);
+
+        return back()->with('success', 'Leave request rejected.');
     }
 }

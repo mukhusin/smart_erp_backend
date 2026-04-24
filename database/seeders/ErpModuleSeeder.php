@@ -200,6 +200,19 @@ class ErpModuleSeeder extends Seeder
                 'is_core'     => false,
             ],
 
+            // ── Reports ────────────────────────────────────────────────
+            [
+                'slug'        => 'reports',
+                'name'        => 'Reports',
+                'description' => 'HR reports — employee lists, leave summaries, contract expiry and attendance.',
+                'icon'        => 'bi-bar-chart-line',
+                'color'       => 'teal',
+                'route_name'  => 'reports.index',
+                'category'    => 'HR',
+                'sort_order'  => 18,
+                'is_core'     => false,
+            ],
+
             // ── Inventory ──────────────────────────────────────────────
             [
                 'slug'        => 'inventory',

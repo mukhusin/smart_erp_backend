@@ -7,8 +7,6 @@ use App\Models\CompanyBranch;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -54,7 +52,14 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Seeded: Company, Branch, Super Admin user');
         $this->command->info('Login: admin@smart-erp.local  OR  username: admin  /  password: password');
         $this->call([
+            RolePermissionSeeder::class,
             ErpModuleSeeder::class,
         ]);
+
+        // Assign super-admin role to the admin user
+        $admin->refresh();
+        if (!$admin->hasRole('super-admin')) {
+            $admin->assignRole('super-admin');
+        }
     }
 }

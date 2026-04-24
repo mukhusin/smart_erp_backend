@@ -8,11 +8,48 @@
 @section('content')
 
 {{-- Welcome bar --}}
-<div class="d-flex align-items-center justify-content-between mb-4">
+<div class="d-flex align-items-center justify-content-between mb-3">
     <div>
         <h5 class="page-title mb-0">Welcome back, {{ auth()->user()->name }} 👋</h5>
         <p class="page-subtitle mb-0">{{ now()->format('l, d F Y') }} &nbsp;·&nbsp; {{ $currentCompany?->name ?? 'Smart ERP' }}</p>
     </div>
+    <a href="{{ route('self-service.dashboard') }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-person-circle me-1"></i> My Portal
+    </a>
+</div>
+
+{{-- ── KPI BAR ──────────────────────────────────────────────── --}}
+<div class="row g-3 mb-4">
+    @php
+        $kpiCards = [
+            ['label' => 'Active Employees',   'value' => $kpis['employees'],      'icon' => 'bi-people-fill',       'color' => 'primary',  'route' => 'hr.employees.index'],
+            ['label' => 'Pending Leaves',      'value' => $kpis['pending_leaves'], 'icon' => 'bi-hourglass-split',   'color' => 'warning',  'route' => 'leave.requests.index', 'route_params' => ['status' => 'pending']],
+            ['label' => 'On Leave Now',        'value' => $kpis['on_leave'],       'icon' => 'bi-person-slash',      'color' => 'info',     'route' => 'leave.requests.index', 'route_params' => ['status' => 'active']],
+            ['label' => 'Unpaid Bills',        'value' => $kpis['unpaid_bills'],   'icon' => 'bi-receipt-cutoff',    'color' => 'danger',   'route' => 'bills.index'],
+            ['label' => 'Pending PRs',         'value' => $kpis['pending_prs'],    'icon' => 'bi-box-seam',          'color' => 'secondary','route' => 'procurement.requests.index'],
+            ['label' => 'Low Stock Items',     'value' => $kpis['low_stock_items'],'icon' => 'bi-exclamation-triangle','color' => 'orange', 'route' => 'inventory.items.index', 'route_params' => ['low_stock' => 1]],
+        ];
+    @endphp
+    @foreach($kpiCards as $card)
+    @php
+        $colorMap = ['primary'=>'#0d6efd','warning'=>'#ffc107','info'=>'#0dcaf0','danger'=>'#dc3545','secondary'=>'#6c757d','orange'=>'#fd7e14'];
+        $lightMap = ['primary'=>'#e7f0ff','warning'=>'#fff8e1','info'=>'#e0f9ff','danger'=>'#fde8ea','secondary'=>'#f0f0f0','orange'=>'#fff0e0'];
+        $col = $card['color'];
+    @endphp
+    <div class="col-6 col-md-4 col-xl-2">
+        <a href="{{ route($card['route'], $card['route_params'] ?? []) }}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100 text-center py-3 px-2"
+                 style="border-top: 3px solid {{ $colorMap[$col] ?? '#6c757d' }} !important">
+                <div class="mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:44px;height:44px;background:{{ $lightMap[$col] ?? '#f0f0f0' }}">
+                    <i class="bi {{ $card['icon'] }}" style="color:{{ $colorMap[$col] ?? '#6c757d' }};font-size:1.25rem"></i>
+                </div>
+                <div class="fw-bold fs-4" style="color:{{ $colorMap[$col] ?? '#6c757d' }}">{{ $card['value'] }}</div>
+                <div class="text-muted small lh-sm">{{ $card['label'] }}</div>
+            </div>
+        </a>
+    </div>
+    @endforeach
 </div>
 
 {{-- ── MODULE GRID ─────────────────────────────────────────── --}}
