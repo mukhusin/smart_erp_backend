@@ -4,7 +4,7 @@
 **Source Reference:** `/home/mukhusin-siraji/Dev/outside/hrms` (live HRMS — read-only reference, never modify)  
 **ERP Path:** `/home/mukhusin-siraji/Dev/outside/smart-erp`  
 **Stack:** Laravel 11, Bootstrap 5, Bootstrap Icons (`bi-*`), Spatie Laravel Permission, Blade templates  
-**Last Updated:** 2026-04-23
+**Last Updated:** 2026-04-26
 
 ---
 
@@ -107,6 +107,37 @@ Migrate a live, production HRMS (`/hrms`) into a full Enterprise Resource Planni
 | `100061` | `inventory_items` | code, name, category_id, unit, unit_cost, quantity_on_hand, minimum_stock, is_active |
 | `100062` | `stock_movements` | inventory_item_id, type (in/out/adjustment), quantity, date, reference, notes, created_by |
 
+### HRMS Migration — Phase 2 (2026-04-26)
+
+#### Payroll Computation Engine
+
+| Migration | Table | Key Columns |
+|---|---|---|
+| `2026_04_26_100000` | `nhifs` | employee_id, rate, is_active |
+| `2026_04_26_100001` | `nssfs` | employee_id, rate, is_active |
+| `2026_04_26_100002` | `heslbs` | employee_id, rate, is_active |
+| `2026_04_26_100003` | `tughes` | employee_id, rate, is_active |
+| `2026_04_26_100004` | `nics` | employee_id, rate, is_active |
+| `2026_04_26_100005` | `employee_funds` | employee_id, fund_name, rate, is_active |
+| `2026_04_26_100006` | `reliefs` | employee_id, relief_name, amount, is_active |
+| `2026_04_26_100007` | `saccos_members` | employee_id, sacco_name, member_number, is_active |
+| `2026_04_26_100008` | `saccos_contributions` | saccos_member_id, payroll_sheet_id, amount |
+| `2026_04_26_100009` | `payroll_comments` | payroll_sheet_id, user_id, comment |
+
+#### Messaging System
+
+| Migration | Table | Key Columns |
+|---|---|---|
+| `2026_04_26_200000` | `messagings` | company_id, uuid, type (sms/email), subject, body, status, scheduled_at, recipient_type, sent_at |
+| `2026_04_26_200001` | `message_recipients` | messaging_id, employee_id, delivered_at |
+
+#### Appraisal Scoring
+
+| Migration | Table | Key Columns |
+|---|---|---|
+| `2026_04_26_300000` | `employee_appraisals` | company_id, employee_id, department_appraisal_id, period, status (draft/self_assessed/hod_reviewed/completed), employee_comment, hod_comment, total_score, reviewed_by, reviewed_at |
+| `2026_04_26_300001` | `appraisal_kpi_scores` | employee_appraisal_id, appraisal_kpi_id, self_score, self_comment, agreed_score, agreed_comment |
+
 ---
 
 ## Models (65 total)
@@ -136,11 +167,19 @@ Migrate a live, production HRMS (`/hrms`) into a full Enterprise Resource Planni
 
 ### Assets / Appraisals (ERP New)
 `Asset`, `AssetCategory`, `AssetLocation`,
-`AppraisalRatingScale`, `DepartmentAppraisal`, `AppraisalKpi`
+`AppraisalRatingScale`, `DepartmentAppraisal`, `AppraisalKpi`,
+`EmployeeAppraisal`, `AppraisalKpiScore`
 
 ### Fleet / Inventory (ERP New)
 `Vehicle`, `FuelRecord`, `VehicleMaintenanceLog`,
 `InventoryCategory`, `InventoryItem`, `StockMovement`
+
+### Payroll Deduction Members (Phase 2)
+`Nhif`, `Nssf`, `Heslb`, `Tughe`, `Nic`, `EmployeeFund`, `Relief`,
+`SaccosMember`, `SaccosContribution`, `PayrollComment`
+
+### Messaging (Phase 2)
+`Messaging`, `MessageRecipient`
 
 ---
 
@@ -204,6 +243,7 @@ Migrate a live, production HRMS (`/hrms`) into a full Enterprise Resource Planni
 ### Appraisals (ERP New)
 `Appraisals/AppraisalRatingScaleController` — Full CRUD
 `Appraisals/DepartmentAppraisalController` — Full CRUD + `storeKpi()` + `destroyKpi()` for inline KPI management
+`Appraisals/EmployeeAppraisalController` — Full CRUD + `saveSelfAssessment()` + `saveAgreedScores()` + `complete()`
 
 ### Fleet (ERP New)
 `Fleet/VehicleController` — Full CRUD
@@ -225,6 +265,9 @@ Migrate a live, production HRMS (`/hrms`) into a full Enterprise Resource Planni
 
 ### Auth
 - `auth/login.blade.php` — Username/email field, Caps Lock warning, single-device notice, session warning flash
+- `auth/forgot-password.blade.php` — Email input to request OTP
+- `auth/reset-password.blade.php` — Email + OTP + new password form
+- `emails/otp.blade.php` — HTML email with large OTP display
 
 ### HR
 - `hr/employees/` — index (searchable), create, edit, show (with sub-tabs: qualifications, experience, dependants, contracts, bank accounts, documents)
@@ -265,6 +308,13 @@ All sub-module views created (index, create, edit, show as applicable) for:
 ### Appraisals (ERP New)
 - `appraisals/scales/` — index, create, edit
 - `appraisals/templates/` — index, create, edit, show (with inline KPI add form)
+- `appraisals/employee/` — index (filterable by period/status/template), create, show (self-assessment form + HOD agreed scores form + completed read-only view + total score card)
+
+### Messaging (Phase 2)
+- `messaging/` — index (list with status/type badges), create (char counter JS, dynamic recipient picker), show, edit
+
+### Payroll (Phase 2 additions)
+- `payroll/sheets/payslip.blade.php` — printable payslip with `@media print` CSS
 
 ### Fleet (ERP New)
 - `fleet/vehicles/` — index (card grid with status badges), create, edit, show (fuel records + maintenance history)
@@ -287,6 +337,13 @@ All sub-module views created (index, create, edit, show as applicable) for:
 | `app/Services/CompanyContext.php` | Resolves active company_id for multi-tenant scoping |
 | `app/Services/ModuleAccessService.php` | Checks if a module is enabled for the current company |
 | `app/Services/SingleDeviceSessionManager.php` | Cache-based single-device session enforcement (migrated from HRMS) |
+| `app/Services/PayrollComputationService.php` | Tanzania payroll engine: PAYE brackets, NSSF/NHIF/HESLB/TUGHE/NIC/WCF/SDL, loans, allowances, overtime; Cache::lock prevents concurrent generation |
+
+### Mails
+
+| File | Purpose |
+|---|---|
+| `app/Mail/SendOtpMail.php` | OTP password reset email |
 
 ### Middleware
 
@@ -377,6 +434,7 @@ Authenticated group (middleware: auth):
   Appraisals group (middleware: module:appraisals):
     appraisals/scales        AppraisalRatingScaleController (resource)
     appraisals/templates     DepartmentAppraisalController (resource + storeKpi + destroyKpi)
+    appraisals/employee      EmployeeAppraisalController (resource + saveSelfAssessment + saveAgreedScores + complete)
 
   Fleet group (middleware: module:fleet):
     fleet/vehicles           VehicleController (resource)
@@ -390,6 +448,15 @@ Authenticated group (middleware: auth):
 
   Admin group:
     admin/users, admin/roles, admin/permissions, admin/companies
+
+  Messaging group (middleware: module:hr):
+    messaging/               MessagingController (resource + recipients AJAX endpoints)
+
+  Password Reset (unauthenticated):
+    GET  /forgot-password        ForgotPasswordController@showRequestForm
+    POST /forgot-password        ForgotPasswordController@sendOtpEmail
+    GET  /reset-password         ForgotPasswordController@showResetForm
+    POST /reset-password         ForgotPasswordController@resetPassword
 ```
 
 ---
@@ -431,15 +498,47 @@ Authenticated group (middleware: auth):
 - Route group `/reports/*` with `module:reports` middleware
 - Sidebar: Reports section with sub-links for all 4 report types
 
+## What Was Built (2026-04-26 Session — HRMS Migration Phase 2)
+
+### Phase 7 — Password Reset (OTP-based)
+- `ForgotPasswordController` — `sendOtpEmail()` stores 6-digit OTP + 10-min expiry; `resetPassword()` validates OTP and updates password
+- `SendOtpMail` mailable + `emails/otp.blade.php` HTML template
+- Views: `auth/forgot-password.blade.php` (email input), `auth/reset-password.blade.php` (email + OTP + new password)
+- OTP columns (`otp`, `otp_expiry`) already existed on `users` table — no new migration needed
+
+### Phase 8 — Payroll Computation Engine
+- 10 new migrations for deduction member tables: `nhifs`, `nssfs`, `heslbs`, `tughes`, `nics`, `employee_funds`, `reliefs`, `saccos_members`, `saccos_contributions`, `payroll_comments`
+- Corresponding models for all 10 tables
+- `PayrollComputationService` — Tanzania PAYE brackets (0/8/20/25/30%), NSSF 10% gross, NHIF 3% basic, HESLB 15% basic, TUGHE 2% basic, WCF/SDL employer contributions, loan repayments, allowances, overtime; `Cache::lock` prevents concurrent generation
+- `PayrollSheetController` fully rewritten: `generate()`, `payslip()`, `addComment()`, full approval state machine
+- Payslip view with `@media print` CSS for browser-native printing
+
+### Phase 9 — Messaging System
+- 2 migrations: `messagings` (uuid, type sms/email, status, scheduled_at, recipient_type), `message_recipients`
+- `Messaging` model with UUID auto-generation in `boot()`, TYPE/STATUS/RECIPIENT constants
+- `MessagingController` — full CRUD + AJAX recipient-picker endpoints + `normalizeRecipientFields()` + `addRecipients()` match expression resolving individual/department/section/all-active-contract recipients
+- 4 views: index, create (JS char counter, dynamic recipient picker), show, edit
+- Sidebar link added under HR module
+
+### Phase 10 — Appraisal Scoring
+- 2 migrations: `employee_appraisals` (status workflow: draft→self_assessed→hod_reviewed→completed, total_score, reviewed_by/at), `appraisal_kpi_scores` (self_score, self_comment, agreed_score, agreed_comment)
+- `EmployeeAppraisal` model with `computeTotalScore()`: Σ(agreed_score × weight / 100)
+- `AppraisalKpiScore` model
+- `EmployeeAppraisalController` — `index()`, `create()`, `store()` (pre-creates KPI score rows, duplicate guard), `show()`, `destroy()`, `saveSelfAssessment()`, `saveAgreedScores()` (computes weighted total), `complete()`
+- 3 views: index (filterable by period/status/template), create, show (self-assessment form when draft/self_assessed, HOD agreed scores form when self_assessed/hod_reviewed, read-only when completed, rating scale reference panel)
+- Sidebar "Employee Appraisals" link added under Appraisals section
+- Route model binding fixed with `.parameters(['employee' => 'employeeAppraisal'])`
+
+---
+
 ## What Remains (Not Yet Built)
 
-| Feature | Notes |
-|---|---|
-| **Appraisal Scoring** | `DepartmentAppraisal` is templates only — actual employee appraisal instances (scoring per employee, results, history) not built |
-| **Messaging / Notifications** | MessagingController in HRMS. Not yet migrated |
-| **Password Reset** | Route stub (`password.request`) exists but no controller/views created |
-| **File Uploads** | Employee documents model exists; file upload/storage not wired in views |
-| **Payroll Computation Engine** | Sheet model exists; actual salary calculation logic not yet implemented |
+| Feature | Priority | Notes |
+|---|---|---|
+| **Learning & Development** | Low | Not in HRMS — optional future module |
+| **In-App Notifications** | Low | System notification bell; not in HRMS |
+| **Payroll Settings UI** | Medium | No view for configuring `PayrollDateSetting` rate percentages and toggles |
+| **Deduction Member Management** | Medium | No views for managing per-employee NHIF/NSSF/HESLB/TUGHE/NIC enrollment records |
 
 ---
 

@@ -18,6 +18,7 @@ class PayrollSheet extends Model
 
     public function company()       { return $this->belongsTo(Company::class); }
     public function details()       { return $this->hasMany(PayrollSheetDetail::class); }
+    public function comments()      { return $this->hasMany(PayrollComment::class); }
     public function hrOfficer()     { return $this->belongsTo(Employee::class, 'hr_officer'); }
     public function payrollOfficer(){ return $this->belongsTo(Employee::class, 'payroll_officer'); }
     public function directorEmp()   { return $this->belongsTo(Employee::class, 'director'); }

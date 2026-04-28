@@ -8,7 +8,7 @@ class AllowanceSheet extends Model
 {
     protected $fillable = [
         'payroll_sheet_detail_id', 'emp_allowance_id', 'daily_allowance_id',
-        'employee_id', 'amount', 'description',
+        'employee_id', 'allowance_name', 'comment', 'amount', 'description',
     ];
 
     public function payrollSheetDetail() { return $this->belongsTo(PayrollSheetDetail::class); }

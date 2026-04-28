@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SelfService\SelfServiceController;
 use App\Http\Controllers\Hod\HodController;
@@ -14,6 +15,12 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login']);
+
+    // Password Reset (OTP-based)
+    Route::get('forgot-password',  [ForgotPasswordController::class, 'showForgotPasswordForm'])->name('password.request');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'sendOtpEmail'])->name('password.send-otp');
+    Route::get('reset-password',   [ForgotPasswordController::class, 'showResetPasswordForm'])->name('password.reset.form');
+    Route::post('reset-password',  [ForgotPasswordController::class, 'resetPassword'])->name('password.do-reset');
 });
 
 Route::post('logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
@@ -121,7 +128,11 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Payroll ──────────────────────────────────────────────────
     Route::prefix('payroll')->name('payroll.')->middleware('module:payroll')->group(function () {
-        Route::resource('sheets', \App\Http\Controllers\Payroll\PayrollSheetController::class);
+        $ps = \App\Http\Controllers\Payroll\PayrollSheetController::class;
+        Route::resource('sheets', $ps);
+        Route::post('sheets/{sheet}/generate',    [$ps, 'generate'])->name('sheets.generate');
+        Route::get('sheets/{sheet}/payslip/{detail}', [$ps, 'payslip'])->name('sheets.payslip');
+        Route::post('sheets/{sheet}/comment',     [$ps, 'addComment'])->name('sheets.comment');
         Route::resource('salary-adjustments', \App\Http\Controllers\Payroll\SalaryAdjustmentController::class);
         Route::get('deductions', [\App\Http\Controllers\Payroll\DeductionController::class, 'index'])->name('deductions.index');
     });
@@ -177,6 +188,12 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('templates', \App\Http\Controllers\Appraisals\DepartmentAppraisalController::class);
         Route::post('templates/{template}/kpis',           [\App\Http\Controllers\Appraisals\DepartmentAppraisalController::class, 'storeKpi'])->name('templates.kpis.store');
         Route::delete('templates/{template}/kpis/{kpi}',   [\App\Http\Controllers\Appraisals\DepartmentAppraisalController::class, 'destroyKpi'])->name('templates.kpis.destroy');
+
+        $ea = \App\Http\Controllers\Appraisals\EmployeeAppraisalController::class;
+        Route::resource('employee', $ea)->parameters(['employee' => 'employeeAppraisal']);
+        Route::post('employee/{employeeAppraisal}/self-assessment', [$ea, 'saveSelfAssessment'])->name('employee.self-assessment');
+        Route::post('employee/{employeeAppraisal}/agreed-scores',   [$ea, 'saveAgreedScores'])->name('employee.agreed-scores');
+        Route::post('employee/{employeeAppraisal}/complete',        [$ea, 'complete'])->name('employee.complete');
     });
 
     // ── Fleet ────────────────────────────────────────────────────
@@ -191,6 +208,22 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('categories', \App\Http\Controllers\Inventory\InventoryCategoryController::class);
         Route::resource('items',      \App\Http\Controllers\Inventory\InventoryItemController::class);
         Route::resource('movements',  \App\Http\Controllers\Inventory\StockMovementController::class)->only(['index','create','store','show']);
+    });
+
+    // ── Messaging ────────────────────────────────────────────────
+    Route::prefix('messaging')->name('messaging.')->middleware('module:hr')->group(function () {
+        $mc = \App\Http\Controllers\Messaging\MessagingController::class;
+        Route::resource('/', $mc)->parameters(['' => 'messaging'])->names([
+            'index'   => 'index',
+            'create'  => 'create',
+            'store'   => 'store',
+            'show'    => 'show',
+            'edit'    => 'edit',
+            'update'  => 'update',
+            'destroy' => 'destroy',
+        ]);
+        Route::get('ajax/by-department', [$mc, 'employeesByDepartment'])->name('ajax.by-department');
+        Route::get('ajax/by-section',    [$mc, 'employeesBySection'])->name('ajax.by-section');
     });
 
     // ── Reports ──────────────────────────────────────────────────

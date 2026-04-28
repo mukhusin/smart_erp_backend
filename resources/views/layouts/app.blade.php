@@ -344,6 +344,17 @@
                 </li>
             @endif
 
+            {{-- ── Messaging ────────────────────────────────── --}}
+            @if($canHr)
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->is('messaging*') ? 'active' : '' }}"
+                       href="{{ route('messaging.index') }}">
+                        <i class="bi bi-chat-dots"></i>
+                        <span class="nav-label">Messaging</span>
+                    </a>
+                </li>
+            @endif
+
             @if($canLoans)
                 <li class="nav-item">
                     <a class="nav-link"
@@ -540,6 +551,8 @@
                             <i class="bi bi-file-earmark-check"></i><span class="nav-label">Appraisal Templates</span></a></li>
                         <li><a href="{{ route('appraisals.scales.index') }}" class="nav-link {{ request()->routeIs('appraisals.scales.*') ? 'active' : '' }}">
                             <i class="bi bi-sliders2"></i><span class="nav-label">Rating Scales</span></a></li>
+                        <li><a href="{{ route('appraisals.employee.index') }}" class="nav-link {{ request()->routeIs('appraisals.employee.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-check"></i><span class="nav-label">Employee Appraisals</span></a></li>
                     </ul>
                 </li>
             @else
