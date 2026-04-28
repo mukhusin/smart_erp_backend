@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ModuleDashboardController;
 use App\Http\Controllers\SelfService\SelfServiceController;
 use App\Http\Controllers\Hod\HodController;
 use Illuminate\Support\Facades\Route;
@@ -65,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── HR ──────────────────────────────────────────────────────
     Route::prefix('hr')->name('hr.')->middleware('module:hr')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'hr'])->name('dashboard');
         Route::resource('departments',   \App\Http\Controllers\HR\DepartmentController::class);
         Route::resource('positions',     \App\Http\Controllers\HR\JobPositionController::class);
         Route::resource('salary-scales', \App\Http\Controllers\HR\SalaryScaleController::class);
@@ -88,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Roster ──────────────────────────────────────────────────
     Route::prefix('roster')->name('roster.')->middleware('module:roster')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'roster'])->name('dashboard');
         Route::resource('duty', \App\Http\Controllers\Roster\DutyRosterController::class);
         Route::resource('timetables', \App\Http\Controllers\Roster\TimetableController::class);
         Route::resource('annual-leave', \App\Http\Controllers\Roster\AnnualLeaveRosterController::class);
@@ -98,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Leave ────────────────────────────────────────────────────
     Route::prefix('leave')->name('leave.')->middleware('module:leave')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'leave'])->name('dashboard');
         Route::resource('requests', \App\Http\Controllers\Leave\LeaveRequestController::class);
         Route::post('requests/{request_model}/approve', [\App\Http\Controllers\Leave\LeaveRequestController::class, 'approve'])->name('requests.approve');
         Route::post('requests/{request_model}/reject',  [\App\Http\Controllers\Leave\LeaveRequestController::class, 'reject'])->name('requests.reject');
@@ -108,12 +112,14 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Attendance ───────────────────────────────────────────────
     Route::prefix('attendance')->name('attendance.')->middleware('module:attendance')->group(function () {
+        Route::get('/dashboard', [ModuleDashboardController::class, 'attendance'])->name('dashboard');
         Route::get('/', [\App\Http\Controllers\Attendance\AttendanceController::class, 'index'])->name('index');
         Route::resource('claims', \App\Http\Controllers\Attendance\AttendanceClaimController::class);
     });
 
     // ── Allowance ────────────────────────────────────────────────
     Route::prefix('allowance')->name('allowance.')->middleware('module:allowance')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'allowance'])->name('dashboard');
         Route::resource('requests', \App\Http\Controllers\Allowance\EmpAllowanceController::class);
         Route::resource('daily', \App\Http\Controllers\Allowance\DailyAllowanceController::class);
         Route::resource('sheets', \App\Http\Controllers\Allowance\AllowanceSheetController::class);
@@ -122,12 +128,14 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Overtime ─────────────────────────────────────────────────
     Route::prefix('overtime')->name('overtime.')->middleware('module:overtime')->group(function () {
+        Route::get('/dashboard', [ModuleDashboardController::class, 'overtime'])->name('dashboard');
         Route::get('/', [\App\Http\Controllers\Overtime\OvertimeController::class, 'index'])->name('index');
         Route::resource('sheets', \App\Http\Controllers\Overtime\OvertimeSheetController::class);
     });
 
     // ── Payroll ──────────────────────────────────────────────────
     Route::prefix('payroll')->name('payroll.')->middleware('module:payroll')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'payroll'])->name('dashboard');
         $ps = \App\Http\Controllers\Payroll\PayrollSheetController::class;
         Route::resource('sheets', $ps);
         Route::post('sheets/{sheet}/generate',    [$ps, 'generate'])->name('sheets.generate');
@@ -139,6 +147,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Loans ────────────────────────────────────────────────────
     Route::prefix('loans')->name('loans.')->middleware('module:loans')->group(function () {
+        Route::get('/dashboard', [ModuleDashboardController::class, 'loans'])->name('dashboard');
         Route::get('/', [\App\Http\Controllers\Loan\LoanController::class, 'index'])->name('index');
         Route::resource('advances', \App\Http\Controllers\Loan\AdvanceController::class);
         Route::resource('providers', \App\Http\Controllers\Loan\LoanProviderController::class);
@@ -146,6 +155,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Accounting ───────────────────────────────────────────────
     Route::prefix('accounting')->name('accounting.')->middleware('module:accounting')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'accounting'])->name('dashboard');
         Route::resource('chart', \App\Http\Controllers\Accounting\ChartOfAccountController::class);
         Route::resource('journals', \App\Http\Controllers\Accounting\JournalController::class);
         Route::post('journals/{journal}/post', [\App\Http\Controllers\Accounting\JournalController::class, 'post'])->name('journals.post');
@@ -154,6 +164,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Bills ────────────────────────────────────────────────────
     Route::prefix('bills')->name('bills.')->middleware('module:bills')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'bills'])->name('dashboard');
         Route::resource('bills', \App\Http\Controllers\Bills\BillController::class)->parameter('bills', 'bill')->names([
             'index'   => 'index',   'create'  => 'create',  'store'   => 'store',
             'show'    => 'show',    'edit'     => 'edit',    'update'  => 'update',
@@ -165,6 +176,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Procurement ──────────────────────────────────────────────
     Route::prefix('procurement')->name('procurement.')->middleware('module:procurement')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'procurement'])->name('dashboard');
         Route::resource('requests', \App\Http\Controllers\Procurement\PurchaseRequestController::class);
         Route::post('requests/{request}/approve', [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'approve'])->name('requests.approve');
         Route::post('requests/{request}/reject',  [\App\Http\Controllers\Procurement\PurchaseRequestController::class, 'reject'])->name('requests.reject');
@@ -173,6 +185,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Assets ───────────────────────────────────────────────────
     Route::prefix('assets')->name('assets.')->middleware('module:assets')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'assets'])->name('dashboard');
         Route::resource('assets', \App\Http\Controllers\Assets\AssetController::class)->parameter('assets', 'asset')->names([
             'index'   => 'index',   'create'  => 'create',  'store'   => 'store',
             'show'    => 'show',    'edit'     => 'edit',    'update'  => 'update',
@@ -184,6 +197,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Appraisals ───────────────────────────────────────────────
     Route::prefix('appraisals')->name('appraisals.')->middleware('module:appraisals')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'appraisals'])->name('dashboard');
         Route::resource('scales',    \App\Http\Controllers\Appraisals\AppraisalRatingScaleController::class);
         Route::resource('templates', \App\Http\Controllers\Appraisals\DepartmentAppraisalController::class);
         Route::post('templates/{template}/kpis',           [\App\Http\Controllers\Appraisals\DepartmentAppraisalController::class, 'storeKpi'])->name('templates.kpis.store');
@@ -198,6 +212,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Fleet ────────────────────────────────────────────────────
     Route::prefix('fleet')->name('fleet.')->middleware('module:fleet')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'fleet'])->name('dashboard');
         Route::resource('vehicles',    \App\Http\Controllers\Fleet\VehicleController::class);
         Route::resource('fuel',        \App\Http\Controllers\Fleet\FuelRecordController::class)->except(['edit','update']);
         Route::resource('maintenance', \App\Http\Controllers\Fleet\MaintenanceController::class)->except(['edit','update']);
@@ -205,6 +220,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Inventory ────────────────────────────────────────────────
     Route::prefix('inventory')->name('inventory.')->middleware('module:inventory')->group(function () {
+        Route::get('/', [ModuleDashboardController::class, 'inventory'])->name('dashboard');
         Route::resource('categories', \App\Http\Controllers\Inventory\InventoryCategoryController::class);
         Route::resource('items',      \App\Http\Controllers\Inventory\InventoryItemController::class);
         Route::resource('movements',  \App\Http\Controllers\Inventory\StockMovementController::class)->only(['index','create','store','show']);
@@ -228,6 +244,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Reports ──────────────────────────────────────────────────
     Route::prefix('reports')->name('reports.')->middleware('module:reports')->group(function () {
+        Route::get('/dashboard', [ModuleDashboardController::class, 'reports'])->name('dashboard');
         Route::get('/',           [\App\Http\Controllers\Reports\ReportController::class, 'index'])->name('index');
         Route::get('/employees',  [\App\Http\Controllers\Reports\ReportController::class, 'employees'])->name('employees');
         Route::get('/leaves',     [\App\Http\Controllers\Reports\ReportController::class, 'leaves'])->name('leaves');

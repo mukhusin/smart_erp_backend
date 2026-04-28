@@ -26,13 +26,13 @@ class EmpAllowanceController extends Controller
         }
 
         $allowances = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
-        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('allowance.requests.index', compact('allowances', 'employees'));
     }
 
     public function create()
     {
-        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $categories = AllowanceCategory::where('company_id', $this->ctx->id())->where('is_active', true)->orderBy('category')->get();
         return view('allowance.requests.create', compact('employees', 'categories'));
     }
@@ -72,7 +72,7 @@ class EmpAllowanceController extends Controller
 
     public function edit(EmpAllowance $request)
     {
-        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $categories = AllowanceCategory::where('company_id', $this->ctx->id())->where('is_active', true)->orderBy('category')->get();
         return view('allowance.requests.edit', ['allowance' => $request, 'employees' => $employees, 'categories' => $categories]);
     }

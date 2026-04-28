@@ -32,7 +32,7 @@ class AttendanceController extends Controller
         }
 
         $transactions = $query->orderByDesc('transaction_date')->paginate(30)->withQueryString();
-        $employees    = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees    = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $departments  = Department::where('company_id', $this->ctx->id())->whereNull('parent_id')->orderBy('name')->get();
 
         return view('attendance.index', compact('transactions', 'employees', 'departments'));

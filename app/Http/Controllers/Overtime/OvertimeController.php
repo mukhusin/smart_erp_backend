@@ -32,7 +32,7 @@ class OvertimeController extends Controller
         }
 
         $overtimes   = $query->orderByDesc('date_of_task_done')->paginate(25)->withQueryString();
-        $employees   = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees   = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $departments = Department::where('company_id', $this->ctx->id())->whereNull('parent_id')->orderBy('name')->get();
 
         return view('overtime.index', compact('overtimes', 'employees', 'departments'));

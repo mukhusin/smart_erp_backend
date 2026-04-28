@@ -72,7 +72,7 @@ class AnnualLeaveRosterController extends Controller
     public function create()
     {
         $rosters   = Roster::where('company_id', $this->ctx->id())->orderByDesc('created_at')->get();
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('roster.annual-leave.create', compact('rosters', 'employees'));
     }
 
@@ -108,7 +108,7 @@ class AnnualLeaveRosterController extends Controller
     public function edit(AnnualLeaveRoster $annualLeave)
     {
         $rosters   = Roster::where('company_id', $this->ctx->id())->orderByDesc('created_at')->get();
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('roster.annual-leave.edit', compact('annualLeave', 'rosters', 'employees'));
     }
 

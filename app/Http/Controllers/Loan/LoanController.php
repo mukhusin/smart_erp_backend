@@ -26,13 +26,13 @@ class LoanController extends Controller
         }
 
         $loans     = $query->orderByDesc('date_of_loan')->paginate(20)->withQueryString();
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('loans.index', compact('loans', 'employees'));
     }
 
     public function create()
     {
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $providers = LoanProvider::where('company_id', $this->ctx->id())->where('is_active', true)->orderBy('name')->get();
         return view('loans.create', compact('employees', 'providers'));
     }
@@ -67,7 +67,7 @@ class LoanController extends Controller
 
     public function edit(EmployeeLoan $loan)
     {
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $providers = LoanProvider::where('company_id', $this->ctx->id())->where('is_active', true)->orderBy('name')->get();
         return view('loans.edit', compact('loan', 'employees', 'providers'));
     }

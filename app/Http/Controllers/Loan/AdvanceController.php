@@ -28,13 +28,13 @@ class AdvanceController extends Controller
         }
 
         $advances  = $query->orderByDesc('date_advanced')->paginate(20)->withQueryString();
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('loans.advances.index', compact('advances', 'employees'));
     }
 
     public function create()
     {
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('loans.advances.create', compact('employees'));
     }
 
@@ -60,7 +60,7 @@ class AdvanceController extends Controller
 
     public function edit(EmployeeMonthlyAdvance $advance)
     {
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('loans.advances.edit', compact('advance', 'employees'));
     }
 

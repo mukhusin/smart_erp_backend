@@ -25,14 +25,14 @@ class SalaryAdjustmentController extends Controller
         }
 
         $adjustments = $query->orderByDesc('effective_date')->paginate(20)->withQueryString();
-        $employees   = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees   = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('payroll.salary-adjustments.index', compact('adjustments', 'employees'));
     }
 
     public function create()
     {
         $employees = Employee::where('company_id', $this->ctx->id())
-            ->with('activeContract')->orderBy('first_name')->get();
+            ->with('activeContract')->orderBy('fname')->get();
         return view('payroll.salary-adjustments.create', compact('employees'));
     }
 
@@ -69,7 +69,7 @@ class SalaryAdjustmentController extends Controller
 
     public function edit(SalaryAdjustment $salaryAdjustment)
     {
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('payroll.salary-adjustments.edit', compact('salaryAdjustment', 'employees'));
     }
 

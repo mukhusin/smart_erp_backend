@@ -28,7 +28,7 @@ class DailyAllowanceController extends Controller
 
     public function create()
     {
-        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $categories = AllowanceCategory::where('company_id', $this->ctx->id())->where('is_active', true)->where('duration', 'day')->orderBy('category')->get();
         return view('allowance.daily.create', compact('employees', 'categories'));
     }
@@ -67,7 +67,7 @@ class DailyAllowanceController extends Controller
 
     public function edit(DailyAllowance $daily)
     {
-        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $categories = AllowanceCategory::where('company_id', $this->ctx->id())->where('is_active', true)->where('duration', 'day')->orderBy('category')->get();
         return view('allowance.daily.edit', compact('daily', 'employees', 'categories'));
     }

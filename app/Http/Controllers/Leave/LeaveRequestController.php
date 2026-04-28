@@ -34,7 +34,7 @@ class LeaveRequestController extends Controller
 
     public function create()
     {
-        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $leaveTypes = LeaveType::where('company_id', $this->ctx->id())->where('is_active', true)->orderBy('name')->get();
         return view('leave.requests.create', compact('employees', 'leaveTypes'));
     }
@@ -72,7 +72,7 @@ class LeaveRequestController extends Controller
 
     public function edit(EmpLeave $request)
     {
-        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees  = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         $leaveTypes = LeaveType::where('company_id', $this->ctx->id())->where('is_active', true)->orderBy('name')->get();
         return view('leave.requests.edit', ['leave' => $request, 'employees' => $employees, 'leaveTypes' => $leaveTypes]);
     }

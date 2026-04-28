@@ -32,7 +32,7 @@ class AbsenceRequestController extends Controller
 
     public function create()
     {
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('leave.absence.create', compact('employees'));
     }
 
@@ -67,7 +67,7 @@ class AbsenceRequestController extends Controller
 
     public function edit(AbsenceRequest $absence)
     {
-        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('first_name')->get();
+        $employees = Employee::where('company_id', $this->ctx->id())->orderBy('fname')->get();
         return view('leave.absence.edit', compact('absence', 'employees'));
     }
 
