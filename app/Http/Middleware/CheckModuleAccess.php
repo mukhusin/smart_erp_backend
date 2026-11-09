@@ -12,7 +12,8 @@ class CheckModuleAccess
 
     public function handle(Request $request, Closure $next, string $slug)
     {
-        if (!$this->service->hasAccess($slug)) {
+        $user = $request->user();
+        if (! $user || ! app(\Modules\Core\Services\AccessService::class)->canUseModule($user, $slug)) {
             return response()->json(['message' => 'Module not available for your account.'], 403);
         }
         return $next($request);

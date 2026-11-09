@@ -981,23 +981,28 @@
                     },
                     "modules": {
                         "type": "array",
-                        "description": "Modules the user's company can use (core modules are always included).",
+                        "description": "Modules this user can open: enabled for the company, not locked for their branch or for them.",
                         "items": {
                             "$ref": "#/components/schemas/ModuleResource"
                         }
                     },
                     "roles": {
                         "type": "array",
+                        "description": "Assigned roles plus roles handed over to the user right now.",
                         "items": {
                             "type": "string"
                         }
                     },
                     "permissions": {
                         "type": "array",
-                        "description": "Permission names, e.g. \"leave.approve\".",
+                        "description": "Effective permission names, e.g. \"leave.approve-hr\". The UI shows actions from this list only.",
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "acting_roles": {
+                        "type": "string",
+                        "description": "Roles the user holds temporarily for someone else."
                     }
                 },
                 "required": [
@@ -1007,7 +1012,8 @@
                     "branch",
                     "modules",
                     "roles",
-                    "permissions"
+                    "permissions",
+                    "acting_roles"
                 ],
                 "title": "MeResource"
             },

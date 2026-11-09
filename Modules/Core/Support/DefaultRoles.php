@@ -9,43 +9,34 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * The one place that defines permissions (global) and the roles every new company starts with.
- * Roles are per company (Spatie teams), so each company can later change its own roles.
+ * Roles every new company starts with. Roles are per company (Spatie teams):
+ * each company can rename them, change their permissions or add its own.
  */
 final class DefaultRoles
 {
-    public const PERMISSIONS = [
-        // Organization
-        'manage-branches', 'manage-departments', 'manage-settings',
-        // People
-        'manage-employees', 'manage-contracts',
-        // Leave
-        'manage-leave-types', 'approve-leave-hod', 'approve-leave-hr',
-        // Payroll and time
-        'manage-payroll', 'manage-rosters',
-        // Access
-        'manage-users', 'manage-roles',
-        // Reports and self-service
-        'view-reports', 'self-service',
-    ];
-
-    /** Role name => permissions ('*' = all). */
-    public const ROLES = [
-        'company-admin' => '*',
-        'hr-officer' => [
-            'manage-employees', 'manage-contracts', 'manage-departments', 'manage-leave-types',
-            'approve-leave-hod', 'approve-leave-hr', 'manage-payroll', 'manage-rosters', 'view-reports', 'self-service',
-        ],
-        'hod' => ['approve-leave-hod', 'manage-rosters', 'self-service'],
-        'employee' => ['self-service'],
-    ];
-
     public const COMPANY_ADMIN = 'company-admin';
 
+    /** Role name => permission names ('*' = all), or module wildcards like 'leave.*'. */
+    public const ROLES = [
+        self::COMPANY_ADMIN => ['*'],
+        'hr-officer' => [
+            'hr.*', 'leave.*', 'roster.*', 'attendance.*', 'allowance.*', 'overtime.*', 'payroll.view',
+            'payroll.create', 'payroll.edit', 'payroll.comment', 'loans.*', 'reports.*', 'self-service.use',
+        ],
+        'hod' => [
+            'leave.department.view', 'leave.approve-hod', 'roster.department.view', 'roster.manage',
+            'attendance.working-hours.department', 'allowance.department.view', 'overtime.view', 'self-service.use',
+        ],
+        'employee' => ['self-service.use'],
+    ];
+
+    /** Insert/update every permission in PermissionCatalog (module, label). */
     public static function syncPermissions(): void
     {
-        foreach (self::PERMISSIONS as $name) {
-            Permission::findOrCreate($name, 'web');
+        foreach (PermissionCatalog::MODULES as $module => $permissions) {
+            foreach ($permissions as $name => $label) {
+                Permission::updateOrCreate(['name' => $name, 'guard_name' => 'web'], ['module_slug' => $module, 'label' => $label]);
+            }
         }
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
@@ -55,9 +46,21 @@ final class DefaultRoles
         self::syncPermissions();
 
         app(CompanyContext::class)->run($company, function () {
-            foreach (self::ROLES as $name => $permissions) {
-                Role::findOrCreate($name, 'web')->syncPermissions($permissions === '*' ? self::PERMISSIONS : $permissions);
+            foreach (self::ROLES as $name => $patterns) {
+                Role::findOrCreate($name, 'web')->syncPermissions(self::expand($patterns));
             }
         });
+    }
+
+    /** @param list<string> $patterns  @return list<string> */
+    public static function expand(array $patterns): array
+    {
+        $all = PermissionCatalog::names();
+
+        return array_values(array_unique(array_merge(...array_map(fn (string $p) => match (true) {
+            $p === '*' => $all,
+            str_ends_with($p, '.*') => array_values(array_filter($all, fn ($n) => str_starts_with($n, substr($p, 0, -1)))),
+            default => [$p],
+        }, $patterns))));
     }
 }

@@ -253,3 +253,71 @@ The frontend depends only on the API contract, not on Laravel. The backend could
 A migration can then go module by module behind the same `/api/v1` paths (e.g. via a reverse proxy routing
 some paths to the new service), with the contract tests from section 6 proving nothing changed.
 The Angular frontend works the same with either backend. The decision (2026-11-09) is to stay on a Laravel modular monolith, no microservices.
+
+## 10. Multi-tenancy (decided 2026-11-09)
+
+One system serves many client organizations (companies). One database, every company-owned row has `company_id`.
+
+| Level | Who | What they see |
+|---|---|---|
+| Platform | System owner (`users.is_platform_admin = true`, no company, no employee record) | Client companies only: register, suspend, modules, resend invite (`/api/v1/platform/*`). No company data |
+| Company | Every other user (`users.company_id` required) | Only their company's data. Each company has its own branches, roles and settings |
+| Branch | `company_branches` (one head office per company) | A dimension on users, employees and departments; other records get it through the employee |
+
+**Data rules (easy relations, easy maintenance)**
+- **Company-owned main records** (45 tables: employees, departments, leave types, payroll sheets...) have a required `company_id`
+  and use the `BelongsToCompany` trait: queries only see the current company, new rows get it automatically.
+- **Child rows** (contracts, payslip lines, order items...) have **no** `company_id`: they are reached through their parent.
+- **Shared lists** (banks, ERP modules, permissions) have no company.
+- Uniqueness is per company: `(company_id, employee_no)`, `(company_id, plate_number)`. Usernames and emails are unique system-wide (login).
+- The company filter **fails closed**: in a request with no company (guest, platform admin) it returns nothing.
+  Cross-company code must say so: `Model::withoutCompanyScope()` or `CompanyContext::run($company, fn () => ...)` (scheduled jobs).
+- Companies are suspended (`is_active = false`), not deleted. Suspended companies' users cannot log in or use the API (`company_suspended`).
+
+**Registering a company** (`POST /api/v1/platform/companies`, one transaction): company → branches (one head office) →
+enabled modules (optional expiry) → the company's default roles → HR department and HR Manager position →
+the first HR admin as **employee + user** with role `company-admin` → invite email with a link to set their own password
+(`POST /api/v1/auth/set-password`, link valid 3 days). The platform admin never knows the company's passwords.
+After that the company admin registers staff, branches, departments and roles.
+
+## 11. Access control (decided 2026-11-09)
+
+**Permissions** are defined in one catalog in code (`Modules/Core/Support/PermissionCatalog.php`), named `<module>.<action>`
+and grouped by module (the module is the permission's category). `php artisan erp:sync-permissions` loads them.
+HRMS permissions map to these names in `hrms-migration-mapping.md` section 5.
+
+**A user may do X** when all of these hold (`Modules/Core/Services/AccessService.php`, wired into Laravel's Gate):
+1. X's module is **enabled for the company** (`company_modules`, set by the platform admin), and
+2. the module is **not locked for the user's branch** (`module_locks.company_branch_id`), and
+3. the module is **not locked for the user** (`module_locks.user_id`), and
+4. the user holds X through **any** of: a **direct permission**, **any of their roles** (a user can have many),
+   or a role **handed over** to them right now (`role_handovers`: from user, to user, start, optional end, reason, revocable).
+
+Roles are per company (Spatie teams with team = company): each company can change its roles without affecting others.
+New companies start with `company-admin` (all), `hr-officer`, `hod`, `employee` (`DefaultRoles`).
+
+`GET /api/v1/me` returns the result of these rules: `modules` (what the user can open), `permissions` (effective),
+`roles` (assigned + handed over) and `acting_roles` (handover details). **The frontend uses only these lists** to show menus,
+pages and buttons; the API still checks every request (`can:` / `permission:` / `module:` middleware and policies go through the same service).
+
+Still to design: **data scope** (own / section / department / branch / company) for permissions like
+"working hours of my department"; until then screens filter by the user's own department.
+
+## 12. Frontend UI standards
+
+Professional and friendly by default. Built once in `shared/`, used by every page:
+
+| Situation | What the user sees |
+|---|---|
+| Loading a page or list | **Skeleton placeholders** in the shape of the content (table rows, cards, form fields), not a blank page or a lone spinner |
+| Saving / a button action | The button shows a small spinner and is disabled until done (no double submit) |
+| Empty list | An empty state with an icon, one sentence and the main action ("No employees yet. Register employee") if the user may do it |
+| Validation error (422) | The message under each field (from the API `errors`), focus moves to the first wrong field |
+| Other errors | A toast with the API `message`; for lists and pages, an inline error card with **Retry** |
+| No permission (403) | A friendly "You don't have access" page; the menu never shows modules or actions the user cannot use |
+| Session ended (401) | Back to the login page with the reason (expired, logged in elsewhere) |
+| Offline / server down | A clear "Can't reach the server" message with Retry |
+| Success | A short toast ("Employee registered") |
+
+Other rules: responsive down to phone width, keyboard-accessible forms, consistent page header (title, breadcrumbs, main action),
+dates and money formatted for the company (currency, fiscal year), and `*appCan="'hr.employees.create'"` to show actions by permission.

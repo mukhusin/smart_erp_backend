@@ -209,7 +209,191 @@ Status: ✅ copy with generic renames only · 🟡 needs column decisions · ⚠
 | `workflow_templates` | 7 | #11 |
 | `workflow_types` | 7 | #11 |
 
-## 5. Next steps
+
+## 5. Permissions and roles
+
+ERP permissions are named `<module>.<action>` and grouped by module (`Modules/Core/Support/PermissionCatalog.php`).
+A permission works only while its module is available to the user: enabled for the company, and not locked
+for the user's branch or for the user.
+
+**How the import works**
+- HRMS `roles` (20) → roles of the Kairuki company (same names; roles are per company in the ERP). Each role gets the ERP
+  permissions its HRMS permissions map to (table below, duplicates merged).
+- HRMS `users_roles` (805) → `model_has_roles` with `company_id` = Kairuki. Users keep all their roles (more than one allowed).
+- HRMS `users_permissions` (32 direct grants) → `model_has_permissions` (direct permissions, same mapping).
+- HRMS `permission_categories` are not copied: the ERP category of a permission is its module.
+- `system-admin` is not a permission in the ERP: users who had it get the `company-admin` role.
+- Permissions marked "department scope" or "section scope" depend on data scope (own section / department / branch / company),
+  which is a later design item; until then they map to the listed permission and the screen filters by the user's department.
+
+**Roles in HRMS today**
+
+| Role | Users | Permissions |
+|---|---|---|
+| super_admin | 1 | 8 |
+| Director General | 2 | 123 |
+| HR Manager | 1 | 127 |
+| hr_officer | 3 | 105 |
+| Chief Accountant | 2 | 49 |
+| Payroll Officer | 1 | 9 |
+| Internal Auditor | 1 | 2 |
+| hod | 11 | 30 |
+| assistant_hod | 1 | 14 |
+| hos | 25 | 13 |
+| procurement | 0 | 0 |
+| biometric_technician | 1 | 1 |
+| ict_officer | 3 | 1 |
+| normal_employee | 752 | 0 |
+| Hospital Administrator | 0 | 5 |
+| Human Resources Manager | 0 | 0 |
+| Director Clinical & Medical Services | 0 | 0 |
+| Director IVF | 0 | 0 |
+| DDG | 1 | 132 |
+| Director | 0 | 131 |
+
+**Permission mapping** (Roles / Users = how many HRMS roles and users hold it today)
+
+| # | HRMS permission | HRMS category | Roles | Users | ERP permission |
+|---|---|---|---|---|---|
+| 1 | `edit-absence` | Absence Management | 5 | 0 | `leave.absence.manage` |
+| 2 | `delete-absence` | Absence Management | 5 | 0 | `leave.absence.manage` |
+| 3 | `add-absence` | Absence Management | 5 | 0 | `leave.absence.manage` |
+| 4 | `manage-annual-leave` | Leave Management | 8 | 1 | `leave.annual-roster.manage` |
+| 5 | `manage-roster` | Leave Management | 10 | 0 | `roster.manage` |
+| 6 | `create-leave-roster` | Leave Management | 9 | 1 | `leave.annual-roster.manage` |
+| 7 | `add-employee-annual-leave-roster` | Leave Management | 9 | 0 | `leave.annual-roster.manage` |
+| 8 | `add-allowance` | Allowance Management | 5 | 0 | `allowance.manage` |
+| 9 | `remove-allowance` | Allowance Management | 5 | 0 | `allowance.manage` |
+| 10 | `assign-allowance` | Allowance Management | 5 | 0 | `allowance.assign` |
+| 11 | `add-employee-heslb` | Employee Management | 5 | 0 | `payroll.statutory.manage` |
+| 12 | `manage-employee-heslb` | Employee Management | 5 | 0 | `payroll.statutory.manage` |
+| 13 | `add-ability` | Settings | 6 | 0 | `hr.abilities.manage` |
+| 14 | `manage-ability` | Settings | 6 | 0 | `hr.abilities.manage` |
+| 15 | `add-allowance-category` | Allowance Management | 5 | 0 | `allowance.categories.manage` |
+| 16 | `manage-allowance-category` | Allowance Management | 5 | 0 | `allowance.categories.manage` |
+| 17 | `manage-allowance` | Allowance Management | 5 | 0 | `allowance.manage` |
+| 18 | `hr-office` | HR Office | 6 | 1 | `hr.employees.view` |
+| 19 | `department-office` | Department Management | 10 | 0 | `leave.department.view` + `roster.department.view` |
+| 20 | `department-section` | Department Management | 9 | 2 | `roster.section.view` |
+| 21 | `payroll-office` | Payroll Management | 8 | 1 | `payroll.view` |
+| 22 | `asset-management` | Asset Management | 6 | 0 | `assets.view` + `assets.create` + `assets.edit` |
+| 23 | `employee` |  | 4 | 0 | `self-service.use` |
+| 24 | `add-employee-loan` | Employee Management | 5 | 0 | `loans.manage` |
+| 25 | `add-department-setting` | Settings | 5 | 0 | `hr.department-settings.manage` |
+| 26 | `manage-department-setting` | Settings | 5 | 0 | `hr.department-settings.manage` |
+| 27 | `manage-ability-setting` | Settings | 5 | 0 | `hr.abilities.manage` |
+| 28 | `add-relief` | Settings | 5 | 0 | `payroll.reliefs.manage` |
+| 29 | `manage-relief` | Settings | 5 | 0 | `payroll.reliefs.manage` |
+| 30 | `add-role` | Role & Permission Management | 5 | 0 | `admin.roles.manage` |
+| 31 | `manage-role` | Role & Permission Management | 5 | 0 | `admin.roles.manage` |
+| 32 | `assign-permission` | Role & Permission Management | 6 | 0 | `admin.roles.manage` |
+| 33 | `add-company-branche` | Settings | 5 | 0 | `admin.branches.manage` |
+| 34 | `manage-company-branche` | Settings | 5 | 0 | `admin.branches.manage` |
+| 35 | `manage-contract-type` | Settings | 5 | 0 | `hr.contract-types.manage` |
+| 36 | `add-contract-type` | Settings | 5 | 0 | `hr.contract-types.manage` |
+| 37 | `add-proffesional-licence` | Settings | 5 | 0 | `hr.licences.manage` |
+| 38 | `manage-proffesional-licence` | Settings | 5 | 0 | `hr.licences.manage` |
+| 39 | `attendance` | Attendance Management | 7 | 0 | `attendance.view` |
+| 40 | `add-dept-overtime-range` | Department Management | 8 | 0 | `overtime.department-ranges.manage` |
+| 41 | `add-dept-allowance-range` | Department Management | 7 | 0 | `allowance.department-ranges.manage` |
+| 42 | `manage-user` | User Management | 6 | 0 | `admin.users.manage` |
+| 43 | `setting-public-holiday` | Settings | 5 | 0 | `roster.holidays.manage` |
+| 44 | `setting-duty-timetable` | Settings | 5 | 0 | `roster.timetables.manage` |
+| 45 | `settings` | Settings | 6 | 1 | `admin.settings.manage` |
+| 46 | `delete-other-leave` | Leave Management | 4 | 0 | `leave.delete` |
+| 47 | `create-roster` | Roster Management | 9 | 0 | `roster.manage` |
+| 48 | `create-payroll-sheet` | Payroll Management | 7 | 0 | `payroll.create` |
+| 49 | `approve-annual-leave` | Leave Management | 8 | 0 | `leave.approve-hr` |
+| 50 | `add-bank-setting` | Settings | 5 | 0 | `payroll.banks.manage` |
+| 51 | `manage-bank-setting` | Settings | 5 | 0 | `payroll.banks.manage` |
+| 52 | `assign-user-permission` | User Management | 6 | 0 | `admin.roles.assign` |
+| 53 | `manage-overtime` | Overtime Management | 9 | 0 | `overtime.manage` |
+| 54 | `upload-payrolly` | Payroll Management | 7 | 0 | `payroll.upload` |
+| 55 | `manage-employee-allowance` | Allowance Management | 6 | 0 | `allowance.assign` |
+| 56 | `working-hours-full` | Department Management | 7 | 0 | `attendance.working-hours.company` |
+| 57 | `working-hours-section` | Department Management | 8 | 0 | `attendance.working-hours.section` |
+| 58 | `working-hours-department` | Department Management | 7 | 0 | `attendance.working-hours.department` |
+| 59 | `update-duty-roster` | Roster Management | 7 | 4 | `roster.manage` |
+| 60 | `approve-payroll` | Payroll Management | 7 | 2 | `payroll.approve` |
+| 61 | `add-payroll-comment` | Payroll Management | 7 | 2 | `payroll.comment` |
+| 62 | `claim-approve` | Claims | 5 | 0 | `attendance.claims.approve` |
+| 63 | `manage-contract` | Employee Management | 5 | 0 | `hr.contracts.manage` |
+| 64 | `manage-resident` | Employee Management | 5 | 0 | `hr.residents.manage` |
+| 65 | `add-duty-roster` | Roster Management | 9 | 0 | `roster.manage` |
+| 66 | `department-leave` | Department Management | 10 | 0 | `leave.department.view` |
+| 67 | `department-employee` | Department Management | 9 | 0 | `hr.employees.view (department scope)` |
+| 68 | `department-roster` | Department Management | 9 | 0 | `roster.department.view` |
+| 69 | `department-allowance` | Allowance Management | 7 | 0 | `allowance.department.view` |
+| 70 | `add-daily-allowance` | Allowance Management | 6 | 0 | `allowance.daily.manage` |
+| 71 | `create-messaging` | Messaging | 5 | 0 | `admin.messaging.send` |
+| 72 | `add-admin-incharge` | Department Management | 7 | 0 | `admin.roles.assign` |
+| 73 | `role-permission` | Role & Permission Management | 4 | 0 | `admin.roles.manage` |
+| 74 | `view-role` | Role & Permission Management | 5 | 0 | `admin.roles.manage` |
+| 75 | `create-role` | Role & Permission Management | 4 | 0 | `admin.roles.manage` |
+| 76 | `edit-role` | Role & Permission Management | 4 | 0 | `admin.roles.manage` |
+| 77 | `delete-role` | Role & Permission Management | 4 | 0 | `admin.roles.manage` |
+| 78 | `assign-role` | Role & Permission Management | 5 | 0 | `admin.roles.assign` |
+| 79 | `revoke-role` | Role & Permission Management | 5 | 0 | `admin.roles.assign` |
+| 80 | `view-permission` | Role & Permission Management | 5 | 0 | `admin.roles.manage` |
+| 81 | `create-permission` | Role & Permission Management | 4 | 0 | (none: permissions come from the catalog) |
+| 82 | `edit-permission` | Role & Permission Management | 4 | 0 | (none: permissions come from the catalog) |
+| 83 | `delete-permission` | Role & Permission Management | 4 | 0 | (none: permissions come from the catalog) |
+| 84 | `view-users` | User Management | 5 | 0 | `admin.users.view` |
+| 85 | `create-user` | User Management | 5 | 0 | `admin.users.manage` |
+| 86 | `edit-user` | User Management | 5 | 0 | `admin.users.manage` |
+| 87 | `delete-user` | User Management | 5 | 0 | `admin.users.manage` |
+| 88 | `view-employees` | Employee Management | 5 | 2 | `hr.employees.view` |
+| 89 | `create-employee` | Employee Management | 5 | 0 | `hr.employees.create` |
+| 90 | `edit-employee` | Employee Management | 5 | 0 | `hr.employees.edit` |
+| 91 | `delete-employee` | Employee Management | 4 | 0 | `hr.employees.delete` |
+| 92 | `view-attendance` | Attendance Management | 6 | 1 | `attendance.view` |
+| 93 | `edit-attendance` | Attendance Management | 5 | 0 | `attendance.edit` |
+| 94 | `approve-attendance` | Attendance Management | 5 | 0 | `attendance.approve` |
+| 95 | `view-leave` | Leave Management | 8 | 0 | `leave.view` |
+| 96 | `approve-leave` | Leave Management | 7 | 0 | `leave.approve-hod` |
+| 97 | `reject-leave` | Leave Management | 7 | 0 | `leave.reject` |
+| 98 | `view-payroll` | Payroll Management | 7 | 2 | `payroll.view` |
+| 99 | `create-payroll` | Payroll Management | 7 | 0 | `payroll.create` |
+| 100 | `edit-payroll` | Payroll Management | 7 | 1 | `payroll.edit` |
+| 101 | `view-reports` | Settings | 5 | 0 | `reports.view` |
+| 102 | `generate-reports` | Settings | 5 | 0 | `reports.generate` |
+| 103 | `view-settings` | Settings | 5 | 0 | `admin.settings.manage` |
+| 104 | `edit-settings` | Settings | 5 | 0 | `admin.settings.manage` |
+| 105 | `system-admin` | System Administration | 4 | 0 | (role company-admin) |
+| 106 | `view-audit-log` | System Administration | 4 | 0 | `admin.audit.view` |
+| 107 | `view-departments` | Department Management | 8 | 0 | `hr.departments.manage` |
+| 108 | `create-department` | Department Management | 5 | 0 | `hr.departments.manage` |
+| 109 | `edit-department` | Department Management | 6 | 0 | `hr.departments.manage` |
+| 110 | `delete-department` | Department Management | 4 | 0 | `hr.departments.manage` |
+| 111 | `view-assets` | Asset Management | 4 | 0 | `assets.view` |
+| 112 | `create-asset` | Asset Management | 4 | 0 | `assets.create` |
+| 113 | `edit-asset` | Asset Management | 4 | 0 | `assets.edit` |
+| 114 | `delete-asset` | Asset Management | 4 | 0 | `assets.delete` |
+| 115 | `add-admitted-employee` | Employee Management | 4 | 1 | `hr.admitted.manage` |
+| 116 | `submit-payroll-to-payroll-officer` | Payroll Management | 3 | 2 | `payroll.submit-to-payroll-officer` |
+| 117 | `submit-payroll-to-director` | Payroll Management | 3 | 1 | `payroll.submit-to-director` |
+| 118 | `submit-payroll-to-finance` | Payroll Management | 4 | 1 | `payroll.submit-to-finance` |
+| 119 | `add-excuse_of_duty` | Attendance Management | 4 | 1 | `hr.excuse-duty.manage` |
+| 120 | `mange-proffesional-licence` | Settings | 5 | 2 | `hr.licences.manage` |
+| 121 | `add-branche` | Settings | 4 | 0 | `admin.branches.manage` |
+| 122 | `submit-salary-adjustment-to-director` | Payroll Management | 3 | 1 | `payroll.salary-adjustments.submit` |
+| 123 | `allow-finance-comment-salary-adjustment` | Payroll Management | 2 | 0 | `payroll.salary-adjustments.finance-comment` |
+| 124 | `approve-salary-adjustment` | Payroll Management | 3 | 0 | `payroll.salary-adjustments.approve` |
+| 125 | `add-salary-adjustment-comment` | Payroll Management | 4 | 1 | `payroll.salary-adjustments.manage` |
+| 126 | `head-of-section-roster-details` | Department Management | 4 | 1 | `roster.section.view` |
+| 127 | `manage-workflow` | Workflow Management | 4 | 0 | `admin.workflow.manage` |
+| 128 | `view-workflow-types` | Workflow Management | 4 | 0 | `admin.workflow.manage` |
+| 129 | `create-workflow-types` | Workflow Management | 4 | 0 | `admin.workflow.manage` |
+| 130 | `edit-workflow-types` | Workflow Management | 4 | 0 | `admin.workflow.manage` |
+| 131 | `view-workflow-templates` | Workflow Management | 5 | 0 | `admin.workflow.manage` |
+| 132 | `create-workflow-templates` | Workflow Management | 4 | 0 | `admin.workflow.manage` |
+| 133 | `edit-workflow-templates` | Workflow Management | 4 | 0 | `admin.workflow.manage` |
+| 134 | `delete-workflow-templates` | Workflow Management | 3 | 0 | `admin.workflow.manage` |
+| 135 | `manage-workflow-steps` | Workflow Management | 4 | 0 | `admin.workflow.manage` |
+| 136 | `edit-duty-roster` | Roster Management | 5 | 0 | `roster.manage` |
+| 137 | `toggle-contract-type` | Settings | 1 | 0 | `hr.contract-types.manage` |
+
+## 6. Next steps
 
 1. Resolve every **decide** / **check** above with HR/admin (most are small).
 2. Add the ERP columns/tables marked "add" — each is tied to a gap-list item.

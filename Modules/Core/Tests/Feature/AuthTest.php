@@ -78,7 +78,9 @@ class AuthTest extends TestCase
         $this->actingAs($this->user)->getJson('/api/v1/me')
             ->assertOk()
             ->assertJsonPath('data.user.email', 'hr@testco.test')
-            ->assertJsonFragment(['manage-employees']);
+            ->assertJsonFragment(['admin.users.manage'])
+            // No module enabled for this company except core ones, so no HR permissions yet.
+            ->assertJsonMissing(['hr.employees.view']);
     }
 
     public function test_platform_admin_has_no_company(): void

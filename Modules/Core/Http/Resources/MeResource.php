@@ -4,7 +4,7 @@ namespace Modules\Core\Http\Resources;
 
 use App\Models\ErpModule;
 use App\Models\User;
-use App\Services\ModuleAccessService;
+use Modules\Core\Services\AccessService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,6 +15,7 @@ class MeResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $access = app(AccessService::class);
         $employee = $this->employee;
         $company = $this->company;
         $branch = $this->branch;
@@ -47,14 +48,20 @@ class MeResource extends JsonResource
                 'name' => $branch->name,
                 'is_headquarters' => (bool) $branch->is_headquarters,
             ] : null,
-            /** Modules the user's company can use (core modules are always included). */
+            /** Modules this user can open: enabled for the company, not locked for their branch or for them. */
             'modules' => ModuleResource::collection(
-                app(ModuleAccessService::class)->allForDashboard()->filter(fn (ErpModule $m) => $m->has_access)->values()
+                ErpModule::whereIn('slug', $access->modules($this->resource))->orderBy('sort_order')->get()
             ),
-            /** @var list<string> */
-            'roles' => $this->getRoleNames()->values()->all(),
-            /** @var list<string> Permission names, e.g. "leave.approve". */
-            'permissions' => $this->getAllPermissions()->pluck('name')->values()->all(),
+            /** @var list<string> Assigned roles plus roles handed over to the user right now. */
+            'roles' => $access->roles($this->resource),
+            /** @var list<string> Effective permission names, e.g. "leave.approve-hr". The UI shows actions from this list only. */
+            'permissions' => $access->permissions($this->resource),
+            /** Roles the user holds temporarily for someone else. */
+            'acting_roles' => $access->activeHandovers($this->resource)->map(fn ($h) => [
+                'role' => $h->role->name,
+                'for_user' => $h->fromUser?->display_name,
+                'ends_at' => $h->ends_at?->toIso8601String(),
+            ])->values(),
         ];
     }
 }

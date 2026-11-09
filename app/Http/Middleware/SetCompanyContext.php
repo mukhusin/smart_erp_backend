@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\CompanyContext;
 use Closure;
 use Illuminate\Http\Request;
+use Modules\Core\Services\AccessService;
 
 /**
  * Per request: roles/permissions are read for the user's company (Spatie teams),
@@ -16,6 +17,7 @@ class SetCompanyContext
 
     public function handle(Request $request, Closure $next)
     {
+        app(AccessService::class)->forget();
         setPermissionsTeamId($this->context->id());
 
         $company = $this->context->get();

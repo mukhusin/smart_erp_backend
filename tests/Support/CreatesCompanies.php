@@ -15,6 +15,9 @@ trait CreatesCompanies
     protected function createCompany(string $name = 'Acme', array $overrides = []): array
     {
         Mail::fake();
+        if (! \App\Models\ErpModule::exists()) {
+            (new \Database\Seeders\ErpModuleSeeder())->run();
+        }
         $slug = strtolower(preg_replace('/\W+/', '', $name));
         $company = app(RegisterCompany::class)->handle(array_replace_recursive([
             'company' => ['name' => $name],

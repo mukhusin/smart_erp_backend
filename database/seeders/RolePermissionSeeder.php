@@ -11,6 +11,6 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         DefaultRoles::syncPermissions();
-        $this->command?->info('Permissions seeded: ' . count(DefaultRoles::PERMISSIONS));
+        $this->command?->info('Permissions seeded: ' . count(\Modules\Core\Support\PermissionCatalog::names()));
     }
 }
