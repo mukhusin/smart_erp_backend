@@ -32,7 +32,7 @@ class Employee extends Model {
 
     public function getProfileImageUrlAttribute(): string {
         return $this->profile_image
-            ? asset('storage/' . $this->profile_image)
+            ? '/storage/' . $this->profile_image
             : 'https://ui-avatars.com/api/?name=' . urlencode($this->full_name) . '&background=0d6efd&color=fff&size=128';
     }
     public function branch()        { return $this->belongsTo(CompanyBranch::class, 'company_branch_id'); }

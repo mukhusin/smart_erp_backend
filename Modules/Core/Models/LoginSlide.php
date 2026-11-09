@@ -28,6 +28,6 @@ class LoginSlide extends Model
             return null;
         }
 
-        return str_starts_with($this->image, 'http') ? $this->image : asset('storage/' . $this->image);
+        return str_starts_with($this->image, 'http') ? $this->image : '/storage/' . $this->image;
     }
 }

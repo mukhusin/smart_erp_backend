@@ -32,7 +32,7 @@ Every gap-list item is built API-first.
 - Each repository has its own CI, `.env`/environment settings, versioning and deployment.
 - **Local development:** `php artisan serve` (port 8000) + `npm start` in the frontend (port 4200). The Angular dev server
   proxies `/api` and `/sanctum` to port 8000, so the browser sees one origin and Sanctum cookie auth needs no CORS.
-- **Production:** one domain. The web server serves the built SPA and forwards `/api` and `/sanctum` to Laravel
+- **Production:** one domain. The web server serves the built SPA and forwards `/api`, `/sanctum` and `/storage` (uploaded files) to Laravel
   (or `app.` and `api.` subdomains of the same site, with `SANCTUM_STATEFUL_DOMAINS` and CORS set).
 
 ## 3. The contract between them

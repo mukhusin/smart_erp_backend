@@ -42,11 +42,11 @@ class Company extends Model
 
     public function getLoginBackgroundUrlAttribute(): ?string
     {
-        return $this->login_background ? asset('storage/' . $this->login_background) : null;
+        return $this->login_background ? '/storage/' . $this->login_background : null;
     }
 
     public function getLogoUrlAttribute(): ?string
     {
-        return $this->logo ? asset('storage/' . $this->logo) : null;
+        return $this->logo ? '/storage/' . $this->logo : null;
     }
 }

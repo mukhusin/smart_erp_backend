@@ -74,6 +74,6 @@ class User extends Authenticatable
     /** Uploaded avatar, or null so the frontend shows initials (no external avatar service). */
     public function getAvatarUrlAttribute(): ?string
     {
-        return $this->avatar ? asset('storage/' . $this->avatar) : null;
+        return $this->avatar ? '/storage/' . $this->avatar : null;
     }
 }
