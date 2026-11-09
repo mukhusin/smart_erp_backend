@@ -15,6 +15,7 @@ use Modules\Platform\Http\Resources\CompanyResource;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use App\Services\ModuleAccessService;
+use Dedoc\Scramble\Attributes\QueryParameter;
 
 /**
  * Client companies (tenants). System administrator only.
@@ -28,6 +29,11 @@ class CompanyController extends Controller
      *
      * Filters: `filter[search]` (name, short name, TIN), `filter[is_active]`. Sort: `name`, `created_at` (prefix `-` for descending).
      */
+    #[QueryParameter('filter[search]', description: 'Part of the name, short name or TIN.', type: 'string')]
+    #[QueryParameter('filter[is_active]', description: '1 = active, 0 = suspended.', type: 'boolean')]
+    #[QueryParameter('sort', description: '`name`, `created_at`; prefix `-` for descending.', type: 'string', default: 'name')]
+    #[QueryParameter('page', type: 'integer', default: 1)]
+    #[QueryParameter('per_page', description: 'Max 100.', type: 'integer', default: 25)]
     public function index(): AnonymousResourceCollection
     {
         $companies = QueryBuilder::for(Company::class)

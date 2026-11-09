@@ -182,6 +182,50 @@
                     "Platform: Companies",
                     "Company"
                 ],
+                "parameters": [
+                    {
+                        "name": "filter[search]",
+                        "in": "query",
+                        "description": "Part of the name, short name or TIN.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[is_active]",
+                        "in": "query",
+                        "description": "1 = active, 0 = suspended.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "`name`, `created_at`; prefix `-` for descending.",
+                        "schema": {
+                            "type": "string",
+                            "default": "name"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Max 100.",
+                        "schema": {
+                            "type": "integer",
+                            "default": 25
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Paginated set of `CompanyResource`",
