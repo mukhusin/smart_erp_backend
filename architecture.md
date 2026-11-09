@@ -337,6 +337,12 @@ dates and money formatted for the company (currency, fiscal year), and `*appCan=
 - A module asks the engine whether a workflow is configured for its process (e.g. "leave request", "user access change").
 - If yes, the record is saved as `pending`, a workflow instance starts, and the engine calls the module's apply/reject action
   at the end. If no workflow is configured, the action applies at once.
+- Built in `Modules/Workflow` (2026-11-10): processes are registered in `WorkflowCatalog` (each implements `WorkflowProcess`:
+  summary for the inbox, branch/department of the request, `onApproved`, `onRejected`). Per process the company admin defines
+  ordered steps; approver = a role (optionally same branch; handed-over roles count), a specific user, or the head of the
+  requester's department. A branch may have its own workflow that overrides the company one. Steps are copied when a request
+  starts, so editing a workflow never changes requests in progress. Approvers can approve, reject (comment required) or send back
+  to an earlier step; the requester can withdraw; nobody approves their own request.
 - User access changes already work this way: `ChangeUserAccess` records every change in `access_changes`
   (type, before, after, reason, requested by, status). Today status is `applied`; with a configured workflow it will be `pending`
   until approved. The API and screens do not change.

@@ -11,6 +11,140 @@
         }
     ],
     "paths": {
+        "/admin/workflows": {
+            "get": {
+                "operationId": "admin.workflows.index",
+                "description": "Every process the company can use. A process with no active workflow applies changes at once.",
+                "summary": "List processes and their workflows",
+                "tags": [
+                    "Admin: Approval workflows",
+                    "WorkflowSetup"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "process": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "module": {
+                                                        "type": "string"
+                                                    },
+                                                    "workflows": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "$ref": "#/components/schemas/WorkflowTemplateResource"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "process",
+                                                    "name",
+                                                    "description",
+                                                    "module",
+                                                    "workflows"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/workflows/{process}": {
+            "put": {
+                "operationId": "admin.workflows.save",
+                "description": "Replaces the steps of the company-wide workflow (or a branch's own one). Requests already in progress keep\nthe steps they started with. An empty step list removes the workflow.",
+                "summary": "Save a process's workflow",
+                "tags": [
+                    "Admin: Approval workflows",
+                    "WorkflowSetup"
+                ],
+                "parameters": [
+                    {
+                        "name": "process",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveWorkflowRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": [
+                                                "array",
+                                                "null"
+                                            ],
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/admin/handovers": {
             "get": {
                 "operationId": "admin.handovers.index",
@@ -1719,6 +1853,526 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workflow/inbox": {
+            "get": {
+                "operationId": "workflow.inbox",
+                "description": "Requests waiting for the current user now (by role, handed-over role, name or as head of department).",
+                "summary": "My approvals inbox",
+                "tags": [
+                    "Approvals",
+                    "Approval"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `WorkflowInstanceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WorkflowInstanceResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workflow/inbox/count": {
+            "get": {
+                "operationId": "workflow.inbox.count",
+                "summary": "Number of requests waiting for me",
+                "tags": [
+                    "Approvals",
+                    "Approval"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "count": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "count"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workflow/my-requests": {
+            "get": {
+                "operationId": "workflow.mine",
+                "description": "Requests I started, newest first.",
+                "summary": "My requests",
+                "tags": [
+                    "Approvals",
+                    "Approval"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `WorkflowInstanceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WorkflowInstanceResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workflow/requests/{instance}": {
+            "get": {
+                "operationId": "workflow.show",
+                "description": "For the requester, its approvers (current or earlier) and workflow administrators.",
+                "summary": "Show a request",
+                "tags": [
+                    "Approvals",
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "instance",
+                        "in": "path",
+                        "required": true,
+                        "description": "The instance ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`WorkflowInstanceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/WorkflowInstanceResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "You are not part of this request."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/workflow/requests/{instance}/approve": {
+            "post": {
+                "operationId": "workflow.approve",
+                "summary": "Approve the current step",
+                "tags": [
+                    "Approvals",
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "instance",
+                        "in": "path",
+                        "required": true,
+                        "description": "The instance ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WorkflowActionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`WorkflowInstanceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/WorkflowInstanceResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workflow/requests/{instance}/reject": {
+            "post": {
+                "operationId": "workflow.reject",
+                "description": "Ends the request; a comment is required.",
+                "summary": "Reject the request",
+                "tags": [
+                    "Approvals",
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "instance",
+                        "in": "path",
+                        "required": true,
+                        "description": "The instance ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WorkflowActionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`WorkflowInstanceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/WorkflowInstanceResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workflow/requests/{instance}/send-back": {
+            "post": {
+                "operationId": "workflow.send-back",
+                "summary": "Send back to an earlier step",
+                "tags": [
+                    "Approvals",
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "instance",
+                        "in": "path",
+                        "required": true,
+                        "description": "The instance ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WorkflowActionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`WorkflowInstanceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/WorkflowInstanceResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/workflow/requests/{instance}/cancel": {
+            "post": {
+                "operationId": "workflow.cancel",
+                "summary": "Withdraw my request",
+                "tags": [
+                    "Approvals",
+                    "Approval"
+                ],
+                "parameters": [
+                    {
+                        "name": "instance",
+                        "in": "path",
+                        "required": true,
+                        "description": "The instance ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`WorkflowInstanceResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/WorkflowInstanceResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -4070,6 +4724,87 @@
                 ],
                 "title": "SaveRoleRequest"
             },
+            "SaveWorkflowRequest": {
+                "type": "object",
+                "properties": {
+                    "company_branch_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Empty = the company-wide workflow; a branch id = that branch's own workflow (overrides the company one)."
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "steps": {
+                        "type": "array",
+                        "description": "Approval steps in order. An empty list removes the workflow (changes then apply at once).",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "maxLength": 100
+                                },
+                                "approver_type": {
+                                    "type": "string",
+                                    "description": "role = anyone with the role; user = one person; department_head = head of the requester's department.",
+                                    "enum": [
+                                        "role",
+                                        "user",
+                                        "department_head"
+                                    ]
+                                },
+                                "role_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "user_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "same_branch": {
+                                    "type": "boolean",
+                                    "description": "Role approvers: only people from the request's branch."
+                                },
+                                "allow_send_back": {
+                                    "type": "boolean"
+                                },
+                                "approve_label": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "Button text, e.g. \"Recommend\" / \"Decline\".",
+                                    "maxLength": 40
+                                },
+                                "reject_label": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 40
+                                }
+                            },
+                            "required": [
+                                "name",
+                                "approver_type"
+                            ]
+                        },
+                        "maxItems": 10
+                    }
+                },
+                "required": [
+                    "is_active",
+                    "steps"
+                ],
+                "title": "SaveWorkflowRequest"
+            },
             "SetPasswordRequest": {
                 "type": "object",
                 "properties": {
@@ -4511,6 +5246,300 @@
                     }
                 },
                 "title": "UserStatusRequest"
+            },
+            "WorkflowActionRequest": {
+                "type": "object",
+                "properties": {
+                    "comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Required when rejecting or sending back.",
+                        "maxLength": 2000
+                    },
+                    "to_step": {
+                        "type": "integer",
+                        "description": "Send back only: the step order to return to.",
+                        "minimum": 1
+                    }
+                },
+                "title": "WorkflowActionRequest"
+            },
+            "WorkflowInstanceResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "process": {
+                        "type": "string"
+                    },
+                    "process_name": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "link": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Where to see the record in the app."
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "pending | approved | rejected | cancelled"
+                    },
+                    "requested_by": {
+                        "type": "string"
+                    },
+                    "requested_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "completed_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "current_step": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "approve_label": {
+                                "type": "string"
+                            },
+                            "reject_label": {
+                                "type": "string"
+                            },
+                            "allow_send_back": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "approve_label",
+                            "reject_label",
+                            "allow_send_back"
+                        ]
+                    },
+                    "can_act": {
+                        "type": "string",
+                        "description": "The current user can approve / reject / send back now."
+                    },
+                    "can_cancel": {
+                        "type": "boolean",
+                        "description": "The current user (the requester) can withdraw it."
+                    },
+                    "send_back_options": {
+                        "type": "array",
+                        "description": "Earlier steps this request can be sent back to. @var list<array{step_order: int, name: string}>",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "step_order": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "step_order",
+                                "name"
+                            ]
+                        }
+                    },
+                    "steps": {
+                        "type": "array",
+                        "description": "Timeline. @var list<array{step_order: int, name: string, approver: string, status: string, acted_by: string|null, acted_at: string|null, comment: string|null}>",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "step_order": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "approver": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "acted_by": {
+                                    "type": "string"
+                                },
+                                "acted_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "comment": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "step_order",
+                                "name",
+                                "approver",
+                                "status",
+                                "acted_by",
+                                "acted_at",
+                                "comment"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "process",
+                    "process_name",
+                    "title",
+                    "lines",
+                    "link",
+                    "status",
+                    "requested_by",
+                    "requested_at",
+                    "completed_at",
+                    "current_step",
+                    "can_act",
+                    "can_cancel",
+                    "send_back_options",
+                    "steps"
+                ],
+                "title": "WorkflowInstanceResource"
+            },
+            "WorkflowTemplateResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "branch": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Null = company-wide.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "step_order": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "approver_type": {
+                                    "type": "string"
+                                },
+                                "role_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "role_name": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "user_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "user_name": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "same_branch": {
+                                    "type": "boolean"
+                                },
+                                "allow_send_back": {
+                                    "type": "boolean"
+                                },
+                                "approve_label": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "reject_label": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "step_order",
+                                "name",
+                                "approver_type",
+                                "role_id",
+                                "role_name",
+                                "user_id",
+                                "user_name",
+                                "same_branch",
+                                "allow_send_back",
+                                "approve_label",
+                                "reject_label"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "branch",
+                    "is_active",
+                    "steps"
+                ],
+                "title": "WorkflowTemplateResource"
             }
         },
         "responses": {

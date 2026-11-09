@@ -10,18 +10,24 @@ use Illuminate\Validation\ValidationException;
 use Modules\Admin\Models\AccessChange;
 use Modules\Core\Services\AccessService;
 use Modules\Core\Support\DefaultRoles;
+use Modules\Workflow\Services\WorkflowEngine;
 use Spatie\Permission\Models\Role;
 
 /**
  * The only way a company admin changes a user's access: roles, direct permissions, activation.
- * Records an AccessChange, then applies it. When approval is introduced, record() will create a
- * pending change and apply() will run after approval; callers and the API stay the same.
+ *
+ * Each change is recorded in access_changes. If the company configured an approval workflow for
+ * "user-access-change", the change stays pending and is applied by apply() when the workflow approves it.
+ * Without a workflow it is applied at once.
  */
 class ChangeUserAccess
 {
+    public const PROCESS = 'user-access-change';
+
     public function __construct(
         private readonly AccessService $access,
         private readonly SingleDeviceSessionManager $sessions,
+        private readonly WorkflowEngine $workflow,
     ) {}
 
     /** @param list<string> $roleNames */
@@ -29,12 +35,9 @@ class ChangeUserAccess
     {
         $before = $user->getRoleNames()->sort()->values()->all();
         $after = collect($roleNames)->unique()->sort()->values()->all();
+        $this->checkRoles($user, $before, $after);
 
-        if (in_array(DefaultRoles::COMPANY_ADMIN, $before, true) && ! in_array(DefaultRoles::COMPANY_ADMIN, $after, true)) {
-            $this->ensureAnotherAdmin($user);
-        }
-
-        return $this->record($user, 'roles', $before, $after, $reason, fn () => $user->syncRoles($after));
+        return $this->request($user, 'roles', $before, $after, $reason);
     }
 
     /** @param list<string> $permissions */
@@ -43,10 +46,85 @@ class ChangeUserAccess
         $before = $user->getDirectPermissions()->pluck('name')->sort()->values()->all();
         $after = collect($permissions)->unique()->sort()->values()->all();
 
-        return $this->record($user, 'permissions', $before, $after, $reason, fn () => $user->syncPermissions($after));
+        return $this->request($user, 'permissions', $before, $after, $reason);
     }
 
     public function deactivate(User $user, string $reason): AccessChange
+    {
+        $this->checkDeactivate($user);
+
+        return $this->request($user, 'deactivate', ['is_active' => true], ['is_active' => false], $reason);
+    }
+
+    public function activate(User $user, ?string $reason = null): AccessChange
+    {
+        if ($user->is_active) {
+            throw ValidationException::withMessages(['user' => 'This user is already active.']);
+        }
+
+        return $this->request($user, 'activate', ['is_active' => false], ['is_active' => true], $reason);
+    }
+
+    /** Applies a recorded change (at once, or when its approval workflow finishes). Rules are checked again. */
+    public function apply(AccessChange $change): void
+    {
+        DB::transaction(function () use ($change) {
+            $user = $change->user()->firstOrFail();
+            setPermissionsTeamId($user->company_id);
+
+            match ($change->type) {
+                'roles' => $this->applyRoles($user, $change->after),
+                'permissions' => $user->syncPermissions($change->after),
+                'deactivate' => $this->doDeactivate($user),
+                'activate' => $user->forceFill(['is_active' => true])->save(),
+            };
+
+            $change->update(['status' => AccessChange::APPLIED, 'applied_at' => now(), 'decided_by' => Auth::id()]);
+            $this->access->forget($user);
+        });
+    }
+
+    private function request(User $user, string $type, array $before, array $after, ?string $reason): AccessChange
+    {
+        if (AccessChange::where('user_id', $user->id)->where('status', AccessChange::PENDING)->exists()) {
+            throw ValidationException::withMessages(['user' => 'A change for this user is waiting for approval. Wait for it to be decided first.']);
+        }
+
+        return DB::transaction(function () use ($user, $type, $before, $after, $reason) {
+            $change = AccessChange::create([
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
+                'type' => $type,
+                'before' => $before,
+                'after' => $after,
+                'reason' => $reason,
+                'status' => AccessChange::PENDING,
+                'requested_by' => Auth::id(),
+            ]);
+
+            $instance = $this->workflow->start(self::PROCESS, $change, Auth::user());
+            if (! $instance) {
+                $this->apply($change);
+            }
+
+            return $change->refresh();
+        });
+    }
+
+    private function checkRoles(User $user, array $before, array $after): void
+    {
+        if (in_array(DefaultRoles::COMPANY_ADMIN, $before, true) && ! in_array(DefaultRoles::COMPANY_ADMIN, $after, true)) {
+            $this->ensureAnotherAdmin($user);
+        }
+    }
+
+    private function applyRoles(User $user, array $roles): void
+    {
+        $this->checkRoles($user, $user->getRoleNames()->all(), $roles);
+        $user->syncRoles($roles);
+    }
+
+    private function checkDeactivate(User $user): void
     {
         if ($user->id === Auth::id()) {
             throw ValidationException::withMessages(['user' => 'You cannot deactivate your own account.']);
@@ -57,45 +135,14 @@ class ChangeUserAccess
         if ($user->hasRole(DefaultRoles::COMPANY_ADMIN)) {
             $this->ensureAnotherAdmin($user);
         }
-
-        return $this->record($user, 'deactivate', ['is_active' => true], ['is_active' => false], $reason, function () use ($user) {
-            $user->forceFill(['is_active' => false])->save();
-            // End the user's current session immediately (single-device registry).
-            $this->sessions->clearSessionRegistration($user->id);
-            $user->tokens()->delete();
-        });
     }
 
-    public function activate(User $user, ?string $reason = null): AccessChange
+    private function doDeactivate(User $user): void
     {
-        if ($user->is_active) {
-            throw ValidationException::withMessages(['user' => 'This user is already active.']);
-        }
-
-        return $this->record($user, 'activate', ['is_active' => false], ['is_active' => true], $reason,
-            fn () => $user->forceFill(['is_active' => true])->save());
-    }
-
-    private function record(User $user, string $type, array $before, array $after, ?string $reason, \Closure $apply): AccessChange
-    {
-        return DB::transaction(function () use ($user, $type, $before, $after, $reason, $apply) {
-            $change = AccessChange::create([
-                'company_id' => $user->company_id,
-                'user_id' => $user->id,
-                'type' => $type,
-                'before' => $before,
-                'after' => $after,
-                'reason' => $reason,
-                'status' => AccessChange::APPLIED,
-                'requested_by' => Auth::id(),
-                'decided_by' => Auth::id(),
-                'applied_at' => now(),
-            ]);
-            $apply();
-            $this->access->forget($user);
-
-            return $change;
-        });
+        $user->forceFill(['is_active' => false])->save();
+        // End the user's current session immediately (single-device registry) and any API tokens.
+        $this->sessions->clearSessionRegistration($user->id);
+        $user->tokens()->delete();
     }
 
     /** A company must always keep at least one active company admin. */
