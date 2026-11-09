@@ -47,7 +47,9 @@ final class DefaultRoles
 
         app(CompanyContext::class)->run($company, function () {
             foreach (self::ROLES as $name => $patterns) {
-                Role::findOrCreate($name, 'web')->syncPermissions(self::expand($patterns));
+                $role = Role::findOrCreate($name, 'web');
+                $role->forceFill(['is_system' => true])->save();
+                $role->syncPermissions(self::expand($patterns));
             }
         });
     }

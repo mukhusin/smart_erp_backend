@@ -20,6 +20,12 @@ class SetCompanyContext
         app(AccessService::class)->forget();
         setPermissionsTeamId($this->context->id());
 
+        $user = $request->user();
+        if ($user && ! $user->is_active && ! $request->routeIs('auth.logout')) {
+            auth()->guard('web')->logout();
+            return response()->json(['message' => 'Your account has been deactivated. Contact your administrator.', 'code' => 'account_deactivated'], 401);
+        }
+
         $company = $this->context->get();
         if ($company && ! $company->is_active && ! $request->routeIs('auth.logout')) {
             return response()->json([

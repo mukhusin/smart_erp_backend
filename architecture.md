@@ -321,3 +321,22 @@ Professional and friendly by default. Built once in `shared/`, used by every pag
 
 Other rules: responsive down to phone width, keyboard-accessible forms, consistent page header (title, breadcrumbs, main action),
 dates and money formatted for the company (currency, fiscal year), and `*appCan="'hr.employees.create'"` to show actions by permission.
+
+## 13. Company administration and approvals (decided 2026-11-10)
+
+**Company admin** (role `company-admin`, one or more per company; a company always keeps at least one active):
+- may **deactivate / reactivate** users (reason required; the user is logged out at once), **assign roles** (several per user),
+  give **direct permissions**, **create roles** and choose their permissions, hand over roles, lock modules for a branch or user,
+  and manage the login page announcements;
+- may **not** create, edit or delete users' personal details: users come from HR (the employee record) and are changed there.
+  There is no update or delete endpoint for users in the admin API.
+- `company-admin` always has every permission and cannot be edited; built-in roles cannot be deleted; custom roles only when unused.
+
+**Every approval in the ERP uses the dynamic workflow engine** (Core module), configured **per company by the company admin**
+(steps, approver roles or users, conditions such as amount or department). No module hard-codes its approval chain.
+- A module asks the engine whether a workflow is configured for its process (e.g. "leave request", "user access change").
+- If yes, the record is saved as `pending`, a workflow instance starts, and the engine calls the module's apply/reject action
+  at the end. If no workflow is configured, the action applies at once.
+- User access changes already work this way: `ChangeUserAccess` records every change in `access_changes`
+  (type, before, after, reason, requested by, status). Today status is `applied`; with a configured workflow it will be `pending`
+  until approved. The API and screens do not change.
