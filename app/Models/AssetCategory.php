@@ -1,11 +1,13 @@
 <?php
 namespace App\Models;
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class AssetCategory extends Model
 {
-    protected $fillable = ['company_id','name','description'];
+    use BelongsToCompany;
 
-    public function company() { return $this->belongsTo(Company::class); }
+    protected $fillable = ['company_id','name','description'];
     public function assets()  { return $this->hasMany(Asset::class); }
 }

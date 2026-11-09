@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class EmployeeAppraisal extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'employee_id', 'department_appraisal_id', 'period',
         'status', 'employee_comment', 'hod_comment', 'total_score',
@@ -13,8 +17,6 @@ class EmployeeAppraisal extends Model
     ];
 
     protected $casts = ['reviewed_at' => 'datetime', 'total_score' => 'decimal:2'];
-
-    public function company()            { return $this->belongsTo(Company::class); }
     public function employee()           { return $this->belongsTo(Employee::class); }
     public function departmentAppraisal(){ return $this->belongsTo(DepartmentAppraisal::class); }
     public function reviewer()           { return $this->belongsTo(Employee::class, 'reviewed_by'); }

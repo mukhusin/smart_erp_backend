@@ -1,9 +1,13 @@
 <?php
 namespace App\Models;
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class Bill extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id','supplier_id','bill_no','issue_date','due_date',
         'subtotal','tax_amount','total_amount','paid_amount','status','notes',
@@ -19,8 +23,6 @@ class Bill extends Model
     ];
 
     const STATUSES = ['draft','open','partial','paid','overdue','cancelled'];
-
-    public function company()  { return $this->belongsTo(Company::class); }
     public function supplier() { return $this->belongsTo(Supplier::class); }
     public function payments() { return $this->hasMany(BillPayment::class); }
 

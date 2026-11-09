@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LeaveType extends Model
 {
-    use SoftDeletes;
+    use BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id', 'name', 'code', 'gender', 'description',
@@ -15,7 +17,5 @@ class LeaveType extends Model
     ];
 
     protected $casts = ['with_pay' => 'boolean', 'is_active' => 'boolean'];
-
-    public function company() { return $this->belongsTo(Company::class); }
     public function leaves()  { return $this->hasMany(EmpLeave::class); }
 }

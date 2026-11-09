@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
-use App\Models\CompanyModule;
 use App\Models\ErpModule;
 use Illuminate\Database\Seeder;
 
@@ -231,19 +229,6 @@ class ErpModuleSeeder extends Seeder
             ErpModule::updateOrCreate(['slug' => $data['slug']], $data);
         }
 
-        // Enable all modules for the first company (the default seeded company)
-        $company = Company::first();
-        if ($company) {
-            $slugs = ErpModule::where('is_core', false)->pluck('slug');
-            foreach ($slugs as $slug) {
-                CompanyModule::updateOrCreate(
-                    ['company_id' => $company->id, 'module_slug' => $slug],
-                    ['is_enabled' => true, 'enabled_at' => now()]
-                );
-            }
-            $this->command->info("Enabled all modules for company: {$company->name}");
-        }
-
-        $this->command->info('ERP modules seeded: ' . count($modules));
+        $this->command?->info('ERP modules seeded: ' . count($modules));
     }
 }

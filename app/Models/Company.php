@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+
+use App\Models\Scopes\CompanyScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -17,9 +19,20 @@ class Company extends Model
 
     protected $casts = ['is_active' => 'boolean'];
 
+    /** Already limited to this company, so the current-company filter is not needed here. */
     public function branches()
     {
-        return $this->hasMany(CompanyBranch::class);
+        return $this->hasMany(CompanyBranch::class)->withoutGlobalScope(CompanyScope::class);
+    }
+
+    public function employees()
+    {
+        return $this->hasMany(Employee::class)->withoutGlobalScope(CompanyScope::class);
+    }
+
+    public function modules()
+    {
+        return $this->hasMany(CompanyModule::class);
     }
 
     public function users()

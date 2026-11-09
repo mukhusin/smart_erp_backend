@@ -7,13 +7,13 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('set null');
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('company_branch_id')->nullable()->constrained('company_branches')->onDelete('set null');
             $table->foreignId('department_id')->nullable()->constrained('departments')->onDelete('set null');
             $table->foreignId('section_id')->nullable()->constrained('departments')->onDelete('set null');
             $table->foreignId('job_position_id')->nullable()->constrained('job_positions')->onDelete('set null');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->string('employee_no')->unique();
+            $table->string('employee_no');
             $table->string('fname');
             $table->string('mname')->nullable();
             $table->string('lname');
@@ -46,6 +46,7 @@ return new class extends Migration {
             $table->date('probation_end')->nullable();
             $table->string('updated_by')->nullable();
             $table->softDeletes();
+            $table->unique(['company_id', 'employee_no']);
             $table->timestamps();
         });
     }

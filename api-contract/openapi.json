@@ -72,6 +72,36 @@
                 }
             }
         },
+        "/auth/set-password": {
+            "post": {
+                "operationId": "auth.set-password",
+                "description": "Used by a new user (e.g. a company's first HR admin) with the token from the invite email.\nAfter this, the user logs in normally.",
+                "summary": "Set password from an invite link",
+                "tags": [
+                    "Auth",
+                    "SetPassword"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
         "/me": {
             "get": {
                 "operationId": "me",
@@ -105,10 +135,706 @@
                     }
                 }
             }
+        },
+        "/platform/modules": {
+            "get": {
+                "operationId": "platform.modules.index",
+                "description": "All modules that can be enabled for a company.",
+                "summary": "List ERP modules",
+                "tags": [
+                    "Platform: Companies",
+                    "ModuleCatalog"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ModuleCatalogResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ModuleCatalogResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/platform/companies": {
+            "get": {
+                "operationId": "platform.companies.index",
+                "description": "Filters: `filter[search]` (name, short name, TIN), `filter[is_active]`. Sort: `name`, `created_at` (prefix `-` for descending).",
+                "summary": "List companies",
+                "tags": [
+                    "Platform: Companies",
+                    "Company"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CompanyResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "platform.companies.store",
+                "description": "Creates the company, its branches, enabled modules, default roles, and its first HR admin\n(employee + user with role company-admin), then emails the admin a link to set their password.",
+                "summary": "Register a company",
+                "tags": [
+                    "Platform: Companies",
+                    "Company"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterCompanyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/CompanyResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "branches",
+                                                        "modules"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "invite_sent": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "invite_sent"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/platform/companies/{company}": {
+            "get": {
+                "operationId": "platform.companies.show",
+                "summary": "Show a company",
+                "tags": [
+                    "Platform: Companies",
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "company",
+                        "in": "path",
+                        "required": true,
+                        "description": "The company ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/CompanyResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "branches",
+                                                        "modules"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "platform.companies.update",
+                "description": "Send `is_active: false` to suspend it: its users can no longer log in or use the API.",
+                "summary": "Update a company",
+                "tags": [
+                    "Platform: Companies",
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "company",
+                        "in": "path",
+                        "required": true,
+                        "description": "The company ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCompanyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/CompanyResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "branches",
+                                                        "modules"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/platform/companies/{company}/modules": {
+            "put": {
+                "operationId": "platform.companies.modules",
+                "description": "Replaces the list of enabled modules (with optional expiry dates).",
+                "summary": "Set the company's modules",
+                "tags": [
+                    "Platform: Companies",
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "company",
+                        "in": "path",
+                        "required": true,
+                        "description": "The company ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCompanyModulesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/CompanyResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "branches",
+                                                        "modules"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/platform/companies/{company}/resend-invite": {
+            "post": {
+                "operationId": "platform.companies.resend-invite",
+                "description": "Emails the company admin a new link to set their password.",
+                "summary": "Resend the admin invite",
+                "tags": [
+                    "Platform: Companies",
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "company",
+                        "in": "path",
+                        "required": true,
+                        "description": "The company ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
+            "CompanyResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "short_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "registration_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "tin": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "website": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "city": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "country": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "fiscal_year_start": {
+                        "type": "string"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "employees_count": {
+                        "type": "integer"
+                    },
+                    "users_count": {
+                        "type": "integer"
+                    },
+                    "branches": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "code": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "city": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "is_headquarters": {
+                                    "type": "boolean"
+                                },
+                                "is_active": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "name",
+                                "code",
+                                "city",
+                                "is_headquarters",
+                                "is_active"
+                            ]
+                        }
+                    },
+                    "modules": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "expires_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "slug",
+                                "expires_at"
+                            ]
+                        }
+                    },
+                    "admin": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "The company admin (first HR user). Only on the detail endpoint.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "username": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "has_set_password": {
+                                "type": "boolean",
+                                "description": "False until the admin has used the invite link."
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "username",
+                            "email",
+                            "has_set_password"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "short_name",
+                    "registration_number",
+                    "tin",
+                    "phone",
+                    "email",
+                    "website",
+                    "address",
+                    "city",
+                    "country",
+                    "currency",
+                    "fiscal_year_start",
+                    "is_active",
+                    "created_at"
+                ],
+                "title": "CompanyResource"
+            },
             "LoginRequest": {
                 "type": "object",
                 "properties": {
@@ -154,6 +880,10 @@
                                     "string",
                                     "null"
                                 ]
+                            },
+                            "is_platform_admin": {
+                                "type": "boolean",
+                                "description": "System owner: manages client companies only, has no company."
                             }
                         },
                         "required": [
@@ -161,7 +891,8 @@
                             "name",
                             "username",
                             "email",
-                            "avatar_url"
+                            "avatar_url",
+                            "is_platform_admin"
                         ]
                     },
                     "employee": {
@@ -211,11 +942,41 @@
                             },
                             "name": {
                                 "type": "string"
+                            },
+                            "logo_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
                             "id",
-                            "name"
+                            "name",
+                            "logo_url"
+                        ]
+                    },
+                    "branch": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "The user's home branch.",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "is_headquarters": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "is_headquarters"
                         ]
                     },
                     "modules": {
@@ -243,11 +1004,55 @@
                     "user",
                     "employee",
                     "company",
+                    "branch",
                     "modules",
                     "roles",
                     "permissions"
                 ],
                 "title": "MeResource"
+            },
+            "ModuleCatalogResource": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "icon": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Bootstrap Icons name without the \"bi-\" prefix."
+                    },
+                    "category": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_core": {
+                        "type": "boolean",
+                        "description": "Core modules are always available to every company."
+                    }
+                },
+                "required": [
+                    "slug",
+                    "name",
+                    "description",
+                    "icon",
+                    "category",
+                    "is_core"
+                ],
+                "title": "ModuleCatalogResource"
             },
             "ModuleResource": {
                 "type": "object",
@@ -280,6 +1085,410 @@
                     "category"
                 ],
                 "title": "ModuleResource"
+            },
+            "RegisterCompanyRequest": {
+                "type": "object",
+                "properties": {
+                    "company": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "short_name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "registration_number": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 100
+                            },
+                            "tin": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "phone": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "email",
+                                "maxLength": 255
+                            },
+                            "website": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri",
+                                "maxLength": 255
+                            },
+                            "address": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 500
+                            },
+                            "city": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 100
+                            },
+                            "country": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 100
+                            },
+                            "currency": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "minLength": 3,
+                                "maxLength": 3
+                            },
+                            "fiscal_year_start": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Month and day the fiscal year starts, e.g. \"07-01\".",
+                                "maxLength": 10
+                            }
+                        },
+                        "required": [
+                            "name"
+                        ]
+                    },
+                    "branches": {
+                        "type": "array",
+                        "description": "At least one branch. The one marked is_headquarters (or the first) is the head office.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                },
+                                "code": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 20
+                                },
+                                "phone": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 50
+                                },
+                                "email": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "format": "email",
+                                    "maxLength": 255
+                                },
+                                "address": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 500
+                                },
+                                "city": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 100
+                                },
+                                "is_headquarters": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "name"
+                            ]
+                        },
+                        "minItems": 1,
+                        "uniqueItems": true
+                    },
+                    "modules": {
+                        "type": "array",
+                        "description": "Modules the company may use. Core modules are always available.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "expires_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "format": "date-time"
+                                }
+                            },
+                            "required": [
+                                "slug"
+                            ]
+                        },
+                        "uniqueItems": true
+                    },
+                    "admin": {
+                        "type": "object",
+                        "description": "The company's first HR admin. Gets an employee record, a user account and an invite email.",
+                        "properties": {
+                            "fname": {
+                                "type": "string",
+                                "maxLength": 100
+                            },
+                            "mname": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 100
+                            },
+                            "lname": {
+                                "type": "string",
+                                "maxLength": 100
+                            },
+                            "gender": {
+                                "type": "string",
+                                "enum": [
+                                    "Male",
+                                    "Female"
+                                ]
+                            },
+                            "email": {
+                                "type": "string",
+                                "format": "email",
+                                "maxLength": 255
+                            },
+                            "phone_number": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "username": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Defaults to the email address.",
+                                "maxLength": 100
+                            },
+                            "employee_no": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "position": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 100
+                            }
+                        },
+                        "required": [
+                            "fname",
+                            "lname",
+                            "gender",
+                            "email"
+                        ]
+                    }
+                },
+                "required": [
+                    "company",
+                    "branches",
+                    "admin"
+                ],
+                "title": "RegisterCompanyRequest"
+            },
+            "SetPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "description": "From the invite link."
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "password_confirmation": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "token",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "title": "SetPasswordRequest"
+            },
+            "UpdateCompanyModulesRequest": {
+                "type": "object",
+                "properties": {
+                    "modules": {
+                        "type": "array",
+                        "description": "The full list of enabled modules. Modules not listed are disabled.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "expires_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "format": "date-time"
+                                }
+                            },
+                            "required": [
+                                "slug"
+                            ]
+                        },
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "modules"
+                ],
+                "title": "UpdateCompanyModulesRequest"
+            },
+            "UpdateCompanyRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "short_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "registration_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "tin": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "website": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uri",
+                        "maxLength": 255
+                    },
+                    "address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "city": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "country": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "fiscal_year_start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 10
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "description": "false = suspended: the company's users can no longer log in."
+                    }
+                },
+                "title": "UpdateCompanyRequest"
             }
         },
         "responses": {
@@ -315,6 +1524,25 @@
             },
             "AuthenticationException": {
                 "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ModelNotFoundException": {
+                "description": "Not found",
                 "content": {
                     "application/json": {
                         "schema": {

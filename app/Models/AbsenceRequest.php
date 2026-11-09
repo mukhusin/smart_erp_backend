@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class AbsenceRequest extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'employee_id', 'last_updated_by',
         'from_date', 'to_date', 'from_time', 'to_time',
@@ -16,5 +20,4 @@ class AbsenceRequest extends Model
 
     public function employee()      { return $this->belongsTo(Employee::class); }
     public function lastUpdatedBy() { return $this->belongsTo(Employee::class, 'last_updated_by'); }
-    public function company()       { return $this->belongsTo(Company::class); }
 }

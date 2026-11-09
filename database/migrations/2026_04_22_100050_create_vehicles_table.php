@@ -8,7 +8,7 @@ return new class extends Migration {
         Schema::create('vehicles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            $table->string('plate_number', 30)->unique();
+            $table->string('plate_number', 30);
             $table->string('make', 80);
             $table->string('model', 80);
             $table->smallInteger('year')->nullable();
@@ -21,6 +21,7 @@ return new class extends Migration {
             $table->date('insurance_expiry')->nullable();
             $table->date('inspection_expiry')->nullable();
             $table->text('description')->nullable();
+            $table->unique(['company_id', 'plate_number']);
             $table->timestamps();
         });
     }

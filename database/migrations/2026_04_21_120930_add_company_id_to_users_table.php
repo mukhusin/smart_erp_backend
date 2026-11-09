@@ -12,10 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('company_id')->nullable()->after('id')->constrained('companies')->onDelete('set null');
+            // Null only for platform admins (system owner), who belong to no company.
+            $table->foreignId('company_id')->nullable()->after('id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('company_branch_id')->nullable()->after('company_id')->constrained('company_branches')->onDelete('set null');
             $table->boolean('is_active')->default(true)->after('remember_token');
             $table->string('avatar')->nullable()->after('is_active');
+            $table->boolean('is_platform_admin')->default(false)->after('is_active');
         });
     }
 
@@ -24,7 +26,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['company_id']);
             $table->dropForeign(['company_branch_id']);
-            $table->dropColumn(['company_id', 'company_branch_id', 'is_active', 'avatar']);
+            $table->dropColumn(['company_id', 'company_branch_id', 'is_active', 'avatar', 'is_platform_admin']);
         });
     }
 };

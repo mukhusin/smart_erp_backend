@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Scopes\CompanyScope;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -20,11 +21,12 @@ class User extends Authenticatable
         'avatar',
         'username',
         'role_as',
-        'isActive',
+        'is_active',
+        'is_platform_admin',
         'otp',
         'otp_expiry',
         'verification_code',
-        'password', //$2y$10$lA.ERv9FqoGiKBxuv2x..OntwQ7cGSsD0CmdLscc289b6AKzfZeE6
+        'password',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -34,8 +36,15 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'isActive' => 'boolean',
+            'is_active' => 'boolean',
+            'is_platform_admin' => 'boolean',
         ];
+    }
+
+    /** System owner: manages client companies, belongs to none, sees no company data. */
+    public function isPlatformAdmin(): bool
+    {
+        return (bool) $this->is_platform_admin;
     }
 
     public function company()
@@ -45,12 +54,12 @@ class User extends Authenticatable
 
     public function branch()
     {
-        return $this->belongsTo(CompanyBranch::class, 'company_branch_id');
+        return $this->belongsTo(CompanyBranch::class, 'company_branch_id')->withoutGlobalScope(CompanyScope::class);
     }
 
     public function employee()
     {
-        return $this->hasOne(Employee::class, 'user_id');
+        return $this->hasOne(Employee::class, 'user_id')->withoutGlobalScope(CompanyScope::class);
     }
 
     /** Users have no name column: the name comes from the linked employee, otherwise the username. */

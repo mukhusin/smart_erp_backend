@@ -6,25 +6,23 @@ use App\Services\CompanyContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Illuminate\Support\Facades\Auth;
 
+/**
+ * Limits queries to the current company. Fails closed: in a web/API request with no company
+ * (guest or platform admin) it returns nothing, never another company's data.
+ * Console code (commands, seeders, jobs) without a company sees all rows and must scope itself,
+ * normally with CompanyContext::run().
+ */
 class CompanyScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
     {
-        // Skip in console (seeders, artisan commands) — they manage their own scoping
-        if (app()->runningInConsole()) {
-            return;
-        }
-
-        if (!Auth::check()) {
-            return;
-        }
-
         $companyId = app(CompanyContext::class)->id();
 
         if ($companyId) {
-            $builder->where($model->getTable() . '.company_id', $companyId);
+            $builder->where($model->qualifyColumn('company_id'), $companyId);
+        } elseif (! app()->runningInConsole() || app()->runningUnitTests()) {
+            $builder->whereRaw('1 = 0');
         }
     }
 }

@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class Overtime extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'employee_id', 'department_id', 'section_id',
         'hod_approved', 'hr_approved', 'is_hod_approved', 'is_hr_approved',
@@ -24,5 +28,4 @@ class Overtime extends Model
     public function section()    { return $this->belongsTo(Department::class, 'section_id'); }
     public function hodApprover(){ return $this->belongsTo(Employee::class, 'hod_approved'); }
     public function hrApprover() { return $this->belongsTo(Employee::class, 'hr_approved'); }
-    public function company()    { return $this->belongsTo(Company::class); }
 }

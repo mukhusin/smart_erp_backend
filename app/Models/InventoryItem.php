@@ -1,9 +1,13 @@
 <?php
 namespace App\Models;
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class InventoryItem extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id','inventory_category_id','code','name','description',
         'unit','unit_cost','quantity_on_hand','minimum_stock','is_active',
@@ -15,8 +19,6 @@ class InventoryItem extends Model
         'minimum_stock'   => 'decimal:2',
         'is_active'       => 'boolean',
     ];
-
-    public function company()  { return $this->belongsTo(Company::class); }
     public function category() { return $this->belongsTo(InventoryCategory::class, 'inventory_category_id'); }
     public function movements(){ return $this->hasMany(StockMovement::class); }
 

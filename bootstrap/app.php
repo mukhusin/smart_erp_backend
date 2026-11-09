@@ -35,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission'       => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'module'           => \App\Http\Middleware\CheckModuleAccess::class,
+            'platform'         => \Modules\Platform\Http\Middleware\EnsurePlatformAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -17,6 +17,7 @@ class MeResource extends JsonResource
     {
         $employee = $this->employee;
         $company = $this->company;
+        $branch = $this->branch;
 
         return [
             'user' => [
@@ -25,6 +26,8 @@ class MeResource extends JsonResource
                 'username' => $this->username,
                 'email' => $this->email,
                 'avatar_url' => $this->avatar_url,
+                /** System owner: manages client companies only, has no company. */
+                'is_platform_admin' => $this->isPlatformAdmin(),
             ],
             'employee' => $employee ? [
                 'id' => $employee->id,
@@ -36,6 +39,13 @@ class MeResource extends JsonResource
             'company' => $company ? [
                 'id' => $company->id,
                 'name' => $company->name,
+                'logo_url' => $company->logo_url,
+            ] : null,
+            /** The user's home branch. */
+            'branch' => $branch ? [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'is_headquarters' => (bool) $branch->is_headquarters,
             ] : null,
             /** Modules the user's company can use (core modules are always included). */
             'modules' => ModuleResource::collection(

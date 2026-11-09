@@ -7,7 +7,7 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('departments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('set null');
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('company_branch_id')->nullable()->constrained('company_branches')->onDelete('set null');
             $table->foreignId('parent_id')->nullable()->constrained('departments')->onDelete('set null');
             $table->string('name');

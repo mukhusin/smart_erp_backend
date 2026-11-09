@@ -1,14 +1,14 @@
 <?php
 namespace App\Models;
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model {
-    use SoftDeletes;
+    use BelongsToCompany, SoftDeletes;
     protected $fillable = ['company_id','company_branch_id','parent_id','name','short_name','description','is_active'];
     protected $casts = ['is_active' => 'boolean'];
-
-    public function company() { return $this->belongsTo(Company::class); }
     public function branch() { return $this->belongsTo(CompanyBranch::class, 'company_branch_id'); }
     public function parent() { return $this->belongsTo(Department::class, 'parent_id'); }
     public function sections() { return $this->hasMany(Department::class, 'parent_id'); }

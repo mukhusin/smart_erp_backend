@@ -7,7 +7,7 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('salary_scales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('set null');
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('job_position_id')->nullable()->constrained('job_positions')->onDelete('set null');
             $table->string('name');
             $table->decimal('minimum', 15, 2)->default(0);

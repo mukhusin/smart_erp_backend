@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class PayrollDateSetting extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'from_day', 'from_month', 'to_day', 'to_month',
         'wcf', 'sdl', 'heslb', 'paye', 'income_tax',
@@ -19,7 +23,5 @@ class PayrollDateSetting extends Model
         'use_attendance' => 'boolean', 'use_leave_deduction' => 'boolean',
         'use_deduction' => 'boolean', 'is_active' => 'boolean',
     ];
-
-    public function company()   { return $this->belongsTo(Company::class); }
     public function updatedBy() { return $this->belongsTo(Employee::class, 'updated_by'); }
 }

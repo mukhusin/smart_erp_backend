@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class EmpLeave extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'employee_id', 'leave_type_id', 'employee_dependant_id',
         'hod_id', 'hr_id', 'department_id',
@@ -26,5 +30,4 @@ class EmpLeave extends Model
     public function hod()        { return $this->belongsTo(Employee::class, 'hod_id'); }
     public function hrOfficer()  { return $this->belongsTo(Employee::class, 'hr_id'); }
     public function dependant()  { return $this->belongsTo(EmployeeDependant::class, 'employee_dependant_id'); }
-    public function company()    { return $this->belongsTo(Company::class); }
 }

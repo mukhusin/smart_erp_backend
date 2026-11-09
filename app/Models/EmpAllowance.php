@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmpAllowance extends Model
 {
-    use SoftDeletes;
+    use BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id', 'employee_id', 'department_allowance_id', 'allowance_category_id',
@@ -23,5 +25,4 @@ class EmpAllowance extends Model
     public function category()            { return $this->belongsTo(AllowanceCategory::class, 'allowance_category_id'); }
     public function hodApprover()         { return $this->belongsTo(Employee::class, 'hod_approved'); }
     public function hrApprover()          { return $this->belongsTo(Employee::class, 'hr_approved'); }
-    public function company()             { return $this->belongsTo(Company::class); }
 }

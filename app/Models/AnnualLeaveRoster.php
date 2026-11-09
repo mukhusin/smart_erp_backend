@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class AnnualLeaveRoster extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'roster_id', 'employee_id', 'hod_id', 'hr_id',
         'department_id', 'start_date', 'end_date', 'days', 'leave_year',
@@ -25,5 +29,4 @@ class AnnualLeaveRoster extends Model
     public function employee() { return $this->belongsTo(Employee::class); }
     public function hod()      { return $this->belongsTo(Employee::class, 'hod_id'); }
     public function hr()       { return $this->belongsTo(Employee::class, 'hr_id'); }
-    public function company()  { return $this->belongsTo(Company::class); }
 }

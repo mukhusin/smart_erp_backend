@@ -7,7 +7,7 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('nature_of_contracts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained('companies')->onDelete('set null');
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('contract_name')->default('Full Time Contract');
             $table->string('code')->default('FTC');
             $table->string('employment_type')->default('FULL TIME');

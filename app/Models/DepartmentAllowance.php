@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class DepartmentAllowance extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'department_id', 'section_id', 'category_id',
         'job_position_id', 'last_updated_by', 'amount', 'total_amount',
@@ -13,8 +17,6 @@ class DepartmentAllowance extends Model
     ];
 
     protected $casts = ['rate_payroll_period' => 'boolean', 'is_active' => 'boolean'];
-
-    public function company()     { return $this->belongsTo(Company::class); }
     public function department()  { return $this->belongsTo(Department::class); }
     public function section()     { return $this->belongsTo(Department::class, 'section_id'); }
     public function category()    { return $this->belongsTo(AllowanceCategory::class, 'category_id'); }

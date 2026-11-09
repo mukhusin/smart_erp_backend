@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class SalaryAdjustment extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'employee_id', 'contract_id', 'adjustment_type',
         'current_salary', 'percentage', 'amount', 'new_salary', 'reason', 'effective_date',
@@ -24,7 +28,6 @@ class SalaryAdjustment extends Model
 
     public function employee()         { return $this->belongsTo(Employee::class); }
     public function contract()         { return $this->belongsTo(EmployeeContract::class); }
-    public function company()          { return $this->belongsTo(Company::class); }
     public function hrApprover()       { return $this->belongsTo(Employee::class, 'hr_approved_by'); }
     public function financeApprover()  { return $this->belongsTo(Employee::class, 'finance_approved_by'); }
     public function directorApprover() { return $this->belongsTo(Employee::class, 'director_approved_by'); }

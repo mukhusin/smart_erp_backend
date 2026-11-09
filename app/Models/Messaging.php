@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +11,8 @@ use Illuminate\Support\Str;
 
 class Messaging extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'uuid', 'company_id', 'type', 'from_address', 'subject', 'message',
         'extra', 'response', 'scheduled_at', 'recipient_type',
@@ -35,8 +39,6 @@ class Messaging extends Model
         parent::boot();
         static::creating(fn($m) => $m->uuid ??= Str::uuid());
     }
-
-    public function company():    BelongsTo { return $this->belongsTo(Company::class); }
     public function creator():    BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
     public function department(): BelongsTo { return $this->belongsTo(Department::class); }
     public function section():    BelongsTo { return $this->belongsTo(Department::class, 'section_id'); }

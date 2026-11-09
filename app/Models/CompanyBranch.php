@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class CompanyBranch extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id', 'name', 'code', 'phone', 'email',
@@ -18,11 +20,6 @@ class CompanyBranch extends Model
         'is_headquarters' => 'boolean',
         'is_active' => 'boolean',
     ];
-
-    public function company()
-    {
-        return $this->belongsTo(Company::class);
-    }
 
     public function users()
     {

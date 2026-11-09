@@ -1,9 +1,13 @@
 <?php
 namespace App\Models;
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class Asset extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id','asset_category_id','department_id','asset_location_id','employee_id',
         'name','model','manufacturer','serial_number','barcode',
@@ -18,8 +22,6 @@ class Asset extends Model
     ];
 
     const STATUSES = ['available','in-use','maintenance','disposed'];
-
-    public function company()    { return $this->belongsTo(Company::class); }
     public function category()   { return $this->belongsTo(AssetCategory::class, 'asset_category_id'); }
     public function department() { return $this->belongsTo(Department::class); }
     public function location()   { return $this->belongsTo(AssetLocation::class, 'asset_location_id'); }

@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class PayrollSheet extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'name', 'month', 'year', 'payroll_from_date', 'payroll_to_date',
         'number_of_days', 'payroll_cost', 'hr_approved', 'payroll_approved',
@@ -15,8 +19,6 @@ class PayrollSheet extends Model
     protected $casts = [
         'hr_approved' => 'boolean', 'payroll_approved' => 'boolean', 'director_approved' => 'boolean',
     ];
-
-    public function company()       { return $this->belongsTo(Company::class); }
     public function details()       { return $this->hasMany(PayrollSheetDetail::class); }
     public function comments()      { return $this->hasMany(PayrollComment::class); }
     public function hrOfficer()     { return $this->belongsTo(Employee::class, 'hr_officer'); }

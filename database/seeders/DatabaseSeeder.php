@@ -3,64 +3,48 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
-use App\Models\CompanyBranch;
+use App\Models\ErpModule;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
+use Modules\Platform\Actions\RegisterCompany;
+use Modules\Platform\Actions\SendCompanyInvite;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Company
-        $company = Company::firstOrCreate(
-            ['name' => 'Smart ERP Company'],
-            [
-                'short_name'    => 'SmartERP',
-                'email'         => 'admin@smart-erp.local',
-                'country'       => 'Tanzania',
-                'currency'      => 'TZS',
-                'is_active'     => true,
-            ]
-        );
+        $this->call([RolePermissionSeeder::class, ErpModuleSeeder::class]);
 
-        $branch = CompanyBranch::firstOrCreate(
-            ['company_id' => $company->id, 'name' => 'Head Office'],
-            [
-                'code'             => 'HQ',
-                'is_headquarters'  => true,
-                'is_active'        => true,
-            ]
-        );
-
-        // Super Admin role
-        $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
-
-        // Admin user
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@smart-erp.local'],
-            [
-                'username'          => 'admin',
-                'password'          => Hash::make('password'),
-                'company_id'        => $company->id,
-                'company_branch_id' => $branch->id,
-                'isActive'          => true,
-            ]
-        );
-        $admin->assignRole($superAdmin);
-
-        $this->command->info('Seeded: Company, Branch, Super Admin user');
-        $this->command->info('Login: admin@smart-erp.local  OR  username: admin  /  password: password');
-        $this->call([
-            RolePermissionSeeder::class,
-            ErpModuleSeeder::class,
+        // System owner: manages client companies, has no company.
+        User::firstOrCreate(['username' => 'admin'], [
+            'email' => 'admin@smart-erp.local',
+            'password' => Hash::make('password'),
+            'is_platform_admin' => true,
+            'is_active' => true,
+            'email_verified_at' => now(),
         ]);
 
-        // Assign super-admin role to the admin user
-        $admin->refresh();
-        if (!$admin->hasRole('super-admin')) {
-            $admin->assignRole('super-admin');
+        // Demo client company, registered the same way the platform admin does it.
+        if (! Company::where('name', 'Demo Hospital')->exists()) {
+            $company = app(RegisterCompany::class)->handle([
+                'company' => ['name' => 'Demo Hospital', 'short_name' => 'DEMO', 'country' => 'Tanzania', 'currency' => 'TZS'],
+                'branches' => [
+                    ['name' => 'Head Office', 'code' => 'HQ', 'city' => 'Dar es Salaam', 'is_headquarters' => true],
+                    ['name' => 'Arusha Branch', 'code' => 'ARU', 'city' => 'Arusha'],
+                ],
+                'modules' => ErpModule::where('is_core', false)->pluck('slug')->map(fn ($slug) => ['slug' => $slug])->all(),
+                'admin' => [
+                    'fname' => 'Asha', 'lname' => 'Juma', 'gender' => 'Female',
+                    'email' => 'hr@demo.local', 'username' => 'hr', 'employee_no' => 'ST1',
+                ],
+            ]);
+
+            // Local development only: give the demo HR admin a known password instead of the invite email.
+            app(SendCompanyInvite::class)->companyAdmin($company)
+                ->forceFill(['password' => Hash::make('password'), 'email_verified_at' => now()])->save();
         }
+
+        $this->command->info('Platform admin: admin / password    Demo Hospital HR admin: hr / password');
     }
 }

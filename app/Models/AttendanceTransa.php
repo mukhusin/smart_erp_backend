@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class AttendanceTransa extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id', 'employee_id', 'contract_id', 'timetable_detail',
         'transaction_date', 'pass_day', 'attendance_in_time', 'punch_in_time',
@@ -24,5 +28,4 @@ class AttendanceTransa extends Model
     public function employee() { return $this->belongsTo(Employee::class); }
     public function contract() { return $this->belongsTo(EmployeeContract::class); }
     public function claims()   { return $this->hasMany(AttendanceClaim::class, 'attendance_transa_id'); }
-    public function company()  { return $this->belongsTo(Company::class); }
 }

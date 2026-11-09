@@ -1,10 +1,12 @@
 <?php
 namespace App\Models;
+
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model {
-    use SoftDeletes;
+    use BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id','company_branch_id','department_id','section_id','job_position_id','user_id',
@@ -33,8 +35,6 @@ class Employee extends Model {
             ? asset('storage/' . $this->profile_image)
             : 'https://ui-avatars.com/api/?name=' . urlencode($this->full_name) . '&background=0d6efd&color=fff&size=128';
     }
-
-    public function company()       { return $this->belongsTo(Company::class); }
     public function branch()        { return $this->belongsTo(CompanyBranch::class, 'company_branch_id'); }
     public function department()    { return $this->belongsTo(Department::class); }
     public function section()       { return $this->belongsTo(Department::class, 'section_id'); }
