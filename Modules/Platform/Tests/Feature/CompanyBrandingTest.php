@@ -41,7 +41,7 @@ class CompanyBrandingTest extends TestCase
         // Back to defaults
         $old = $company->logo;
         $this->actingAs($owner)->post("/api/v1/platform/companies/{$company->id}/branding",
-            ['remove_logo' => true, 'primary_color' => ''], ['Accept' => 'application/json'])
+            ['remove_logo' => 'true', 'primary_color' => ''], ['Accept' => 'application/json'])
             ->assertOk()->assertJsonPath('data.logo_url', null)->assertJsonPath('data.primary_color', null);
         Storage::disk('public')->assertMissing($old);
     }

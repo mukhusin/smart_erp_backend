@@ -12,6 +12,16 @@ class UpdateCompanyBrandingRequest extends FormRequest
         return true;
     }
 
+    /** Multipart sends booleans as text ("true"/"false"/"1"/"0"). */
+    protected function prepareForValidation(): void
+    {
+        foreach (['remove_logo', 'remove_login_background'] as $flag) {
+            if ($this->has($flag)) {
+                $this->merge([$flag => $this->boolean($flag)]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         $hex = ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'];
