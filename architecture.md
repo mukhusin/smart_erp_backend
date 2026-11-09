@@ -158,11 +158,11 @@ Not in production, so module by module, no big bang:
 1. **Foundation:** frontend repo created (Angular shell done). Backend: add Sanctum, `/api/v1/me`,
    response helpers, query builder, OpenAPI generation, and the frontend shell + shared components (DataTable, forms, modal, layout, auth).
 2. **Core + reference data** through the generic CRUD endpoint and `CrudPage`.
-3. For each existing module: move logic from the Blade controller into **Actions** → add API controller/Requests/Resources/tests →
-   build the SPA pages from shared components → delete the Blade views and web routes of that module.
+3. **The Blade UI was removed on 2026-11-09** (views, Alpine, Vite and the web controllers). The last version with it is
+   tagged `blade-ui-final`. Use it as reference: for each module, move the logic from the old controller into **Actions**,
+   add API controller/Requests/Resources/tests, then build the Angular pages from shared components.
 4. **New gap-list items** (workflow engine, work entries, waiting contracts…) are built API-first directly, following the
    build order in `hrms-gap-list.md`.
-5. When the last Blade module is gone, the backend has no UI left: remove Blade, Alpine and Vite from it.
 
 ## 8. Growing to a full ERP
 
