@@ -56,12 +56,16 @@ class MeResource extends JsonResource
             'roles' => $access->roles($this->resource),
             /** @var list<string> Effective permission names, e.g. "leave.approve-hr". The UI shows actions from this list only. */
             'permissions' => $access->permissions($this->resource),
-            /** Roles the user holds temporarily for someone else. */
+            /**
+             * Roles the user holds temporarily for someone else (handover).
+             *
+             * @var list<array{role: string, for_user: string|null, ends_at: string|null}>
+             */
             'acting_roles' => $access->activeHandovers($this->resource)->map(fn ($h) => [
                 'role' => $h->role->name,
                 'for_user' => $h->fromUser?->display_name,
                 'ends_at' => $h->ends_at?->toIso8601String(),
-            ])->values(),
+            ])->values()->all(),
         ];
     }
 }

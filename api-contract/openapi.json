@@ -1001,8 +1001,33 @@
                         }
                     },
                     "acting_roles": {
-                        "type": "string",
-                        "description": "Roles the user holds temporarily for someone else."
+                        "type": "array",
+                        "description": "Roles the user holds temporarily for someone else (handover).",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "role": {
+                                    "type": "string"
+                                },
+                                "for_user": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "ends_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "role",
+                                "for_user",
+                                "ends_at"
+                            ]
+                        }
                     }
                 },
                 "required": [
