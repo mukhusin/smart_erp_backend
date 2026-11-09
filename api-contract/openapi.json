@@ -1078,7 +1078,7 @@
                             "object",
                             "null"
                         ],
-                        "description": "Null when no (or an unknown or suspended) organization was asked for: show the neutral ERP branding.",
+                        "description": "Null when no (or an unknown or suspended) organization was asked for: show the neutral ERP branding.\nColors are #rrggbb or null (ERP default).",
                         "properties": {
                             "slug": {
                                 "type": "string"
@@ -1087,20 +1087,34 @@
                                 "type": "string"
                             },
                             "short_name": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             },
                             "logo_url": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             },
                             "background_url": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             },
                             "primary_color": {
-                                "type": "string",
-                                "description": "#rrggbb or null (ERP default)."
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             },
                             "secondary_color": {
-                                "type": "string"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [

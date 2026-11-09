@@ -20,14 +20,18 @@ class LoginBrandingResource extends JsonResource
         $company = $this->resource;
 
         return [
-            /** Null when no (or an unknown or suspended) organization was asked for: show the neutral ERP branding. */
+            /**
+             * Null when no (or an unknown or suspended) organization was asked for: show the neutral ERP branding.
+             * Colors are #rrggbb or null (ERP default).
+             *
+             * @var array{slug: string, name: string, short_name: string|null, logo_url: string|null, background_url: string|null, primary_color: string|null, secondary_color: string|null}|null
+             */
             'organization' => $company ? [
                 'slug' => $company->slug,
                 'name' => $company->name,
                 'short_name' => $company->short_name,
                 'logo_url' => $company->logo_url,
                 'background_url' => $company->login_background_url,
-                /** #rrggbb or null (ERP default). */
                 'primary_color' => $company->primary_color,
                 'secondary_color' => $company->secondary_color,
             ] : null,
