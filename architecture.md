@@ -8,7 +8,7 @@ later without code changes.
 
 | | Today | Target |
 |---|---|---|
-| UI | 184 Blade views (~13k lines), Bootstrap 5 + Alpine | SPA in `frontend/` (Angular + TypeScript + Bootstrap 5 CSS) |
+| UI | 184 Blade views (~13k lines), Bootstrap 5 + Alpine | SPA in the `smart-erp-frontend` repo (Angular + TypeScript + Bootstrap 5 CSS) |
 | Controllers | 62, of which 61 `return view()` | API controllers returning JSON only |
 | API | none (`routes/web.php` only), no Sanctum | `/api/v1/...`, Sanctum auth |
 | Validation / output | inline in controllers | FormRequests in, API Resources out |
@@ -17,20 +17,23 @@ later without code changes.
 smart-erp is not in production yet, so the switch costs least now. **Rule from today: no new Blade UI.**
 Every gap-list item is built API-first.
 
-## 2. Repository layout (one repository now, ready to split)
+## 2. Two repositories (decided 2026-11-09)
 
-```
-smart-erp/
-├── backend/            Laravel 13 API: own composer.json, .env, tests, CI job
-├── frontend/           Angular SPA: own package.json, environments, tests, CI job
-├── api-contract/       openapi.yaml, generated from backend, input for frontend types
-└── docs/               architecture.md, hrms-gap-list.md, hrms-migration-mapping.md
-```
+| Repository | Folder | Contains |
+|---|---|---|
+| `smart-erp` (backend) | `Dev/outside/smart-erp` | Laravel 13 API, `api-contract/openapi.json`, these docs |
+| `smart-erp-frontend` | `Dev/outside/smart-erp-frontend` | Angular SPA (foundation committed: shell, module manifests, Sanctum-ready HTTP setup, Bootstrap CSS) |
 
-**Split-readiness rules:**
-- `frontend/` never imports anything from `backend/` and the other way round. The only link is `api-contract/openapi.yaml`.
-- Each folder builds, tests and deploys on its own (separate CI jobs, separate `.env`).
-- Splitting later = `git subtree split -P backend` / `-P frontend` into two repositories. The contract file is then published as a release artifact (or an npm package of generated types).
+**Rules:**
+- Neither repository imports code from the other. The only link is the OpenAPI contract.
+- The backend generates `api-contract/openapi.json` and commits it, so each contract change is visible in review.
+- The frontend runs `npm run api:generate`, which reads the contract (locally `../smart-erp/api-contract/openapi.json`,
+  in CI a URL or the backend's release artifact) and regenerates `src/app/core/api/generated/`.
+- Each repository has its own CI, `.env`/environment settings, versioning and deployment.
+- **Local development:** `php artisan serve` (port 8000) + `npm start` in the frontend (port 4200). The Angular dev server
+  proxies `/api` and `/sanctum` to port 8000, so the browser sees one origin and Sanctum cookie auth needs no CORS.
+- **Production:** one domain. The web server serves the built SPA and forwards `/api` and `/sanctum` to Laravel
+  (or `app.` and `api.` subdomains of the same site, with `SANCTUM_STATEFUL_DOMAINS` and CORS set).
 
 ## 3. The contract between them
 
@@ -48,7 +51,7 @@ smart-erp/
 
 ## 4. Backend (Laravel API)
 
-### Module layout (`backend/Modules/<Module>/`)
+### Module layout (`Modules/<Module>/` in the backend repo)
 ```
 Modules/Leave/
 ├── Http/Controllers/Api/   thin: authorize → validate (FormRequest) → call Action → return Resource
@@ -115,7 +118,7 @@ and server-data caching.
 - No UI component suite (PrimeNG, Material, ng-bootstrap). Our shared library (below) is built on Angular CDK + Bootstrap CSS.
 - Stay on Angular's supported versions; run `ng update` each major release.
 
-### Layout (`frontend/src/app/`)
+### Layout (`src/app/` in the frontend repo)
 ```
 app/
 ├── core/            generated API client, auth, interceptors (CSRF, errors, company), guards, permissions (*appCan), layout shell, i18n
@@ -148,18 +151,18 @@ app/
 ## 6. Quality gates
 - **Backend:** feature test per endpoint (status, JSON shape, authorization), and a check that the OpenAPI file is up to date in CI.
 - **Frontend:** type check (fails on contract changes), component tests (Angular CLI test runner), a few end-to-end flows (Playwright): login, apply leave, approve leave, generate payroll.
-- Both: lint + format in CI, separate pipelines per folder.
+- Both: lint + format in CI, one pipeline per repository.
 
 ## 7. Moving the current smart-erp code
 Not in production, so module by module, no big bang:
-1. **Foundation:** create `backend/` (move the Laravel app) and `frontend/` (new Angular CLI app). Add Sanctum, `/api/v1/me`,
+1. **Foundation:** frontend repo created (Angular shell done). Backend: add Sanctum, `/api/v1/me`,
    response helpers, query builder, OpenAPI generation, and the frontend shell + shared components (DataTable, forms, modal, layout, auth).
 2. **Core + reference data** through the generic CRUD endpoint and `CrudPage`.
 3. For each existing module: move logic from the Blade controller into **Actions** → add API controller/Requests/Resources/tests →
    build the SPA pages from shared components → delete the Blade views and web routes of that module.
 4. **New gap-list items** (workflow engine, work entries, waiting contracts…) are built API-first directly, following the
    build order in `hrms-gap-list.md`.
-5. When the last Blade module is gone, `backend/` has no UI left. Splitting into two repositories is then just a subtree split.
+5. When the last Blade module is gone, the backend has no UI left: remove Blade, Alpine and Vite from it.
 
 ## 8. Growing to a full ERP
 
