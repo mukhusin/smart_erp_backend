@@ -12,5 +12,6 @@ Route::prefix('platform')->middleware(['auth:sanctum', 'platform'])->name('platf
     Route::get('companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
     Route::patch('companies/{company}', [CompanyController::class, 'update'])->name('companies.update');
     Route::put('companies/{company}/modules', [CompanyController::class, 'updateModules'])->name('companies.modules');
+    Route::post('companies/{company}/branding', [CompanyController::class, 'updateBranding'])->name('companies.branding');
     Route::post('companies/{company}/resend-invite', [CompanyController::class, 'resendInvite'])->name('companies.resend-invite');
 });

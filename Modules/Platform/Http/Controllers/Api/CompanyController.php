@@ -8,6 +8,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
 use Modules\Platform\Actions\RegisterCompany;
 use Modules\Platform\Actions\SendCompanyInvite;
+use Modules\Platform\Actions\UpdateCompanyBranding;
+use Modules\Platform\Http\Requests\UpdateCompanyBrandingRequest;
 use Modules\Platform\Http\Requests\RegisterCompanyRequest;
 use Modules\Platform\Http\Requests\UpdateCompanyModulesRequest;
 use Modules\Platform\Http\Requests\UpdateCompanyRequest;
@@ -106,6 +108,19 @@ class CompanyController extends Controller
             $modules->enableModule($company->id, $slug, isset($module['expires_at']) ? new \DateTimeImmutable($module['expires_at']) : null);
         }
         Cache::forget("company_modules_{$company->id}");
+
+        return $this->detail($company, $invite);
+    }
+
+    /**
+     * Update branding.
+     *
+     * Logo, login page photo and theme colors (multipart/form-data). Send `remove_logo` / `remove_login_background`
+     * to go back to the default, or an empty color for the default color.
+     */
+    public function updateBranding(UpdateCompanyBrandingRequest $request, Company $company, UpdateCompanyBranding $branding, SendCompanyInvite $invite): CompanyResource
+    {
+        $branding->handle($company, $request->validated());
 
         return $this->detail($company, $invite);
     }

@@ -18,6 +18,8 @@ class RegisterCompanyRequest extends FormRequest
             'company' => ['required', 'array'],
             'company.name' => ['required', 'string', 'max:255', 'unique:companies,name'],
             'company.short_name' => ['nullable', 'string', 'max:50'],
+            /** Login link name (/login?org=...). Generated from the short name or name when empty. */
+            'company.slug' => ['nullable', 'string', 'max:60', 'alpha_dash', 'unique:companies,slug'],
             'company.registration_number' => ['nullable', 'string', 'max:100', 'unique:companies,registration_number'],
             'company.tin' => ['nullable', 'string', 'max:50'],
             'company.phone' => ['nullable', 'string', 'max:50'],

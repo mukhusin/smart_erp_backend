@@ -31,6 +31,8 @@ class CompanyResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            /** Login link: /login?org={slug} */
+            'slug' => $this->slug,
             'short_name' => $this->short_name,
             'registration_number' => $this->registration_number,
             'tin' => $this->tin,
@@ -41,6 +43,11 @@ class CompanyResource extends JsonResource
             'city' => $this->city,
             'country' => $this->country,
             'currency' => $this->currency,
+            'logo_url' => $this->logo_url,
+            'login_background_url' => $this->login_background_url,
+            /** #rrggbb or null (ERP default). */
+            'primary_color' => $this->primary_color,
+            'secondary_color' => $this->secondary_color,
             'fiscal_year_start' => $this->fiscal_year_start,
             'is_active' => $this->is_active,
             'created_at' => $this->created_at?->toIso8601String(),

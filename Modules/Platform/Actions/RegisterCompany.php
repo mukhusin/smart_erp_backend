@@ -34,7 +34,10 @@ class RegisterCompany
     public function handle(array $data): Company
     {
         return DB::transaction(function () use ($data) {
-            $company = Company::create($data['company'] + ['is_active' => true]);
+            $company = Company::create($data['company'] + [
+                'slug' => $data['company']['slug'] ?? $this->uniqueSlug($data['company']['short_name'] ?? $data['company']['name']),
+                'is_active' => true,
+            ]);
 
             foreach ($data['modules'] ?? [] as $module) {
                 $this->modules->enableModule($company->id, $module['slug'], isset($module['expires_at']) ? new \DateTimeImmutable($module['expires_at']) : null);
@@ -93,5 +96,16 @@ class RegisterCompany
 
             return $company->refresh();
         });
+    }
+
+    private function uniqueSlug(string $from): string
+    {
+        $base = Str::limit(Str::slug($from), 50, '') ?: 'org';
+        $slug = $base;
+        for ($n = 2; Company::where('slug', $slug)->exists(); $n++) {
+            $slug = "{$base}-{$n}";
+        }
+
+        return $slug;
     }
 }

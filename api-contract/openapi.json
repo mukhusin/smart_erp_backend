@@ -75,8 +75,8 @@
         "/auth/set-password": {
             "post": {
                 "operationId": "auth.set-password",
-                "description": "Used by a new user (e.g. a company's first HR admin) with the token from the invite email.\nAfter this, the user logs in normally.",
-                "summary": "Set password from an invite link",
+                "description": "For a new user's invite (e.g. a company's first HR admin) or a forgot-password link (`purpose: reset`).\nAfter this, the user logs in normally.",
+                "summary": "Set password from an emailed link",
                 "tags": [
                     "Auth",
                     "SetPassword"
@@ -97,6 +97,78 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/forgot-password": {
+            "post": {
+                "operationId": "auth.forgot-password",
+                "description": "Always answers 204, whether or not the email belongs to an account (so it cannot be used to find accounts).\nActive users get an email with a link to choose a new password.",
+                "summary": "Request a password reset link",
+                "tags": [
+                    "Auth",
+                    "ForgotPassword"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/login-branding": {
+            "get": {
+                "operationId": "auth.login-branding",
+                "description": "Logo, background and announcements of an organization for the login page, plus announcements for everyone.",
+                "summary": "Login page branding",
+                "tags": [
+                    "Auth",
+                    "LoginBranding"
+                ],
+                "parameters": [
+                    {
+                        "name": "org",
+                        "in": "query",
+                        "description": "Organization slug from the login link, e.g. \"kairuki\".",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`LoginBrandingResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LoginBrandingResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "security": []
@@ -639,6 +711,77 @@
                 }
             }
         },
+        "/platform/companies/{company}/branding": {
+            "post": {
+                "operationId": "platform.companies.branding",
+                "description": "Logo, login page photo and theme colors (multipart/form-data). Send `remove_logo` / `remove_login_background`\nto go back to the default, or an empty color for the default color.",
+                "summary": "Update branding",
+                "tags": [
+                    "Platform: Companies",
+                    "Company"
+                ],
+                "parameters": [
+                    {
+                        "name": "company",
+                        "in": "path",
+                        "required": true,
+                        "description": "The company ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCompanyBrandingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CompanyResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/CompanyResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "branches",
+                                                        "modules"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/platform/companies/{company}/resend-invite": {
             "post": {
                 "operationId": "platform.companies.resend-invite",
@@ -690,6 +833,10 @@
                     },
                     "name": {
                         "type": "string"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "description": "Login link: /login?org={slug}"
                     },
                     "short_name": {
                         "type": [
@@ -744,6 +891,31 @@
                     },
                     "currency": {
                         "type": "string"
+                    },
+                    "logo_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "login_background_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "primary_color": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "#rrggbb or null (ERP default)."
+                    },
+                    "secondary_color": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "fiscal_year_start": {
                         "type": "string"
@@ -863,6 +1035,7 @@
                 "required": [
                     "id",
                     "name",
+                    "slug",
                     "short_name",
                     "registration_number",
                     "tin",
@@ -873,11 +1046,111 @@
                     "city",
                     "country",
                     "currency",
+                    "logo_url",
+                    "login_background_url",
+                    "primary_color",
+                    "secondary_color",
                     "fiscal_year_start",
                     "is_active",
                     "created_at"
                 ],
                 "title": "CompanyResource"
+            },
+            "ForgotPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "email"
+                ],
+                "title": "ForgotPasswordRequest"
+            },
+            "LoginBrandingResource": {
+                "type": "object",
+                "properties": {
+                    "organization": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Null when no (or an unknown or suspended) organization was asked for: show the neutral ERP branding.",
+                        "properties": {
+                            "slug": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "short_name": {
+                                "type": "string"
+                            },
+                            "logo_url": {
+                                "type": "string"
+                            },
+                            "background_url": {
+                                "type": "string"
+                            },
+                            "primary_color": {
+                                "type": "string",
+                                "description": "#rrggbb or null (ERP default)."
+                            },
+                            "secondary_color": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "slug",
+                            "name",
+                            "short_name",
+                            "logo_url",
+                            "background_url",
+                            "primary_color",
+                            "secondary_color"
+                        ]
+                    },
+                    "slides": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "content": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "image_url": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "title",
+                                "content",
+                                "image_url"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "organization",
+                    "slides"
+                ],
+                "title": "LoginBrandingResource"
             },
             "LoginRequest": {
                 "type": "object",
@@ -984,6 +1257,9 @@
                             "id": {
                                 "type": "integer"
                             },
+                            "slug": {
+                                "type": "string"
+                            },
                             "name": {
                                 "type": "string"
                             },
@@ -992,12 +1268,28 @@
                                     "string",
                                     "null"
                                 ]
+                            },
+                            "primary_color": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Theme colors (#rrggbb) or null for the ERP default."
+                            },
+                            "secondary_color": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
                             "id",
+                            "slug",
                             "name",
-                            "logo_url"
+                            "logo_url",
+                            "primary_color",
+                            "secondary_color"
                         ]
                     },
                     "branch": {
@@ -1177,6 +1469,14 @@
                                     "null"
                                 ],
                                 "maxLength": 50
+                            },
+                            "slug": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Login link name (/login?org=...). Generated from the short name or name when empty.",
+                                "maxLength": 60
                             },
                             "registration_number": {
                                 "type": [
@@ -1427,6 +1727,14 @@
                     "password": {
                         "type": "string"
                     },
+                    "purpose": {
+                        "type": "string",
+                        "description": "\"invite\" (default, link valid 3 days) or \"reset\" (forgot password, link valid 60 minutes).",
+                        "enum": [
+                            "invite",
+                            "reset"
+                        ]
+                    },
                     "password_confirmation": {
                         "type": "string"
                     }
@@ -1438,6 +1746,53 @@
                     "password_confirmation"
                 ],
                 "title": "SetPasswordRequest"
+            },
+            "UpdateCompanyBrandingRequest": {
+                "type": "object",
+                "description": "multipart/form-data: files plus colors.",
+                "properties": {
+                    "logo": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "PNG, JPG, WEBP or SVG, max 1 MB. Shown in the top bar, login page and documents."
+                    },
+                    "login_background": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "Login page photo. JPG, PNG or WEBP, max 4 MB, landscape works best (1920\u00d71080)."
+                    },
+                    "remove_logo": {
+                        "type": "boolean"
+                    },
+                    "remove_login_background": {
+                        "type": "boolean"
+                    },
+                    "primary_color": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Main color (buttons, links, active menu), e.g. \"#0d6efd\". Empty = default.",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "secondary_color": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Top bar color. Empty = same as primary.",
+                        "pattern": "^#[0-9a-fA-F]{6}$"
+                    }
+                },
+                "title": "UpdateCompanyBrandingRequest"
             },
             "UpdateCompanyModulesRequest": {
                 "type": "object",

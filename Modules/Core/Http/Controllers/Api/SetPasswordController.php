@@ -16,16 +16,16 @@ use Modules\Core\Http\Requests\SetPasswordRequest;
 class SetPasswordController extends Controller
 {
     /**
-     * Set password from an invite link.
+     * Set password from an emailed link.
      *
-     * Used by a new user (e.g. a company's first HR admin) with the token from the invite email.
+     * For a new user's invite (e.g. a company's first HR admin) or a forgot-password link (`purpose: reset`).
      * After this, the user logs in normally.
      *
      * @unauthenticated
      */
     public function __invoke(SetPasswordRequest $request): Response
     {
-        $status = Password::broker('invites')->reset(
+        $status = Password::broker($request->validated('purpose') === 'reset' ? 'users' : 'invites')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
@@ -37,7 +37,7 @@ class SetPasswordController extends Controller
 
         if ($status !== Password::PASSWORD_RESET) {
             throw ValidationException::withMessages([
-                'token' => 'This link is invalid or has expired. Ask the system administrator for a new one.',
+                'token' => 'This link is invalid or has expired. Request a new one.',
             ]);
         }
 

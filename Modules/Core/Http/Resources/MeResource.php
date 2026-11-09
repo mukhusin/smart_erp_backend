@@ -39,8 +39,12 @@ class MeResource extends JsonResource
             ] : null,
             'company' => $company ? [
                 'id' => $company->id,
+                'slug' => $company->slug,
                 'name' => $company->name,
                 'logo_url' => $company->logo_url,
+                /** Theme colors (#rrggbb) or null for the ERP default. */
+                'primary_color' => $company->primary_color,
+                'secondary_color' => $company->secondary_color,
             ] : null,
             /** The user's home branch. */
             'branch' => $branch ? [
