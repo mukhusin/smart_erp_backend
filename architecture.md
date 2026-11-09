@@ -21,13 +21,13 @@ Every gap-list item is built API-first.
 
 | Repository | Folder | Contains |
 |---|---|---|
-| `smart_erp_backend` (GitHub: mukhusin/smart_erp_backend) | `Dev/outside/smart-erp` | Laravel 13 API, `api-contract/openapi.json`, these docs |
-| `smart_erp_frontend` (GitHub: mukhusin/smart_erp_frontend) | `Dev/outside/smart-erp-frontend` | Angular SPA (foundation committed: shell, module manifests, Sanctum-ready HTTP setup, Bootstrap CSS) |
+| `smart_erp_backend` (GitHub: mukhusin/smart_erp_backend) | `Dev/outside/smart_erp_backend` | Laravel 13 API, `api-contract/openapi.json`, these docs |
+| `smart_erp_frontend` (GitHub: mukhusin/smart_erp_frontend) | `Dev/outside/smart_erp_frontend` | Angular SPA (foundation committed: shell, module manifests, Sanctum-ready HTTP setup, Bootstrap CSS) |
 
 **Rules:**
 - Neither repository imports code from the other. The only link is the OpenAPI contract.
 - The backend generates `api-contract/openapi.json` and commits it, so each contract change is visible in review.
-- The frontend runs `npm run api:generate`, which reads the contract (locally `../smart-erp/api-contract/openapi.json`,
+- The frontend runs `npm run api:generate`, which reads the contract (locally `../smart_erp_backend/api-contract/openapi.json`,
   in CI a URL or the backend's release artifact) and regenerates `src/app/core/api/generated/`.
 - Each repository has its own CI, `.env`/environment settings, versioning and deployment.
 - **Local development:** `php artisan serve` (port 8000) + `npm start` in the frontend (port 4200). The Angular dev server

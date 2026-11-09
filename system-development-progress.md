@@ -2,7 +2,7 @@
 
 **Project:** Smart ERP  
 **Source Reference:** `/home/mukhusin-siraji/Dev/outside/hrms` (live HRMS — read-only reference, never modify)  
-**ERP Path:** `/home/mukhusin-siraji/Dev/outside/smart-erp`  
+**ERP Path:** `/home/mukhusin-siraji/Dev/outside/smart_erp_backend`  
 **Stack:** Laravel 11, Bootstrap 5, Bootstrap Icons (`bi-*`), Spatie Laravel Permission, Blade templates  
 **Last Updated:** 2026-04-26
 
