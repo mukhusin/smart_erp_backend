@@ -22,8 +22,7 @@ class ModuleAccessService
             ? Cache::remember("company_modules_{$companyId}", 300, fn() =>
                 CompanyModule::where('company_id', $companyId)
                     ->where('is_enabled', true)
-                    ->whereNull('expires_at')
-                    ->orWhere(fn($q) => $q->where('company_id', $companyId)->where('expires_at', '>', now()))
+                    ->where(fn($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
                     ->pluck('module_slug')
                     ->toArray()
               )

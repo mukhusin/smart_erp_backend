@@ -6,15 +6,15 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
-        'name',
-        'email', 
+        'email',
         'company_id', 
         'company_branch_id',
         'avatar',
@@ -53,10 +53,18 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class, 'user_id');
     }
 
-    public function getAvatarUrlAttribute(): string
+    /** Users have no name column: the name comes from the linked employee, otherwise the username. */
+    public function getDisplayNameAttribute(): string
     {
-        return $this->avatar
-            ? asset('storage/' . $this->avatar)
-            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=0d6efd&color=fff';
+        $employee = $this->employee;
+        $name = $employee ? trim(preg_replace('/\s+/', ' ', "{$employee->fname} {$employee->mname} {$employee->lname}")) : '';
+
+        return $name !== '' ? $name : $this->username;
+    }
+
+    /** Uploaded avatar, or null so the frontend shows initials (no external avatar service). */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) : null;
     }
 }
