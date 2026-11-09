@@ -21,7 +21,7 @@ Every gap-list item is built API-first.
 
 | Repository | Folder | Contains |
 |---|---|---|
-| `smart-erp` (backend) | `Dev/outside/smart-erp` | Laravel 13 API, `api-contract/openapi.json`, these docs |
+| `smart_erp_backend` (GitHub: mukhusin/smart_erp_backend) | `Dev/outside/smart-erp` | Laravel 13 API, `api-contract/openapi.json`, these docs |
 | `smart_erp_frontend` (GitHub: mukhusin/smart_erp_frontend) | `Dev/outside/smart-erp-frontend` | Angular SPA (foundation committed: shell, module manifests, Sanctum-ready HTTP setup, Bootstrap CSS) |
 
 **Rules:**
