@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsureSessionTimeout::class,
         ]);
 
+        // No login page in the backend: unauthenticated requests get 401 JSON.
+        $middleware->redirectGuestsTo(fn () => null);
+
         $middleware->alias([
             'role'             => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission'       => \Spatie\Permission\Middleware\PermissionMiddleware::class,
@@ -26,5 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // API only: every error (401, 403, 404, 422, 500) is returned as JSON, never a redirect or HTML page.
+        $exceptions->shouldRenderJsonWhen(fn () => true);
     })->create();

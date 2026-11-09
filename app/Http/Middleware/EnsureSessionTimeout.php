@@ -24,16 +24,20 @@ class EnsureSessionTimeout
                 Auth::logout();
                 Session::flush();
                 Session::regenerate();
-                return redirect()->route('login')
-                    ->with('warning', 'Your account was accessed from another device. Please log in again.');
+                return response()->json([
+                    'message' => 'Your account was accessed from another device. Please log in again.',
+                    'code'    => 'session_replaced',
+                ], 401);
             }
 
             if (time() - Session::get('last_activity', time()) > $timeout) {
                 Auth::logout();
                 Session::flush();
                 Session::regenerate();
-                return redirect()->route('login')
-                    ->with('warning', 'Your session expired due to inactivity. Please log in again.');
+                return response()->json([
+                    'message' => 'Your session expired due to inactivity. Please log in again.',
+                    'code'    => 'session_expired',
+                ], 401);
             }
 
             Session::put('last_activity', time());
