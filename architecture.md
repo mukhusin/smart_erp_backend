@@ -30,7 +30,7 @@ Every gap-list item is built API-first.
 - The frontend runs `npm run api:generate`, which reads the contract (locally `../smart_erp_backend/api-contract/openapi.json`,
   in CI a URL or the backend's release artifact) and regenerates `src/app/core/api/generated/`.
 - Each repository has its own CI, `.env`/environment settings, versioning and deployment.
-- **Local development:** `php artisan serve` (port 8000) + `npm start` in the frontend (port 4200). The Angular dev server
+- **Local development:** `php artisan serve` (port 8000) + `npm start` in the frontend (port 4300). The Angular dev server
   proxies `/api` and `/sanctum` to port 8000, so the browser sees one origin and Sanctum cookie auth needs no CORS.
 - **Production:** one domain. The web server serves the built SPA and forwards `/api`, `/sanctum` and `/storage` (uploaded files) to Laravel
   (or `app.` and `api.` subdomains of the same site, with `SANCTUM_STATEFUL_DOMAINS` and CORS set).

@@ -76,7 +76,7 @@ class CompanyRegistrationTest extends TestCase
             return true;
         });
         parse_str(parse_url($url, PHP_URL_QUERY), $query);
-        $this->assertStringStartsWith('http://localhost:4200/set-password?', $url);
+        $this->assertStringStartsWith(config('app.frontend_url') . '/set-password?', $url);
 
         $this->startNewRequestAsGuest();
         $this->postJson('/api/v1/auth/set-password', [
