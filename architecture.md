@@ -107,6 +107,7 @@ and server-data caching.
 | Forms and validation | Angular Reactive Forms (typed) + custom validators | No |
 | App state and server data | signals + services (`resource()` / small cache in services) | No |
 | Tables, overlays, dialogs, drag-drop, virtual scroll, a11y | Angular CDK | No (Angular team) |
+| Material 3 components (side menu, toolbar, menus, dialogs, snackbars, ripple, badges; tables and form fields next) | Angular Material, themed from each company's brand color, light/dark | No (Angular team) |
 | Styling and icons | **Bootstrap 5 CSS only** (no Bootstrap JS, no ng-bootstrap) + Bootstrap Icons | CSS/icons only |
 | Charts (later, dashboards) | decide when needed; prefer one small library | Yes, one |
 
@@ -115,7 +116,7 @@ and server-data caching.
 **Dependency rules:**
 - A new runtime package needs a reason no Angular/CDK feature covers, and is added in `core/` behind our own wrapper,
   so it can be replaced in one place.
-- No UI component suite (PrimeNG, Material, ng-bootstrap). Our shared library (below) is built on Angular CDK + Bootstrap CSS.
+- No third-party UI suite (PrimeNG, ng-bootstrap...). Angular Material (Angular team) + Bootstrap grid/utilities; shared components wrap them.
 - Stay on Angular's supported versions; run `ng update` each major release.
 
 ### Layout (`src/app/` in the frontend repo)
@@ -304,6 +305,12 @@ Still to design: **data scope** (own / section / department / branch / company) 
 "working hours of my department"; until then screens filter by the user's own department.
 
 ## 12. Frontend UI standards
+
+**Layout (2026-11-10):** Material shell. The Dashboard is a module launcher: tiles for every module available to the user's company
+and branch; modules locked for the user (or without any permission) are shown faded and cannot be opened; modules locked for the
+company or the user's branch are hidden. Opening a module switches the side menu to that module's own menu (module dashboard + pages,
+"All modules" to go back). Motion: page cross-fade (view transitions), staggered slide-up of cards/rows, top progress bar while loading;
+all disabled for users who prefer reduced motion.
 
 Professional and friendly by default. Built once in `shared/`, used by every page:
 
