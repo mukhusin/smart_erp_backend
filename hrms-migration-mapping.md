@@ -72,6 +72,18 @@ Status: ✅ copy with generic renames only · 🟡 needs column decisions · ⚠
 |---|---|---|---|---|---|
 | `employees` | 776 | ⚠️ | `company_branche_id`→`company_branch_id`, `st_no`→`employee_no` | `patient_id`: → employee external IDs (E-14)<br>`created_by`: add to ERP (audit) | `company_id`: Kairuki company id<br>`probation_start`: **check production**: defined in the HRMS employees migration but missing in the local DB — copy if present, else null<br>`probation_period`: **check production**: defined in the HRMS employees migration but missing in the local DB — copy if present, else null<br>`probation_end`: **check production**: defined in the HRMS employees migration but missing in the local DB — copy if present, else null |
 
+#### Employee value mapping
+
+The ERP stores fixed keys (`Modules/Hr/Support/EmployeeOptions.php`). Convert while copying:
+
+| Column | HRMS value → ERP value |
+|---|---|
+| `employment_status` | `on probation`, `probation` → `probation`; `confirmed` → `confirmed`; terminated staff (has `termination_date`) → `terminated` |
+| `emp_type` | `FULL TIME` → `full_time`; `PART TIME` → `part_time`; `INTERNSHIP` → `internship`; `RESIDENT` → `resident`; `VOLUNTEER` → `volunteer`; `INDIRECT EMPLOYEE` → `indirect` |
+| `id_type` | `NIDA`, `NATIONAL ID` → `nida`; `Passport` → `passport`; `VOTE ID` → `voter_id`; empty → `nida` |
+| `marital_status` | `SINGLE` → `single`; `MARRIED` → `married`; `Divorced` → `divorced`; `SEPARATED` → `separated`; `Widowed`, `WIDOWER` → `widowed`; empty → null |
+| `gender`, `emp_category` | unchanged (`Female`/`Male`, `Primary`/`Secondary`) |
+
 ### Level 3 — employee details & setup
 
 | HRMS table → ERP | Rows (local) | Status | Renames | HRMS-only columns → decision | ERP-only columns → fill |

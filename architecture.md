@@ -353,3 +353,17 @@ dates and money formatted for the company (currency, fiscal year), and `*appCan=
 - User access changes already work this way: `ChangeUserAccess` records every change in `access_changes`
   (type, before, after, reason, requested by, status). Today status is `applied`; with a configured workflow it will be `pending`
   until approved. The API and screens do not change.
+
+## 14. HR employee registration (2026-11-10)
+
+- `POST /api/v1/hr/employees` (`hr.employees.create`) creates the employee and, with `create_account`, the user account in one
+  transaction. The invite email is sent after the commit; `meta.invite_sent` tells the frontend whether it went out.
+- A new account gets only the `employee` role. Any other role is given by the company admin in Administration → Users, so it
+  goes through the access-change workflow. HR never assigns roles.
+- An employee without an account can get one later (`POST hr/employees/{id}/account`). The invite can be resent while the
+  password is not set (`POST hr/employees/{id}/invite`).
+- Lookups for forms: `hr/options` (fixed choices), `hr/branches`, `hr/departments` (sections with `parent_id`), `hr/positions`
+  (filtered by department), `hr/employees/next-number` (continues the last number's prefix and padding).
+- Invites for any user go through `Modules/Core/Actions/SendUserInvite` (invites broker); company and staff invites only differ by email.
+- Not yet: editing employees, photos, contracts, and data scope (HOD sees own department only).
+

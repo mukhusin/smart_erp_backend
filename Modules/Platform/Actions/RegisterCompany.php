@@ -89,7 +89,9 @@ class RegisterCompany
                     'gender' => $admin['gender'],
                     'phone_number' => $admin['phone_number'] ?? null,
                     'email' => Str::lower($admin['email']),
-                    'employment_status' => 'active',
+                    'employment_status' => 'confirmed',
+                    'emp_type' => 'full_time',
+                    'employment_date' => now()->toDateString(),
                 ]);
                 $user->assignRole(DefaultRoles::COMPANY_ADMIN);
             });

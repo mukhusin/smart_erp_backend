@@ -51,6 +51,8 @@ class DatabaseSeeder extends Seeder
                 ->forceFill(['password' => Hash::make('password'), 'email_verified_at' => now()])->save();
         }
 
+        $this->call(DemoOrganizationSeeder::class);
+
         LoginSlide::firstOrCreate(['company_id' => null, 'title' => 'Welcome to Smart ERP'], [
             'content' => 'HR, payroll, finance and operations in one place.', 'sort_order' => 0,
         ]);

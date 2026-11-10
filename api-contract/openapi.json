@@ -2574,6 +2574,1016 @@
                 }
             }
         },
+        "/hr/employees": {
+            "get": {
+                "operationId": "hr.employees.index",
+                "summary": "List employees",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "parameters": [
+                    {
+                        "name": "filter[search]",
+                        "in": "query",
+                        "description": "Name, employee number, email or phone.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[branch_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[department_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[job_position_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[employment_status]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[emp_type]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[has_account]",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "`employee_no`, `fname`, `employment_date`, `created_at`; prefix `-` for descending.",
+                        "schema": {
+                            "type": "string",
+                            "default": "-created_at"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Max 100.",
+                        "schema": {
+                            "type": "integer",
+                            "default": 25
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `EmployeeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/EmployeeResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "hr.employees.store",
+                "description": "With `create_account`, the employee also gets a user account (role \"employee\") and an email to set their\npassword. `meta.invite_sent` is false when that email could not be sent (resend it from the employee page).",
+                "summary": "Register an employee",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreEmployeeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`EmployeeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmployeeResource"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "invite_sent": {
+                                                    "type": [
+                                                        "boolean",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "invite_sent"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/next-number": {
+            "get": {
+                "operationId": "hr.employees.next-number",
+                "summary": "Suggested next employee number",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "employee_no": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "employee_no"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/{employee}": {
+            "get": {
+                "operationId": "hr.employees.show",
+                "summary": "Show an employee",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`EmployeeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmployeeResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/{employee}/account": {
+            "post": {
+                "operationId": "hr.employees.account",
+                "description": "The account gets the \"employee\" role and an invite email. Other roles are given in Administration \u2192 Users.",
+                "summary": "Create a user account for an employee",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateAccountRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "`EmployeeResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/EmployeeResource"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "invite_sent": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "invite_sent"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/{employee}/invite": {
+            "post": {
+                "operationId": "hr.employees.invite",
+                "description": "Only while the employee has not set their password yet.",
+                "summary": "Resend the account invite",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "An error\n\nAn error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Error overview.",
+                                                    "examples": [
+                                                        "This employee has no user account."
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Error overview.",
+                                                    "examples": [
+                                                        "This employee has already set their password."
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "The invite email could not be sent. Try again later."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/options": {
+            "get": {
+                "operationId": "hr.options",
+                "summary": "Employee field choices",
+                "tags": [
+                    "HR: Lookups",
+                    "Lookup"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "genders": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "value",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "employment_statuses": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "value",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "employment_types": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "value",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "value",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "id_types": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "value",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "marital_statuses": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "value",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "genders",
+                                                "employment_statuses",
+                                                "employment_types",
+                                                "categories",
+                                                "id_types",
+                                                "marital_statuses"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/branches": {
+            "get": {
+                "operationId": "hr.branches",
+                "summary": "Active branches",
+                "tags": [
+                    "HR: Lookups",
+                    "Lookup"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_headquarters": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "is_headquarters"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/departments": {
+            "get": {
+                "operationId": "hr.departments",
+                "description": "Without `parent_id`: departments (company-wide or of `branch_id`). With `parent_id`: that department's sections.",
+                "summary": "Search departments or sections",
+                "tags": [
+                    "HR: Lookups",
+                    "Lookup"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "branch_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "parent_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "short_name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "branch": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "short_name",
+                                                    "branch"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/positions": {
+            "get": {
+                "operationId": "hr.positions",
+                "description": "With `department_id`: that department's positions and positions not tied to a department.",
+                "summary": "Search job positions",
+                "tags": [
+                    "HR: Lookups",
+                    "Lookup"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "department": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "title",
+                                                    "department"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/summary": {
+            "get": {
+                "operationId": "hr.summary",
+                "summary": "Employee counts for the HR dashboard",
+                "tags": [
+                    "HR: Lookups",
+                    "Lookup"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "probation": {
+                                                    "type": "integer"
+                                                },
+                                                "without_account": {
+                                                    "type": "integer"
+                                                },
+                                                "invited": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "total",
+                                                "probation",
+                                                "without_account",
+                                                "invited"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/platform/modules": {
             "get": {
                 "operationId": "platform.modules.index",
@@ -3604,6 +4614,353 @@
                     "created_at"
                 ],
                 "title": "CompanyResource"
+            },
+            "CreateAccountRequest": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Defaults to the employee's email.",
+                        "pattern": "^[A-Za-z0-9._@-]+$",
+                        "maxLength": 100
+                    }
+                },
+                "title": "CreateAccountRequest"
+            },
+            "EmployeeResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "employee_no": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "fname": {
+                        "type": "string"
+                    },
+                    "mname": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "lname": {
+                        "type": "string"
+                    },
+                    "gender": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "phone_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "photo_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "branch": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "department": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "section": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "position": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "title": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "title"
+                        ]
+                    },
+                    "emp_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "emp_type_label": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "employment_status": {
+                        "type": "string"
+                    },
+                    "employment_status_label": {
+                        "type": "string"
+                    },
+                    "employment_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "account": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "username": {
+                                "type": "string"
+                            },
+                            "is_active": {
+                                "type": "boolean"
+                            },
+                            "has_set_password": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "username",
+                            "is_active",
+                            "has_set_password"
+                        ]
+                    },
+                    "details": {
+                        "type": "object",
+                        "properties": {
+                            "date_of_birth": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "place_of_birth": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "nationality": {
+                                "type": "string"
+                            },
+                            "marital_status": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "marital_status_label": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "id_type": {
+                                "type": "string"
+                            },
+                            "id_type_label": {
+                                "type": "string"
+                            },
+                            "id_number": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "tin": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "home_address": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "emp_title": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "emp_category": {
+                                "type": "string"
+                            },
+                            "place_of_recruitment": {
+                                "type": "string"
+                            },
+                            "probation_start": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "probation_period": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "probation_end": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "termination_date": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "nssf_no": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "nhif_no": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "wcf_no": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "date_of_birth",
+                            "place_of_birth",
+                            "nationality",
+                            "marital_status",
+                            "marital_status_label",
+                            "id_type",
+                            "id_type_label",
+                            "id_number",
+                            "tin",
+                            "home_address",
+                            "emp_title",
+                            "emp_category",
+                            "place_of_recruitment",
+                            "probation_start",
+                            "probation_period",
+                            "probation_end",
+                            "termination_date",
+                            "nssf_no",
+                            "nhif_no",
+                            "wcf_no"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "employee_no",
+                    "name",
+                    "fname",
+                    "mname",
+                    "lname",
+                    "gender",
+                    "email",
+                    "phone_number",
+                    "photo_url",
+                    "branch",
+                    "department",
+                    "section",
+                    "position",
+                    "emp_type",
+                    "emp_type_label",
+                    "employment_status",
+                    "employment_status_label",
+                    "employment_date",
+                    "account",
+                    "details",
+                    "created_at"
+                ],
+                "title": "EmployeeResource"
             },
             "ForgotPasswordRequest": {
                 "type": "object",
@@ -5037,6 +6394,248 @@
                     "roles"
                 ],
                 "title": "SetUserRolesRequest"
+            },
+            "StoreEmployeeRequest": {
+                "type": "object",
+                "properties": {
+                    "employee_no": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "fname": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "mname": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "lname": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "gender": {
+                        "type": "string",
+                        "enum": [
+                            "Female",
+                            "Male"
+                        ]
+                    },
+                    "date_of_birth": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "place_of_birth": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "nationality": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "marital_status": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "single",
+                            "married",
+                            "divorced",
+                            "separated",
+                            "widowed",
+                            null
+                        ]
+                    },
+                    "id_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "nida",
+                            "passport",
+                            "voter_id",
+                            "driving_licence",
+                            null
+                        ]
+                    },
+                    "id_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "tin": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "phone_number": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "email",
+                        "description": "Required when `create_account` is true: the invite is sent here.",
+                        "maxLength": 255
+                    },
+                    "home_address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "company_branch_id": {
+                        "type": "integer"
+                    },
+                    "department_id": {
+                        "type": "integer"
+                    },
+                    "section_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "A section of the chosen department."
+                    },
+                    "job_position_id": {
+                        "type": "integer"
+                    },
+                    "emp_title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "emp_type": {
+                        "type": "string",
+                        "enum": [
+                            "full_time",
+                            "part_time",
+                            "internship",
+                            "resident",
+                            "volunteer",
+                            "indirect"
+                        ]
+                    },
+                    "emp_category": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "Primary",
+                            "Secondary",
+                            null
+                        ]
+                    },
+                    "employment_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "employment_status": {
+                        "type": "string",
+                        "enum": [
+                            "probation",
+                            "confirmed"
+                        ]
+                    },
+                    "probation_start": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "probation_period": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Months.",
+                        "minimum": 1,
+                        "maximum": 24
+                    },
+                    "place_of_recruitment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "nssf_no": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "nhif_no": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "wcf_no": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "create_account": {
+                        "type": "boolean",
+                        "description": "Also create a user account (role \"employee\") and email an invite to set the password."
+                    },
+                    "username": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Defaults to the email.",
+                        "pattern": "^[A-Za-z0-9._@-]+$",
+                        "maxLength": 100
+                    }
+                },
+                "required": [
+                    "employee_no",
+                    "fname",
+                    "lname",
+                    "gender",
+                    "company_branch_id",
+                    "department_id",
+                    "job_position_id",
+                    "emp_type",
+                    "employment_date",
+                    "employment_status"
+                ],
+                "title": "StoreEmployeeRequest"
             },
             "StoreHandoverRequest": {
                 "type": "object",
