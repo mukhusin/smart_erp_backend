@@ -71,6 +71,37 @@ class AccessService
             ->get();
     }
 
+    /**
+     * Dashboard tiles: modules enabled for the company and not locked for the user's branch.
+     * state: open | locked (locked for this user) | no_permission.
+     *
+     * @return list<array{slug: string, name: string, description: string|null, icon: string|null, color: string|null, category: string|null, state: string}>
+     */
+    public function moduleTiles(User $user): array
+    {
+        if (! $user->company_id || ! $user->is_active) {
+            return [];
+        }
+
+        $enabled = app(\App\Services\CompanyContext::class)->run($user->company_id, fn () => $this->companyModules
+            ->allForDashboard()->where('has_access', true)->pluck('slug')->all());
+        $locks = ModuleLock::withoutCompanyScope()->where('company_id', $user->company_id)->get(['module_slug', 'user_id', 'company_branch_id']);
+        $branchLocked = $locks->whereNotNull('company_branch_id')->where('company_branch_id', $user->company_branch_id)->pluck('module_slug')->all();
+        $userLocked = $locks->where('user_id', $user->id)->pluck('module_slug')->all();
+        $withPermission = array_unique(array_filter(array_map([PermissionCatalog::class, 'moduleOf'], $this->permissions($user))));
+
+        return \App\Models\ErpModule::whereIn('slug', array_diff($enabled, $branchLocked))->orderBy('sort_order')->get()
+            ->map(fn ($m) => [
+                'slug' => $m->slug,
+                'name' => $m->name,
+                'description' => $m->description,
+                'icon' => $m->icon ? \Illuminate\Support\Str::after($m->icon, 'bi-') : null,
+                'color' => $m->color,
+                'category' => $m->category,
+                'state' => in_array($m->slug, $userLocked, true) ? 'locked' : (in_array($m->slug, $withPermission, true) ? 'open' : 'no_permission'),
+            ])->values()->all();
+    }
+
     public function forget(?User $user = null): void
     {
         if ($user) {

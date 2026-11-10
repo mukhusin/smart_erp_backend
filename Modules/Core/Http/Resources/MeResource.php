@@ -56,6 +56,12 @@ class MeResource extends JsonResource
             'modules' => ModuleResource::collection(
                 ErpModule::whereIn('slug', $access->modules($this->resource))->orderBy('sort_order')->get()
             ),
+            /**
+             * Dashboard tiles: every module available to the user's company and branch. state: open | locked (locked for this user) | no_permission.
+             *
+             * @var list<array{slug: string, name: string, description: string|null, icon: string|null, color: string|null, category: string|null, state: string}>
+             */
+            'module_tiles' => $access->moduleTiles($this->resource),
             /** @var list<string> Assigned roles plus roles handed over to the user right now. */
             'roles' => $access->roles($this->resource),
             /** @var list<string> Effective permission names, e.g. "leave.approve-hr". The UI shows actions from this list only. */

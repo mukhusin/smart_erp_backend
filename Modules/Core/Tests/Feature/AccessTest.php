@@ -158,4 +158,20 @@ class AccessTest extends TestCase
             Role::where('name', 'hod')->where('company_id', $beta->id)->value('id'),
         );
     }
+
+    public function test_dashboard_tiles_hide_branch_locks_and_fade_user_locks(): void
+    {
+        $arusha = CompanyBranch::firstWhere('name', 'Arusha');
+        $user = $this->staff('Arusha', ['hod']);
+        ModuleLock::create(['module_slug' => 'payroll', 'company_branch_id' => $arusha->id]);
+        ModuleLock::create(['module_slug' => 'leave', 'user_id' => $user->id]);
+
+        $tiles = collect($this->access()->moduleTiles($user))->keyBy('slug');
+
+        $this->assertFalse($tiles->has('payroll'), 'locked for the branch: hidden');
+        $this->assertFalse($tiles->has('fleet'), 'not enabled for the company: hidden');
+        $this->assertSame('locked', $tiles['leave']['state'], 'locked for the user: shown faded');
+        $this->assertSame('no_permission', $tiles['hr']['state']);
+        $this->assertSame('open', $tiles['self-service']['state']);
+    }
 }

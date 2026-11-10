@@ -4035,6 +4035,57 @@
                             "$ref": "#/components/schemas/ModuleResource"
                         }
                     },
+                    "module_tiles": {
+                        "type": "array",
+                        "description": "Dashboard tiles: every module available to the user's company and branch. state: open | locked (locked for this user) | no_permission.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "slug": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "icon": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "color": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "category": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "state": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "slug",
+                                "name",
+                                "description",
+                                "icon",
+                                "color",
+                                "category",
+                                "state"
+                            ]
+                        }
+                    },
                     "roles": {
                         "type": "array",
                         "description": "Assigned roles plus roles handed over to the user right now.",
@@ -4085,6 +4136,7 @@
                     "company",
                     "branch",
                     "modules",
+                    "module_tiles",
                     "roles",
                     "permissions",
                     "acting_roles"
