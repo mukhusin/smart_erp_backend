@@ -183,4 +183,14 @@ class CompanyAdminTest extends TestCase
         $this->getJson("/api/v1/auth/login-branding?org={$this->company->slug}")->assertJsonFragment(['title' => 'Payday moved']);
         $this->actingAs($this->admin)->deleteJson("/api/v1/admin/login-slides/{$id}")->assertNoContent();
     }
+
+    public function test_roles_list_with_user_counts(): void
+    {
+        $this->staff(['hod']);
+
+        $this->actingAs($this->admin)->getJson('/api/v1/admin/roles')
+            ->assertOk()
+            ->assertJsonFragment(['name' => 'hod', 'users_count' => 1])
+            ->assertJsonFragment(['name' => 'company-admin', 'users_count' => 1]);
+    }
 }
