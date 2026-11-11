@@ -76,6 +76,18 @@ class EmployeeResource extends JsonResource
             'contract' => $this->whenLoaded('activeContract', fn () => $this->activeContract ? new ContractResource($this->activeContract) : null),
             /** Contract waiting to start (on the profile). */
             'waiting_contract' => $this->whenLoaded('waitingContract', fn () => $this->waitingContract ? new ContractResource($this->waitingContract) : null),
+            /**
+             * The account the employee is paid into (on the profile).
+             *
+             * @var array{id: int, bank: array{id: int, name: string}|null, branch: string|null, account_number: string, account_name: string}|null
+             */
+            'bank_account' => $this->whenLoaded('bankAccount', fn () => $this->bankAccount ? [
+                'id' => $this->bankAccount->id,
+                'bank' => $this->bankAccount->bank ? ['id' => $this->bankAccount->bank->id, 'name' => $this->bankAccount->bank->name] : null,
+                'branch' => $this->bankAccount->branch,
+                'account_number' => $this->bankAccount->account_number,
+                'account_name' => $this->bankAccount->account_name,
+            ] : null),
             /** Current or next internship/residency period (on the profile). */
             'placement' => $this->whenLoaded('currentPlacement', fn () => $this->currentPlacement ? new PlacementResource($this->currentPlacement) : null),
             /**

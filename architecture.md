@@ -435,3 +435,14 @@ company admins are exempt, so a new company is never locked out. Contracts are s
 today works before the nightly job). Open sessions are re-checked every 15 minutes and end with 401
 `code: access_ended`. Modules add such rules by implementing `Modules\Core\Contracts\LoginCheck`, tagged `login.checks`.
 
+Names across branches: departments are per branch or company-wide. The same department name is allowed in different
+branches, but not next to a company-wide department of that name, nor twice in one branch (sections: within their
+parent). Job positions (HR → Job positions, `hr.positions.manage`) belong to a department and are unique per department,
+so each branch's "Nursing" can have its own "Registered Nurse". Pickers show the branch next to the name. An employee's
+department must be company-wide or of the employee's branch, and the position must belong to that department.
+Positions ever held are deactivated, not deleted.
+
+Banks (HR settings → Banks, `hr.banks.manage`; was `payroll.banks.manage`, moved to HR because employee bank accounts
+live in HR) are per company. Each employee has one active bank account (HRMS rule); changing it keeps the old one
+inactive. The same account number at the same bank cannot belong to two employees.
+

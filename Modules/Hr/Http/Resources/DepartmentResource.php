@@ -36,6 +36,10 @@ class DepartmentResource extends JsonResource
                 'photo_url' => $head->employee->profile_image ? route('hr.employees.photo', $head->employee->id, false) : null,
                 'since' => ($head->started_at ?? $head->created_at)?->toDateString(),
             ] : null,
+            /** @var list<array{id: int, title: string, is_active: bool, staff_count: int}> */
+            'positions' => $this->whenLoaded('positions', fn () => $this->positions->map(fn ($p) => [
+                'id' => $p->id, 'title' => $p->title, 'is_active' => $p->is_active, 'staff_count' => (int) ($p->staff_count ?? 0),
+            ])->values()->all()),
             /** @var list<DepartmentResource> */
             'sections' => DepartmentResource::collection($this->whenLoaded('sections')),
             /** @var list<array{id: int, name: string, employee_no: string, from: string|null, to: string|null, reason: string|null, active: bool}> */

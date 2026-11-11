@@ -1,15 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Hr\Http\Controllers\Api\BankController;
 use Modules\Hr\Http\Controllers\Api\ContractTypeController;
 use Modules\Hr\Http\Controllers\Api\DepartmentController;
 use Modules\Hr\Http\Controllers\Api\EmployeeContractController;
+use Modules\Hr\Http\Controllers\Api\EmployeeBankAccountController;
 use Modules\Hr\Http\Controllers\Api\EmployeeController;
 use Modules\Hr\Http\Controllers\Api\EmployeeDependantController;
 use Modules\Hr\Http\Controllers\Api\EmployeeDocumentController;
 use Modules\Hr\Http\Controllers\Api\EmployeeExperienceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeLicenceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeQualificationController;
+use Modules\Hr\Http\Controllers\Api\JobPositionController;
 use Modules\Hr\Http\Controllers\Api\LicenceTypeController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
@@ -25,6 +28,8 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::get('licence-types/active', [LookupController::class, 'licenceTypes'])->name('licence-types.active');
         Route::get('summary', [LookupController::class, 'summary'])->name('summary');
         Route::get('placements', [PlacementController::class, 'index'])->name('placements.index');
+        Route::get('job-positions', [JobPositionController::class, 'index'])->name('job-positions.index');
+        Route::get('banks/active', [BankController::class, 'active'])->name('banks.active');
         Route::get('structure/departments', [DepartmentController::class, 'index'])->name('structure.index');
         Route::get('structure/departments/{department}', [DepartmentController::class, 'show'])->name('structure.show');
         Route::get('number-formats/options', [NumberFormatController::class, 'options'])->name('number-formats.options');
@@ -58,6 +63,8 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
     Route::middleware('can:hr.employees.edit')->group(function () {
         Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
         Route::post('employees/{employee}/photo', [EmployeeController::class, 'uploadPhoto'])->name('employees.photo.upload');
+        Route::put('employees/{employee}/bank-account', [EmployeeBankAccountController::class, 'update'])->name('employees.bank-account.update');
+        Route::delete('employees/{employee}/bank-account', [EmployeeBankAccountController::class, 'destroy'])->name('employees.bank-account.destroy');
         Route::delete('employees/{employee}/photo', [EmployeeController::class, 'deletePhoto'])->name('employees.photo.delete');
 
         Route::prefix('employees/{employee}')->name('employees.')->scopeBindings()->group(function () {
@@ -102,6 +109,19 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::put('placements/{placement}', [PlacementController::class, 'update'])->name('placements.update');
         Route::post('placements/{placement}/stop', [PlacementController::class, 'stop'])->name('placements.stop');
         Route::delete('placements/{placement}', [PlacementController::class, 'destroy'])->name('placements.destroy');
+    });
+
+    Route::middleware('can:hr.banks.manage')->group(function () {
+        Route::get('banks', [BankController::class, 'index'])->name('banks.index');
+        Route::post('banks', [BankController::class, 'store'])->name('banks.store');
+        Route::put('banks/{bank}', [BankController::class, 'update'])->name('banks.update');
+        Route::delete('banks/{bank}', [BankController::class, 'destroy'])->name('banks.destroy');
+    });
+
+    Route::middleware('can:hr.positions.manage')->group(function () {
+        Route::post('job-positions', [JobPositionController::class, 'store'])->name('job-positions.store');
+        Route::put('job-positions/{jobPosition}', [JobPositionController::class, 'update'])->name('job-positions.update');
+        Route::delete('job-positions/{jobPosition}', [JobPositionController::class, 'destroy'])->name('job-positions.destroy');
     });
 
     Route::middleware('can:hr.departments.manage')->prefix('structure/departments')->name('structure.')->group(function () {

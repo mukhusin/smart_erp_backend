@@ -73,19 +73,19 @@ class LookupController extends Controller
      *
      * With `department_id`: that department's positions and positions not tied to a department.
      *
-     * @response array{data: list<array{id: int, title: string, department: string|null}>}
+     * @response array{data: list<array{id: int, title: string, department: string|null, branch: string|null}>}
      */
     #[QueryParameter('search', type: 'string')]
     #[QueryParameter('department_id', type: 'integer')]
     public function positions(): JsonResponse
     {
         $search = trim((string) request('search'));
-        $rows = JobPosition::with('department')->where('is_active', true)
+        $rows = JobPosition::with('department.branch')->where('is_active', true)
             ->when(request()->filled('department_id'), fn ($q) => $q->where(fn ($q) => $q->whereNull('department_id')->orWhere('department_id', request()->integer('department_id'))))
             ->when($search !== '', fn ($q) => $q->where('title', 'like', "%{$search}%"))
             ->orderBy('title')->limit(30)->get();
 
-        return response()->json(['data' => $rows->map(fn ($p) => ['id' => $p->id, 'title' => $p->title, 'department' => $p->department?->name])]);
+        return response()->json(['data' => $rows->map(fn ($p) => ['id' => $p->id, 'title' => $p->title, 'department' => $p->department?->name, 'branch' => $p->department?->branch?->name])]);
     }
 
     /**

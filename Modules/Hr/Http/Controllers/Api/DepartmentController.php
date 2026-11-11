@@ -41,7 +41,9 @@ class DepartmentController extends Controller
     public function show(Department $department): DepartmentResource
     {
         return new DepartmentResource($this->withDetails(Department::whereKey($department->id))
-            ->with(['heads.employee', 'sections' => fn ($q) => $this->withDetails($q)->orderBy('name')])->firstOrFail());
+            ->with(['heads.employee', 'sections' => fn ($q) => $this->withDetails($q)->orderBy('name'),
+                'positions' => fn ($q) => $q->withCount(['employees as staff_count' => fn ($e) => $e->where('employment_status', '!=', 'terminated')])->orderByDesc('is_active')->orderBy('title')])
+            ->firstOrFail());
     }
 
     /**

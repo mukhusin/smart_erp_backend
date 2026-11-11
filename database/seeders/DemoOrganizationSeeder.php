@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\Department;
+use App\Models\Bank;
 use App\Models\EmployeeNumberFormat;
 use App\Models\HrSetting;
 use App\Models\JobPosition;
@@ -38,6 +39,11 @@ class DemoOrganizationSeeder extends Seeder
         'volunteer' => ['Volunteer (VOL)', [['type' => 'text', 'value' => 'VOL'], ['type' => 'sequence', 'length' => 0, 'start_at' => 1]], false],
         'internship' => ['Interns', [['type' => 'text', 'value' => 'INT/DH/'], ['type' => 'department', 'value' => 'GEN'], ['type' => 'text', 'value' => ':'],
             ['type' => 'sequence', 'length' => 4, 'start_at' => 1], ['type' => 'text', 'value' => '/'], ['type' => 'year', 'length' => 2]], false],
+    ];
+
+    private const BANKS = [
+        ['CRDB Bank', 'CRDB'], ['NMB Bank', 'NMB'], ['NBC Bank', 'NBC'], ['Stanbic Bank', 'STANBIC'],
+        ['Exim Bank', 'EXIM'], ['Azania Bank', 'AZANIA'], ['Equity Bank', 'EQUITY'],
     ];
 
     private const LICENCES = [
@@ -81,6 +87,9 @@ class DemoOrganizationSeeder extends Seeder
                 ]);
                 $contractType->employee_number_format_id ??= $formats[$type] ?? null;
                 $contractType->save();
+            }
+            foreach (self::BANKS as [$name, $code]) {
+                Bank::firstOrCreate(['name' => $name], ['code' => $code, 'is_active' => true]);
             }
             HrSetting::firstOrCreate([], ['renumber_on_contract_change' => true]);
             foreach (self::LICENCES as [$name, $short, $provider]) {

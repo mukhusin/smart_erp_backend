@@ -332,8 +332,8 @@ for the user's branch or for the user.
 | 47 | `create-roster` | Roster Management | 9 | 0 | `roster.manage` |
 | 48 | `create-payroll-sheet` | Payroll Management | 7 | 0 | `payroll.create` |
 | 49 | `approve-annual-leave` | Leave Management | 8 | 0 | `leave.approve-hr` |
-| 50 | `add-bank-setting` | Settings | 5 | 0 | `payroll.banks.manage` |
-| 51 | `manage-bank-setting` | Settings | 5 | 0 | `payroll.banks.manage` |
+| 50 | `add-bank-setting` | Settings | 5 | 0 | `hr.banks.manage` |
+| 51 | `manage-bank-setting` | Settings | 5 | 0 | `hr.banks.manage` |
 | 52 | `assign-user-permission` | User Management | 6 | 0 | `admin.roles.assign` |
 | 53 | `manage-overtime` | Overtime Management | 9 | 0 | `overtime.manage` |
 | 54 | `upload-payrolly` | Payroll Management | 7 | 0 | `payroll.upload` |

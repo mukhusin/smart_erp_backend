@@ -46,10 +46,14 @@ class StoreEmployeeRequest extends FormRequest
             'home_address' => ['nullable', 'string', 'max:255'],
 
             'company_branch_id' => ['required', 'integer', Rule::exists('company_branches', 'id')->where('company_id', $companyId)->where('is_active', true)],
-            'department_id' => ['required', 'integer', $inCompany('departments')->whereNull('parent_id')],
+            /** Company-wide or of the employee's branch. */
+            'department_id' => ['required', 'integer', $inCompany('departments')->whereNull('parent_id')
+                ->where(fn ($q) => $q->whereNull('company_branch_id')->orWhere('company_branch_id', $this->integer('company_branch_id')))],
             /** A section of the chosen department. */
             'section_id' => ['nullable', 'integer', $inCompany('departments')->where('parent_id', $this->integer('department_id'))],
-            'job_position_id' => ['required', 'integer', $inCompany('job_positions')],
+            /** A position of the chosen department (or one not tied to a department). */
+            'job_position_id' => ['required', 'integer', $inCompany('job_positions')
+                ->where(fn ($q) => $q->whereNull('department_id')->orWhere('department_id', $this->integer('department_id')))],
             'emp_title' => ['nullable', 'string', 'max:50'],
             'emp_type' => ['required', O::keys(O::EMPLOYMENT_TYPES)],
             'emp_category' => ['nullable', O::keys(O::CATEGORIES)],
@@ -76,6 +80,8 @@ class StoreEmployeeRequest extends FormRequest
             'email.required' => 'An email is needed to send the account invite.',
             'email.unique' => 'Another user already has this email.',
             'section_id.exists' => 'The section must belong to the chosen department.',
+            'department_id.exists' => 'Choose a department of this branch (or one for all branches).',
+            'job_position_id.exists' => 'Choose a position of the chosen department.',
             'probation_start.required_if' => 'Enter when probation starts.',
             'probation_period.required_if' => 'Enter the probation period.',
         ];
