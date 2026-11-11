@@ -26,7 +26,9 @@ class EmployeeResource extends JsonResource
             'gender' => $this->gender,
             'email' => $this->email,
             'phone_number' => $this->phone_number,
-            'photo_url' => $this->profile_image ? '/storage/' . $this->profile_image : null,
+            'photo_url' => $this->profile_image
+                ? route('hr.employees.photo', $this->id, false) . '?v=' . substr(md5($this->profile_image), 0, 8)
+                : null,
             /** @var array{id: int, name: string}|null */
             'branch' => $this->branch ? ['id' => $this->branch->id, 'name' => $this->branch->name] : null,
             /** @var array{id: int, name: string}|null */
@@ -68,7 +70,26 @@ class EmployeeResource extends JsonResource
                 'nssf_no' => $this->nssf_no,
                 'nhif_no' => $this->nhif_no,
                 'wcf_no' => $this->wcf_no,
+                'has_annual_leave' => (bool) ($this->has_annual_leave ?? true),
             ],
+            /** Active contract (on the profile). */
+            'contract' => $this->whenLoaded('activeContract', fn () => $this->activeContract ? new ContractResource($this->activeContract) : null),
+            /** Contract waiting to start (on the profile). */
+            'waiting_contract' => $this->whenLoaded('waitingContract', fn () => $this->waitingContract ? new ContractResource($this->waitingContract) : null),
+            /**
+             * Number of records per profile section (on the profile).
+             *
+             * @var array{contracts: int, qualifications: int, licences: int, experiences: int, documents: int, dependants: int, next_of_kin: int}
+             */
+            'counts' => $this->when(isset($this->contracts_count), fn () => [
+                'contracts' => (int) $this->contracts_count,
+                'qualifications' => (int) $this->qualifications_count,
+                'licences' => (int) $this->licences_count,
+                'experiences' => (int) $this->experiences_count,
+                'documents' => (int) $this->documents_count,
+                'dependants' => (int) $this->dependants_count,
+                'next_of_kin' => (int) $this->next_of_kin_count,
+            ]),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

@@ -42,6 +42,7 @@ final class PermissionCatalog
             'hr.departments.manage' => 'Manage departments and sections',
             'hr.positions.manage' => 'Manage job positions',
             'hr.contract-types.manage' => 'Manage contract types',
+            'hr.number-formats.manage' => 'Manage employee number formats',
             'hr.licences.manage' => 'Manage professional licences',
             'hr.admitted.manage' => 'Record admitted employees',
             'hr.excuse-duty.manage' => 'Record excuse of duty',

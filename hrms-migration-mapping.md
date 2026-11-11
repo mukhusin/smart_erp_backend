@@ -84,11 +84,27 @@ The ERP stores fixed keys (`Modules/Hr/Support/EmployeeOptions.php`). Convert wh
 | `marital_status` | `SINGLE` → `single`; `MARRIED` → `married`; `Divorced` → `divorced`; `SEPARATED` → `separated`; `Widowed`, `WIDOWER` → `widowed`; empty → null |
 | `gender`, `emp_category` | unchanged (`Female`/`Male`, `Primary`/`Secondary`) |
 
+#### Employee profile value mapping
+
+| Table.column | HRMS value → ERP value |
+|---|---|
+| `employee_qualifications.education_level` | `1` → `o_level`; `2` → `a_level`; `3` → `certificate`; `4` → `ordinary_diploma`; `5` → `advanced_diploma`; `6` → `degree`; `7` → `masters`; `8` → `phd`; `9` → `professor` |
+| `employee_documents.file_type` | `Birth Certificate` → `birth_certificate`; `Registration Certificate` → `registration_certificate`; `TIN Certificate` → `tin_certificate`; `Marriage Certificate` → `marriage_certificate`; `Academic Certificate` → `academic_certificate`; `Proffesional Cerificate` → `professional_certificate` |
+| `employee_dependants.relationship` | `Father` → `father`; `Mother` → `mother`; `Child` → `child`; `Sister` → `spouse` (the HRMS form saved "Spouse" as `Sister`) |
+| `employee_contracts.status` | unchanged keys (`active`, `waiting`, `ended`, `resigned_24_hrs_notes` …); `vacation_of_office` → `abscondment`; `expired`/`pending` → `ended` |
+| `employee_contract_comments` | from `emp_contract_comments`: `emp_contract_id` → `employee_contract_id`, `comment`, `status`; `action` = `created`; `user_id` = user of HRMS `employee_id` |
+| `professional_licences` | from `proffesional_licences` (`name`, `provider_name`, `short_name`), `company_id` = Kairuki |
+| `employee_licences` | `proffesional_licence_id` → `professional_licence_id`; `file_name` → `file_path` after copying files; `status` dropped (computed from `end_date`) |
+| `employees.has_annual_leave` | from `employee_settings.hasAnnualLeave` |
+| employee number formats (Kairuki) | `Staff (ST)`: text `ST` + number; `Part time (PT)`: `PT` + number; `Volunteer (VOL)`: `VOL` + number; `Lab interns`: `INT/KH/LAB:` + number (4 digits, start 30) + `/` + year YY; `Nursing interns`: `INT/KH/NRS:` + number (4, start 36) + `/` + YY; `Other interns`: `INT/KH/OTHER:` + number (3) + `/` + YY; `Residents`: `RES/KH/SN:` + number (3) + `/` + YY; separator none. Link contract types by `employeement_type`; turn renumbering on. HRMS `st_no` → `employee_no` |
+| `company_sms_settings` (Kairuki) | enabled, driver `afyabox`, sender `KAIRUKI`, contract reminders on; copy `AFYABOX_DB_*` from the HRMS `.env` |
+| file columns | copy files to the private disk at `hr/{company_id}/employees/{employee_id}/{documents,qualifications,licences,dependants,photo}/` |
+
 ### Level 3 — employee details & setup
 
 | HRMS table → ERP | Rows (local) | Status | Renames | HRMS-only columns → decision | ERP-only columns → fill |
 |---|---|---|---|---|---|
-| `employee_contracts` | 1,555 | ⚠️ | `isActive`→`is_active` | `st_no`: → `contract_no` (HRMS shows st_no as "Contract ID")<br>`created_by`: add to ERP (audit)<br>`updated_by`: add to ERP (audit)<br>`company_branche_id`: drop | `contract_no`: from `st_no` |
+| `employee_contracts` | 1,555 | 🟡 | `isActive`→`is_active` | `st_no`: → `contract_no` (HRMS shows st_no as "Contract ID")<br>`created_by`, `updated_by`: HRMS employee ids → their user ids<br>`company_branche_id`: drop | `contract_no`: from `st_no` |
 | `employee_bank_accounts` | 705 | 🟡 | `isActive`→`is_active` | `name`: → `account_name`<br>`account`: → `account_number` | `account_name`: from `name`<br>`account_number`: from `account` |
 | `employee_dependants` | 1 | ✅ | `isNextOfKin`→`is_next_of_kin` | — | — |
 | `employee_documents` | 10 | 🟡 | — | — | `file_path`: `employee/document/{file_name}` after copying files |

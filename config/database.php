@@ -64,6 +64,21 @@ return [
             ]) : [],
         ],
 
+        'afyabox' => [
+            'driver' => 'mysql',
+            'url' => env('AFYABOX_DATABASE_URL'),
+            'host' => env('AFYABOX_DB_HOST'),
+            'port' => env('AFYABOX_DB_PORT', '3306'),
+            'database' => env('AFYABOX_DB_DATABASE', 'afyabox'),
+            'username' => env('AFYABOX_DB_USERNAME'),
+            'password' => env('AFYABOX_DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

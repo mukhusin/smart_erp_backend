@@ -367,3 +367,43 @@ dates and money formatted for the company (currency, fiscal year), and `*appCan=
 - Invites for any user go through `Modules/Core/Actions/SendUserInvite` (invites broker); company and staff invites only differ by email.
 - Not yet: editing employees, photos, contracts, and data scope (HOD sees own department only).
 
+## 15. Employee profile (2026-11-11)
+
+After registration the profile guides HR to complete the record. Sections are tabs that load on demand:
+Overview, Contracts, Qualifications, Licences, Experience, Documents, Dependants. A completion card counts
+contract, qualifications, documents, next of kin and photo as required; licences and experience are optional.
+
+Contract rules (ported from HRMS `EmployeeController`/`EmployeeContract`, in `Modules/Hr/Actions/ManageContracts.php`):
+
+- one active contract; end date = start + period months − 1 day;
+- a renewal can be added only in the last 90 days, must start after the active one ends, one waiting at a time;
+- `contract:status` (every two hours, per company) ends expired contracts and starts waiting ones;
+- the active contract's type sets `employees.emp_type`; every change is logged in `employee_contract_events`;
+- ending with a reason other than `ended`/`change_of_contract` marks the employee terminated and cancels the renewal;
+- "Remove wrong contract" deletes only the latest contract not used in payroll and restores the previous one;
+- ending and removing need the user's password (as in HRMS).
+
+Employee numbers (HR settings → Employee numbers, permission `hr.number-formats.manage`):
+
+- a number format is an ordered list of segments: fixed text, running number (digits, start), year (YY/YYYY),
+  department code (department short name); joined by a separator (none, `/`, `-`, `.`, `:`);
+- each contract type uses one format, one format can serve many contract types; the default format is used at
+  registration (HR can pick another) and for contract types without one; no format at all = continue the latest number;
+- running number = highest in use for that format + 1 (removed employees and old contract numbers count);
+- with "Give a new number when the contract type changes" on, a starting contract renumbers the employee into its
+  contract type's format (HRMS ST/PT/VOL). The old/new number is saved in `employee_contract_events.changes`, so
+  "Remove wrong contract" restores it exactly (or gives a fresh one in the same format if it was taken).
+
+Leavers: a leaving reason deactivates the user account on the effective date (at once if today or past, else by
+`contract:status`), without approval, recorded in `access_changes` with the reason. The only company admin is kept
+active and HR is warned.
+
+SMS (Administration → SMS settings): `Modules/Core/Sms` with drivers `log` and `afyabox` (rows in AfyaBox's
+`messaging` table, as HRMS; connection `AFYABOX_DB_*` in `.env`). Messages are kept in `messagings`/`message_recipients`.
+`hr:contract-reminders` (daily 08:30) ports HRMS `app:sms-notify-three-month-contract`: active contract ending within
+90 days, no renewal waiting, valid Tanzanian mobile, at most 3 per contract end date, 28 days apart (failed sends do
+not count, so they are retried). Not ported: the 90/60/30/10/5 jobs (disabled in HRMS), AfyaBox delivery-status sync.
+
+Files live on the private disk and are served only by authenticated HR endpoints. Updates that carry files
+use POST with multipart form data; fields left out are cleared, files are kept unless replaced or removed.
+

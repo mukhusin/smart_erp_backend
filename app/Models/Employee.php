@@ -15,7 +15,7 @@ class Employee extends Model {
         'id_number','id_type','marital_status','emp_title','employment_date',
         'place_of_recruitment','emp_type','emp_category','termination_date',
         'nssf_no','nhif_no','wcf_no','employment_status','contract_id','contract_status',
-        'probation_start','probation_period','probation_end','updated_by',
+        'probation_start','probation_period','probation_end','updated_by','has_annual_leave',
     ];
 
     protected $casts = [
@@ -24,6 +24,7 @@ class Employee extends Model {
         'termination_date' => 'date',
         'probation_start'  => 'date',
         'probation_end'    => 'date',
+        'has_annual_leave' => 'boolean',
     ];
 
     public function getFullNameAttribute(): string {
@@ -44,7 +45,9 @@ class Employee extends Model {
     public function experiences()   { return $this->hasMany(EmployeeExperience::class); }
     public function dependants()    { return $this->hasMany(EmployeeDependant::class); }
     public function contracts()     { return $this->hasMany(EmployeeContract::class); }
-    public function activeContract(){ return $this->hasOne(EmployeeContract::class)->where('is_active', true)->latest(); }
+    public function activeContract(){ return $this->hasOne(EmployeeContract::class)->where('is_active', true)->latest('id'); }
+    public function waitingContract(){ return $this->hasOne(EmployeeContract::class)->where('status', 'waiting')->latest('id'); }
+    public function licences()      { return $this->hasMany(EmployeeLicence::class); }
     public function bankAccounts()  { return $this->hasMany(EmployeeBankAccount::class); }
     public function documents()     { return $this->hasMany(EmployeeDocument::class); }
     public function supervisors()   { return $this->hasMany(EmpSupervisor::class)->where('status','active'); }

@@ -6,14 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Modules\Hr\Actions\CreateEmployeeAccount;
+use Modules\Hr\Actions\ManageContracts;
 use Modules\Hr\Actions\RegisterEmployee;
+use Modules\Hr\Actions\UpdateEmployee;
 use Modules\Hr\Http\Requests\CreateAccountRequest;
 use Modules\Hr\Http\Requests\StoreEmployeeRequest;
+use Modules\Hr\Http\Requests\UpdateEmployeeRequest;
 use Modules\Hr\Http\Resources\EmployeeResource;
+use Modules\Hr\Support\EmployeeFiles;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * @tags HR: Employees
@@ -58,11 +64,65 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Show an employee.
+     * Show an employee, with the active and waiting contract and the number of records per profile section.
      */
-    public function show(Employee $employee): EmployeeResource
+    public function show(Employee $employee, ManageContracts $contracts): EmployeeResource
     {
-        return new EmployeeResource($employee->load(self::WITH));
+        $contracts->sync($employee);
+
+        return new EmployeeResource($this->profile($employee));
+    }
+
+    /**
+     * Update an employee's details.
+     *
+     * When the employee has a user account, its email and branch change too.
+     */
+    public function update(UpdateEmployeeRequest $request, Employee $employee, UpdateEmployee $update): EmployeeResource
+    {
+        $update->handle($employee, $request->employeeData(), $request->user()->username);
+
+        return new EmployeeResource($this->profile($employee->refresh()));
+    }
+
+    /**
+     * Upload the employee's photo.
+     */
+    public function uploadPhoto(Request $request, Employee $employee): EmployeeResource
+    {
+        $request->validate([
+            /** JPG, PNG or WEBP, up to 2 MB. */
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+        $employee->update(['profile_image' => EmployeeFiles::replace($employee->profile_image, $request->file('photo'), $employee, 'photo')]);
+
+        return new EmployeeResource($this->profile($employee));
+    }
+
+    /**
+     * Remove the employee's photo.
+     */
+    public function deletePhoto(Employee $employee): EmployeeResource
+    {
+        EmployeeFiles::delete($employee->profile_image);
+        $employee->update(['profile_image' => null]);
+
+        return new EmployeeResource($this->profile($employee));
+    }
+
+    /**
+     * The employee's photo.
+     */
+    public function photo(Employee $employee): StreamedResponse
+    {
+        return EmployeeFiles::response($employee->profile_image);
+    }
+
+    private function profile(Employee $employee): Employee
+    {
+        return $employee->load([...self::WITH, 'activeContract.natureOfContract', 'waitingContract.natureOfContract'])
+            ->loadCount(['contracts', 'qualifications', 'licences', 'experiences', 'documents', 'dependants',
+                'dependants as next_of_kin_count' => fn ($q) => $q->where('is_next_of_kin', true)]);
     }
 
     /**
@@ -83,11 +143,17 @@ class EmployeeController extends Controller
     /**
      * Suggested next employee number.
      *
+     * In the chosen number format, or the default format. `department_id` fills a department-code segment.
+     *
      * @response array{data: array{employee_no: string}}
      */
-    public function nextNumber(RegisterEmployee $register): JsonResponse
+    #[QueryParameter('format_id', type: 'integer')]
+    #[QueryParameter('department_id', type: 'integer')]
+    public function nextNumber(Request $request, RegisterEmployee $register): JsonResponse
     {
-        return response()->json(['data' => ['employee_no' => $register->nextNumber()]]);
+        $number = $register->nextNumber($request->integer('format_id') ?: null, $request->integer('department_id') ?: null);
+
+        return response()->json(['data' => ['employee_no' => $number]]);
     }
 
     /**

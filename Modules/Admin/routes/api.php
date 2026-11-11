@@ -7,6 +7,7 @@ use Modules\Admin\Http\Controllers\Api\LoginSlideController;
 use Modules\Admin\Http\Controllers\Api\ModuleLockController;
 use Modules\Admin\Http\Controllers\Api\PermissionController;
 use Modules\Admin\Http\Controllers\Api\RoleController;
+use Modules\Admin\Http\Controllers\Api\SmsSettingsController;
 use Modules\Admin\Http\Controllers\Api\UserController;
 
 // Company administration. Every route: logged in, company's admin module available, and the listed permission.
@@ -54,5 +55,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'module:admin'])->name('admi
         Route::post('login-slides', [LoginSlideController::class, 'store'])->name('login-slides.store');
         Route::post('login-slides/{loginSlide}', [LoginSlideController::class, 'update'])->name('login-slides.update');
         Route::delete('login-slides/{loginSlide}', [LoginSlideController::class, 'destroy'])->name('login-slides.destroy');
+        Route::get('sms-settings', [SmsSettingsController::class, 'show'])->name('sms-settings.show');
+        Route::put('sms-settings', [SmsSettingsController::class, 'update'])->name('sms-settings.update');
+        Route::post('sms-settings/test', [SmsSettingsController::class, 'test'])->middleware('throttle:5,1')->name('sms-settings.test');
     });
 });

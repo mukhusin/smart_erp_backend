@@ -6,7 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\CompanyBranch;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\EmployeeContract;
+use App\Models\EmployeeLicence;
 use App\Models\JobPosition;
+use App\Models\NatureOfContract;
+use App\Models\ProfessionalLicence;
+use Carbon\CarbonImmutable;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Modules\Hr\Support\EmployeeOptions;
@@ -21,7 +26,7 @@ class LookupController extends Controller
     /**
      * Employee field choices.
      *
-     * @response array{data: array{genders: list<array{value: string, label: string}>, employment_statuses: list<array{value: string, label: string}>, employment_types: list<array{value: string, label: string}>, categories: list<array{value: string, label: string}>, id_types: list<array{value: string, label: string}>, marital_statuses: list<array{value: string, label: string}>}}
+     * @response array{data: array{genders: list<array{value: string, label: string}>, employment_statuses: list<array{value: string, label: string}>, employment_types: list<array{value: string, label: string}>, categories: list<array{value: string, label: string}>, id_types: list<array{value: string, label: string}>, marital_statuses: list<array{value: string, label: string}>, education_levels: list<array{value: string, label: string}>, document_types: list<array{value: string, label: string}>, relationships: list<array{value: string, label: string}>, contract_end_reasons: list<array{value: string, label: string}>}}
      */
     public function options(): JsonResponse
     {
@@ -82,19 +87,53 @@ class LookupController extends Controller
     }
 
     /**
-     * Employee counts for the HR dashboard.
+     * Active contract types.
      *
-     * @response array{data: array{total: int, probation: int, without_account: int, invited: int}}
+     * @response array{data: list<array{id: int, name: string, code: string|null, employment_type: string|null, has_annual_leave: bool}>}
+     */
+    public function contractTypes(): JsonResponse
+    {
+        return response()->json(['data' => NatureOfContract::where('is_active', true)->orderBy('contract_name')->get()
+            ->map(fn ($t) => ['id' => $t->id, 'name' => $t->contract_name, 'code' => $t->code, 'employment_type' => $t->employment_type, 'has_annual_leave' => (bool) $t->has_annual_leave])]);
+    }
+
+    /**
+     * Active professional licence types.
+     *
+     * @response array{data: list<array{id: int, name: string, provider_name: string|null, short_name: string|null}>}
+     */
+    public function licenceTypes(): JsonResponse
+    {
+        return response()->json(['data' => ProfessionalLicence::where('is_active', true)->orderBy('name')->get()
+            ->map(fn ($l) => ['id' => $l->id, 'name' => $l->name, 'provider_name' => $l->provider_name, 'short_name' => $l->short_name])]);
+    }
+
+    /**
+     * Counts for the HR dashboard.
+     *
+     * `contracts_ending`: active contracts ending within 90 days without a renewal waiting.
+     * `licences_expiring`: licences of current staff expired or expiring within 90 days.
+     *
+     * @response array{data: array{total: int, probation: int, without_account: int, invited: int, without_contract: int, contracts_ending: int, licences_expiring: int}}
      */
     public function summary(): JsonResponse
     {
         $active = Employee::where('employment_status', '!=', 'terminated');
+        $ids = (clone $active)->select('id');
+        $soon = CarbonImmutable::today()->addDays(EmployeeOptions::RENEWAL_WINDOW_DAYS)->toDateString();
 
         return response()->json(['data' => [
             'total' => (clone $active)->count(),
             'probation' => (clone $active)->where('employment_status', 'probation')->count(),
             'without_account' => (clone $active)->whereNull('user_id')->count(),
             'invited' => (clone $active)->whereHas('user', fn ($u) => $u->whereNull('email_verified_at'))->count(),
+            'without_contract' => (clone $active)->whereDoesntHave('contracts', fn ($q) => $q->whereIn('status', ['active', 'waiting']))->count(),
+            'contracts_ending' => EmployeeContract::whereIn('employee_id', $ids)->where('is_active', true)->whereDate('end_date', '<=', $soon)
+                ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('employee_contracts as w')->whereColumn('w.employee_id', 'employee_contracts.employee_id')
+                    ->where('w.status', 'waiting')->whereNull('w.deleted_at'))->count(),
+            'licences_expiring' => EmployeeLicence::whereIn('employee_id', $ids)->whereDate('end_date', '<=', $soon)
+                ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('employee_licences as n')->whereColumn('n.employee_id', 'employee_licences.employee_id')
+                    ->whereColumn('n.professional_licence_id', 'employee_licences.professional_licence_id')->whereColumn('n.end_date', '>', 'employee_licences.end_date'))->count(),
         ]]);
     }
 }

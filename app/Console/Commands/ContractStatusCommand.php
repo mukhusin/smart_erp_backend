@@ -2,61 +2,40 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Company;
 use App\Models\Employee;
-use App\Models\EmployeeContract;
+use App\Services\CompanyContext;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Modules\Hr\Actions\ManageContracts;
 
 class ContractStatusCommand extends Command
 {
-    protected $signature   = 'contract:status';
-    protected $description = 'Mark expired contracts inactive and update employee contract_status';
+    protected $signature = 'contract:status';
 
-    public function handle(): int
+    protected $description = 'End expired contracts, start waiting ones and deactivate accounts of employees who have left';
+
+    public function handle(CompanyContext $context, ManageContracts $contracts): int
     {
-        $today = Carbon::today();
-
-        // Expire active contracts whose end_date has passed
-        $expired = EmployeeContract::where('is_active', true)
-            ->whereNotNull('end_date')
-            ->where('end_date', '<', $today)
-            ->get();
-
+        $today = CarbonImmutable::today()->toDateString();
         $count = 0;
-        foreach ($expired as $contract) {
-            DB::transaction(function () use ($contract) {
-                $contract->update(['is_active' => false, 'status' => 'expired']);
-                // Update employee record only if this was their current contract
-                Employee::where('id', $contract->employee_id)
-                    ->where('contract_id', $contract->id)
-                    ->update(['contract_status' => 'expired']);
-            });
-            $count++;
-        }
 
-        // Activate contracts whose start_date is today and are not yet active
-        $activating = EmployeeContract::where('is_active', false)
-            ->where('status', 'pending')
-            ->where('start_date', '<=', $today)
-            ->whereNull('end_date')
-            ->orWhere(fn($q) => $q->where('is_active', false)
-                ->where('status', 'pending')
-                ->where('start_date', '<=', $today)
-                ->where('end_date', '>=', $today))
-            ->get();
+        foreach (Company::query()->pluck('id') as $companyId) {
+            $count += $context->run($companyId, function () use ($contracts, $today) {
+                $due = Employee::where(fn ($q) => $q
+                    ->whereHas('contracts', fn ($q) => $q
+                        ->where(fn ($q) => $q->where('is_active', true)->whereDate('end_date', '<', $today))
+                        ->orWhere(fn ($q) => $q->where('status', 'waiting')->whereDate('start_date', '<=', $today)))
+                    ->orWhere(fn ($q) => $q->where('employment_status', 'terminated')->whereDate('termination_date', '<=', $today)
+                        ->whereHas('user', fn ($u) => $u->where('is_active', true))))
+                    ->get();
+                $due->each(fn (Employee $employee) => $contracts->sync($employee));
 
-        foreach ($activating as $contract) {
-            DB::transaction(function () use ($contract) {
-                $contract->update(['is_active' => true, 'status' => 'active']);
-                Employee::where('id', $contract->employee_id)
-                    ->update(['contract_id' => $contract->id, 'contract_status' => 'active']);
+                return $due->count();
             });
         }
 
-        $this->info("Contracts processed: {$count} expired, {$activating->count()} activated.");
-        Log::info("contract:status — expired: {$count}, activated: {$activating->count()}");
+        $this->info("Employees with contract changes: {$count}");
 
         return self::SUCCESS;
     }

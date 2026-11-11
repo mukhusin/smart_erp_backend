@@ -56,6 +56,45 @@ class ChangeUserAccess
         return $this->request($user, 'deactivate', ['is_active' => true], ['is_active' => false], $reason);
     }
 
+    /**
+     * The employee left (HR ended their contract): deactivate at once, without the approval workflow
+     * (HR already confirmed the termination). Recorded in access_changes with the reason.
+     * Returns false when the user is the only active company admin (the account is kept).
+     */
+    public function deactivateLeaver(User $user, string $reason): bool
+    {
+        if (! $user->is_active) {
+            return true;
+        }
+        setPermissionsTeamId($user->company_id);
+        if ($user->hasRole(DefaultRoles::COMPANY_ADMIN)) {
+            try {
+                $this->ensureAnotherAdmin($user);
+            } catch (ValidationException) {
+                return false;
+            }
+        }
+
+        DB::transaction(function () use ($user, $reason) {
+            AccessChange::create([
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
+                'type' => 'deactivate',
+                'before' => ['is_active' => true],
+                'after' => ['is_active' => false],
+                'reason' => $reason,
+                'status' => AccessChange::APPLIED,
+                'requested_by' => Auth::id(),
+                'decided_by' => Auth::id(),
+                'applied_at' => now(),
+            ]);
+            $this->doDeactivate($user);
+            $this->access->forget($user);
+        });
+
+        return true;
+    }
+
     public function activate(User $user, ?string $reason = null): AccessChange
     {
         if ($user->is_active) {

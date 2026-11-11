@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MessageRecipient extends Model
 {
-    protected $fillable = ['messaging_id', 'employee_id', 'recipient_address', 'status', 'response'];
+    protected $fillable = ['uuid', 'messaging_id', 'employee_id', 'recipient_address', 'individual_message', 'status', 'response'];
 
     const STATUS_PENDING   = 'Pending';
     const STATUS_SENT      = 'Sent';

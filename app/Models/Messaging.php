@@ -14,7 +14,7 @@ class Messaging extends Model
     use BelongsToCompany;
 
     protected $fillable = [
-        'uuid', 'company_id', 'type', 'from_address', 'subject', 'message',
+        'uuid', 'company_id', 'type', 'campaign', 'campaign_key', 'from_address', 'subject', 'message',
         'extra', 'response', 'scheduled_at', 'recipient_type',
         'department_id', 'section_id', 'created_by', 'status',
     ];
