@@ -141,7 +141,12 @@ class EmployeeRegistrationTest extends TestCase
 
     public function test_next_number_and_permissions(): void
     {
-        $this->actingAs($this->admin)->getJson('/api/v1/hr/employees/next-number')->assertOk()->assertJsonPath('data.employee_no', 'EMP-0002');
+        $yy = now()->format('y');
+        $this->actingAs($this->admin)->getJson('/api/v1/hr/employees/next-number')->assertOk()->assertJsonPath('data.employee_no', 'ST1');
+        $this->getJson('/api/v1/hr/employees/next-number?emp_type=part_time')->assertJsonPath('data.employee_no', 'PT1');
+        $this->getJson('/api/v1/hr/employees/next-number?emp_type=internship')->assertJsonPath('data.employee_no', "INT/A/OTHER:0001/{$yy}");
+        $this->getJson('/api/v1/hr/employees/next-number?emp_type=resident')->assertJsonPath('data.employee_no', "RES/A/SN:001/{$yy}");
+        $this->getJson('/api/v1/hr/number-formats')->assertJsonPath('meta.using_built_in', true)->assertJsonPath('meta.renumber_on_contract_change', true);
 
         $staff = User::factory()->create(['company_id' => $this->company->id, 'company_branch_id' => $this->branch]);
         $staff->assignRole('employee');

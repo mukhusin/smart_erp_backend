@@ -36,9 +36,9 @@ class RegisterEmployee
         ];
     }
 
-    /** Next number in the chosen number format (or the default one), or after the latest number. */
-    public function nextNumber(?int $formatId = null, ?int $departmentId = null): string
+    /** Next number in the chosen number format, the default one, or (without formats) the HRMS series of the employee type. */
+    public function nextNumber(?int $formatId = null, ?int $departmentId = null, ?string $empType = null): string
     {
-        return $this->numbers->next($formatId, $departmentId);
+        return $this->numbers->next($formatId, $departmentId, $empType);
     }
 }

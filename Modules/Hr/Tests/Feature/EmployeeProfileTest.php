@@ -120,7 +120,9 @@ class EmployeeProfileTest extends TestCase
 
         $this->postJson("{$this->base}/contracts/{$first}/revert", ['password' => 'password'])
             ->assertStatus(422)->assertJsonPath('message', 'Only the latest contract of an employee can be removed.');
-        $this->postJson("{$this->base}/contracts/{$second}/revert", ['password' => 'password'])->assertOk()->assertJsonPath('message', 'Contract removed.');
+        $this->assertSame('ST1', $this->employee->refresh()->employee_no, 'HRMS numbering: full-time contract gives an ST number');
+        $this->postJson("{$this->base}/contracts/{$second}/revert", ['password' => 'password'])->assertOk()
+            ->assertJsonPath('message', 'Contract removed. The employee number is back to PT1.');
 
         $this->assertNull(EmployeeContract::withTrashed()->find($second));
         $this->employee->refresh();

@@ -5197,7 +5197,7 @@
         "/hr/employees/next-number": {
             "get": {
                 "operationId": "hr.employees.next-number",
-                "description": "In the chosen number format, or the default format. `department_id` fills a department-code segment.",
+                "description": "In the chosen number format, or the default format. `department_id` fills a department-code segment.\nA company without its own formats gets HRMS-style numbers for `emp_type` (ST, PT, VOL, INT/.., RES/..).",
                 "summary": "Suggested next employee number",
                 "tags": [
                     "HR: Employees",
@@ -5216,6 +5216,13 @@
                         "in": "query",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "emp_type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -8546,6 +8553,7 @@
         "/hr/number-formats": {
             "get": {
                 "operationId": "hr.number-formats.index",
+                "description": "Without formats of its own the company uses the built-in HRMS-style numbering (`meta.built_in`).",
                 "summary": "List number formats, with the contract types using each one and the renumbering switch",
                 "tags": [
                     "HR: Settings",
@@ -8570,10 +8578,37 @@
                                             "properties": {
                                                 "renumber_on_contract_change": {
                                                     "type": "boolean"
+                                                },
+                                                "using_built_in": {
+                                                    "type": "boolean"
+                                                },
+                                                "built_in": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "emp_type": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "next_number": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "emp_type",
+                                                            "name",
+                                                            "next_number"
+                                                        ]
+                                                    }
                                                 }
                                             },
                                             "required": [
-                                                "renumber_on_contract_change"
+                                                "renumber_on_contract_change",
+                                                "using_built_in",
+                                                "built_in"
                                             ]
                                         }
                                     },

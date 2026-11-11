@@ -209,7 +209,7 @@ The employee cannot ask for renewal in the system. The ERP should let them, thro
 **4. What approvers see**
 - the request: comment, attachments, timesheet
 - **previous contracts of this employee, when there are any:** type, number, start/end, period, basic salary, how it ended, earlier renewal requests with their decisions, comments and attachments
-- when available: leave and attendance summary and appraisal results for the current contract
+- when available: leave and attendance summary and appraisal results for the current contract (new appraisal design: architecture.md §17)
 - read-only, visible only to users who have a step in this request, and to HR
 
 **5. Result**
@@ -558,3 +558,16 @@ ERP status: ❌. No activity-based allowances, no adapters, no integrations scre
    Done: **Payroll**, **Employee + Contract**, **Attendance + Roster**, **Leave**, **Allowance + Overtime**, **Loans**. All core HR modules compared.
 2. ~~Write the HRMS → ERP data migration mapping~~ Done: see `hrms-migration-mapping.md` (2026-11-09).
 3. Before switching over: run payroll in both systems for 1–2 months and compare every line.
+
+## Added to the plan (2026-11-11)
+
+- **Planning module**: strategic plan (multi-year) and annual plan per financial year with activities, objectives,
+  service output, target and KPI. See architecture.md §17.
+- **Performance appraisal**: new design (HOD activities → employee sub-activities; employees record progress entries
+  describing what they did, each with a percentage capped by a configurable maximum per entry, submitted for approval and approved by
+  their supervisor / head of department; optional quarterly
+  minimum percentage; leave-aware), replacing the unused HRMS appraisal. To be discussed before
+  building. See architecture.md §17.
+- **Employee numbers without configuration**: fall back to the HRMS numbering (ST/PT/VOL by contract type, interns
+  and residents with their own series). Done 2026-11-11.
+

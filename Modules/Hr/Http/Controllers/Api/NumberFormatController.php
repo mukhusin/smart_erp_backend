@@ -11,6 +11,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Hr\Http\Requests\NumberFormatRequest;
 use Modules\Hr\Http\Resources\NumberFormatResource;
+use Modules\Hr\Support\EmployeeNumbers;
 
 /**
  * Employee number formats. A format is a list of segments (fixed text, running number, year, department code)
@@ -23,15 +24,21 @@ class NumberFormatController extends Controller
     /**
      * List number formats, with the contract types using each one and the renumbering switch.
      *
-     * @response array{data: list<NumberFormatResource>, meta: array{renumber_on_contract_change: bool}}
+     * Without formats of its own the company uses the built-in HRMS-style numbering (`meta.built_in`).
+     *
+     * @response array{data: list<NumberFormatResource>, meta: array{renumber_on_contract_change: bool, using_built_in: bool, built_in: list<array{emp_type: string, name: string, next_number: string}>}}
      */
-    public function index(): JsonResponse
+    public function index(EmployeeNumbers $numbers): JsonResponse
     {
         $formats = EmployeeNumberFormat::with(['segments', 'contractTypes'])->orderByDesc('is_default')->orderBy('name')->get();
 
         return response()->json([
             'data' => NumberFormatResource::collection($formats)->resolve(),
-            'meta' => ['renumber_on_contract_change' => HrSetting::current()->renumber_on_contract_change],
+            'meta' => [
+                'renumber_on_contract_change' => $numbers->renumberOnContractChange(),
+                'using_built_in' => ! $numbers->configured(),
+                'built_in' => $numbers->builtIn()->map(fn ($f, $type) => ['emp_type' => $type, 'name' => $f->name, 'next_number' => $numbers->nextIn($f)])->values()->all(),
+            ],
         ]);
     }
 

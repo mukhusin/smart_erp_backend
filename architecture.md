@@ -234,7 +234,7 @@ Commitments (approved but not yet paid) reduce the available budget until they'r
 2. **Bills + Billing + Loans module** (money out / in, with the existing loans moved out of HR into a standalone module that Payroll consumes).
 3. **Budgeting** with budget control, then **Procurement** checking budgets.
 4. **Assets** (depreciation postings), **Fleet**, **Inventory**.
-5. **Projects** and **Planning** (they mainly reuse dimensions, budgets and timesheets).
+5. **Projects** and **Planning** (they mainly reuse dimensions, budgets and timesheets). Planning scope: §17.
 
 ## 9. Backend technology independence
 
@@ -388,7 +388,10 @@ Employee numbers (HR settings → Employee numbers, permission `hr.number-format
 - a number format is an ordered list of segments: fixed text, running number (digits, start), year (YY/YYYY),
   department code (department short name); joined by a separator (none, `/`, `-`, `.`, `:`);
 - each contract type uses one format, one format can serve many contract types; the default format is used at
-  registration (HR can pick another) and for contract types without one; no format at all = continue the latest number;
+  registration (HR can pick another) and for contract types without one;
+- a company without formats of its own numbers like HRMS (built-in, `EmployeeNumbers::BUILT_IN`): ST / PT / VOL / IND
+  by employee type, interns `INT/{company code}/{department code}:0001/YY`, residents `RES/{company code}/SN:001/YY`
+  (company code = short name or initials), and renumbering on contract change is on unless HR turns it off;
 - running number = highest in use for that format + 1 (removed employees and old contract numbers count);
 - with "Give a new number when the contract type changes" on, a starting contract renumbers the employee into its
   contract type's format (HRMS ST/PT/VOL). The old/new number is saved in `employee_contract_events.changes`, so
@@ -458,4 +461,35 @@ Deductions (profile tab, shown when the company uses Payroll; edit with `payroll
 NHIF 6% shared the same way, HESLB and TUGHE a percentage paid by the employee, NIC and employee fund a fixed monthly
 amount. NSSF/NHIF numbers are unique and copied to the employee record. One membership per scheme; a membership can be
 paused. The tab estimates monthly amounts from the active contract's basic salary. Payroll (step 6) will read these.
+
+## 17. Planned modules (agreed 2026-11-11, not built yet)
+
+### Planning (new module)
+
+- **Strategic plan** for a period of several years (e.g. 2026–2030) per company.
+- **Annual plan** for a financial year (period) of the company: the activities planned for that year, each with its
+  objective, service output, target and KPI.
+- Reuses fiscal periods and dimensions from the accounting backbone; budgets can be attached later.
+- Likely link (to confirm): annual plan activities feed the department activities used in performance appraisal below.
+
+### Performance appraisal (new design, replaces the HRMS one)
+
+The HRMS appraisal is not used in production, so it is redesigned instead of ported. To be discussed in detail
+before building; agreed so far:
+
+- The **head of department** creates the department's activities for the financial year.
+- Each **employee** of the department adds **sub-activities** under each activity, and records progress on them as
+  they do the work.
+- **Progress entries:** each time the employee does work on a sub-activity they record a progress entry (what they
+  did) and give it a percentage. The percentage of one entry is capped by a configurable maximum, so progress cannot
+  jump in a single entry.
+- **Approval:** a progress entry is a draft the employee can still edit until they **submit it for approval**. Once
+  submitted it goes to the employee's supervisor (by default the head of their department, §16 reporting line), who
+  approves or rejects it; only approved entries count towards progress. Uses the workflow engine's `supervisor` approver.
+- **Configurable per company:**
+  - the **maximum percentage per progress entry**; and
+  - optionally, filling **by quarter** with a **minimum percentage** that must be reached each quarter.
+- **Leave is taken into account:** days on approved leave do not count against the employee (targets and
+  minimums are prorated).
+- Results are used for decisions such as **contract renewal** (shown on the renewal request, gap list E-17).
 

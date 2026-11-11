@@ -151,14 +151,16 @@ class EmployeeController extends Controller
      * Suggested next employee number.
      *
      * In the chosen number format, or the default format. `department_id` fills a department-code segment.
+     * A company without its own formats gets HRMS-style numbers for `emp_type` (ST, PT, VOL, INT/.., RES/..).
      *
      * @response array{data: array{employee_no: string}}
      */
     #[QueryParameter('format_id', type: 'integer')]
     #[QueryParameter('department_id', type: 'integer')]
+    #[QueryParameter('emp_type', type: 'string')]
     public function nextNumber(Request $request, RegisterEmployee $register): JsonResponse
     {
-        $number = $register->nextNumber($request->integer('format_id') ?: null, $request->integer('department_id') ?: null);
+        $number = $register->nextNumber($request->integer('format_id') ?: null, $request->integer('department_id') ?: null, $request->query('emp_type') ?: null);
 
         return response()->json(['data' => ['employee_no' => $number]]);
     }
