@@ -183,6 +183,22 @@ class WorkflowTest extends TestCase
         $this->actingAs($boss)->postJson("/api/v1/workflow/requests/{$id}/approve")->assertOk()->assertJsonPath('data.status', 'approved');
     }
 
+    public function test_supervisor_step_goes_to_the_head_of_department_when_none_is_assigned(): void
+    {
+        $this->actingAs($this->admin);
+        $nursing = Department::create(['name' => 'Nursing']);
+        $head = $this->staff();
+        $headEmployee = Employee::create(['employee_no' => 'H1', 'fname' => 'Head', 'lname' => 'Nurse', 'gender' => 'Female', 'department_id' => $nursing->id, 'user_id' => $head->id]);
+        HeadOfDepartment::create(['employee_id' => $headEmployee->id, 'department_id' => $nursing->id, 'level' => HeadOfDepartment::DEPARTMENT, 'is_active' => true]);
+        $nurse = $this->staff();
+        Employee::create(['employee_no' => 'N1', 'fname' => 'A', 'lname' => 'Nurse', 'gender' => 'Female', 'department_id' => $nursing->id, 'user_id' => $nurse->id]);
+
+        $this->configure([['name' => 'Supervisor', 'approver_type' => 'supervisor']]);
+        $id = $this->requestRoles($nurse, ['hod']);
+
+        $this->actingAs($head)->postJson("/api/v1/workflow/requests/{$id}/approve")->assertOk()->assertJsonPath('data.status', 'approved');
+    }
+
     public function test_branch_workflow_overrides_the_company_one(): void
     {
         $hod = $this->staff(['hod']);

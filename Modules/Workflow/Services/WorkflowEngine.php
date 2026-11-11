@@ -2,7 +2,8 @@
 
 namespace Modules\Workflow\Services;
 
-use App\Models\EmpSupervisor;
+use App\Models\Employee;
+use App\Services\ReportingLine;
 use App\Models\HeadOfDepartment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -176,8 +177,8 @@ class WorkflowEngine
                 && HeadOfDepartment::where('department_id', $instance->department_id)->where('is_active', true)
                     ->whereHas('employee', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $user->id))->exists(),
             WorkflowStep::APPROVER_SUPERVISOR => $instance->employee_id !== null
-                && EmpSupervisor::where('employee_id', $instance->employee_id)->where('status', 'active')
-                    ->whereHas('supervisor', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $user->id))->exists(),
+                && ($boss = app(ReportingLine::class)->supervisorIdOf($instance->employee_id)) !== null
+                && Employee::withoutGlobalScopes()->whereKey($boss)->where('user_id', $user->id)->exists(),
             default => false,
         };
     }

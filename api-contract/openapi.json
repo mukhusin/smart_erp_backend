@@ -5293,7 +5293,6 @@
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
-                                                        "supervisor",
                                                         "placement"
                                                     ]
                                                 }
@@ -5363,7 +5362,6 @@
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
-                                                        "supervisor",
                                                         "placement"
                                                     ]
                                                 }
@@ -5500,7 +5498,6 @@
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
-                                                        "supervisor",
                                                         "placement"
                                                     ]
                                                 }
@@ -5565,7 +5562,6 @@
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
-                                                        "supervisor",
                                                         "placement"
                                                     ]
                                                 }
@@ -9054,7 +9050,8 @@
         "/hr/employees/{employee}/supervisors": {
             "get": {
                 "operationId": "hr.employees.supervisors.index",
-                "summary": "The employee's supervisor history (current first) and the people they supervise",
+                "description": "`current.source`: `assigned` (set on the profile) or `department_head` (default: the head of their department).\n`current.title`: what to show: the assigned person's name, or the role (\"Head of Nursing\") for the default.\nThe team includes assigned reports and, for a department head, the department's staff without an assigned supervisor.",
+                "summary": "Who the employee reports to, their supervisor history and the people who report to them",
                 "tags": [
                     "HR: Supervisors",
                     "Supervisor"
@@ -9081,6 +9078,57 @@
                                         "data": {
                                             "type": "object",
                                             "properties": {
+                                                "current": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": "string"
+                                                        },
+                                                        "position": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "photo_url": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "source": {
+                                                            "type": "string"
+                                                        },
+                                                        "title": {
+                                                            "type": "string"
+                                                        },
+                                                        "since": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "position",
+                                                        "photo_url",
+                                                        "source",
+                                                        "title",
+                                                        "since"
+                                                    ]
+                                                },
                                                 "history": {
                                                     "type": "array",
                                                     "items": {
@@ -9185,6 +9233,12 @@
                                                                 ]
                                                             },
                                                             "since": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "source": {
                                                                 "type": "string"
                                                             }
                                                         },
@@ -9194,12 +9248,14 @@
                                                             "employee_no",
                                                             "position",
                                                             "photo_url",
-                                                            "since"
+                                                            "since",
+                                                            "source"
                                                         ]
                                                     }
                                                 }
                                             },
                                             "required": [
+                                                "current",
                                                 "history",
                                                 "team"
                                             ]
@@ -11777,7 +11833,7 @@
                             "object",
                             "null"
                         ],
-                        "description": "Current supervisor (on the profile).",
+                        "description": "Who the employee reports to (on the profile): `source` is `assigned` or `department_head` (default); show `title`.",
                         "properties": {
                             "id": {
                                 "type": "integer"
@@ -11789,6 +11845,15 @@
                                 "type": "string"
                             },
                             "since": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "source": {
+                                "type": "string"
+                            },
+                            "title": {
                                 "type": "string"
                             }
                         },
@@ -11796,7 +11861,9 @@
                             "id",
                             "name",
                             "employee_no",
-                            "since"
+                            "since",
+                            "source",
+                            "title"
                         ]
                     },
                     "placement": {

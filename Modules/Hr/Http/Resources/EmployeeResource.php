@@ -3,6 +3,7 @@
 namespace Modules\Hr\Http\Resources;
 
 use App\Models\Employee;
+use App\Services\ReportingLine;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\Hr\Support\EmployeeOptions as O;
@@ -88,13 +89,19 @@ class EmployeeResource extends JsonResource
                 'account_number' => $this->bankAccount->account_number,
                 'account_name' => $this->bankAccount->account_name,
             ] : null),
-            /** @var array{id: int, name: string, employee_no: string, since: string}|null Current supervisor (on the profile). */
-            'supervisor' => $this->whenLoaded('currentSupervisor', fn () => $this->currentSupervisor?->supervisor ? [
-                'id' => $this->currentSupervisor->supervisor->id,
-                'name' => $this->currentSupervisor->supervisor->full_name,
-                'employee_no' => $this->currentSupervisor->supervisor->employee_no,
-                'since' => $this->currentSupervisor->from_date->toDateString(),
-            ] : null),
+            /**
+             * Who the employee reports to (on the profile): `source` is `assigned` or `department_head` (default); show `title`.
+             *
+             * @var array{id: int, name: string, employee_no: string, since: string|null, source: string, title: string}|null
+             */
+            'supervisor' => $this->when($this->relationLoaded('currentSupervisor'), function () {
+                $line = app(ReportingLine::class)->supervisorOf($this->resource);
+
+                return $line ? [
+                    'id' => $line['employee']->id, 'name' => $line['employee']->full_name, 'employee_no' => $line['employee']->employee_no,
+                    'since' => $line['since']?->toDateString(), 'source' => $line['source'], 'title' => $line['title'],
+                ] : null;
+            }),
             /** Current or next internship/residency period (on the profile). */
             'placement' => $this->whenLoaded('currentPlacement', fn () => $this->currentPlacement ? new PlacementResource($this->currentPlacement) : null),
             /**
@@ -111,7 +118,7 @@ class EmployeeResource extends JsonResource
                 'documents' => (int) $this->documents_count,
                 'dependants' => (int) $this->dependants_count,
                 'next_of_kin' => (int) $this->next_of_kin_count,
-                'team' => (int) ($this->team_count ?? 0),
+                'team' => $this->relationLoaded('currentSupervisor') ? app(ReportingLine::class)->teamOf($this->resource)->count() : (int) ($this->team_count ?? 0),
             ]),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

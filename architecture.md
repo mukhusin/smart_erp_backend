@@ -446,10 +446,12 @@ Banks (HR settings → Banks, `hr.banks.manage`; was `payroll.banks.manage`, mov
 live in HR) are per company. Each employee has one active bank account (HRMS rule); changing it keeps the old one
 inactive. The same account number at the same bank cannot belong to two employees.
 
-Supervisors (HRMS emp_supervisors): one active supervisor per employee; assigning a new one closes the current one the
-day before (history kept, with reason). An employee cannot supervise themselves or anyone above them in the chain.
+Supervisors (HRMS emp_supervisors): by default every employee reports to the head of their department (shown as the
+role, "Head of Nursing", not the person; the head has no default). An assigned supervisor overrides it; assigning a new
+one closes the current one the day before (history kept, with reason); "reset" ends the override. `App\Services\ReportingLine`
+works this out (not stored), so a new department head takes over at once. An employee cannot supervise themselves or anyone above them in the chain.
 Approval workflows have a `supervisor` approver type (`workflow_instances.employee_id`, from
-`WorkflowProcess::employeeId()`): the step goes to the active supervisor of the employee the request is about.
+`WorkflowProcess::employeeId()`): the step goes to whoever the employee reports to (assigned supervisor, else head of department).
 
 Deductions (profile tab, shown when the company uses Payroll; edit with `payroll.statutory.manage`), HRMS rules in
 `Modules/Hr/Support/DeductionSchemes.php`: NSSF 20% of basic shared (employee share chosen, employer pays the rest),

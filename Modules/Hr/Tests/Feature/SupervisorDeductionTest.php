@@ -56,6 +56,29 @@ class SupervisorDeductionTest extends TestCase
         $this->getJson("/api/v1/hr/employees/{$c->id}")->assertJsonPath('data.supervisor', null);
     }
 
+    public function test_employees_report_to_the_head_of_department_by_default(): void
+    {
+        $nursing = $this->postJson('/api/v1/hr/structure/departments', ['name' => 'Nursing'])->json('data.id');
+        $make = fn (string $no) => Employee::withoutCompanyScope()->create(['company_id' => $this->company->id, 'employee_no' => $no, 'fname' => $no, 'lname' => 'Test', 'gender' => 'Male', 'employment_status' => 'confirmed', 'department_id' => $nursing]);
+        [$head, $nurse, $nurse2] = [$make('HEAD'), $make('N1'), $make('N2')];
+        $this->postJson("/api/v1/hr/structure/departments/{$nursing}/head", ['employee_id' => $head->id])->assertOk();
+
+        $this->getJson("/api/v1/hr/employees/{$nurse->id}/supervisors")->assertOk()
+            ->assertJsonPath('data.current.employee_no', 'HEAD')->assertJsonPath('data.current.source', 'department_head')
+            ->assertJsonPath('data.current.title', 'Head of Nursing')->assertJsonPath('data.history', []);
+        $this->getJson("/api/v1/hr/employees/{$head->id}/supervisors")->assertJsonPath('data.current', null)->assertJsonCount(2, 'data.team');
+        $this->getJson("/api/v1/hr/employees/{$nurse->id}")->assertJsonPath('data.supervisor.source', 'department_head');
+
+        $this->postJson("/api/v1/hr/employees/{$head->id}/supervisors", ['supervisor_id' => $nurse->id, 'from_date' => '2026-01-01'])
+            ->assertUnprocessable()->assertJsonValidationErrors(['supervisor_id' => 'directly or through others']);
+
+        $this->postJson("/api/v1/hr/employees/{$nurse2->id}/supervisors", ['supervisor_id' => $nurse->id, 'from_date' => '2026-01-01'])->assertCreated();
+        $this->getJson("/api/v1/hr/employees/{$nurse2->id}/supervisors")->assertJsonPath('data.current.employee_no', 'N1')->assertJsonPath('data.current.source', 'assigned')
+            ->assertJsonPath('data.current.title', 'N1 Test');
+        $this->getJson("/api/v1/hr/employees/{$head->id}/supervisors")->assertJsonCount(1, 'data.team')->assertJsonPath('data.team.0.employee_no', 'N1');
+        $this->getJson("/api/v1/hr/employees/{$head->id}")->assertJsonPath('data.counts.team', 1);
+    }
+
     public function test_statutory_memberships_follow_hrms_rules(): void
     {
         $e = $this->employee('E1');

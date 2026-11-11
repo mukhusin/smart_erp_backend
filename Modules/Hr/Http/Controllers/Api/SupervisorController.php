@@ -5,6 +5,7 @@ namespace Modules\Hr\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmpSupervisor;
+use App\Services\ReportingLine;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,16 +23,21 @@ use Illuminate\Validation\ValidationException;
 class SupervisorController extends Controller
 {
     /**
-     * The employee's supervisor history (current first) and the people they supervise.
+     * Who the employee reports to, their supervisor history and the people who report to them.
      *
-     * @response array{data: array{history: list<array{id: int, supervisor: array{id: int, name: string, employee_no: string, position: string|null, photo_url: string|null}, from_date: string, to_date: string|null, active: bool, reason: string|null, assigned_by: string|null}>, team: list<array{id: int, name: string, employee_no: string, position: string|null, photo_url: string|null, since: string}>}}
+     * `current.source`: `assigned` (set on the profile) or `department_head` (default: the head of their department).
+     * `current.title`: what to show: the assigned person's name, or the role ("Head of Nursing") for the default.
+     * The team includes assigned reports and, for a department head, the department's staff without an assigned supervisor.
+     *
+     * @response array{data: array{current: array{id: int, name: string, employee_no: string, position: string|null, photo_url: string|null, source: string, title: string, since: string|null}|null, history: list<array{id: int, supervisor: array{id: int, name: string, employee_no: string, position: string|null, photo_url: string|null}, from_date: string, to_date: string|null, active: bool, reason: string|null, assigned_by: string|null}>, team: list<array{id: int, name: string, employee_no: string, position: string|null, photo_url: string|null, since: string|null, source: string}>}}
      */
-    public function index(Employee $employee): JsonResponse
+    public function index(Employee $employee, ReportingLine $line): JsonResponse
     {
         $history = $employee->supervisions()->with('supervisor.jobPosition', 'assignedBy.employee')->get()->sortByDesc(fn ($s) => $s->status === 'active')->values();
-        $team = $employee->team()->with('employee.jobPosition')->get()->filter(fn ($s) => $s->employee)->sortBy(fn ($s) => $s->employee->fname)->values();
+        $current = $line->supervisorOf($employee);
 
         return response()->json(['data' => [
+            'current' => $current ? $this->person($current['employee']) + ['source' => $current['source'], 'title' => $current['title'], 'since' => $current['since']?->toDateString()] : null,
             'history' => $history->map(fn (EmpSupervisor $s) => [
                 'id' => $s->id,
                 'supervisor' => $this->person($s->supervisor),
@@ -41,7 +47,7 @@ class SupervisorController extends Controller
                 'reason' => $s->reason,
                 'assigned_by' => $s->assignedBy?->display_name,
             ])->all(),
-            'team' => $team->map(fn (EmpSupervisor $s) => $this->person($s->employee) + ['since' => $s->from_date->toDateString()])->all(),
+            'team' => $line->teamOf($employee)->map(fn ($r) => $this->person($r['employee']) + ['since' => $r['since']?->toDateString(), 'source' => $r['source']])->all(),
         ]]);
     }
 
@@ -108,28 +114,12 @@ class SupervisorController extends Controller
             $supervisor->id === $employee->id => 'An employee cannot supervise themselves.',
             $supervisor->employment_status === 'terminated' => 'This person has left the organization.',
             (int) $employee->currentSupervisor()->value('supervisor_id') === $supervisor->id => 'This person already supervises the employee.',
-            $this->supervises($employee, $supervisor) => "{$employee->full_name} supervises {$supervisor->full_name} (directly or through others), so it cannot be the other way round.",
+            app(ReportingLine::class)->isAbove($employee->id, $supervisor->id) => "{$employee->full_name} supervises {$supervisor->full_name} (directly or through others), so it cannot be the other way round.",
             default => null,
         };
         if ($message) {
             throw ValidationException::withMessages(['supervisor_id' => $message]);
         }
-    }
-
-    /** Whether $boss is above $person in the active supervision chain. */
-    private function supervises(Employee $boss, Employee $person): bool
-    {
-        $seen = [];
-        $id = $person->id;
-        while ($id && ! isset($seen[$id])) {
-            $seen[$id] = true;
-            $id = EmpSupervisor::where('employee_id', $id)->where('status', 'active')->value('supervisor_id');
-            if ((int) $id === $boss->id) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function person(?Employee $e): array
