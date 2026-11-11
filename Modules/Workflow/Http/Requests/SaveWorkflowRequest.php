@@ -25,8 +25,8 @@ class SaveWorkflowRequest extends FormRequest
             /** Approval steps in order. An empty list removes the workflow (changes then apply at once). */
             'steps' => ['present', 'array', 'max:10'],
             'steps.*.name' => ['required', 'string', 'max:100'],
-            /** role = anyone with the role; user = one person; department_head = head of the requester's department. */
-            'steps.*.approver_type' => ['required', Rule::in([WorkflowStep::APPROVER_ROLE, WorkflowStep::APPROVER_USER, WorkflowStep::APPROVER_DEPARTMENT_HEAD])],
+            /** role = anyone with the role; user = one person; department_head = head of the requester's department; supervisor = the employee's supervisor. */
+            'steps.*.approver_type' => ['required', Rule::in([WorkflowStep::APPROVER_ROLE, WorkflowStep::APPROVER_USER, WorkflowStep::APPROVER_DEPARTMENT_HEAD, WorkflowStep::APPROVER_SUPERVISOR])],
             'steps.*.role_id' => ['nullable', 'required_if:steps.*.approver_type,role', 'integer', Rule::exists('roles', 'id')->where('company_id', $companyId)],
             'steps.*.user_id' => ['nullable', 'required_if:steps.*.approver_type,user', 'integer', Rule::exists('users', 'id')->where('company_id', $companyId)->where('is_active', true)],
             /** Role approvers: only people from the request's branch. */

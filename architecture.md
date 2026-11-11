@@ -446,3 +446,14 @@ Banks (HR settings → Banks, `hr.banks.manage`; was `payroll.banks.manage`, mov
 live in HR) are per company. Each employee has one active bank account (HRMS rule); changing it keeps the old one
 inactive. The same account number at the same bank cannot belong to two employees.
 
+Supervisors (HRMS emp_supervisors): one active supervisor per employee; assigning a new one closes the current one the
+day before (history kept, with reason). An employee cannot supervise themselves or anyone above them in the chain.
+Approval workflows have a `supervisor` approver type (`workflow_instances.employee_id`, from
+`WorkflowProcess::employeeId()`): the step goes to the active supervisor of the employee the request is about.
+
+Deductions (profile tab, shown when the company uses Payroll; edit with `payroll.statutory.manage`), HRMS rules in
+`Modules/Hr/Support/DeductionSchemes.php`: NSSF 20% of basic shared (employee share chosen, employer pays the rest),
+NHIF 6% shared the same way, HESLB and TUGHE a percentage paid by the employee, NIC and employee fund a fixed monthly
+amount. NSSF/NHIF numbers are unique and copied to the employee record. One membership per scheme; a membership can be
+paused. The tab estimates monthly amounts from the active contract's basic salary. Payroll (step 6) will read these.
+

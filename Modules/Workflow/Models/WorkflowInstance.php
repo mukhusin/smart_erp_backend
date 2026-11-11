@@ -18,7 +18,7 @@ class WorkflowInstance extends Model
     public const REJECTED = 'rejected';
     public const CANCELLED = 'cancelled';
 
-    protected $fillable = ['company_id', 'process', 'workflow_template_id', 'subject_type', 'subject_id', 'company_branch_id', 'department_id', 'status', 'current_step_order', 'initiated_by', 'completed_at'];
+    protected $fillable = ['company_id', 'process', 'workflow_template_id', 'subject_type', 'subject_id', 'company_branch_id', 'department_id', 'employee_id', 'status', 'current_step_order', 'initiated_by', 'completed_at'];
 
     protected $casts = ['completed_at' => 'datetime'];
 

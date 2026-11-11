@@ -2,6 +2,7 @@
 
 namespace Modules\Workflow\Services;
 
+use App\Models\EmpSupervisor;
 use App\Models\HeadOfDepartment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -55,6 +56,7 @@ class WorkflowEngine
                 'subject_id' => $subject->getKey(),
                 'company_branch_id' => $branchId,
                 'department_id' => $process->departmentId($subject),
+                'employee_id' => $process->employeeId($subject),
                 'status' => WorkflowInstance::PENDING,
                 'current_step_order' => $template->steps->first()->step_order,
                 'initiated_by' => $initiator->id,
@@ -173,6 +175,9 @@ class WorkflowEngine
             WorkflowStep::APPROVER_DEPARTMENT_HEAD => $instance->department_id !== null
                 && HeadOfDepartment::where('department_id', $instance->department_id)->where('is_active', true)
                     ->whereHas('employee', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $user->id))->exists(),
+            WorkflowStep::APPROVER_SUPERVISOR => $instance->employee_id !== null
+                && EmpSupervisor::where('employee_id', $instance->employee_id)->where('status', 'active')
+                    ->whereHas('supervisor', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $user->id))->exists(),
             default => false,
         };
     }

@@ -32,6 +32,9 @@ interface WorkflowProcess
 
     public function departmentId(Model $subject): ?int;
 
+    /** The employee the request is about (for supervisor approvers), or null. */
+    public function employeeId(Model $subject): ?int;
+
     /** Called when the last step approves. */
     public function onApproved(Model $subject): void;
 

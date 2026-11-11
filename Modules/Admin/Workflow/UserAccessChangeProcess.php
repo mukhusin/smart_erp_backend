@@ -59,6 +59,11 @@ class UserAccessChangeProcess implements WorkflowProcess
         return $subject->user?->employee?->department_id;
     }
 
+    public function employeeId(Model $subject): ?int
+    {
+        return $subject->user?->employee?->id;
+    }
+
     public function onApproved(Model $subject): void
     {
         app(ChangeUserAccess::class)->apply($subject);

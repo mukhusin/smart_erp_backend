@@ -164,6 +164,25 @@ class WorkflowTest extends TestCase
         $this->actingAs($head)->postJson("/api/v1/workflow/requests/{$id}/approve")->assertOk()->assertJsonPath('data.status', 'approved');
     }
 
+    public function test_the_employees_supervisor_approves(): void
+    {
+        $this->actingAs($this->admin);
+        $boss = $this->staff();
+        $bossEmployee = Employee::create(['employee_no' => 'B1', 'fname' => 'Boss', 'lname' => 'One', 'gender' => 'Female', 'user_id' => $boss->id]);
+        $nurse = $this->staff();
+        $nurseEmployee = Employee::create(['employee_no' => 'N1', 'fname' => 'A', 'lname' => 'Nurse', 'gender' => 'Female', 'user_id' => $nurse->id]);
+        \App\Models\EmpSupervisor::create(['employee_id' => $nurseEmployee->id, 'supervisor_id' => $bossEmployee->id, 'from_date' => now(), 'status' => 'active']);
+        $other = $this->staff(['hod']);
+
+        $this->configure([['name' => 'Supervisor', 'approver_type' => 'supervisor']]);
+        $id = $this->requestRoles($nurse, ['hod']);
+
+        $this->actingAs($other)->getJson('/api/v1/workflow/inbox')->assertOk()->assertJsonCount(0, 'data');
+        $this->actingAs($boss)->getJson('/api/v1/workflow/inbox')->assertOk()->assertJsonCount(1, 'data');
+        $this->actingAs($other)->postJson("/api/v1/workflow/requests/{$id}/approve")->assertUnprocessable();
+        $this->actingAs($boss)->postJson("/api/v1/workflow/requests/{$id}/approve")->assertOk()->assertJsonPath('data.status', 'approved');
+    }
+
     public function test_branch_workflow_overrides_the_company_one(): void
     {
         $hod = $this->staff(['hod']);

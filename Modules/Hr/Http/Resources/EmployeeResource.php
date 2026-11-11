@@ -88,12 +88,19 @@ class EmployeeResource extends JsonResource
                 'account_number' => $this->bankAccount->account_number,
                 'account_name' => $this->bankAccount->account_name,
             ] : null),
+            /** @var array{id: int, name: string, employee_no: string, since: string}|null Current supervisor (on the profile). */
+            'supervisor' => $this->whenLoaded('currentSupervisor', fn () => $this->currentSupervisor?->supervisor ? [
+                'id' => $this->currentSupervisor->supervisor->id,
+                'name' => $this->currentSupervisor->supervisor->full_name,
+                'employee_no' => $this->currentSupervisor->supervisor->employee_no,
+                'since' => $this->currentSupervisor->from_date->toDateString(),
+            ] : null),
             /** Current or next internship/residency period (on the profile). */
             'placement' => $this->whenLoaded('currentPlacement', fn () => $this->currentPlacement ? new PlacementResource($this->currentPlacement) : null),
             /**
              * Number of records per profile section (on the profile).
              *
-             * @var array{contracts: int, placements: int, qualifications: int, licences: int, experiences: int, documents: int, dependants: int, next_of_kin: int}
+             * @var array{contracts: int, placements: int, qualifications: int, licences: int, experiences: int, documents: int, dependants: int, next_of_kin: int, team: int}
              */
             'counts' => $this->when(isset($this->contracts_count), fn () => [
                 'contracts' => (int) $this->contracts_count,
@@ -104,6 +111,7 @@ class EmployeeResource extends JsonResource
                 'documents' => (int) $this->documents_count,
                 'dependants' => (int) $this->dependants_count,
                 'next_of_kin' => (int) $this->next_of_kin_count,
+                'team' => (int) ($this->team_count ?? 0),
             ]),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

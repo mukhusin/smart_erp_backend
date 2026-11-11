@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Hr\Http\Controllers\Api\BankController;
 use Modules\Hr\Http\Controllers\Api\ContractTypeController;
+use Modules\Hr\Http\Controllers\Api\DeductionController;
 use Modules\Hr\Http\Controllers\Api\DepartmentController;
 use Modules\Hr\Http\Controllers\Api\EmployeeContractController;
 use Modules\Hr\Http\Controllers\Api\EmployeeBankAccountController;
@@ -17,6 +18,7 @@ use Modules\Hr\Http\Controllers\Api\LicenceTypeController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
+use Modules\Hr\Http\Controllers\Api\SupervisorController;
 
 Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name('hr.')->group(function () {
     Route::group([], function () {
@@ -42,6 +44,8 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::prefix('employees/{employee}')->name('employees.')->scopeBindings()->group(function () {
             Route::get('contracts', [EmployeeContractController::class, 'index'])->name('contracts.index');
             Route::get('placements', [PlacementController::class, 'employeeIndex'])->name('placements.index');
+            Route::get('supervisors', [SupervisorController::class, 'index'])->name('supervisors.index');
+            Route::get('deductions', [DeductionController::class, 'index'])->name('deductions.index');
             Route::get('qualifications', [EmployeeQualificationController::class, 'index'])->name('qualifications.index');
             Route::get('qualifications/{qualification}/file', [EmployeeQualificationController::class, 'file'])->name('qualifications.file');
             Route::get('licences', [EmployeeLicenceController::class, 'index'])->name('licences.index');
@@ -84,6 +88,10 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
             Route::post('documents/{document}', [EmployeeDocumentController::class, 'update'])->name('documents.update');
             Route::delete('documents/{document}', [EmployeeDocumentController::class, 'destroy'])->name('documents.destroy');
 
+            Route::post('supervisors', [SupervisorController::class, 'store'])->name('supervisors.store');
+            Route::post('supervisors/end', [SupervisorController::class, 'end'])->name('supervisors.end');
+            Route::delete('supervisors/{supervision}', [SupervisorController::class, 'destroy'])->name('supervisors.destroy');
+
             Route::post('dependants', [EmployeeDependantController::class, 'store'])->name('dependants.store');
             Route::post('dependants/{dependant}', [EmployeeDependantController::class, 'update'])->name('dependants.update');
             Route::delete('dependants/{dependant}', [EmployeeDependantController::class, 'destroy'])->name('dependants.destroy');
@@ -116,6 +124,11 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::post('banks', [BankController::class, 'store'])->name('banks.store');
         Route::put('banks/{bank}', [BankController::class, 'update'])->name('banks.update');
         Route::delete('banks/{bank}', [BankController::class, 'destroy'])->name('banks.destroy');
+    });
+
+    Route::middleware('can:payroll.statutory.manage')->prefix('employees/{employee}')->name('employees.')->group(function () {
+        Route::put('deductions/{scheme}', [DeductionController::class, 'update'])->name('deductions.update');
+        Route::delete('deductions/{scheme}', [DeductionController::class, 'destroy'])->name('deductions.destroy');
     });
 
     Route::middleware('can:hr.positions.manage')->group(function () {

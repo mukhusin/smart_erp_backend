@@ -54,4 +54,7 @@ class Employee extends Model {
     public function bankAccount()   { return $this->hasOne(EmployeeBankAccount::class)->where('is_active', true)->latest('id'); }
     public function documents()     { return $this->hasMany(EmployeeDocument::class); }
     public function supervisors()   { return $this->hasMany(EmpSupervisor::class)->where('status','active'); }
+    public function supervisions()  { return $this->hasMany(EmpSupervisor::class)->latest('from_date')->latest('id'); }
+    public function currentSupervisor() { return $this->hasOne(EmpSupervisor::class)->where('status', 'active')->latest('id'); }
+    public function team()          { return $this->hasMany(EmpSupervisor::class, 'supervisor_id')->where('status', 'active'); }
 }

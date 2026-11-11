@@ -3631,6 +3631,238 @@
                 }
             }
         },
+        "/hr/employees/{employee}/deductions": {
+            "get": {
+                "operationId": "hr.employees.deductions.index",
+                "summary": "All schemes with the employee's membership, and the monthly estimate from the active contract's basic salary",
+                "tags": [
+                    "HR: Deductions",
+                    "Deduction"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "scheme": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "total": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "number_label": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "number_required": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "member": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "contribution_no": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "value": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "employer_value": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "estimate": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "employee": {
+                                                                "type": "number"
+                                                            },
+                                                            "employer": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "employee",
+                                                            "employer"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "scheme",
+                                                    "label",
+                                                    "description",
+                                                    "type",
+                                                    "total",
+                                                    "number_label",
+                                                    "number_required",
+                                                    "member",
+                                                    "contribution_no",
+                                                    "value",
+                                                    "employer_value",
+                                                    "is_active",
+                                                    "estimate"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "basic_salary": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "basic_salary"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/{employee}/deductions/{scheme}": {
+            "put": {
+                "operationId": "hr.employees.deductions.update",
+                "description": "`value`: the employee's percent of basic salary (percent schemes) or the monthly amount (NIC, employee fund).\nFor NSSF and NHIF the employer pays the rest of the total.\u26a0\ufe0f Cannot generate request documentation: Cannot evaluate validation rules (1 evaluators failed):\n  [NodeRulesEvaluator] Undefined array key \"type\" (at /home/mukhusin-siraji/Dev/outside/smart_erp_backend/vendor/nikic/php-parser/lib/PhpParser/ConstExprEvaluator.php:141)",
+                "summary": "Add or update the employee's membership of a scheme",
+                "tags": [
+                    "HR: Deductions",
+                    "Deduction"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "hr.employees.deductions.destroy",
+                "summary": "Remove the employee from a scheme",
+                "tags": [
+                    "HR: Deductions",
+                    "Deduction"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "scheme",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/structure/departments": {
             "get": {
                 "operationId": "hr.structure.index",
@@ -5061,6 +5293,7 @@
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
+                                                        "supervisor",
                                                         "placement"
                                                     ]
                                                 }
@@ -5130,6 +5363,7 @@
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
+                                                        "supervisor",
                                                         "placement"
                                                     ]
                                                 }
@@ -5266,6 +5500,7 @@
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
+                                                        "supervisor",
                                                         "placement"
                                                     ]
                                                 }
@@ -5330,6 +5565,7 @@
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
+                                                        "supervisor",
                                                         "placement"
                                                     ]
                                                 }
@@ -8815,6 +9051,380 @@
                 }
             }
         },
+        "/hr/employees/{employee}/supervisors": {
+            "get": {
+                "operationId": "hr.employees.supervisors.index",
+                "summary": "The employee's supervisor history (current first) and the people they supervise",
+                "tags": [
+                    "HR: Supervisors",
+                    "Supervisor"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "history": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "supervisor": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "employee_no": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "position": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "photo_url": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "name",
+                                                                    "employee_no",
+                                                                    "position",
+                                                                    "photo_url"
+                                                                ]
+                                                            },
+                                                            "from_date": {
+                                                                "type": "string"
+                                                            },
+                                                            "to_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "assigned_by": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "supervisor",
+                                                            "from_date",
+                                                            "to_date",
+                                                            "active",
+                                                            "reason",
+                                                            "assigned_by"
+                                                        ]
+                                                    }
+                                                },
+                                                "team": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": "string"
+                                                            },
+                                                            "position": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "photo_url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "since": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "position",
+                                                            "photo_url",
+                                                            "since"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "history",
+                                                "team"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "hr.employees.supervisors.store",
+                "summary": "Assign a supervisor (replaces the current one)",
+                "tags": [
+                    "HR: Supervisors",
+                    "Supervisor"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "supervisor_id": {
+                                        "type": "integer"
+                                    },
+                                    "from_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "supervisor_id",
+                                    "from_date"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/{employee}/supervisors/end": {
+            "post": {
+                "operationId": "hr.employees.supervisors.end",
+                "summary": "End the current supervision without a replacement",
+                "tags": [
+                    "HR: Supervisors",
+                    "Supervisor"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "date"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/{employee}/supervisors/{supervision}": {
+            "delete": {
+                "operationId": "hr.employees.supervisors.destroy",
+                "summary": "Delete a supervision recorded by mistake",
+                "tags": [
+                    "HR: Supervisors",
+                    "Supervisor"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "supervision",
+                        "in": "path",
+                        "required": true,
+                        "description": "The supervision ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/platform/modules": {
             "get": {
                 "operationId": "platform.modules.index",
@@ -11162,6 +11772,33 @@
                             "account_name"
                         ]
                     },
+                    "supervisor": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Current supervisor (on the profile).",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "employee_no": {
+                                "type": "string"
+                            },
+                            "since": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "employee_no",
+                            "since"
+                        ]
+                    },
                     "placement": {
                         "anyOf": [
                             {
@@ -11200,6 +11837,9 @@
                             },
                             "next_of_kin": {
                                 "type": "integer"
+                            },
+                            "team": {
+                                "type": "integer"
                             }
                         },
                         "required": [
@@ -11210,7 +11850,8 @@
                             "experiences",
                             "documents",
                             "dependants",
-                            "next_of_kin"
+                            "next_of_kin",
+                            "team"
                         ]
                     },
                     "created_at": {
@@ -13334,11 +13975,12 @@
                                 },
                                 "approver_type": {
                                     "type": "string",
-                                    "description": "role = anyone with the role; user = one person; department_head = head of the requester's department.",
+                                    "description": "role = anyone with the role; user = one person; department_head = head of the requester's department; supervisor = the employee's supervisor.",
                                     "enum": [
                                         "role",
                                         "user",
-                                        "department_head"
+                                        "department_head",
+                                        "supervisor"
                                     ]
                                 },
                                 "role_id": {
