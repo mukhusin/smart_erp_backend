@@ -11003,7 +11003,7 @@
                     },
                     "module_tiles": {
                         "type": "array",
-                        "description": "Dashboard tiles: every module available to the user's company and branch. state: open | locked (locked for this user) | no_permission.",
+                        "description": "Dashboard tiles: every module available to the user's company and branch. state: open | locked (locked for this user) | no_permission. `parent`: the module this one is opened from (e.g. leave inside hr); such modules have no dashboard tile.",
                         "items": {
                             "type": "object",
                             "properties": {
@@ -11037,6 +11037,12 @@
                                         "null"
                                     ]
                                 },
+                                "parent": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
                                 "state": {
                                     "type": "string"
                                 }
@@ -11048,6 +11054,7 @@
                                 "icon",
                                 "color",
                                 "category",
+                                "parent",
                                 "state"
                             ]
                         }

@@ -7,6 +7,9 @@ use Illuminate\Database\Seeder;
 
 class ErpModuleSeeder extends Seeder
 {
+    /** Modules opened from inside Human Resources instead of their own dashboard tile. */
+    public const INSIDE_HR = ['roster', 'leave', 'attendance', 'allowance', 'overtime'];
+
     public function run(): void
     {
         $modules = [
@@ -226,6 +229,7 @@ class ErpModuleSeeder extends Seeder
         ];
 
         foreach ($modules as $data) {
+            $data['parent_slug'] = in_array($data['slug'], self::INSIDE_HR, true) ? 'hr' : null;
             ErpModule::updateOrCreate(['slug' => $data['slug']], $data);
         }
 

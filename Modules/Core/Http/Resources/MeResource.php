@@ -59,7 +59,9 @@ class MeResource extends JsonResource
             /**
              * Dashboard tiles: every module available to the user's company and branch. state: open | locked (locked for this user) | no_permission.
              *
-             * @var list<array{slug: string, name: string, description: string|null, icon: string|null, color: string|null, category: string|null, state: string}>
+             * `parent`: the module this one is opened from (e.g. leave inside hr); such modules have no dashboard tile.
+             *
+             * @var list<array{slug: string, name: string, description: string|null, icon: string|null, color: string|null, category: string|null, parent: string|null, state: string}>
              */
             'module_tiles' => $access->moduleTiles($this->resource),
             /** @var list<string> Assigned roles plus roles handed over to the user right now. */

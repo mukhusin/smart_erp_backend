@@ -90,7 +90,7 @@ class AccessService
         $userLocked = $locks->where('user_id', $user->id)->pluck('module_slug')->all();
         $withPermission = array_unique(array_filter(array_map([PermissionCatalog::class, 'moduleOf'], $this->permissions($user))));
 
-        return \App\Models\ErpModule::whereIn('slug', array_diff($enabled, $branchLocked))->orderBy('sort_order')->get()
+        $tiles = \App\Models\ErpModule::whereIn('slug', array_diff($enabled, $branchLocked))->orderBy('sort_order')->get()
             ->map(fn ($m) => [
                 'slug' => $m->slug,
                 'name' => $m->name,
@@ -98,8 +98,21 @@ class AccessService
                 'icon' => $m->icon ? \Illuminate\Support\Str::after($m->icon, 'bi-') : null,
                 'color' => $m->color,
                 'category' => $m->category,
+                'parent' => $m->parent_slug,
                 'state' => in_array($m->slug, $userLocked, true) ? 'locked' : (in_array($m->slug, $withPermission, true) ? 'open' : 'no_permission'),
-            ])->values()->all();
+            ])->keyBy('slug');
+
+        // A module shown inside another needs that parent; the parent opens when any of its modules is open.
+        return $tiles->map(function ($t) use ($tiles) {
+            if ($t['parent'] && ! $tiles->has($t['parent'])) {
+                $t['parent'] = null;
+            }
+            if ($t['state'] === 'no_permission' && $tiles->contains(fn ($c) => $c['parent'] === $t['slug'] && $c['state'] === 'open')) {
+                $t['state'] = 'open';
+            }
+
+            return $t;
+        })->values()->all();
     }
 
     public function forget(?User $user = null): void

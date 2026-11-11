@@ -173,5 +173,20 @@ class AccessTest extends TestCase
         $this->assertSame('locked', $tiles['leave']['state'], 'locked for the user: shown faded');
         $this->assertSame('open', $tiles['hr']['state'], 'heads of department see their department staff');
         $this->assertSame('open', $tiles['self-service']['state']);
+        $this->assertSame('hr', $tiles['leave']['parent'], 'leave is opened from inside HR');
+        $this->assertNull($tiles['hr']['parent']);
+    }
+
+    public function test_parent_tile_opens_for_a_permission_in_one_of_its_modules(): void
+    {
+        $role = \Spatie\Permission\Models\Role::findOrCreate('leave-clerk', 'web');
+        $role->syncPermissions(['leave.view']);
+        $user = $this->staff('Head Office', ['leave-clerk']);
+
+        $tiles = collect($this->access()->moduleTiles($user))->keyBy('slug');
+
+        $this->assertSame('open', $tiles['leave']['state']);
+        $this->assertSame('open', $tiles['hr']['state'], 'HR opens because Leave, inside it, is open');
+        $this->assertSame('no_permission', $tiles['payroll']['state']);
     }
 }
