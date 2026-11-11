@@ -189,7 +189,11 @@ The employee cannot ask for renewal in the system. The ERP should let them, thro
 - Not shown for permanent contracts.
 - Not shown when a renewal request is already open or a renewal contract is already waiting.
 - At N days the employee gets an SMS/email/in-app notice with a link to the request form. This replaces today's plain 3-month SMS.
-- HR can also start a request on the employee's behalf.
+- **Two ways to start a renewal (agreed 2026-11-11):**
+  - **HR initiates** the renewal for a specific employee, or
+  - the **employee requests** it from self-service.
+  Both go through the same dynamic approval workflow. They exclude each other: while the employee has an open
+  renewal request, HR cannot start one for that employee, and while HR's renewal is open the employee cannot request.
 
 **2. Request form (self-service)**
 - Comment: why they want to renew, any changes requested.

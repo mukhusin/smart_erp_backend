@@ -472,6 +472,17 @@ paused. The tab estimates monthly amounts from the active contract's basic salar
 - Reuses fiscal periods and dimensions from the accounting backbone; budgets can be attached later.
 - Likely link (to confirm): annual plan activities feed the department activities used in performance appraisal below.
 
+### Contract renewal (to build next, 2026-11-12)
+
+Two ways to renew a contract, both through the dynamic approval workflow (process "Contract renewal"):
+
+- **HR-initiated:** HR starts a renewal for a specific employee.
+- **Employee-requested:** the employee requests renewal from self-service (details in hrms-gap-list.md E-17).
+
+The two exclude each other per employee: while an employee's own request is open, HR cannot start a renewal for
+them, and while an HR-initiated renewal is open, the employee cannot request one. On approval HR's renewal contract
+is created as `waiting` (§15 rules: last 90 days, starts after the current contract ends).
+
 ### Performance appraisal (new design, replaces the HRMS one)
 
 The HRMS appraisal is not used in production, so it is redesigned instead of ported. To be discussed in detail
