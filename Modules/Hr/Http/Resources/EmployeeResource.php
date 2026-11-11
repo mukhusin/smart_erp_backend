@@ -76,13 +76,16 @@ class EmployeeResource extends JsonResource
             'contract' => $this->whenLoaded('activeContract', fn () => $this->activeContract ? new ContractResource($this->activeContract) : null),
             /** Contract waiting to start (on the profile). */
             'waiting_contract' => $this->whenLoaded('waitingContract', fn () => $this->waitingContract ? new ContractResource($this->waitingContract) : null),
+            /** Current or next internship/residency period (on the profile). */
+            'placement' => $this->whenLoaded('currentPlacement', fn () => $this->currentPlacement ? new PlacementResource($this->currentPlacement) : null),
             /**
              * Number of records per profile section (on the profile).
              *
-             * @var array{contracts: int, qualifications: int, licences: int, experiences: int, documents: int, dependants: int, next_of_kin: int}
+             * @var array{contracts: int, placements: int, qualifications: int, licences: int, experiences: int, documents: int, dependants: int, next_of_kin: int}
              */
             'counts' => $this->when(isset($this->contracts_count), fn () => [
                 'contracts' => (int) $this->contracts_count,
+                'placements' => (int) ($this->placements_count ?? 0),
                 'qualifications' => (int) $this->qualifications_count,
                 'licences' => (int) $this->licences_count,
                 'experiences' => (int) $this->experiences_count,

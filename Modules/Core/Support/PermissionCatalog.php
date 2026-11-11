@@ -33,7 +33,10 @@ final class PermissionCatalog
             'self-service.use' => 'Use employee self-service',
         ],
         'hr' => [
-            'hr.employees.view' => 'View employees',
+            'hr.employees.view' => 'View all employees',
+            'hr.employees.view-branch' => 'View employees of own branch',
+            'hr.employees.view-department' => 'View employees of own department and departments they head',
+            'hr.employees.view-section' => 'View employees of own section',
             'hr.employees.create' => 'Register employees',
             'hr.employees.edit' => 'Edit employees',
             'hr.employees.delete' => 'Delete employees',

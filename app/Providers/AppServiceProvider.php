@@ -15,6 +15,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->tag([\Modules\Hr\Support\EmployeeLoginCheck::class], 'login.checks');
         $this->app->singleton(CompanyContext::class);
         $this->app->singleton(ModuleAccessService::class);
         $this->app->singleton(AccessService::class);

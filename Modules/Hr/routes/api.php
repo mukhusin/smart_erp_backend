@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Hr\Http\Controllers\Api\ContractTypeController;
+use Modules\Hr\Http\Controllers\Api\DepartmentController;
 use Modules\Hr\Http\Controllers\Api\EmployeeContractController;
 use Modules\Hr\Http\Controllers\Api\EmployeeController;
 use Modules\Hr\Http\Controllers\Api\EmployeeDependantController;
@@ -12,9 +13,10 @@ use Modules\Hr\Http\Controllers\Api\EmployeeQualificationController;
 use Modules\Hr\Http\Controllers\Api\LicenceTypeController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
+use Modules\Hr\Http\Controllers\Api\PlacementController;
 
-Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr'])->name('hr.')->group(function () {
-    Route::middleware('can:hr.employees.view')->group(function () {
+Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name('hr.')->group(function () {
+    Route::group([], function () {
         Route::get('options', [LookupController::class, 'options'])->name('options');
         Route::get('branches', [LookupController::class, 'branches'])->name('branches');
         Route::get('departments', [LookupController::class, 'departments'])->name('departments');
@@ -22,6 +24,9 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr'])->name('hr.')->gro
         Route::get('contract-types/active', [LookupController::class, 'contractTypes'])->name('contract-types.active');
         Route::get('licence-types/active', [LookupController::class, 'licenceTypes'])->name('licence-types.active');
         Route::get('summary', [LookupController::class, 'summary'])->name('summary');
+        Route::get('placements', [PlacementController::class, 'index'])->name('placements.index');
+        Route::get('structure/departments', [DepartmentController::class, 'index'])->name('structure.index');
+        Route::get('structure/departments/{department}', [DepartmentController::class, 'show'])->name('structure.show');
         Route::get('number-formats/options', [NumberFormatController::class, 'options'])->name('number-formats.options');
 
         Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
@@ -31,6 +36,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr'])->name('hr.')->gro
 
         Route::prefix('employees/{employee}')->name('employees.')->scopeBindings()->group(function () {
             Route::get('contracts', [EmployeeContractController::class, 'index'])->name('contracts.index');
+            Route::get('placements', [PlacementController::class, 'employeeIndex'])->name('placements.index');
             Route::get('qualifications', [EmployeeQualificationController::class, 'index'])->name('qualifications.index');
             Route::get('qualifications/{qualification}/file', [EmployeeQualificationController::class, 'file'])->name('qualifications.file');
             Route::get('licences', [EmployeeLicenceController::class, 'index'])->name('licences.index');
@@ -89,6 +95,21 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr'])->name('hr.')->gro
         Route::post('contract-types', [ContractTypeController::class, 'store'])->name('contract-types.store');
         Route::put('contract-types/{contractType}', [ContractTypeController::class, 'update'])->name('contract-types.update');
         Route::delete('contract-types/{contractType}', [ContractTypeController::class, 'destroy'])->name('contract-types.destroy');
+    });
+
+    Route::middleware('can:hr.residents.manage')->prefix('employees/{employee}')->name('employees.')->scopeBindings()->group(function () {
+        Route::post('placements', [PlacementController::class, 'store'])->name('placements.store');
+        Route::put('placements/{placement}', [PlacementController::class, 'update'])->name('placements.update');
+        Route::post('placements/{placement}/stop', [PlacementController::class, 'stop'])->name('placements.stop');
+        Route::delete('placements/{placement}', [PlacementController::class, 'destroy'])->name('placements.destroy');
+    });
+
+    Route::middleware('can:hr.departments.manage')->prefix('structure/departments')->name('structure.')->group(function () {
+        Route::post('/', [DepartmentController::class, 'store'])->name('store');
+        Route::put('{department}', [DepartmentController::class, 'update'])->name('update');
+        Route::delete('{department}', [DepartmentController::class, 'destroy'])->name('destroy');
+        Route::post('{department}/head', [DepartmentController::class, 'appointHead'])->name('head');
+        Route::post('{department}/head/remove', [DepartmentController::class, 'removeHead'])->name('head.remove');
     });
 
     Route::middleware('can:hr.number-formats.manage')->group(function () {

@@ -407,3 +407,31 @@ not count, so they are retried). Not ported: the 90/60/30/10/5 jobs (disabled in
 Files live on the private disk and are served only by authenticated HR endpoints. Updates that carry files
 use POST with multipart form data; fields left out are cleared, files are kept unless replaced or removed.
 
+## 16. Data scope, departments and interns (2026-11-11)
+
+Employee data scope (`Modules/Hr/Support/EmployeeScope.php`, middleware `hr.scope` on every HR route), from HRMS
+(HR office sees all, `department-office` its department, `department-section` its section):
+
+- `hr.employees.view`: all employees; `view-branch`: own branch; `view-department`: own department plus departments
+  they head; `view-section`: own section. Permissions combine (union). The default `hod` role has `view-department`,
+  the new `section-head` role `view-section`.
+- Lists and dashboard counts only include employees in scope; an employee outside it is 404 for every HR endpoint
+  (records, files, writes). Lists return `meta.scope` with a label for the UI.
+
+Departments (HR → Departments, `hr.departments.manage`): departments with one level of sections, short code, branch.
+One active head per department (`hod`) or section (`hos`), history kept (`started_at`, `ended_at`, reason). Appointing
+gives the head's account the `hod` / `section-head` role and takes it from the previous head (unless they still head
+another), through `ChangeUserAccess` (logged, follows the user-access workflow). Departments with staff or sections
+are deactivated, not deleted.
+
+Interns and residents (HRMS `internship_periods`, `resident_periods`): `employee_placements` (type `internship` |
+`residency`). End date = start + months - 1 day, year = start year; status upcoming → active → ended (`contract:status`),
+or cancelled/ended early. The type must match the employee type, periods cannot overlap. Profiles of interns and
+residents show their periods instead of contracts; HR → Interns and residents lists them with filters.
+
+Login needs employment (HRMS `LoginController::hasContract`): a user of a company with the HR module logs in only
+with a linked employee who has an active contract (interns/residents: an active period). Platform admins and
+company admins are exempt, so a new company is never locked out. Contracts are synced first (a renewal starting
+today works before the nightly job). Open sessions are re-checked every 15 minutes and end with 401
+`code: access_ended`. Modules add such rules by implementing `Modules\Core\Contracts\LoginCheck`, tagged `login.checks`.
+

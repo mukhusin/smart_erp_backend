@@ -171,7 +171,7 @@ class AccessTest extends TestCase
         $this->assertFalse($tiles->has('payroll'), 'locked for the branch: hidden');
         $this->assertFalse($tiles->has('fleet'), 'not enabled for the company: hidden');
         $this->assertSame('locked', $tiles['leave']['state'], 'locked for the user: shown faded');
-        $this->assertSame('no_permission', $tiles['hr']['state']);
+        $this->assertSame('open', $tiles['hr']['state'], 'heads of department see their department staff');
         $this->assertSame('open', $tiles['self-service']['state']);
     }
 }

@@ -8,6 +8,7 @@ use App\Services\CompanyContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Modules\Hr\Actions\ManageContracts;
+use Modules\Hr\Actions\ManagePlacements;
 
 class ContractStatusCommand extends Command
 {
@@ -15,12 +16,16 @@ class ContractStatusCommand extends Command
 
     protected $description = 'End expired contracts, start waiting ones and deactivate accounts of employees who have left';
 
-    public function handle(CompanyContext $context, ManageContracts $contracts): int
+    public function handle(CompanyContext $context, ManageContracts $contracts, ManagePlacements $placements): int
     {
         $today = CarbonImmutable::today()->toDateString();
         $count = 0;
 
         foreach (Company::query()->pluck('id') as $companyId) {
+            $context->run($companyId, fn () => Employee::whereHas('placements', fn ($q) => $q
+                ->where(fn ($q) => $q->where('status', 'upcoming')->whereDate('start_date', '<=', $today))
+                ->orWhere(fn ($q) => $q->where('status', 'active')->whereDate('end_date', '<', $today)))
+                ->get()->each(fn (Employee $e) => $placements->sync($e)));
             $count += $context->run($companyId, function () use ($contracts, $today) {
                 $due = Employee::where(fn ($q) => $q
                     ->whereHas('contracts', fn ($q) => $q

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Modules\Hr\Actions\CreateEmployeeAccount;
 use Modules\Hr\Actions\ManageContracts;
+use Modules\Hr\Actions\ManagePlacements;
 use Modules\Hr\Actions\RegisterEmployee;
 use Modules\Hr\Actions\UpdateEmployee;
 use Modules\Hr\Http\Requests\CreateAccountRequest;
@@ -17,6 +18,7 @@ use Modules\Hr\Http\Requests\StoreEmployeeRequest;
 use Modules\Hr\Http\Requests\UpdateEmployeeRequest;
 use Modules\Hr\Http\Resources\EmployeeResource;
 use Modules\Hr\Support\EmployeeFiles;
+use Modules\Hr\Support\EmployeeScope;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -30,6 +32,9 @@ class EmployeeController extends Controller
 
     /**
      * List employees.
+     *
+     * Only employees the user may see: all with `hr.employees.view`, otherwise their branch, department(s) or
+     * section. `meta.scope` describes it.
      */
     #[QueryParameter('filter[search]', description: 'Name, employee number, email or phone.', type: 'string')]
     #[QueryParameter('filter[branch_id]', type: 'integer')]
@@ -41,9 +46,9 @@ class EmployeeController extends Controller
     #[QueryParameter('sort', description: '`employee_no`, `fname`, `employment_date`, `created_at`; prefix `-` for descending.', type: 'string', default: '-created_at')]
     #[QueryParameter('page', type: 'integer', default: 1)]
     #[QueryParameter('per_page', description: 'Max 100.', type: 'integer', default: 25)]
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request, EmployeeScope $scope): AnonymousResourceCollection
     {
-        $employees = QueryBuilder::for(Employee::with(self::WITH))
+        $employees = QueryBuilder::for($scope->apply(Employee::with(self::WITH), $request->user()))
             ->allowedFilters(
                 AllowedFilter::callback('search', fn ($q, $v) => $q->where(fn ($q) => $q
                     ->where('fname', 'like', "%{$v}%")->orWhere('lname', 'like', "%{$v}%")->orWhere('mname', 'like', "%{$v}%")
@@ -60,15 +65,16 @@ class EmployeeController extends Controller
             ->paginate(min((int) request('per_page', 25), 100))
             ->withQueryString();
 
-        return EmployeeResource::collection($employees);
+        return EmployeeResource::collection($employees)->additional(['meta' => ['scope' => $scope->describe($request->user())]]);
     }
 
     /**
      * Show an employee, with the active and waiting contract and the number of records per profile section.
      */
-    public function show(Employee $employee, ManageContracts $contracts): EmployeeResource
+    public function show(Employee $employee, ManageContracts $contracts, ManagePlacements $placements): EmployeeResource
     {
         $contracts->sync($employee);
+        $placements->sync($employee);
 
         return new EmployeeResource($this->profile($employee));
     }
@@ -120,8 +126,8 @@ class EmployeeController extends Controller
 
     private function profile(Employee $employee): Employee
     {
-        return $employee->load([...self::WITH, 'activeContract.natureOfContract', 'waitingContract.natureOfContract'])
-            ->loadCount(['contracts', 'qualifications', 'licences', 'experiences', 'documents', 'dependants',
+        return $employee->load([...self::WITH, 'activeContract.natureOfContract', 'waitingContract.natureOfContract', 'currentPlacement'])
+            ->loadCount(['contracts', 'placements', 'qualifications', 'licences', 'experiences', 'documents', 'dependants',
                 'dependants as next_of_kin_count' => fn ($q) => $q->where('is_next_of_kin', true)]);
     }
 

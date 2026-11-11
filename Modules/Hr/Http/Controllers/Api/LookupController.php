@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\EmployeeContract;
 use App\Models\EmployeeLicence;
+use App\Models\EmployeePlacement;
 use App\Models\JobPosition;
 use App\Models\NatureOfContract;
 use App\Models\ProfessionalLicence;
@@ -15,6 +16,7 @@ use Carbon\CarbonImmutable;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Modules\Hr\Support\EmployeeOptions;
+use Modules\Hr\Support\EmployeeScope;
 
 /**
  * Lists for HR forms and filters.
@@ -113,12 +115,14 @@ class LookupController extends Controller
      *
      * `contracts_ending`: active contracts ending within 90 days without a renewal waiting.
      * `licences_expiring`: licences of current staff expired or expiring within 90 days.
+     * `placements_active`: interns and residents in an active period; `placements_ending`: ending within 30 days.
+     * Counts cover only the employees the user may see (`scope`).
      *
-     * @response array{data: array{total: int, probation: int, without_account: int, invited: int, without_contract: int, contracts_ending: int, licences_expiring: int}}
+     * @response array{data: array{total: int, probation: int, without_account: int, invited: int, without_contract: int, contracts_ending: int, licences_expiring: int, placements_active: int, placements_ending: int, scope: array{all: bool, label: string}}}
      */
-    public function summary(): JsonResponse
+    public function summary(EmployeeScope $scope): JsonResponse
     {
-        $active = Employee::where('employment_status', '!=', 'terminated');
+        $active = $scope->apply(Employee::where('employment_status', '!=', 'terminated'), request()->user());
         $ids = (clone $active)->select('id');
         $soon = CarbonImmutable::today()->addDays(EmployeeOptions::RENEWAL_WINDOW_DAYS)->toDateString();
 
@@ -127,13 +131,17 @@ class LookupController extends Controller
             'probation' => (clone $active)->where('employment_status', 'probation')->count(),
             'without_account' => (clone $active)->whereNull('user_id')->count(),
             'invited' => (clone $active)->whereHas('user', fn ($u) => $u->whereNull('email_verified_at'))->count(),
-            'without_contract' => (clone $active)->whereDoesntHave('contracts', fn ($q) => $q->whereIn('status', ['active', 'waiting']))->count(),
+            'without_contract' => (clone $active)->whereDoesntHave('contracts', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
+                ->whereDoesntHave('placements', fn ($q) => $q->whereIn('status', ['active', 'upcoming']))->count(),
             'contracts_ending' => EmployeeContract::whereIn('employee_id', $ids)->where('is_active', true)->whereDate('end_date', '<=', $soon)
                 ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('employee_contracts as w')->whereColumn('w.employee_id', 'employee_contracts.employee_id')
                     ->where('w.status', 'waiting')->whereNull('w.deleted_at'))->count(),
             'licences_expiring' => EmployeeLicence::whereIn('employee_id', $ids)->whereDate('end_date', '<=', $soon)
                 ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('employee_licences as n')->whereColumn('n.employee_id', 'employee_licences.employee_id')
                     ->whereColumn('n.professional_licence_id', 'employee_licences.professional_licence_id')->whereColumn('n.end_date', '>', 'employee_licences.end_date'))->count(),
+            'placements_active' => EmployeePlacement::whereIn('employee_id', $ids)->where('status', 'active')->count(),
+            'placements_ending' => EmployeePlacement::whereIn('employee_id', $ids)->where('status', 'active')->whereDate('end_date', '<=', CarbonImmutable::today()->addDays(30))->count(),
+            'scope' => $scope->describe(request()->user()),
         ]]);
     }
 }

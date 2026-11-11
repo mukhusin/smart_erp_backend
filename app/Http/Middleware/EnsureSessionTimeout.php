@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Modules\Core\Support\LoginChecks;
 
 class EnsureSessionTimeout
 {
@@ -43,6 +44,18 @@ class EnsureSessionTimeout
                     'message' => 'Your session expired due to inactivity. Please log in again.',
                     'code'    => 'session_expired',
                 ], 401);
+            }
+
+            if (time() - Session::get('login_checked_at', 0) > LoginChecks::RECHECK_MINUTES * 60) {
+                if ($reason = app(LoginChecks::class)->deny($user)) {
+                    $sessionManager->clearSessionRegistration($user->id);
+                    Auth::guard('web')->logout();
+                    Session::flush();
+                    Session::regenerate();
+
+                    return response()->json(['message' => $reason, 'code' => 'access_ended'], 401);
+                }
+                Session::put('login_checked_at', time());
             }
 
             Session::put('last_activity', time());

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Modules\Core\Support\LoginChecks;
 
 /**
  * Session (cookie) login for the SPA. Accepts username or email, only active users,
@@ -16,7 +17,10 @@ use Illuminate\Validation\ValidationException;
  */
 class Login
 {
-    public function __construct(private readonly SingleDeviceSessionManager $sessions) {}
+    public function __construct(
+        private readonly SingleDeviceSessionManager $sessions,
+        private readonly LoginChecks $checks,
+    ) {}
 
     public function handle(Request $request, string $login, string $password): User
     {
@@ -34,7 +38,13 @@ class Login
                     ]);
                 }
 
+                if ($reason = $this->checks->deny($user)) {
+                    Auth::guard('web')->logout();
+                    throw ValidationException::withMessages(['username' => $reason]);
+                }
+
                 $request->session()->regenerate();
+                $request->session()->put('login_checked_at', time());
                 setPermissionsTeamId($user->company_id);
                 $this->sessions->registerLogin(Auth::id(), $request->session()->getId());
                 $request->session()->put('last_activity', time());

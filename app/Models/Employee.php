@@ -48,6 +48,8 @@ class Employee extends Model {
     public function activeContract(){ return $this->hasOne(EmployeeContract::class)->where('is_active', true)->latest('id'); }
     public function waitingContract(){ return $this->hasOne(EmployeeContract::class)->where('status', 'waiting')->latest('id'); }
     public function licences()      { return $this->hasMany(EmployeeLicence::class); }
+    public function placements()    { return $this->hasMany(EmployeePlacement::class); }
+    public function currentPlacement(){ return $this->hasOne(EmployeePlacement::class)->whereIn('status', ['active', 'upcoming'])->orderByRaw("status = 'active' desc")->orderBy('start_date'); }
     public function bankAccounts()  { return $this->hasMany(EmployeeBankAccount::class); }
     public function documents()     { return $this->hasMany(EmployeeDocument::class); }
     public function supervisors()   { return $this->hasMany(EmpSupervisor::class)->where('status','active'); }

@@ -16,6 +16,9 @@ final class DefaultRoles
 {
     public const COMPANY_ADMIN = 'company-admin';
 
+    /** Roles given to department and section heads when HR appoints them. */
+    public const HEAD_ROLES = ['hod' => 'hod', 'hos' => 'section-head'];
+
     /** Role name => permission names ('*' = all), or module wildcards like 'leave.*'. */
     public const ROLES = [
         self::COMPANY_ADMIN => ['*'],
@@ -24,8 +27,11 @@ final class DefaultRoles
             'payroll.create', 'payroll.edit', 'payroll.comment', 'loans.*', 'reports.*', 'self-service.use',
         ],
         'hod' => [
-            'leave.department.view', 'leave.approve-hod', 'roster.department.view', 'roster.manage',
+            'hr.employees.view-department', 'leave.department.view', 'leave.approve-hod', 'roster.department.view', 'roster.manage',
             'attendance.working-hours.department', 'allowance.department.view', 'overtime.view', 'self-service.use',
+        ],
+        'section-head' => [
+            'hr.employees.view-section', 'roster.section.view', 'attendance.working-hours.section', 'self-service.use',
         ],
         'employee' => ['self-service.use'],
     ];
