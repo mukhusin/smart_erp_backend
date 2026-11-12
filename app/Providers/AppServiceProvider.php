@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CompanyContext::class);
         $this->app->singleton(ModuleAccessService::class);
         $this->app->singleton(AccessService::class);
+        $this->app->scoped(\App\Services\WorkCalendar::class);
     }
 
     public function boot(): void

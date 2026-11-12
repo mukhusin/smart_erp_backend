@@ -19,6 +19,9 @@ use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
+use Modules\Hr\Http\Controllers\Api\Roster\PublicHolidayController;
+use Modules\Hr\Http\Controllers\Api\Roster\RosterCodeController;
+use Modules\Hr\Http\Controllers\Api\Roster\WorkScheduleController;
 use Modules\Hr\Http\Controllers\Api\SelfContractController;
 use Modules\Hr\Http\Controllers\Api\SupervisorController;
 
@@ -179,3 +182,23 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::get('renewals/{renewal}/files/{file}', [SelfContractController::class, 'file'])->name('renewals.file');
 });
 
+
+Route::prefix('roster')->middleware(['auth:sanctum', 'module:roster'])->name('roster.')->group(function () {
+    Route::middleware('can:roster.timetables.manage')->group(function () {
+        Route::get('codes', [RosterCodeController::class, 'index'])->name('codes.index');
+        Route::post('codes', [RosterCodeController::class, 'store'])->name('codes.store');
+        Route::put('codes/{rosterCode}', [RosterCodeController::class, 'update'])->name('codes.update');
+        Route::delete('codes/{rosterCode}', [RosterCodeController::class, 'destroy'])->name('codes.destroy');
+        Route::get('work-schedules', [WorkScheduleController::class, 'index'])->name('work-schedules.index');
+        Route::post('work-schedules', [WorkScheduleController::class, 'store'])->name('work-schedules.store');
+        Route::put('work-schedules/{workSchedule}', [WorkScheduleController::class, 'update'])->name('work-schedules.update');
+        Route::delete('work-schedules/{workSchedule}', [WorkScheduleController::class, 'destroy'])->name('work-schedules.destroy');
+    });
+
+    Route::middleware('can:roster.holidays.manage')->group(function () {
+        Route::get('holidays', [PublicHolidayController::class, 'index'])->name('holidays.index');
+        Route::post('holidays', [PublicHolidayController::class, 'store'])->name('holidays.store');
+        Route::put('holidays/{publicHoliday}', [PublicHolidayController::class, 'update'])->name('holidays.update');
+        Route::delete('holidays/{publicHoliday}', [PublicHolidayController::class, 'destroy'])->name('holidays.destroy');
+    });
+});

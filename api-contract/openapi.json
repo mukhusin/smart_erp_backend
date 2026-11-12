@@ -10683,6 +10683,1197 @@
                 }
             }
         },
+        "/roster/codes": {
+            "get": {
+                "operationId": "roster.codes.index",
+                "summary": "List duty codes",
+                "tags": [
+                    "Roster: Duty codes",
+                    "RosterCode"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "duty": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_working": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "start_time": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "end_time": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "crosses_midnight": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "work_hour": {
+                                                        "type": "number"
+                                                    },
+                                                    "break_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "color": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "duty",
+                                                    "description",
+                                                    "is_working",
+                                                    "start_time",
+                                                    "end_time",
+                                                    "crosses_midnight",
+                                                    "work_hour",
+                                                    "break_minutes",
+                                                    "color",
+                                                    "is_active"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "roster.codes.store",
+                "summary": "Add a duty code",
+                "tags": [
+                    "Roster: Duty codes",
+                    "RosterCode"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RosterCodeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "code": {
+                                                    "type": "string"
+                                                },
+                                                "duty": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_working": {
+                                                    "type": "boolean"
+                                                },
+                                                "start_time": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "end_time": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "crosses_midnight": {
+                                                    "type": "boolean"
+                                                },
+                                                "work_hour": {
+                                                    "type": "number"
+                                                },
+                                                "break_minutes": {
+                                                    "type": "integer"
+                                                },
+                                                "color": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "code",
+                                                "duty",
+                                                "description",
+                                                "is_working",
+                                                "start_time",
+                                                "end_time",
+                                                "crosses_midnight",
+                                                "work_hour",
+                                                "break_minutes",
+                                                "color",
+                                                "is_active"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/roster/codes/{rosterCode}": {
+            "put": {
+                "operationId": "roster.codes.update",
+                "summary": "Update a duty code. Days already on rosters keep the times they were given",
+                "tags": [
+                    "Roster: Duty codes",
+                    "RosterCode"
+                ],
+                "parameters": [
+                    {
+                        "name": "rosterCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The roster code ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RosterCodeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "code": {
+                                                    "type": "string"
+                                                },
+                                                "duty": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_working": {
+                                                    "type": "boolean"
+                                                },
+                                                "start_time": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "end_time": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "crosses_midnight": {
+                                                    "type": "boolean"
+                                                },
+                                                "work_hour": {
+                                                    "type": "number"
+                                                },
+                                                "break_minutes": {
+                                                    "type": "integer"
+                                                },
+                                                "color": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "code",
+                                                "duty",
+                                                "description",
+                                                "is_working",
+                                                "start_time",
+                                                "end_time",
+                                                "crosses_midnight",
+                                                "work_hour",
+                                                "break_minutes",
+                                                "color",
+                                                "is_active"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "roster.codes.destroy",
+                "summary": "Delete a duty code",
+                "tags": [
+                    "Roster: Duty codes",
+                    "RosterCode"
+                ],
+                "parameters": [
+                    {
+                        "name": "rosterCode",
+                        "in": "path",
+                        "required": true,
+                        "description": "The roster code ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/roster/holidays": {
+            "get": {
+                "operationId": "roster.holidays.index",
+                "summary": "List holidays with the date each falls on in the given year (default this year), in date order",
+                "tags": [
+                    "Roster: Public holidays",
+                    "PublicHoliday"
+                ],
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 2000,
+                            "maximum": 2100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "day": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "month": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "date": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "title",
+                                                    "type",
+                                                    "day",
+                                                    "month",
+                                                    "date",
+                                                    "is_active"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "year": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "year"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "roster.holidays.store",
+                "summary": "Add a holiday",
+                "tags": [
+                    "Roster: Public holidays",
+                    "PublicHoliday"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublicHolidayRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "day": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "month": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "title",
+                                                "type",
+                                                "day",
+                                                "month",
+                                                "date",
+                                                "is_active"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/roster/holidays/{publicHoliday}": {
+            "put": {
+                "operationId": "roster.holidays.update",
+                "summary": "Update a holiday",
+                "tags": [
+                    "Roster: Public holidays",
+                    "PublicHoliday"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicHoliday",
+                        "in": "path",
+                        "required": true,
+                        "description": "The public holiday ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublicHolidayRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "day": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "month": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "title",
+                                                "type",
+                                                "day",
+                                                "month",
+                                                "date",
+                                                "is_active"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "roster.holidays.destroy",
+                "summary": "Delete a holiday",
+                "tags": [
+                    "Roster: Public holidays",
+                    "PublicHoliday"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicHoliday",
+                        "in": "path",
+                        "required": true,
+                        "description": "The public holiday ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/roster/work-schedules": {
+            "get": {
+                "operationId": "roster.work-schedules.index",
+                "summary": "List working hours with the departments using each. `meta.departments` lists every active department and\nsection to choose from",
+                "tags": [
+                    "Roster: Working hours",
+                    "WorkSchedule"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "days": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "day": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "start": {
+                                                                    "type": "string"
+                                                                },
+                                                                "end": {
+                                                                    "type": "string"
+                                                                },
+                                                                "hours": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "day",
+                                                                "start",
+                                                                "end",
+                                                                "hours"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "break_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "weekly_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "is_default": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "built_in": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "departments": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "name": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "name"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "days",
+                                                    "break_minutes",
+                                                    "weekly_hours",
+                                                    "is_default",
+                                                    "built_in",
+                                                    "departments"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "departments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "parent": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "branch": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "work_schedule_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "parent",
+                                                            "branch",
+                                                            "work_schedule_id"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "departments"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "roster.work-schedules.store",
+                "summary": "Add working hours",
+                "tags": [
+                    "Roster: Working hours",
+                    "WorkSchedule"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WorkScheduleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "day": {
+                                                                "type": "integer"
+                                                            },
+                                                            "start": {
+                                                                "type": "string"
+                                                            },
+                                                            "end": {
+                                                                "type": "string"
+                                                            },
+                                                            "hours": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "day",
+                                                            "start",
+                                                            "end",
+                                                            "hours"
+                                                        ]
+                                                    }
+                                                },
+                                                "break_minutes": {
+                                                    "type": "integer"
+                                                },
+                                                "weekly_hours": {
+                                                    "type": "number"
+                                                },
+                                                "is_default": {
+                                                    "type": "boolean"
+                                                },
+                                                "built_in": {
+                                                    "type": "boolean"
+                                                },
+                                                "departments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "days",
+                                                "break_minutes",
+                                                "weekly_hours",
+                                                "is_default",
+                                                "built_in",
+                                                "departments"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/roster/work-schedules/{workSchedule}": {
+            "put": {
+                "operationId": "roster.work-schedules.update",
+                "summary": "Update working hours",
+                "tags": [
+                    "Roster: Working hours",
+                    "WorkSchedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "workSchedule",
+                        "in": "path",
+                        "required": true,
+                        "description": "The work schedule ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WorkScheduleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "day": {
+                                                                "type": "integer"
+                                                            },
+                                                            "start": {
+                                                                "type": "string"
+                                                            },
+                                                            "end": {
+                                                                "type": "string"
+                                                            },
+                                                            "hours": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "day",
+                                                            "start",
+                                                            "end",
+                                                            "hours"
+                                                        ]
+                                                    }
+                                                },
+                                                "break_minutes": {
+                                                    "type": "integer"
+                                                },
+                                                "weekly_hours": {
+                                                    "type": "number"
+                                                },
+                                                "is_default": {
+                                                    "type": "boolean"
+                                                },
+                                                "built_in": {
+                                                    "type": "boolean"
+                                                },
+                                                "departments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "days",
+                                                "break_minutes",
+                                                "weekly_hours",
+                                                "is_default",
+                                                "built_in",
+                                                "departments"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "roster.work-schedules.destroy",
+                "summary": "Delete working hours. Its departments go back to the default. The default cannot be deleted while others exist",
+                "tags": [
+                    "Roster: Working hours",
+                    "WorkSchedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "workSchedule",
+                        "in": "path",
+                        "required": true,
+                        "description": "The work schedule ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "Make other working hours the default first."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/self/contract": {
             "get": {
                 "operationId": "self.contract",
@@ -14285,6 +15476,54 @@
                 ],
                 "title": "PlacementResource"
             },
+            "PublicHolidayRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "yearly: same day every year; once: on one date.",
+                        "enum": [
+                            "yearly",
+                            "once"
+                        ]
+                    },
+                    "day": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 31
+                    },
+                    "month": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 12
+                    },
+                    "date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "title",
+                    "type"
+                ],
+                "title": "PublicHolidayRequest"
+            },
             "QualificationRequest": {
                 "type": "object",
                 "properties": {
@@ -14958,6 +16197,69 @@
                     "is_locked"
                 ],
                 "title": "RoleResource"
+            },
+            "RosterCodeRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Short code shown on the roster grid, e.g. M.",
+                        "maxLength": 10
+                    },
+                    "duty": {
+                        "type": "string",
+                        "description": "Name, e.g. Morning shift.",
+                        "maxLength": 100
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "is_working": {
+                        "type": "boolean",
+                        "description": "The employee is expected at work (off, leave and rest codes are not)."
+                    },
+                    "start_time": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "end_time": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "break_minutes": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Break in minutes, taken off the hours.",
+                        "minimum": 0,
+                        "maximum": 600
+                    },
+                    "color": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 20
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "code",
+                    "duty",
+                    "is_working"
+                ],
+                "title": "RosterCodeRequest"
             },
             "SaveLoginSlideRequest": {
                 "type": "object",
@@ -16151,6 +17453,66 @@
                     }
                 },
                 "title": "UserStatusRequest"
+            },
+            "WorkScheduleRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "days": {
+                        "type": "array",
+                        "description": "Working days; days left out are off. day: 1 = Monday \u2026 7 = Sunday. An end before the start runs past midnight.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "day": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 7
+                                },
+                                "start": {
+                                    "type": "string"
+                                },
+                                "end": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "day",
+                                "start",
+                                "end"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 7,
+                        "uniqueItems": true
+                    },
+                    "break_minutes": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 600
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "department_ids": {
+                        "type": "array",
+                        "description": "Departments or sections that use these hours.",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "required": [
+                    "name",
+                    "days"
+                ],
+                "title": "WorkScheduleRequest"
             },
             "WorkflowActionRequest": {
                 "type": "object",

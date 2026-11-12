@@ -69,7 +69,7 @@ final class PermissionCatalog
             'roster.department.view' => 'View department rosters',
             'roster.section.view' => 'View section roster details',
             'roster.manage' => 'Create and update duty rosters',
-            'roster.timetables.manage' => 'Manage duty timetables',
+            'roster.timetables.manage' => 'Manage duty codes and working hours',
             'roster.holidays.manage' => 'Manage public holidays',
         ],
         'attendance' => [
