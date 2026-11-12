@@ -229,6 +229,14 @@ Commitments (approved but not yet paid) reduce the available budget until they'r
   `BudgetVsActual` table), which go into `shared/`, not into one module.
 - No micro-frontends: one team, one design system and one build are simpler. The module manifests keep the option open.
 
+### Attendance is optional (agreed 2026-11-12)
+
+A company can decide not to use attendance at all. Allowances, overtime and payroll must then work fully from
+contracts, schedules, rosters, leave and approved requests (payroll "Mode A", hrms-gap-list.md). Allowances or
+overtime that depend on duty are checked against the employee's **roster and timetable** for that day; attendance,
+when the company uses it, is an extra check, never a requirement. Everything reads daily **work entries**, built
+from the roster/schedule (and attendance when used).
+
 ### Suggested build order after HR
 1. **Master data + Accounting backbone** (fiscal periods, chart of accounts, dimensions, posting engine). Payroll posting is the first user.
 2. **Bills + Billing + Loans module** (money out / in, with the existing loans moved out of HR into a standalone module that Payroll consumes).

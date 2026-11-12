@@ -121,6 +121,8 @@ For example, Odoo picks per contract whether work comes from the *working schedu
 | Fits | Office, admin and management staff; any time devices or sync are down | Shift/roster staff where attendance is enforced |
 
 Rules for the ERP:
+0. **A company can decide not to use attendance at all** (company setting, agreed 2026-11-12). Then every employee is
+   Mode A, attendance screens and devices are not needed, and payroll, allowances and overtime still work fully.
 1. **Mode is chosen per employee (or per contract / pay group)**, with a company default. This is how HRMS
    already works (global `payrollUseAttendancy` + per-employee `hasAttendance` override), so keep it.
 2. **Missing attendance must never silently become a deduction.** If a Mode B employee has no attendance
@@ -380,6 +382,12 @@ Automatic overtime and daily allowances in HRMS depend on attendance. So the two
 - **Mode A (no attendance):** overtime comes from **requests/entries approved through the workflow** (OT-3, OT-4)
   at the configured rate (OT-1). Daily allowances come from **rostered duties** minus approved leave.
 - Both paths produce the same approved overtime/allowance records, so the payroll engine doesn't care which was used.
+- **Roster/timetable-based items are checked against the roster and timetable (agreed 2026-11-12):** an allowance
+  or overtime rule that depends on duty (night shift, weekend, public-holiday duty, call duty, hours beyond the
+  timetable) is validated against the employee's rostered duty and its timetable for that day, whether or not the
+  company uses attendance. Without attendance the roster/timetable is the evidence; with attendance it is also
+  compared with the punches. Items not tied to duty (fixed monthly allowances, approved overtime requests) need
+  neither.
 
 ### Data migration notes (Allowance + Overtime)
 - `overtimes`: the ERP lacks `hos_approved`, `hos_comment`, `is_hos_approved`, `amount_per_duration`,
