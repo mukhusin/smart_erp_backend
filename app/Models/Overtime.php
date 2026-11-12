@@ -63,6 +63,11 @@ class Overtime extends Model
         return $this->belongsTo(Employee::class, 'hr_approved');
     }
 
+    public function sheets()
+    {
+        return $this->hasMany(OvertimeSheet::class);
+    }
+
     public function workflow()
     {
         return $this->morphOne(WorkflowInstance::class, 'subject')->latestOfMany();

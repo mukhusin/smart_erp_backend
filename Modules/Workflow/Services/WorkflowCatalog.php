@@ -21,6 +21,7 @@ final class WorkflowCatalog
         \Modules\Hr\Workflow\LeaveRequestProcess::class,
         \Modules\Hr\Workflow\AllowanceClaimProcess::class,
         \Modules\Hr\Workflow\OvertimeClaimProcess::class,
+        \Modules\Hr\Workflow\PayrollSheetProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

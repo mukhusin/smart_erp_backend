@@ -5,6 +5,7 @@ use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceEntryController;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceSetupController;
 use Modules\Hr\Http\Controllers\Api\BankController;
 use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeController;
+use Modules\Hr\Http\Controllers\Api\Payroll\PayrollController;
 use Modules\Hr\Http\Controllers\Api\ContractTypeController;
 use Modules\Hr\Http\Controllers\Api\DeductionController;
 use Modules\Hr\Http\Controllers\Api\DepartmentController;
@@ -195,6 +196,10 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
     Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
     Route::get('allowances', [AllowanceEntryController::class, 'mine'])->middleware('module:allowance')->name('allowances');
+    Route::middleware('module:payroll')->group(function () {
+        Route::get('payslips', [PayrollController::class, 'myPayslips'])->name('payslips.index');
+        Route::get('payslips/{detail}', [PayrollController::class, 'myPayslip'])->name('payslips.show');
+    });
     Route::middleware('module:overtime')->group(function () {
         Route::get('overtime', [OvertimeController::class, 'mine'])->name('overtime.index');
         Route::get('overtime/preview', [OvertimeController::class, 'preview'])->name('overtime.preview');
@@ -312,4 +317,24 @@ Route::prefix('overtime')->middleware(['auth:sanctum', 'module:overtime'])->name
     Route::get('claims/{overtime}', [OvertimeController::class, 'review'])->name('claims.review');
     Route::put('claims/{overtime}/times', [OvertimeController::class, 'times'])->name('claims.times');
     Route::post('employees/{employee}/claims', [OvertimeController::class, 'storeFor'])->middleware('can:overtime.manage')->name('claims.store-for');
+});
+
+Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('payroll.')->group(function () {
+    Route::middleware('can:payroll.edit')->group(function () {
+        Route::get('settings', [PayrollController::class, 'settings'])->name('settings.show');
+        Route::put('settings', [PayrollController::class, 'updateSettings'])->name('settings.update');
+        Route::get('settings/paye', [PayrollController::class, 'payeCheck'])->name('settings.paye');
+    });
+    Route::middleware('can:payroll.view')->group(function () {
+        Route::get('sheets', [PayrollController::class, 'index'])->name('sheets.index');
+        Route::get('sheets/{sheet}', [PayrollController::class, 'show'])->name('sheets.show');
+        Route::get('sheets/{sheet}/payslips/{detail}', [PayrollController::class, 'payslip'])->name('sheets.payslip');
+    });
+    Route::middleware('can:payroll.create')->group(function () {
+        Route::post('sheets', [PayrollController::class, 'store'])->name('sheets.store');
+        Route::post('sheets/{sheet}/generate', [PayrollController::class, 'regenerate'])->name('sheets.generate');
+        Route::post('sheets/{sheet}/submit', [PayrollController::class, 'submit'])->name('sheets.submit');
+        Route::post('sheets/{sheet}/withdraw', [PayrollController::class, 'withdraw'])->name('sheets.withdraw');
+        Route::delete('sheets/{sheet}', [PayrollController::class, 'destroy'])->name('sheets.destroy');
+    });
 });

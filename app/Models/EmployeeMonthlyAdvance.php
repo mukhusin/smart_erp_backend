@@ -13,7 +13,7 @@ class EmployeeMonthlyAdvance extends Model
 
     protected $fillable = [
         'company_id', 'employee_id', 'created_by',
-        'amount', 'date_advanced', 'month', 'year', 'status', 'is_active',
+        'amount', 'date_advanced', 'month', 'year', 'status', 'is_active', 'payroll_sheet_detail_id',
     ];
 
     protected $casts = ['is_active' => 'boolean'];

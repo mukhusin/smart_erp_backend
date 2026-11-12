@@ -12,7 +12,7 @@ class LoanHistory extends Model
     protected $fillable = [
         'employee_id', 'payroll_sheet_id', 'payroll_sheet_detail_id', 'employee_loan_id',
         'loan_provider', 'repayment_date', 'repaid_amount', 'instalment',
-        'principle_amount', 'outstanding_loan',
+        'principle_amount', 'outstanding_loan', 'status',
     ];
 
     public function employee()           { return $this->belongsTo(Employee::class); }

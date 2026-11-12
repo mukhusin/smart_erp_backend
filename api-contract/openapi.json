@@ -17491,6 +17491,1932 @@
                 }
             }
         },
+        "/self/payslips": {
+            "get": {
+                "operationId": "self.payslips.index",
+                "summary": "My payslips (approved payrolls)",
+                "tags": [
+                    "Payroll"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "sheet": {
+                                                        "type": "string"
+                                                    },
+                                                    "year": {
+                                                        "type": "integer"
+                                                    },
+                                                    "month": {
+                                                        "type": "integer"
+                                                    },
+                                                    "gross": {
+                                                        "type": "number"
+                                                    },
+                                                    "deductions": {
+                                                        "type": "number"
+                                                    },
+                                                    "net": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "sheet",
+                                                    "year",
+                                                    "month",
+                                                    "gross",
+                                                    "deductions",
+                                                    "net"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/payslips/{detail}": {
+            "get": {
+                "operationId": "self.payslips.show",
+                "summary": "One of my payslips",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "detail",
+                        "in": "path",
+                        "required": true,
+                        "description": "The detail ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sheet": {
+                                                    "type": "string"
+                                                },
+                                                "period": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "employee": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "position": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "bank": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "account": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "employee_no",
+                                                        "position",
+                                                        "department",
+                                                        "bank",
+                                                        "account"
+                                                    ]
+                                                },
+                                                "earnings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "deductions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "employer": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "gross": {
+                                                    "type": "number"
+                                                },
+                                                "taxable": {
+                                                    "type": "number"
+                                                },
+                                                "total_deductions": {
+                                                    "type": "number"
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "sheet",
+                                                "period",
+                                                "status",
+                                                "employee",
+                                                "earnings",
+                                                "deductions",
+                                                "employer",
+                                                "gross",
+                                                "taxable",
+                                                "total_deductions",
+                                                "net"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/settings": {
+            "get": {
+                "operationId": "payroll.settings.show",
+                "summary": "Payroll settings: period, statutory rates, PAYE bands and what payroll includes",
+                "tags": [
+                    "Payroll"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "from_day": {
+                                                    "type": "integer"
+                                                },
+                                                "from_month": {
+                                                    "type": "string"
+                                                },
+                                                "to_day": {
+                                                    "type": "integer"
+                                                },
+                                                "to_month": {
+                                                    "type": "string"
+                                                },
+                                                "wcf": {
+                                                    "type": "number"
+                                                },
+                                                "sdl": {
+                                                    "type": "number"
+                                                },
+                                                "income_tax": {
+                                                    "type": "number"
+                                                },
+                                                "emergency_fund": {
+                                                    "type": "number"
+                                                },
+                                                "nssf_employee": {
+                                                    "type": "number"
+                                                },
+                                                "nssf_employer": {
+                                                    "type": "number"
+                                                },
+                                                "nhif_employee": {
+                                                    "type": "number"
+                                                },
+                                                "nhif_employer": {
+                                                    "type": "number"
+                                                },
+                                                "heslb": {
+                                                    "type": "number"
+                                                },
+                                                "tax_bands": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "up_to": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "rate": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "up_to",
+                                                            "rate"
+                                                        ]
+                                                    }
+                                                },
+                                                "use_overtime": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_loan": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_allowance": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_leave_deduction": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_deduction": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_saccos": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_relief": {
+                                                    "type": "boolean"
+                                                },
+                                                "example_period": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "from_day",
+                                                "from_month",
+                                                "to_day",
+                                                "to_month",
+                                                "wcf",
+                                                "sdl",
+                                                "income_tax",
+                                                "emergency_fund",
+                                                "nssf_employee",
+                                                "nssf_employer",
+                                                "nhif_employee",
+                                                "nhif_employer",
+                                                "heslb",
+                                                "tax_bands",
+                                                "use_overtime",
+                                                "use_loan",
+                                                "use_allowance",
+                                                "use_leave_deduction",
+                                                "use_deduction",
+                                                "use_saccos",
+                                                "use_relief",
+                                                "example_period"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "payroll.settings.update",
+                "summary": "Save the payroll settings. Draft payrolls follow them when worked out again",
+                "tags": [
+                    "Payroll"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "from_day": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 31
+                                    },
+                                    "from_month": {
+                                        "type": "string",
+                                        "enum": [
+                                            "last",
+                                            "current"
+                                        ]
+                                    },
+                                    "to_day": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 31
+                                    },
+                                    "to_month": {
+                                        "type": "string",
+                                        "enum": [
+                                            "current",
+                                            "next"
+                                        ]
+                                    },
+                                    "wcf": {
+                                        "type": "number",
+                                        "description": "Employer, % of gross.",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "sdl": {
+                                        "type": "number",
+                                        "description": "Employer, % of gross.",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "income_tax": {
+                                        "type": "number",
+                                        "description": "Flat PAYE for secondary employment, %.",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "nssf_employee": {
+                                        "type": "number",
+                                        "description": "Default rates offered when adding statutory memberships.",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "nssf_employer": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "nhif_employee": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "nhif_employer": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "heslb": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100
+                                    },
+                                    "emergency_fund": {
+                                        "type": "number",
+                                        "minimum": 0
+                                    },
+                                    "tax_bands": {
+                                        "type": "array",
+                                        "description": "PAYE bands: each band's upper amount (null for the last) and the rate on the part above the previous band.",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "up_to": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 0
+                                                },
+                                                "rate": {
+                                                    "type": "number",
+                                                    "minimum": 0,
+                                                    "maximum": 100
+                                                }
+                                            },
+                                            "required": [
+                                                "rate"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 12
+                                    },
+                                    "use_overtime": {
+                                        "type": "boolean"
+                                    },
+                                    "use_loan": {
+                                        "type": "boolean"
+                                    },
+                                    "use_allowance": {
+                                        "type": "boolean"
+                                    },
+                                    "use_leave_deduction": {
+                                        "type": "boolean"
+                                    },
+                                    "use_deduction": {
+                                        "type": "boolean"
+                                    },
+                                    "use_saccos": {
+                                        "type": "boolean"
+                                    },
+                                    "use_relief": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "from_day",
+                                    "from_month",
+                                    "to_day",
+                                    "to_month",
+                                    "wcf",
+                                    "sdl",
+                                    "income_tax",
+                                    "nssf_employee",
+                                    "nssf_employer",
+                                    "nhif_employee",
+                                    "nhif_employer",
+                                    "heslb",
+                                    "emergency_fund",
+                                    "tax_bands"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "from_day": {
+                                                    "type": "integer"
+                                                },
+                                                "from_month": {
+                                                    "type": "string"
+                                                },
+                                                "to_day": {
+                                                    "type": "integer"
+                                                },
+                                                "to_month": {
+                                                    "type": "string"
+                                                },
+                                                "wcf": {
+                                                    "type": "number"
+                                                },
+                                                "sdl": {
+                                                    "type": "number"
+                                                },
+                                                "income_tax": {
+                                                    "type": "number"
+                                                },
+                                                "emergency_fund": {
+                                                    "type": "number"
+                                                },
+                                                "nssf_employee": {
+                                                    "type": "number"
+                                                },
+                                                "nssf_employer": {
+                                                    "type": "number"
+                                                },
+                                                "nhif_employee": {
+                                                    "type": "number"
+                                                },
+                                                "nhif_employer": {
+                                                    "type": "number"
+                                                },
+                                                "heslb": {
+                                                    "type": "number"
+                                                },
+                                                "tax_bands": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "up_to": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "rate": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "up_to",
+                                                            "rate"
+                                                        ]
+                                                    }
+                                                },
+                                                "use_overtime": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_loan": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_allowance": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_leave_deduction": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_deduction": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_saccos": {
+                                                    "type": "boolean"
+                                                },
+                                                "use_relief": {
+                                                    "type": "boolean"
+                                                },
+                                                "example_period": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "from_day",
+                                                "from_month",
+                                                "to_day",
+                                                "to_month",
+                                                "wcf",
+                                                "sdl",
+                                                "income_tax",
+                                                "emergency_fund",
+                                                "nssf_employee",
+                                                "nssf_employer",
+                                                "nhif_employee",
+                                                "nhif_employer",
+                                                "heslb",
+                                                "tax_bands",
+                                                "use_overtime",
+                                                "use_loan",
+                                                "use_allowance",
+                                                "use_leave_deduction",
+                                                "use_deduction",
+                                                "use_saccos",
+                                                "use_relief",
+                                                "example_period"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/settings/paye": {
+            "get": {
+                "operationId": "payroll.settings.paye",
+                "summary": "Work out the PAYE of a taxable income with the current bands (to check the settings)",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "taxable",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        },
+                        "x-deepObject-style": "qs"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "taxable": {
+                                                    "type": "number"
+                                                },
+                                                "paye": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "taxable",
+                                                "paye"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets": {
+            "get": {
+                "operationId": "payroll.sheets.index",
+                "summary": "Payroll sheets, newest first",
+                "tags": [
+                    "Payroll"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "year": {
+                                                        "type": "integer"
+                                                    },
+                                                    "month": {
+                                                        "type": "integer"
+                                                    },
+                                                    "from": {
+                                                        "type": "string"
+                                                    },
+                                                    "to": {
+                                                        "type": "string"
+                                                    },
+                                                    "days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "employees": {
+                                                        "type": "integer"
+                                                    },
+                                                    "gross": {
+                                                        "type": "number"
+                                                    },
+                                                    "deductions": {
+                                                        "type": "number"
+                                                    },
+                                                    "net": {
+                                                        "type": "number"
+                                                    },
+                                                    "employer": {
+                                                        "type": "number"
+                                                    },
+                                                    "cost": {
+                                                        "type": "number"
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "generated_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "year",
+                                                    "month",
+                                                    "from",
+                                                    "to",
+                                                    "days",
+                                                    "status",
+                                                    "status_label",
+                                                    "employees",
+                                                    "gross",
+                                                    "deductions",
+                                                    "net",
+                                                    "employer",
+                                                    "cost",
+                                                    "waiting_for",
+                                                    "decision_comment",
+                                                    "generated_at"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "payroll.sheets.store",
+                "summary": "Create the payroll of a month and work it out",
+                "tags": [
+                    "Payroll"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "year": {
+                                        "type": "integer",
+                                        "minimum": 2000,
+                                        "maximum": 2100
+                                    },
+                                    "month": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 12
+                                    }
+                                },
+                                "required": [
+                                    "year",
+                                    "month"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "year": {
+                                                    "type": "integer"
+                                                },
+                                                "month": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": "string"
+                                                },
+                                                "to": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "employees": {
+                                                    "type": "integer"
+                                                },
+                                                "gross": {
+                                                    "type": "number"
+                                                },
+                                                "deductions": {
+                                                    "type": "number"
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                },
+                                                "employer": {
+                                                    "type": "number"
+                                                },
+                                                "cost": {
+                                                    "type": "number"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "generated_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "year",
+                                                "month",
+                                                "from",
+                                                "to",
+                                                "days",
+                                                "status",
+                                                "status_label",
+                                                "employees",
+                                                "gross",
+                                                "deductions",
+                                                "net",
+                                                "employer",
+                                                "cost",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "generated_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets/{sheet}": {
+            "get": {
+                "operationId": "payroll.sheets.show",
+                "summary": "A payroll sheet with each employee's pay",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sheet": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "year": {
+                                                            "type": "integer"
+                                                        },
+                                                        "month": {
+                                                            "type": "integer"
+                                                        },
+                                                        "from": {
+                                                            "type": "string"
+                                                        },
+                                                        "to": {
+                                                            "type": "string"
+                                                        },
+                                                        "days": {
+                                                            "type": "integer"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "status_label": {
+                                                            "type": "string"
+                                                        },
+                                                        "employees": {
+                                                            "type": "integer"
+                                                        },
+                                                        "gross": {
+                                                            "type": "number"
+                                                        },
+                                                        "deductions": {
+                                                            "type": "number"
+                                                        },
+                                                        "net": {
+                                                            "type": "number"
+                                                        },
+                                                        "employer": {
+                                                            "type": "number"
+                                                        },
+                                                        "cost": {
+                                                            "type": "number"
+                                                        },
+                                                        "waiting_for": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "decision_comment": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "generated_at": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "year",
+                                                        "month",
+                                                        "from",
+                                                        "to",
+                                                        "days",
+                                                        "status",
+                                                        "status_label",
+                                                        "employees",
+                                                        "gross",
+                                                        "deductions",
+                                                        "net",
+                                                        "employer",
+                                                        "cost",
+                                                        "waiting_for",
+                                                        "decision_comment",
+                                                        "generated_at"
+                                                    ]
+                                                },
+                                                "rows": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "employee_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "position": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "days_paid": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unpaid_days": {
+                                                                "type": "number"
+                                                            },
+                                                            "basic": {
+                                                                "type": "number"
+                                                            },
+                                                            "allowances": {
+                                                                "type": "number"
+                                                            },
+                                                            "overtime": {
+                                                                "type": "number"
+                                                            },
+                                                            "relief": {
+                                                                "type": "number"
+                                                            },
+                                                            "gross": {
+                                                                "type": "number"
+                                                            },
+                                                            "nssf": {
+                                                                "type": "number"
+                                                            },
+                                                            "nhif": {
+                                                                "type": "number"
+                                                            },
+                                                            "heslb": {
+                                                                "type": "number"
+                                                            },
+                                                            "paye": {
+                                                                "type": "number"
+                                                            },
+                                                            "loans": {
+                                                                "type": "number"
+                                                            },
+                                                            "other_deductions": {
+                                                                "type": "number"
+                                                            },
+                                                            "deductions": {
+                                                                "type": "number"
+                                                            },
+                                                            "net": {
+                                                                "type": "number"
+                                                            },
+                                                            "bank": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "account": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "employee_id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "position",
+                                                            "department",
+                                                            "days_paid",
+                                                            "unpaid_days",
+                                                            "basic",
+                                                            "allowances",
+                                                            "overtime",
+                                                            "relief",
+                                                            "gross",
+                                                            "nssf",
+                                                            "nhif",
+                                                            "heslb",
+                                                            "paye",
+                                                            "loans",
+                                                            "other_deductions",
+                                                            "deductions",
+                                                            "net",
+                                                            "bank",
+                                                            "account"
+                                                        ]
+                                                    }
+                                                },
+                                                "totals": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "can_edit": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "sheet",
+                                                "rows",
+                                                "totals",
+                                                "can_edit"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "payroll.sheets.destroy",
+                "summary": "Delete a draft or returned payroll",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets/{sheet}/payslips/{detail}": {
+            "get": {
+                "operationId": "payroll.sheets.payslip",
+                "summary": "An employee's payslip on a payroll sheet",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "detail",
+                        "in": "path",
+                        "required": true,
+                        "description": "The detail ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sheet": {
+                                                    "type": "string"
+                                                },
+                                                "period": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "employee": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "position": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "bank": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "account": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "employee_no",
+                                                        "position",
+                                                        "department",
+                                                        "bank",
+                                                        "account"
+                                                    ]
+                                                },
+                                                "earnings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "deductions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "employer": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "gross": {
+                                                    "type": "number"
+                                                },
+                                                "taxable": {
+                                                    "type": "number"
+                                                },
+                                                "total_deductions": {
+                                                    "type": "number"
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "sheet",
+                                                "period",
+                                                "status",
+                                                "employee",
+                                                "earnings",
+                                                "deductions",
+                                                "employer",
+                                                "gross",
+                                                "taxable",
+                                                "total_deductions",
+                                                "net"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets/{sheet}/generate": {
+            "post": {
+                "operationId": "payroll.sheets.generate",
+                "summary": "Work a draft payroll out again (after changes to contracts, allowances, overtime, leave or deductions)",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "year": {
+                                                    "type": "integer"
+                                                },
+                                                "month": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": "string"
+                                                },
+                                                "to": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "employees": {
+                                                    "type": "integer"
+                                                },
+                                                "gross": {
+                                                    "type": "number"
+                                                },
+                                                "deductions": {
+                                                    "type": "number"
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                },
+                                                "employer": {
+                                                    "type": "number"
+                                                },
+                                                "cost": {
+                                                    "type": "number"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "generated_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "year",
+                                                "month",
+                                                "from",
+                                                "to",
+                                                "days",
+                                                "status",
+                                                "status_label",
+                                                "employees",
+                                                "gross",
+                                                "deductions",
+                                                "net",
+                                                "employer",
+                                                "cost",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "generated_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets/{sheet}/submit": {
+            "post": {
+                "operationId": "payroll.sheets.submit",
+                "summary": "Submit for approval (the \"Payroll sheet\" workflow; approved at once without one)",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "year": {
+                                                    "type": "integer"
+                                                },
+                                                "month": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": "string"
+                                                },
+                                                "to": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "employees": {
+                                                    "type": "integer"
+                                                },
+                                                "gross": {
+                                                    "type": "number"
+                                                },
+                                                "deductions": {
+                                                    "type": "number"
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                },
+                                                "employer": {
+                                                    "type": "number"
+                                                },
+                                                "cost": {
+                                                    "type": "number"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "generated_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "year",
+                                                "month",
+                                                "from",
+                                                "to",
+                                                "days",
+                                                "status",
+                                                "status_label",
+                                                "employees",
+                                                "gross",
+                                                "deductions",
+                                                "net",
+                                                "employer",
+                                                "cost",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "generated_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets/{sheet}/withdraw": {
+            "post": {
+                "operationId": "payroll.sheets.withdraw",
+                "summary": "Withdraw a payroll waiting for approval, back to draft",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "year": {
+                                                    "type": "integer"
+                                                },
+                                                "month": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": "string"
+                                                },
+                                                "to": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "employees": {
+                                                    "type": "integer"
+                                                },
+                                                "gross": {
+                                                    "type": "number"
+                                                },
+                                                "deductions": {
+                                                    "type": "number"
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                },
+                                                "employer": {
+                                                    "type": "number"
+                                                },
+                                                "cost": {
+                                                    "type": "number"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "generated_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "year",
+                                                "month",
+                                                "from",
+                                                "to",
+                                                "days",
+                                                "status",
+                                                "status_label",
+                                                "employees",
+                                                "gross",
+                                                "deductions",
+                                                "net",
+                                                "employer",
+                                                "cost",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "generated_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/platform/modules": {
             "get": {
                 "operationId": "platform.modules.index",
