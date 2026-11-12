@@ -61,6 +61,7 @@ final class PermissionCatalog
             'leave.reject' => 'Reject leave',
             'leave.delete' => 'Delete leave of others',
             'leave.types.manage' => 'Manage leave types',
+            'leave.balances.manage' => 'Adjust leave balances',
             'leave.annual-roster.manage' => 'Manage annual leave roster',
             'leave.absence.manage' => 'Manage absence requests',
         ],

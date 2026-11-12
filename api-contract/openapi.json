@@ -10677,6 +10677,1458 @@
                 }
             }
         },
+        "/self/leave/balances": {
+            "get": {
+                "operationId": "self.leave.balances",
+                "summary": "My leave balances for a year (default this year): only the leave types I can take",
+                "tags": [
+                    "Leave: Balances",
+                    "LeaveBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "leave_type": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "color": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "with_pay": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "limit_per": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "code",
+                                                            "kind",
+                                                            "color",
+                                                            "with_pay",
+                                                            "limit_per"
+                                                        ]
+                                                    },
+                                                    "leave_type_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "year": {
+                                                        "type": "integer"
+                                                    },
+                                                    "period_start": {
+                                                        "type": "string"
+                                                    },
+                                                    "period_end": {
+                                                        "type": "string"
+                                                    },
+                                                    "period_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "from_joining": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "yearly": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "entitled": {
+                                                        "type": "number"
+                                                    },
+                                                    "carried_over": {
+                                                        "type": "number"
+                                                    },
+                                                    "adjustments": {
+                                                        "type": "number"
+                                                    },
+                                                    "taken": {
+                                                        "type": "number"
+                                                    },
+                                                    "pending": {
+                                                        "type": "number"
+                                                    },
+                                                    "available": {
+                                                        "type": "number"
+                                                    },
+                                                    "eligible": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "reason": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "leave_type",
+                                                    "leave_type_id",
+                                                    "year",
+                                                    "period_start",
+                                                    "period_end",
+                                                    "period_label",
+                                                    "from_joining",
+                                                    "yearly",
+                                                    "entitled",
+                                                    "carried_over",
+                                                    "adjustments",
+                                                    "taken",
+                                                    "pending",
+                                                    "available",
+                                                    "eligible",
+                                                    "reason"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "year": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "year"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/leave/days": {
+            "get": {
+                "operationId": "self.leave.days",
+                "summary": "How many leave days a period takes for me (by the leave type's counting rule and my roster or working hours).\nGive `end_date` to count the days, or `days` to find the last day",
+                "tags": [
+                    "Leave: Balances",
+                    "LeaveBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "leave_type_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-12-07"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-12-13"
+                    },
+                    {
+                        "name": "days",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "start_date": {
+                                                    "type": "string"
+                                                },
+                                                "end_date": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "integer"
+                                                },
+                                                "breakdown": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "counted": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "date",
+                                                            "counted",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "start_date",
+                                                "end_date",
+                                                "days",
+                                                "breakdown"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/employees/{employee}/balances": {
+            "get": {
+                "operationId": "leave.balances.employee",
+                "summary": "An employee's balance in each leave type for a leave period named by its start year (default: each type's current period), with HR adjustments",
+                "tags": [
+                    "Leave: Balances",
+                    "LeaveBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "leave_type": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "color": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "with_pay": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "limit_per": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "code",
+                                                            "kind",
+                                                            "color",
+                                                            "with_pay",
+                                                            "limit_per"
+                                                        ]
+                                                    },
+                                                    "leave_type_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "year": {
+                                                        "type": "integer"
+                                                    },
+                                                    "period_start": {
+                                                        "type": "string"
+                                                    },
+                                                    "period_end": {
+                                                        "type": "string"
+                                                    },
+                                                    "period_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "from_joining": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "yearly": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "entitled": {
+                                                        "type": "number"
+                                                    },
+                                                    "carried_over": {
+                                                        "type": "number"
+                                                    },
+                                                    "adjustments": {
+                                                        "type": "number"
+                                                    },
+                                                    "taken": {
+                                                        "type": "number"
+                                                    },
+                                                    "pending": {
+                                                        "type": "number"
+                                                    },
+                                                    "available": {
+                                                        "type": "number"
+                                                    },
+                                                    "eligible": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "reason": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "leave_type",
+                                                    "leave_type_id",
+                                                    "year",
+                                                    "period_start",
+                                                    "period_end",
+                                                    "period_label",
+                                                    "from_joining",
+                                                    "yearly",
+                                                    "entitled",
+                                                    "carried_over",
+                                                    "adjustments",
+                                                    "taken",
+                                                    "pending",
+                                                    "available",
+                                                    "eligible",
+                                                    "reason"
+                                                ]
+                                            }
+                                        },
+                                        "adjustments": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "leave_type": {
+                                                        "type": "string"
+                                                    },
+                                                    "days": {
+                                                        "type": "number"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    },
+                                                    "by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "leave_type",
+                                                    "days",
+                                                    "reason",
+                                                    "by",
+                                                    "at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "year": {
+                                                    "type": "integer"
+                                                },
+                                                "can_adjust": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "year",
+                                                "can_adjust"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "adjustments",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/employees/{employee}/days": {
+            "get": {
+                "operationId": "leave.days.employee",
+                "summary": "How many leave days a period takes for an employee. Give `end_date` to count the days, or `days` to find the last day",
+                "tags": [
+                    "Leave: Balances",
+                    "LeaveBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "leave_type_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-12-07"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-12-13"
+                    },
+                    {
+                        "name": "days",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "start_date": {
+                                                    "type": "string"
+                                                },
+                                                "end_date": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "integer"
+                                                },
+                                                "breakdown": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "counted": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "date",
+                                                            "counted",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "start_date",
+                                                "end_date",
+                                                "days",
+                                                "breakdown"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/employees/{employee}/adjustments": {
+            "post": {
+                "operationId": "leave.adjustments.store",
+                "summary": "Add days to (or take days from) an employee's balance for a year, with the reason (e.g. opening balance from HRMS)",
+                "tags": [
+                    "Leave: Balances",
+                    "LeaveBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "leave_type_id": {
+                                        "type": "integer"
+                                    },
+                                    "leave_year": {
+                                        "type": "integer",
+                                        "minimum": 2000,
+                                        "maximum": 2100
+                                    },
+                                    "days": {
+                                        "type": "number",
+                                        "description": "Positive adds days, negative takes days away. Half days allowed.",
+                                        "minimum": -366,
+                                        "maximum": 366
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "leave_type_id",
+                                    "leave_year",
+                                    "days",
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "leave_type": {
+                                                    "type": "string"
+                                                },
+                                                "days": {
+                                                    "type": "number"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                },
+                                                "by": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "at": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "leave_type",
+                                                "days",
+                                                "reason",
+                                                "by",
+                                                "at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/employees/{employee}/adjustments/{adjustment}": {
+            "delete": {
+                "operationId": "leave.adjustments.destroy",
+                "summary": "Remove an adjustment",
+                "tags": [
+                    "Leave: Balances",
+                    "LeaveBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "adjustment",
+                        "in": "path",
+                        "required": true,
+                        "description": "The adjustment ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/settings": {
+            "get": {
+                "operationId": "leave.settings.show",
+                "summary": "Leave year settings",
+                "tags": [
+                    "Leave: Settings",
+                    "LeaveSettings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "leave_year_start_month": {
+                                                    "type": "integer"
+                                                },
+                                                "annual_cycle_from_joining": {
+                                                    "type": "boolean"
+                                                },
+                                                "joiners_from": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "joiners_from_default": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "current_year": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "leave_year_start_month",
+                                                "annual_cycle_from_joining",
+                                                "joiners_from",
+                                                "joiners_from_default",
+                                                "current_year"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "leave.settings.update",
+                "summary": "Change the leave year settings. Balances are worked out again with the new periods",
+                "tags": [
+                    "Leave: Settings",
+                    "LeaveSettings"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "leave_year_start_month": {
+                                        "type": "integer",
+                                        "description": "Month the company leave year starts (1 = January, as HRMS).",
+                                        "minimum": 1,
+                                        "maximum": 12
+                                    },
+                                    "annual_cycle_from_joining": {
+                                        "type": "boolean",
+                                        "description": "New joiners' annual leave runs in 12-month cycles from their joining date."
+                                    },
+                                    "joiners_from": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time",
+                                        "description": "Employees who joined on or after this date are new joiners. Empty: the day annual leave was set up."
+                                    }
+                                },
+                                "required": [
+                                    "leave_year_start_month",
+                                    "annual_cycle_from_joining"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "leave_year_start_month": {
+                                                    "type": "integer"
+                                                },
+                                                "annual_cycle_from_joining": {
+                                                    "type": "boolean"
+                                                },
+                                                "joiners_from": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "joiners_from_default": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "current_year": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "leave_year_start_month",
+                                                "annual_cycle_from_joining",
+                                                "joiners_from",
+                                                "joiners_from_default",
+                                                "current_year"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/types": {
+            "get": {
+                "operationId": "leave.types.index",
+                "summary": "List leave types with the number of leave records of each, and the choices for the form",
+                "tags": [
+                    "Leave: Types",
+                    "LeaveType"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "gender": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "with_pay": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "max_days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "day_count": {
+                                                        "type": "string"
+                                                    },
+                                                    "day_count_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "limit_per": {
+                                                        "type": "string"
+                                                    },
+                                                    "carry_over_days": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "notice_days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "requires_document": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "employee_types": {
+                                                        "type": [
+                                                            "array",
+                                                            "null"
+                                                        ],
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "color": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "leaves_count": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "code",
+                                                    "kind",
+                                                    "kind_label",
+                                                    "gender",
+                                                    "description",
+                                                    "with_pay",
+                                                    "max_days",
+                                                    "day_count",
+                                                    "day_count_label",
+                                                    "limit_per",
+                                                    "carry_over_days",
+                                                    "notice_days",
+                                                    "requires_document",
+                                                    "employee_types",
+                                                    "color",
+                                                    "is_active",
+                                                    "leaves_count"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "kinds": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "day_counts": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "kinds",
+                                                "day_counts"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "leave.types.store",
+                "summary": "Add a leave type",
+                "tags": [
+                    "Leave: Types",
+                    "LeaveType"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LeaveTypeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "code": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "kind_label": {
+                                                    "type": "string"
+                                                },
+                                                "gender": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "with_pay": {
+                                                    "type": "boolean"
+                                                },
+                                                "max_days": {
+                                                    "type": "integer"
+                                                },
+                                                "day_count": {
+                                                    "type": "string"
+                                                },
+                                                "day_count_label": {
+                                                    "type": "string"
+                                                },
+                                                "limit_per": {
+                                                    "type": "string"
+                                                },
+                                                "carry_over_days": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "notice_days": {
+                                                    "type": "integer"
+                                                },
+                                                "requires_document": {
+                                                    "type": "boolean"
+                                                },
+                                                "employee_types": {
+                                                    "type": [
+                                                        "array",
+                                                        "null"
+                                                    ],
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "color": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                },
+                                                "leaves_count": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "code",
+                                                "kind",
+                                                "kind_label",
+                                                "gender",
+                                                "description",
+                                                "with_pay",
+                                                "max_days",
+                                                "day_count",
+                                                "day_count_label",
+                                                "limit_per",
+                                                "carry_over_days",
+                                                "notice_days",
+                                                "requires_document",
+                                                "employee_types",
+                                                "color",
+                                                "is_active",
+                                                "leaves_count"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/leave/types/{leaveType}": {
+            "put": {
+                "operationId": "leave.types.update",
+                "summary": "Update a leave type. Leave already taken keeps its days",
+                "tags": [
+                    "Leave: Types",
+                    "LeaveType"
+                ],
+                "parameters": [
+                    {
+                        "name": "leaveType",
+                        "in": "path",
+                        "required": true,
+                        "description": "The leave type ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LeaveTypeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "code": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "kind_label": {
+                                                    "type": "string"
+                                                },
+                                                "gender": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "with_pay": {
+                                                    "type": "boolean"
+                                                },
+                                                "max_days": {
+                                                    "type": "integer"
+                                                },
+                                                "day_count": {
+                                                    "type": "string"
+                                                },
+                                                "day_count_label": {
+                                                    "type": "string"
+                                                },
+                                                "limit_per": {
+                                                    "type": "string"
+                                                },
+                                                "carry_over_days": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "notice_days": {
+                                                    "type": "integer"
+                                                },
+                                                "requires_document": {
+                                                    "type": "boolean"
+                                                },
+                                                "employee_types": {
+                                                    "type": [
+                                                        "array",
+                                                        "null"
+                                                    ],
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "color": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                },
+                                                "leaves_count": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "code",
+                                                "kind",
+                                                "kind_label",
+                                                "gender",
+                                                "description",
+                                                "with_pay",
+                                                "max_days",
+                                                "day_count",
+                                                "day_count_label",
+                                                "limit_per",
+                                                "carry_over_days",
+                                                "notice_days",
+                                                "requires_document",
+                                                "employee_types",
+                                                "color",
+                                                "is_active",
+                                                "leaves_count"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "leave.types.destroy",
+                "summary": "Delete a leave type. Types with leave records cannot be deleted; make them inactive instead",
+                "tags": [
+                    "Leave: Types",
+                    "LeaveType"
+                ],
+                "parameters": [
+                    {
+                        "name": "leaveType",
+                        "in": "path",
+                        "required": true,
+                        "description": "The leave type ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "Leave has been taken with this type. Make it inactive instead."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me/notifications": {
             "get": {
                 "operationId": "me.notifications",
@@ -16756,6 +18208,134 @@
                 ],
                 "title": "JobPositionResource"
             },
+            "LeaveTypeRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "code": {
+                        "type": "string",
+                        "maxLength": 10
+                    },
+                    "kind": {
+                        "type": "string",
+                        "description": "annual, sick, maternity, paternity, compassionate, study, unpaid, other. Annual leave is only for employees whose contract gives it.",
+                        "enum": [
+                            "annual",
+                            "sick",
+                            "maternity",
+                            "paternity",
+                            "compassionate",
+                            "study",
+                            "unpaid",
+                            "other"
+                        ]
+                    },
+                    "gender": {
+                        "type": "string",
+                        "description": "all, male or female.",
+                        "enum": [
+                            "all",
+                            "male",
+                            "female"
+                        ]
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "with_pay": {
+                        "type": "boolean"
+                    },
+                    "max_days": {
+                        "type": "integer",
+                        "description": "Days per year (limit_per = year) or per request (limit_per = request).",
+                        "minimum": 1,
+                        "maximum": 366
+                    },
+                    "day_count": {
+                        "type": "string",
+                        "description": "working, calendar_no_holidays or calendar.",
+                        "enum": [
+                            "working",
+                            "calendar_no_holidays",
+                            "calendar"
+                        ]
+                    },
+                    "limit_per": {
+                        "type": "string",
+                        "enum": [
+                            "year",
+                            "request"
+                        ]
+                    },
+                    "carry_over_days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Days left at the end of a year that move to the next year (yearly types). Empty: none.",
+                        "minimum": 0,
+                        "maximum": 366
+                    },
+                    "notice_days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "How many days before the start the request must be made.",
+                        "minimum": 0,
+                        "maximum": 180
+                    },
+                    "requires_document": {
+                        "type": "boolean"
+                    },
+                    "employee_types": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Employee types that can take it; empty: all.",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "full_time",
+                                "part_time",
+                                "internship",
+                                "resident",
+                                "volunteer",
+                                "indirect"
+                            ]
+                        }
+                    },
+                    "color": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 20
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "name",
+                    "code",
+                    "kind",
+                    "gender",
+                    "with_pay",
+                    "max_days",
+                    "day_count",
+                    "limit_per"
+                ],
+                "title": "LeaveTypeRequest"
+            },
             "LicenceRequest": {
                 "type": "object",
                 "properties": {
@@ -18844,6 +20424,7 @@
                                 "leave.reject",
                                 "leave.delete",
                                 "leave.types.manage",
+                                "leave.balances.manage",
                                 "leave.annual-roster.manage",
                                 "leave.absence.manage",
                                 "roster.view",
@@ -19080,6 +20661,7 @@
                                 "leave.reject",
                                 "leave.delete",
                                 "leave.types.manage",
+                                "leave.balances.manage",
                                 "leave.annual-roster.manage",
                                 "leave.absence.manage",
                                 "roster.view",

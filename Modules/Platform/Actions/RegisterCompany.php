@@ -44,6 +44,7 @@ class RegisterCompany
             }
 
             DefaultRoles::createForCompany($company);
+            \Modules\Hr\Support\DefaultLeaveTypes::createForCompany($company);
 
             $this->context->run($company, function () use ($company, $data) {
                 $headOffice = null;

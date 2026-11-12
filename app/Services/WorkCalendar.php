@@ -47,11 +47,14 @@ class WorkCalendar
     }
 
     /** @return Collection<int, PlannedDay> */
-    public function days(Employee $employee, CarbonInterface|string $from, CarbonInterface|string $to): Collection
+    public function days(Employee $employee, CarbonInterface|string $from, CarbonInterface|string $to, bool $ignoreLeave = false): Collection
     {
         $from = Carbon::parse($from)->startOfDay();
         $to = Carbon::parse($to)->startOfDay();
         $entries = $this->entries($employee, $from, $to);
+        if ($ignoreLeave) {
+            $entries = $entries->map(fn ($day) => $day->where('source', '!=', EmployeeTimetable::LEAVE)->values());
+        }
 
         return collect(CarbonPeriod::create($from, $to))->map(fn ($d) => $this->resolve($employee, $d, $entries->get($d->toDateString(), collect())));
     }

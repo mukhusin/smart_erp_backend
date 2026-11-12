@@ -20,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ModuleAccessService::class);
         $this->app->singleton(AccessService::class);
         $this->app->scoped(\App\Services\WorkCalendar::class);
+        $this->app->scoped(\Modules\Hr\Support\LeavePeriods::class);
+        $this->app->scoped(\Modules\Hr\Support\LeaveBalances::class);
     }
 
     public function boot(): void

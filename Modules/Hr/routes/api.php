@@ -14,6 +14,9 @@ use Modules\Hr\Http\Controllers\Api\EmployeeExperienceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeLicenceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeQualificationController;
 use Modules\Hr\Http\Controllers\Api\JobPositionController;
+use Modules\Hr\Http\Controllers\Api\Leave\LeaveBalanceController;
+use Modules\Hr\Http\Controllers\Api\Leave\LeaveSettingsController;
+use Modules\Hr\Http\Controllers\Api\Leave\LeaveTypeController;
 use Modules\Hr\Http\Controllers\Api\LicenceTypeController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
@@ -185,6 +188,10 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
     Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
+    Route::middleware('module:leave')->group(function () {
+        Route::get('leave/balances', [LeaveBalanceController::class, 'mine'])->name('leave.balances');
+        Route::get('leave/days', [LeaveBalanceController::class, 'myDays'])->name('leave.days');
+    });
     Route::post('renewals', [SelfContractController::class, 'store'])->name('renewals.store');
     Route::post('renewals/{renewal}/withdraw', [SelfContractController::class, 'withdraw'])->name('renewals.withdraw');
     Route::get('renewals/{renewal}/files/{file}', [SelfContractController::class, 'file'])->name('renewals.file');
@@ -223,4 +230,21 @@ Route::prefix('roster')->middleware(['auth:sanctum', 'module:roster'])->name('ro
 Route::prefix('renewals')->middleware(['auth:sanctum', 'module:hr'])->name('renewal-review.')->group(function () {
     Route::get('{renewal}/review', [RenewalReviewController::class, 'show'])->name('show');
     Route::put('{renewal}/terms', [RenewalReviewController::class, 'terms'])->name('terms');
+});
+
+Route::prefix('leave')->middleware(['auth:sanctum', 'module:leave'])->name('leave.')->group(function () {
+    Route::middleware('can:leave.types.manage')->group(function () {
+        Route::get('types', [LeaveTypeController::class, 'index'])->name('types.index');
+        Route::post('types', [LeaveTypeController::class, 'store'])->name('types.store');
+        Route::put('types/{leaveType}', [LeaveTypeController::class, 'update'])->name('types.update');
+        Route::delete('types/{leaveType}', [LeaveTypeController::class, 'destroy'])->name('types.destroy');
+        Route::get('settings', [LeaveSettingsController::class, 'show'])->name('settings.show');
+        Route::put('settings', [LeaveSettingsController::class, 'update'])->name('settings.update');
+    });
+    Route::get('employees/{employee}/balances', [LeaveBalanceController::class, 'employee'])->name('balances.employee');
+    Route::get('employees/{employee}/days', [LeaveBalanceController::class, 'employeeDays'])->name('days.employee');
+    Route::middleware('can:leave.balances.manage')->group(function () {
+        Route::post('employees/{employee}/adjustments', [LeaveBalanceController::class, 'adjust'])->name('adjustments.store');
+        Route::delete('employees/{employee}/adjustments/{adjustment}', [LeaveBalanceController::class, 'removeAdjustment'])->name('adjustments.destroy');
+    });
 });

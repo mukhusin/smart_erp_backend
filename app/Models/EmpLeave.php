@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
-
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class EmpLeave extends Model
 {
     use BelongsToCompany;
+
+    public const PENDING = 'pending';
+
+    /** Statuses whose days are taken from the balance. */
+    public const TAKEN = ['approved', 'on_leave', 'reported'];
 
     protected $fillable = [
         'company_id', 'employee_id', 'leave_type_id', 'employee_dependant_id',
@@ -25,9 +29,28 @@ class EmpLeave extends Model
         'is_reported' => 'boolean', 'deducted' => 'boolean', 'is_active' => 'boolean',
     ];
 
-    public function employee()   { return $this->belongsTo(Employee::class); }
-    public function leaveType()  { return $this->belongsTo(LeaveType::class); }
-    public function hod()        { return $this->belongsTo(Employee::class, 'hod_id'); }
-    public function hrOfficer()  { return $this->belongsTo(Employee::class, 'hr_id'); }
-    public function dependant()  { return $this->belongsTo(EmployeeDependant::class, 'employee_dependant_id'); }
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function leaveType()
+    {
+        return $this->belongsTo(LeaveType::class);
+    }
+
+    public function hod()
+    {
+        return $this->belongsTo(Employee::class, 'hod_id');
+    }
+
+    public function hrOfficer()
+    {
+        return $this->belongsTo(Employee::class, 'hr_id');
+    }
+
+    public function dependant()
+    {
+        return $this->belongsTo(EmployeeDependant::class, 'employee_dependant_id');
+    }
 }
