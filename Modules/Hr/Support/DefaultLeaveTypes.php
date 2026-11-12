@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\LeaveType;
 use App\Services\CompanyContext;
 use Modules\Hr\Workflow\LeaveRequestProcess;
+use Modules\Hr\Workflow\OvertimeClaimProcess;
 use Modules\Workflow\Models\WorkflowTemplate;
 use Spatie\Permission\Models\Role;
 
@@ -36,14 +37,20 @@ final class DefaultLeaveTypes
         });
     }
 
-    /** Leave approval as HRMS: the supervisor (or head of department), then HR. */
+    /** Leave and overtime approval as HRMS: the supervisor (or head of department), then HR. */
     public static function createWorkflow(): void
     {
-        if (WorkflowTemplate::where('process', LeaveRequestProcess::KEY)->exists()) {
+        self::supervisorThenHr(LeaveRequestProcess::KEY);
+        self::supervisorThenHr(OvertimeClaimProcess::KEY);
+    }
+
+    public static function supervisorThenHr(string $process): void
+    {
+        if (WorkflowTemplate::where('process', $process)->exists()) {
             return;
         }
         $hr = Role::where('name', 'hr-officer')->where('company_id', app(CompanyContext::class)->id())->first();
-        $template = WorkflowTemplate::create(['process' => LeaveRequestProcess::KEY, 'company_branch_id' => null, 'is_active' => true]);
+        $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
         $template->steps()->create(['step_order' => 1, 'name' => 'Supervisor / Head of Department', 'approver_type' => 'supervisor', 'allow_send_back' => false, 'approve_label' => 'Recommend']);
         if ($hr) {
             $template->steps()->create(['step_order' => 2, 'name' => 'HR', 'approver_type' => 'role', 'role_id' => $hr->id, 'allow_send_back' => true]);

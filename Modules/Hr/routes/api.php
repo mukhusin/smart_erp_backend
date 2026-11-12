@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceEntryController;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceSetupController;
 use Modules\Hr\Http\Controllers\Api\BankController;
+use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeController;
 use Modules\Hr\Http\Controllers\Api\ContractTypeController;
 use Modules\Hr\Http\Controllers\Api\DeductionController;
 use Modules\Hr\Http\Controllers\Api\DepartmentController;
@@ -194,6 +195,12 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
     Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
     Route::get('allowances', [AllowanceEntryController::class, 'mine'])->middleware('module:allowance')->name('allowances');
+    Route::middleware('module:overtime')->group(function () {
+        Route::get('overtime', [OvertimeController::class, 'mine'])->name('overtime.index');
+        Route::get('overtime/preview', [OvertimeController::class, 'preview'])->name('overtime.preview');
+        Route::post('overtime', [OvertimeController::class, 'storeMine'])->name('overtime.store');
+        Route::post('overtime/{overtime}/withdraw', [OvertimeController::class, 'withdraw'])->name('overtime.withdraw');
+    });
     Route::middleware('module:leave')->group(function () {
         Route::get('leave/balances', [LeaveBalanceController::class, 'mine'])->name('leave.balances');
         Route::get('leave/days', [LeaveBalanceController::class, 'myDays'])->name('leave.days');
@@ -292,4 +299,17 @@ Route::prefix('allowance')->middleware(['auth:sanctum', 'module:allowance'])->na
         Route::post('generate', [AllowanceEntryController::class, 'generate'])->name('generate');
         Route::post('employees/{employee}/claims', [AllowanceEntryController::class, 'claim'])->name('claims.store');
     });
+});
+
+Route::prefix('overtime')->middleware(['auth:sanctum', 'module:overtime'])->name('overtime.')->group(function () {
+    Route::middleware('can:overtime.department-ranges.manage')->group(function () {
+        Route::get('rates', [OvertimeController::class, 'rates'])->name('rates.index');
+        Route::post('rates', [OvertimeController::class, 'storeRate'])->name('rates.store');
+        Route::put('rates/{rate}', [OvertimeController::class, 'updateRate'])->name('rates.update');
+        Route::delete('rates/{rate}', [OvertimeController::class, 'destroyRate'])->name('rates.destroy');
+    });
+    Route::get('claims', [OvertimeController::class, 'index'])->name('claims.index');
+    Route::get('claims/{overtime}', [OvertimeController::class, 'review'])->name('claims.review');
+    Route::put('claims/{overtime}/times', [OvertimeController::class, 'times'])->name('claims.times');
+    Route::post('employees/{employee}/claims', [OvertimeController::class, 'storeFor'])->middleware('can:overtime.manage')->name('claims.store-for');
 });

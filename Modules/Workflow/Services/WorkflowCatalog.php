@@ -20,6 +20,7 @@ final class WorkflowCatalog
         \Modules\Hr\Workflow\DutyRosterProcess::class,
         \Modules\Hr\Workflow\LeaveRequestProcess::class,
         \Modules\Hr\Workflow\AllowanceClaimProcess::class,
+        \Modules\Hr\Workflow\OvertimeClaimProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

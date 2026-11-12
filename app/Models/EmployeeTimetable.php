@@ -43,7 +43,7 @@ class EmployeeTimetable extends Model
     public function fillFromCode(RosterCode $code): static
     {
         return $this->fill([
-            'roster_code_id' => $code->id, 'code' => $code->code, 'duty' => $code->duty, 'can_punch' => $code->can_punch, 'pass_day' => $code->pass_day,
+            'roster_code_id' => $code->id, 'code' => $code->code, 'duty' => $code->duty, 'can_punch' => (bool) $code->can_punch, 'pass_day' => (bool) $code->pass_day,
             'start_time' => $code->start_time, 'end_time' => $code->end_time, 'break_minutes' => (int) $code->break_minutes,
             'work_hour' => (float) $code->work_hour, 'color' => $code->color,
         ]);
