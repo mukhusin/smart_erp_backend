@@ -38,7 +38,7 @@ class LeaveBalanceController extends Controller
     /**
      * An employee's balance in each leave type for a leave period named by its start year (default: each type's current period), with HR adjustments.
      *
-     * @response array{data: list<array{leave_type: array{id: int, name: string, code: string, kind: string, color: string|null, with_pay: bool, limit_per: string}, leave_type_id: int, year: int, period_start: string, period_end: string, period_label: string, from_joining: bool, yearly: bool, entitled: float, carried_over: float, adjustments: float, taken: float, pending: float, available: float, eligible: bool, reason: string|null}>, adjustments: list<array{id: int, leave_type: string, days: float, reason: string, by: string|null, at: string}>, meta: array{year: int, can_adjust: bool}}
+     * @response array{data: list<array{leave_type: array{id: int, name: string, code: string, kind: string, color: string|null, with_pay: bool, limit_per: string, notice_days: int, requires_document: bool}, leave_type_id: int, year: int, period_start: string, period_end: string, period_label: string, from_joining: bool, yearly: bool, entitled: float, carried_over: float, adjustments: float, taken: float, pending: float, available: float, eligible: bool, reason: string|null}>, adjustments: list<array{id: int, leave_type: string, days: float, reason: string, by: string|null, at: string}>, meta: array{year: int, can_adjust: bool}}
      */
     #[QueryParameter('year', type: 'integer')]
     public function employee(Request $request, Employee $employee): JsonResponse
@@ -85,7 +85,7 @@ class LeaveBalanceController extends Controller
     /**
      * My leave balances for a year (default this year): only the leave types I can take.
      *
-     * @response array{data: list<array{leave_type: array{id: int, name: string, code: string, kind: string, color: string|null, with_pay: bool, limit_per: string}, leave_type_id: int, year: int, period_start: string, period_end: string, period_label: string, from_joining: bool, yearly: bool, entitled: float, carried_over: float, adjustments: float, taken: float, pending: float, available: float, eligible: bool, reason: string|null}>, meta: array{year: int}}
+     * @response array{data: list<array{leave_type: array{id: int, name: string, code: string, kind: string, color: string|null, with_pay: bool, limit_per: string, notice_days: int, requires_document: bool}, leave_type_id: int, year: int, period_start: string, period_end: string, period_label: string, from_joining: bool, yearly: bool, entitled: float, carried_over: float, adjustments: float, taken: float, pending: float, available: float, eligible: bool, reason: string|null}>, meta: array{year: int}}
      */
     #[QueryParameter('year', type: 'integer')]
     public function mine(Request $request): JsonResponse
@@ -150,7 +150,7 @@ class LeaveBalanceController extends Controller
         $types = LeaveType::whereIn('id', collect($this->balances()->all($employee, $year))->pluck('leave_type_id'))->get()->keyBy('id');
 
         return collect($this->balances()->all($employee, $year, $onlyEligible))->map(fn ($b) => [
-            'leave_type' => ($t = $types[$b['leave_type_id']]) ? ['id' => $t->id, 'name' => $t->name, 'code' => $t->code, 'kind' => $t->kind, 'color' => $t->color, 'with_pay' => (bool) $t->with_pay, 'limit_per' => $t->limit_per] : null,
+            'leave_type' => ($t = $types[$b['leave_type_id']]) ? ['id' => $t->id, 'name' => $t->name, 'code' => $t->code, 'kind' => $t->kind, 'color' => $t->color, 'with_pay' => (bool) $t->with_pay, 'limit_per' => $t->limit_per, 'notice_days' => (int) $t->notice_days, 'requires_document' => (bool) $t->requires_document] : null,
         ] + $b)->values()->all();
     }
 

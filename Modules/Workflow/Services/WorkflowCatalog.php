@@ -18,6 +18,7 @@ final class WorkflowCatalog
         UserAccessChangeProcess::class,
         ContractRenewalProcess::class,
         \Modules\Hr\Workflow\DutyRosterProcess::class,
+        \Modules\Hr\Workflow\LeaveRequestProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

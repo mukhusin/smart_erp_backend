@@ -5,6 +5,9 @@ namespace Modules\Hr\Support;
 use App\Models\Company;
 use App\Models\LeaveType;
 use App\Services\CompanyContext;
+use Modules\Hr\Workflow\LeaveRequestProcess;
+use Modules\Workflow\Models\WorkflowTemplate;
+use Spatie\Permission\Models\Role;
 
 /**
  * Leave types a new company starts with (Tanzania, Employment and Labour Relations Act 2004). HR can change them.
@@ -29,6 +32,21 @@ final class DefaultLeaveTypes
             foreach (self::TYPES as $type) {
                 LeaveType::create($type + ['gender' => 'all', 'with_pay' => true, 'requires_document' => false, 'notice_days' => 0, 'is_active' => true]);
             }
+            self::createWorkflow();
         });
+    }
+
+    /** Leave approval as HRMS: the supervisor (or head of department), then HR. */
+    public static function createWorkflow(): void
+    {
+        if (WorkflowTemplate::where('process', LeaveRequestProcess::KEY)->exists()) {
+            return;
+        }
+        $hr = Role::where('name', 'hr-officer')->where('company_id', app(CompanyContext::class)->id())->first();
+        $template = WorkflowTemplate::create(['process' => LeaveRequestProcess::KEY, 'company_branch_id' => null, 'is_active' => true]);
+        $template->steps()->create(['step_order' => 1, 'name' => 'Supervisor / Head of Department', 'approver_type' => 'supervisor', 'allow_send_back' => false, 'approve_label' => 'Recommend']);
+        if ($hr) {
+            $template->steps()->create(['step_order' => 2, 'name' => 'HR', 'approver_type' => 'role', 'role_id' => $hr->id, 'allow_send_back' => true]);
+        }
     }
 }

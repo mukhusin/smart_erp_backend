@@ -11,9 +11,9 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Modules\Core\Notifications\Notice;
 use Modules\Core\Services\AccessService;
 use Modules\Core\Sms\SmsService;
-use Modules\Hr\Notifications\RenewalDecided;
 use Modules\Hr\Support\EmployeeFiles;
 use Modules\Hr\Support\EmployeeOptions as O;
 use Modules\Hr\Workflow\ContractRenewalProcess;
@@ -228,7 +228,7 @@ class ManageRenewals
     private function notify(ContractRenewal $renewal, string $title, string $message): void
     {
         $employee = $renewal->employee;
-        $employee?->user?->notify(new RenewalDecided($title, $message));
+        $employee?->user?->notify(new Notice($title, $message, '/self-service/contract', 'file-earmark-check'));
         if ($employee?->phone_number) {
             try {
                 app(SmsService::class)->send($title, [['employee_id' => $employee->id, 'phone' => $employee->phone_number, 'message' => $message]], 'contract-renewal', "renewal-{$renewal->id}-{$renewal->status}");

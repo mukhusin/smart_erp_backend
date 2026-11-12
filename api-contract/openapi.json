@@ -10733,6 +10733,12 @@
                                                             },
                                                             "limit_per": {
                                                                 "type": "string"
+                                                            },
+                                                            "notice_days": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requires_document": {
+                                                                "type": "boolean"
                                                             }
                                                         },
                                                         "required": [
@@ -10742,7 +10748,9 @@
                                                             "kind",
                                                             "color",
                                                             "with_pay",
-                                                            "limit_per"
+                                                            "limit_per",
+                                                            "notice_days",
+                                                            "requires_document"
                                                         ]
                                                     },
                                                     "leave_type_id": {
@@ -11017,6 +11025,12 @@
                                                             },
                                                             "limit_per": {
                                                                 "type": "string"
+                                                            },
+                                                            "notice_days": {
+                                                                "type": "integer"
+                                                            },
+                                                            "requires_document": {
+                                                                "type": "boolean"
                                                             }
                                                         },
                                                         "required": [
@@ -11026,7 +11040,9 @@
                                                             "kind",
                                                             "color",
                                                             "with_pay",
-                                                            "limit_per"
+                                                            "limit_per",
+                                                            "notice_days",
+                                                            "requires_document"
                                                         ]
                                                     },
                                                     "leave_type_id": {
@@ -11447,6 +11463,640 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/requests": {
+            "get": {
+                "operationId": "leave.requests.index",
+                "summary": "Leave requests, newest first",
+                "tags": [
+                    "Leave: Requests",
+                    "LeaveRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "pending, approved, on_leave, reported, rejected, cancelled",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "leave_type_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Leave on any day of this month, e.g. 2026-12",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/LeaveRequestResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/requests/{leave}": {
+            "get": {
+                "operationId": "leave.requests.review",
+                "summary": "A leave request as approvers see it: the request, the balance, how the days are counted, and changes",
+                "tags": [
+                    "Leave: Requests",
+                    "LeaveRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "leave",
+                        "in": "path",
+                        "required": true,
+                        "description": "The leave ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "leave": {
+                                                    "$ref": "#/components/schemas/LeaveRequestResource"
+                                                },
+                                                "balance": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "entitled": {
+                                                            "type": "number"
+                                                        },
+                                                        "carried_over": {
+                                                            "type": "number"
+                                                        },
+                                                        "adjustments": {
+                                                            "type": "number"
+                                                        },
+                                                        "taken": {
+                                                            "type": "number"
+                                                        },
+                                                        "pending": {
+                                                            "type": "number"
+                                                        },
+                                                        "available": {
+                                                            "type": "number"
+                                                        },
+                                                        "period_label": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "entitled",
+                                                        "carried_over",
+                                                        "adjustments",
+                                                        "taken",
+                                                        "pending",
+                                                        "available",
+                                                        "period_label"
+                                                    ]
+                                                },
+                                                "breakdown": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "counted": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "date",
+                                                            "counted",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "can_change": {
+                                                    "type": "boolean"
+                                                },
+                                                "can_record_return": {
+                                                    "type": "boolean"
+                                                },
+                                                "changes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "by": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "step": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "before": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "start_date": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "end_date": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "days": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "start_date",
+                                                                    "end_date",
+                                                                    "days"
+                                                                ]
+                                                            },
+                                                            "after": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "start_date": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "end_date": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "days": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "report_date": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "start_date",
+                                                                    "end_date",
+                                                                    "days"
+                                                                ]
+                                                            },
+                                                            "comment": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "kind",
+                                                            "by",
+                                                            "step",
+                                                            "before",
+                                                            "after",
+                                                            "comment",
+                                                            "at"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "leave",
+                                                "balance",
+                                                "breakdown",
+                                                "can_change",
+                                                "can_record_return",
+                                                "changes"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/requests/{leave}/dates": {
+            "put": {
+                "operationId": "leave.requests.dates",
+                "summary": "Change the first day and the number of days (HR, or the approver of the current step)",
+                "tags": [
+                    "Leave: Requests",
+                    "LeaveRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "leave",
+                        "in": "path",
+                        "required": true,
+                        "description": "The leave ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "days": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 366
+                                    },
+                                    "comment": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "start_date",
+                                    "days"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LeaveRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LeaveRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/requests/{leave}/return": {
+            "post": {
+                "operationId": "leave.requests.return",
+                "summary": "Record the day the employee came back to work (HR)",
+                "tags": [
+                    "Leave: Requests",
+                    "LeaveRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "leave",
+                        "in": "path",
+                        "required": true,
+                        "description": "The leave ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "report_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "comment": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "report_date"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LeaveRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LeaveRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/requests/{leave}/files/{file}": {
+            "get": {
+                "operationId": "leave.requests.file",
+                "summary": "Download an attachment of a leave request",
+                "tags": [
+                    "Leave: Requests",
+                    "LeaveRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "leave",
+                        "in": "path",
+                        "required": true,
+                        "description": "The leave ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "file",
+                        "in": "path",
+                        "required": true,
+                        "description": "The file ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/employees/{employee}/requests": {
+            "post": {
+                "operationId": "leave.requests.store-for",
+                "summary": "Request leave for an employee (HR). Notice is not required; the approval workflow still applies",
+                "tags": [
+                    "Leave: Requests",
+                    "LeaveRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LeaveRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LeaveRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LeaveRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -16014,6 +16664,205 @@
                     }
                 }
             }
+        },
+        "/self/leave/requests": {
+            "get": {
+                "operationId": "self.leave.index",
+                "summary": "My leave requests, newest first",
+                "tags": [
+                    "Self service: My leave",
+                    "SelfLeave"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/LeaveRequestResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "self.leave.store",
+                "summary": "Request leave. Sent as multipart form data when attaching documents (PDF, JPG or PNG, up to 5 MB each, at most 5)",
+                "tags": [
+                    "Self service: My leave",
+                    "SelfLeave"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LeaveRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LeaveRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LeaveRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/leave/requests/{leave}/withdraw": {
+            "post": {
+                "operationId": "self.leave.withdraw",
+                "summary": "Withdraw a request waiting for approval, or cancel approved leave that has not started",
+                "tags": [
+                    "Self service: My leave",
+                    "SelfLeave"
+                ],
+                "parameters": [
+                    {
+                        "name": "leave",
+                        "in": "path",
+                        "required": true,
+                        "description": "The leave ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`LeaveRequestResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LeaveRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/leave/requests/{leave}/files/{file}": {
+            "get": {
+                "operationId": "self.leave.file",
+                "summary": "Download an attachment of my request",
+                "tags": [
+                    "Self service: My leave",
+                    "SelfLeave"
+                ],
+                "parameters": [
+                    {
+                        "name": "leave",
+                        "in": "path",
+                        "required": true,
+                        "description": "The leave ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "file",
+                        "in": "path",
+                        "required": true,
+                        "description": "The file ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -18207,6 +19056,309 @@
                     "staff_count"
                 ],
                 "title": "JobPositionResource"
+            },
+            "LeaveRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "leave_type_id": {
+                        "type": "integer"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "days": {
+                        "type": "integer",
+                        "description": "Days of leave, counted by the leave type's rule; the last day is worked out.",
+                        "minimum": 1,
+                        "maximum": 366
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Why (optional).",
+                        "maxLength": 1000
+                    },
+                    "leave_address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "leave_phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 30
+                    },
+                    "agreed": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "I confirm the request (employee)."
+                    },
+                    "details": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Compassionate leave: deceased_name, relationship, death_date.",
+                        "properties": {
+                            "deceased_name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 150
+                            },
+                            "relationship": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "death_date": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "date-time"
+                            }
+                        }
+                    },
+                    "files": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "format": "binary",
+                            "contentMediaType": "application/octet-stream",
+                            "description": "Maximum file size: 5120 kilobytes."
+                        },
+                        "maxItems": 5
+                    }
+                },
+                "required": [
+                    "leave_type_id",
+                    "start_date",
+                    "days"
+                ],
+                "title": "LeaveRequestRequest"
+            },
+            "LeaveRequestResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "employee": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "employee_no": {
+                                "type": "string"
+                            },
+                            "department": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "employee_no",
+                            "department"
+                        ]
+                    },
+                    "leave_type": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "code": {
+                                "type": "string"
+                            },
+                            "kind": {
+                                "type": "string"
+                            },
+                            "color": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "with_pay": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "code",
+                            "kind",
+                            "color",
+                            "with_pay"
+                        ]
+                    },
+                    "start_date": {
+                        "type": "string"
+                    },
+                    "end_date": {
+                        "type": "string"
+                    },
+                    "days": {
+                        "type": "number"
+                    },
+                    "requested_start_date": {
+                        "type": "string"
+                    },
+                    "requested_end_date": {
+                        "type": "string"
+                    },
+                    "days_requested": {
+                        "type": "number"
+                    },
+                    "leave_year": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "pending, approved, on_leave, reported, rejected, cancelled"
+                    },
+                    "status_label": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string",
+                        "description": "employee or hr"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "details": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Compassionate leave: deceased_name, relationship, death_date. @var array<string, string>|null",
+                        "items": {}
+                    },
+                    "leave_address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "leave_phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "report_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "waiting_for": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "decision_comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "files": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "url": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "name",
+                                "url"
+                            ]
+                        }
+                    },
+                    "can_withdraw": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "employee",
+                    "leave_type",
+                    "start_date",
+                    "end_date",
+                    "days",
+                    "requested_start_date",
+                    "requested_end_date",
+                    "days_requested",
+                    "leave_year",
+                    "status",
+                    "status_label",
+                    "source",
+                    "description",
+                    "details",
+                    "leave_address",
+                    "leave_phone",
+                    "report_date",
+                    "waiting_for",
+                    "decision_comment",
+                    "files",
+                    "can_withdraw",
+                    "created_at"
+                ],
+                "title": "LeaveRequestResource"
             },
             "LeaveTypeRequest": {
                 "type": "object",

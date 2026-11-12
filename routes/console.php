@@ -17,7 +17,4 @@ Schedule::command('hr:contract-reminders')->dailyAt('08:30')
 
 Schedule::command('leave:status')->everyFourHours()
     ->appendOutputTo(storage_path('logs/leave-status.log'));
-
-Schedule::command('leave:annual-balance')->everySixHours()
-    ->appendOutputTo(storage_path('logs/leave-annual-balance.log'));
 // Cron entry: * * * * * php /path/to/smart-erp/artisan schedule:run >> /dev/null 2>&1
