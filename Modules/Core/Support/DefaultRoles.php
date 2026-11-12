@@ -26,6 +26,12 @@ final class DefaultRoles
             'hr.*', 'leave.*', 'roster.*', 'attendance.*', 'allowance.*', 'overtime.*', 'payroll.view',
             'payroll.create', 'payroll.edit', 'payroll.comment', 'loans.*', 'reports.*', 'self-service.use',
         ],
+        'hr-manager' => [
+            'hr.*', 'leave.*', 'roster.*', 'attendance.*', 'allowance.*', 'overtime.*', 'payroll.view',
+            'payroll.create', 'payroll.edit', 'payroll.comment', 'loans.*', 'reports.*', 'admin.workflow.manage', 'self-service.use',
+        ],
+        'director' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'reports.view', 'self-service.use'],
+        'director-general' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'payroll.approve', 'reports.view', 'self-service.use'],
         'hod' => [
             'hr.employees.view-department', 'leave.department.view', 'leave.approve-hod', 'roster.department.view', 'roster.manage',
             'attendance.working-hours.department', 'allowance.department.view', 'overtime.view', 'self-service.use',

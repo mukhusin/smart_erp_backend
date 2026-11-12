@@ -49,6 +49,8 @@ class ContractRenewalProcess implements WorkflowProcess
                 $subject->period ? $subject->period.' months' : null,
                 $subject->basic_salary !== null ? 'basic salary '.$money($subject->basic_salary) : null,
             ])) : null,
+            ...$subject->changes()->with('user.employee')->get()->reverse()->map(fn ($c) => 'Terms changed'.($c->step_name ? " at {$c->step_name}" : '')
+                .' by '.($c->user?->display_name ?? 'someone').': '.ManageRenewals::termsLabel($c->after).($c->comment ? " ({$c->comment})" : ''))->all(),
             $subject->letter ? 'Request letter: '.RichText::text($subject->letter) : null,
             $subject->agreed_at ? 'Agreement confirmed on '.$subject->agreed_at->format('d M Y H:i') : null,
             $subject->comment ? 'Comment: '.$subject->comment : null,

@@ -30,7 +30,7 @@ class ContractRenewal extends Model
     public const AGREEMENT = 'I confirm that the information in this request is true, and I understand that renewal is subject to approval and to the company\'s terms and conditions of employment.';
 
     protected $fillable = [
-        'company_id', 'employee_id', 'contract_id', 'source', 'status', 'comment', 'letter', 'agreement', 'agreed_at', 'nature_of_contract_id', 'period',
+        'company_id', 'employee_id', 'contract_id', 'source', 'status', 'comment', 'letter', 'letter_language', 'agreement', 'agreed_at', 'nature_of_contract_id', 'period',
         'basic_salary', 'new_contract_id', 'requested_by', 'decision_comment', 'decided_at',
     ];
 
@@ -64,6 +64,11 @@ class ContractRenewal extends Model
     public function files()
     {
         return $this->hasMany(ContractRenewalFile::class);
+    }
+
+    public function changes()
+    {
+        return $this->hasMany(ContractRenewalChange::class)->latest('id');
     }
 
     public function workflow()

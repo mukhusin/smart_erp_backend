@@ -43,7 +43,7 @@ class DutyRosterProcess implements WorkflowProcess
                 ($subject->section ? $subject->section->name.', ' : '').($subject->department?->name ?? ''),
                 'Period: '.$subject->from_date->format('d M Y').' to '.$subject->to_date->format('d M Y'),
                 "Employees: {$employees}, planned hours: {$hours}",
-                $subject->creator ? 'Prepared by '.($subject->creator->employee?->full_name ?? $subject->creator->name) : null,
+                $subject->creator ? 'Prepared by '.($subject->creator->display_name) : null,
             ])),
             'link' => "/roster/rosters/{$subject->id}",
         ];

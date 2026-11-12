@@ -28,6 +28,8 @@ class WorkflowInstanceResource extends JsonResource
             'id' => $this->id,
             'process' => $this->process,
             'process_name' => $process->name(),
+            /** Id of the record the request is about (e.g. the contract renewal). */
+            'subject_id' => $this->subject_id,
             'title' => $summary['title'],
             /** @var list<string> */
             'lines' => $summary['lines'],

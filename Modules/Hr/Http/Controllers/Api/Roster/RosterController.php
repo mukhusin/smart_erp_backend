@@ -196,7 +196,7 @@ class RosterController extends Controller
             'section' => $r->section ? ['id' => $r->section->id, 'name' => $r->section->name] : null,
             'from_date' => $r->from_date->toDateString(), 'to_date' => $r->to_date->toDateString(), 'days' => (int) $r->from_date->diffInDays($r->to_date) + 1,
             'status' => $r->status, 'status_label' => Roster::STATUS_LABELS[$r->status] ?? $r->status, 'employees' => (int) ($r->employees ?? 0),
-            'prepared_by' => $r->creator ? ($r->creator->employee?->full_name ?? $r->creator->name) : null,
+            'prepared_by' => $r->creator ? ($r->creator->display_name) : null,
             'waiting_for' => $pending?->name, 'decision_comment' => $r->decision_comment,
             'can_manage' => $this->access->canManage($request->user(), $r->department_id, $r->section_id),
         ];

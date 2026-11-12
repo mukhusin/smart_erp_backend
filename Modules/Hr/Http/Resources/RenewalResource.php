@@ -30,6 +30,8 @@ class RenewalResource extends JsonResource
             'comment' => $this->comment,
             /** The employee's request letter (cleaned HTML). */
             'letter' => $this->letter,
+            /** sw or en. */
+            'letter_language' => $this->letter_language,
             /** The letter as plain text. */
             'letter_text' => $this->letter ? RichText::text($this->letter) : null,
             /** The statement the employee agreed to, and when. */
@@ -38,7 +40,8 @@ class RenewalResource extends JsonResource
             /** @var array{id: int, name: string}|null */
             'contract_type' => $this->natureOfContract ? ['id' => $this->natureOfContract->id, 'name' => $this->natureOfContract->contract_name] : null,
             'period' => $this->period,
-            'basic_salary' => $self || $this->basic_salary === null ? null : (float) $this->basic_salary,
+            /** Hidden from the employee while approvers are changing it; shown once final. */
+            'basic_salary' => $this->basic_salary === null || ($self && $this->status !== 'completed' && $this->changes()->exists()) ? null : (float) $this->basic_salary,
             /** @var list<array{id: int, name: string, url: string, size: int|null}> */
             'files' => $this->files->map(fn ($f) => [
                 'id' => $f->id, 'name' => $f->file_name, 'size' => $f->size,

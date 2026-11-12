@@ -5,8 +5,8 @@ use Modules\Hr\Http\Controllers\Api\BankController;
 use Modules\Hr\Http\Controllers\Api\ContractTypeController;
 use Modules\Hr\Http\Controllers\Api\DeductionController;
 use Modules\Hr\Http\Controllers\Api\DepartmentController;
-use Modules\Hr\Http\Controllers\Api\EmployeeContractController;
 use Modules\Hr\Http\Controllers\Api\EmployeeBankAccountController;
+use Modules\Hr\Http\Controllers\Api\EmployeeContractController;
 use Modules\Hr\Http\Controllers\Api\EmployeeController;
 use Modules\Hr\Http\Controllers\Api\EmployeeDependantController;
 use Modules\Hr\Http\Controllers\Api\EmployeeDocumentController;
@@ -19,6 +19,8 @@ use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
+use Modules\Hr\Http\Controllers\Api\RenewalLetterController;
+use Modules\Hr\Http\Controllers\Api\RenewalReviewController;
 use Modules\Hr\Http\Controllers\Api\Roster\PublicHolidayController;
 use Modules\Hr\Http\Controllers\Api\Roster\RosterCodeController;
 use Modules\Hr\Http\Controllers\Api\Roster\RosterController;
@@ -117,6 +119,9 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
     });
 
     Route::middleware('can:hr.contracts.manage')->group(function () {
+        Route::get('settings/renewal-letter', [RenewalLetterController::class, 'index'])->name('settings.renewal-letter.index');
+        Route::put('settings/renewal-letter/{language}', [RenewalLetterController::class, 'update'])->name('settings.renewal-letter.update');
+        Route::post('settings/renewal-letter/{language}/reset', [RenewalLetterController::class, 'reset'])->name('settings.renewal-letter.reset');
         Route::post('renewals/{renewal}/contract', [RenewalController::class, 'complete'])->name('renewals.complete');
         Route::post('renewals/{renewal}/withdraw', [RenewalController::class, 'withdraw'])->name('renewals.withdraw');
     });
@@ -185,7 +190,6 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::get('renewals/{renewal}/files/{file}', [SelfContractController::class, 'file'])->name('renewals.file');
 });
 
-
 Route::prefix('roster')->middleware(['auth:sanctum', 'module:roster'])->name('roster.')->group(function () {
     Route::get('rosters', [RosterController::class, 'index'])->name('rosters.index');
     Route::get('rosters/options', [RosterController::class, 'options'])->name('rosters.options');
@@ -214,4 +218,9 @@ Route::prefix('roster')->middleware(['auth:sanctum', 'module:roster'])->name('ro
         Route::put('holidays/{publicHoliday}', [PublicHolidayController::class, 'update'])->name('holidays.update');
         Route::delete('holidays/{publicHoliday}', [PublicHolidayController::class, 'destroy'])->name('holidays.destroy');
     });
+});
+
+Route::prefix('renewals')->middleware(['auth:sanctum', 'module:hr'])->name('renewal-review.')->group(function () {
+    Route::get('{renewal}/review', [RenewalReviewController::class, 'show'])->name('show');
+    Route::put('{renewal}/terms', [RenewalReviewController::class, 'terms'])->name('terms');
 });

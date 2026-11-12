@@ -17,6 +17,7 @@ use Modules\Hr\Actions\ManageRenewals;
 use Modules\Hr\Http\Resources\ContractResource;
 use Modules\Hr\Http\Resources\RenewalResource;
 use Modules\Hr\Support\EmployeeFiles;
+use Modules\Hr\Support\RenewalLetter;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -31,7 +32,7 @@ class SelfContractController extends Controller
     /**
      * My contract: the active and waiting contract, my renewal requests, and whether I can request renewal now.
      *
-     * @response array{data: array{contract: ContractResource|null, waiting_contract: ContractResource|null, can_request: bool, blocker: string|null, renewals: list<RenewalResource>, contract_types: list<array{id: int, name: string}>, agreement: string}}
+     * @response array{data: array{contract: ContractResource|null, waiting_contract: ContractResource|null, can_request: bool, blocker: string|null, renewals: list<RenewalResource>, contract_types: list<array{id: int, name: string}>, agreement: string, letter_templates: array<string, array{language: string, name: string, subject: string, salutation: string|null, closing: string, signature: list<string>}>}}
      */
     public function show(Request $request): JsonResponse
     {
@@ -49,6 +50,7 @@ class SelfContractController extends Controller
             'renewals' => RenewalResource::collection($employee->renewals()->with(['natureOfContract', 'files', 'workflow.steps', 'contract'])->get())->resolve($request),
             'contract_types' => NatureOfContract::where('is_active', true)->orderBy('contract_name')->get()->map(fn ($t) => ['id' => $t->id, 'name' => $t->contract_name]),
             'agreement' => ContractRenewal::AGREEMENT,
+            'letter_templates' => RenewalLetter::templates($employee),
         ]]);
     }
 
@@ -56,7 +58,8 @@ class SelfContractController extends Controller
      * Request renewal of my contract.
      *
      * Possible in the last 90 days of the active contract, unless HR has already started the renewal.
-     * The request letter explains why; `agreed` confirms the statement in `agreement` (see GET /self/contract).
+     * The employee writes the body of the letter; the subject line and signature come from `letter_templates`
+     * (GET /self/contract) in the chosen language. `agreed` confirms the statement in `agreement`.
      * Sent as multipart form data with optional attachments (PDF, JPG or PNG, up to 5 MB each, at most 5).
      */
     public function store(Request $request): RenewalResource
@@ -66,7 +69,9 @@ class SelfContractController extends Controller
             $request->merge(['agreed' => filter_var($request->input('agreed'), FILTER_VALIDATE_BOOLEAN)]);
         }
         $data = $request->validate([
-            /** Request letter (HTML from the rich text editor): why I need my contract renewed. */
+            /** Language of the letter template: sw (Kiswahili) or en (English). */
+            'language' => ['required', Rule::in(array_keys(RenewalLetter::LANGUAGES))],
+            /** Body of the request letter (HTML from the rich text editor): why I need my contract renewed. */
             'letter' => ['required', 'string', 'max:20000', function ($attribute, $value, $fail) {
                 if (mb_strlen(RichText::text((string) $value)) < 200) {
                     $fail('Your letter is too short; explain why you need the renewal (at least 200 characters).');
@@ -74,18 +79,22 @@ class SelfContractController extends Controller
             }],
             /** I agree to the statement in `agreement`. */
             'agreed' => ['accepted'],
-            /** Contract type I would like (HR decides). */
+            /** Contract type I would like (approvers decide). Empty: the type of my current contract. */
             'nature_of_contract_id' => ['nullable', 'integer', Rule::exists('nature_of_contracts', 'id')->where('company_id', app(CompanyContext::class)->id())->where('is_active', true)->whereNull('deleted_at')],
-            /** Months I would like (HR decides). */
+            /** Months I would like (HR decides). Empty: the months of my current contract. */
             'period' => ['nullable', 'integer', 'min:1', 'max:120'],
+            /** Basic salary I propose (approvers decide). Empty: my current basic salary. */
+            'basic_salary' => ['nullable', 'numeric', 'min:0', 'max:999999999999'],
             'files' => ['nullable', 'array', 'max:5'],
             'files.*' => ['file', ...EmployeeFiles::DOCUMENT_RULES],
         ], [
             'letter.required' => 'Write your request letter.',
+            'language.required' => 'Choose the language of your letter.',
             'agreed.accepted' => 'Tick the agreement to send your request.',
         ]);
 
-        $data['letter'] = RichText::clean($data['letter']);
+        $data['letter'] = RenewalLetter::compose($employee, $data['language'], $data['letter']);
+        $data['letter_language'] = $data['language'];
         $renewal = $this->renewals->start($employee, ContractRenewal::FROM_EMPLOYEE, collect($data)->except('files')->all(), $request->user(), $request->file('files', []));
 
         return new RenewalResource($renewal->load(['natureOfContract', 'files', 'workflow.steps', 'contract']));

@@ -3793,6 +3793,305 @@
                 }
             }
         },
+        "/renewals/{renewal}/review": {
+            "get": {
+                "operationId": "renewal-review.show",
+                "summary": "Renewal details for approvers",
+                "tags": [
+                    "HR: Contract renewals",
+                    "RenewalReview"
+                ],
+                "parameters": [
+                    {
+                        "name": "renewal",
+                        "in": "path",
+                        "required": true,
+                        "description": "The renewal ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "renewal": {
+                                                    "$ref": "#/components/schemas/RenewalResource"
+                                                },
+                                                "employee": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "position": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "department",
+                                                        "position"
+                                                    ]
+                                                },
+                                                "current_contract": {
+                                                    "anyOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/ContractResource"
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                },
+                                                "terms": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "nature_of_contract_id": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "type": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "period": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "basic_salary": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "nature_of_contract_id",
+                                                        "type",
+                                                        "period",
+                                                        "basic_salary"
+                                                    ]
+                                                },
+                                                "can_change_terms": {
+                                                    "type": "boolean"
+                                                },
+                                                "contract_types": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ]
+                                                    }
+                                                },
+                                                "changes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "by": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "step": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "before": {
+                                                                "type": "string"
+                                                            },
+                                                            "after": {
+                                                                "type": "string"
+                                                            },
+                                                            "comment": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "by",
+                                                            "step",
+                                                            "before",
+                                                            "after",
+                                                            "comment",
+                                                            "at"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "renewal",
+                                                "employee",
+                                                "current_contract",
+                                                "terms",
+                                                "can_change_terms",
+                                                "contract_types",
+                                                "changes"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/renewals/{renewal}/terms": {
+            "put": {
+                "operationId": "renewal-review.terms",
+                "summary": "Change the proposed terms (HR or the approver of the current step, while waiting for approval)",
+                "tags": [
+                    "HR: Contract renewals",
+                    "RenewalReview"
+                ],
+                "parameters": [
+                    {
+                        "name": "renewal",
+                        "in": "path",
+                        "required": true,
+                        "description": "The renewal ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nature_of_contract_id": {
+                                        "type": "integer"
+                                    },
+                                    "period": {
+                                        "type": "integer",
+                                        "description": "Months.",
+                                        "minimum": 1,
+                                        "maximum": 120
+                                    },
+                                    "basic_salary": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 999999999999
+                                    },
+                                    "comment": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Why the terms changed.",
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "nature_of_contract_id",
+                                    "period",
+                                    "basic_salary"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/RenewalResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/employees/{employee}/contracts": {
             "get": {
                 "operationId": "hr.employees.contracts.index",
@@ -8846,6 +9145,315 @@
                 }
             }
         },
+        "/hr/settings/renewal-letter": {
+            "get": {
+                "operationId": "hr.settings.renewal-letter.index",
+                "summary": "The template in each language (saved wording, or the defaults)",
+                "tags": [
+                    "HR: Renewal letter",
+                    "RenewalLetter"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "language": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "customized": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "subject": {
+                                                        "type": "string"
+                                                    },
+                                                    "salutation": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "closing": {
+                                                        "type": "string"
+                                                    },
+                                                    "number_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "department_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "section_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "position_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "show_section": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "show_position": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "language",
+                                                    "name",
+                                                    "customized",
+                                                    "subject",
+                                                    "salutation",
+                                                    "closing",
+                                                    "number_label",
+                                                    "department_label",
+                                                    "section_label",
+                                                    "position_label",
+                                                    "show_section",
+                                                    "show_position"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/settings/renewal-letter/{language}": {
+            "put": {
+                "operationId": "hr.settings.renewal-letter.update",
+                "summary": "Save the template of a language. Requests already sent keep their letter",
+                "tags": [
+                    "HR: Renewal letter",
+                    "RenewalLetter"
+                ],
+                "parameters": [
+                    {
+                        "name": "language",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "subject": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                    },
+                                    "salutation": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "description": "Fixed salutation, e.g. \"Kwa Meneja wa Rasilimali Watu,\". Empty: the employee writes it.",
+                                        "maxLength": 200
+                                    },
+                                    "closing": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "number_label": {
+                                        "type": "string",
+                                        "maxLength": 60
+                                    },
+                                    "department_label": {
+                                        "type": "string",
+                                        "maxLength": 60
+                                    },
+                                    "section_label": {
+                                        "type": "string",
+                                        "maxLength": 60
+                                    },
+                                    "position_label": {
+                                        "type": "string",
+                                        "maxLength": 60
+                                    },
+                                    "show_section": {
+                                        "type": "boolean"
+                                    },
+                                    "show_position": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "subject",
+                                    "closing",
+                                    "number_label",
+                                    "department_label",
+                                    "section_label",
+                                    "position_label"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "language": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "customized": {
+                                                    "type": "boolean"
+                                                },
+                                                "subject": {
+                                                    "type": "string"
+                                                },
+                                                "salutation": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "closing": {
+                                                    "type": "string"
+                                                },
+                                                "number_label": {
+                                                    "type": "string"
+                                                },
+                                                "department_label": {
+                                                    "type": "string"
+                                                },
+                                                "section_label": {
+                                                    "type": "string"
+                                                },
+                                                "position_label": {
+                                                    "type": "string"
+                                                },
+                                                "show_section": {
+                                                    "type": "boolean"
+                                                },
+                                                "show_position": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "language",
+                                                "name",
+                                                "customized",
+                                                "subject",
+                                                "salutation",
+                                                "closing",
+                                                "number_label",
+                                                "department_label",
+                                                "section_label",
+                                                "position_label",
+                                                "show_section",
+                                                "show_position"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/settings/renewal-letter/{language}/reset": {
+            "post": {
+                "operationId": "hr.settings.renewal-letter.reset",
+                "summary": "Go back to the default wording of a language",
+                "tags": [
+                    "HR: Renewal letter",
+                    "RenewalLetter"
+                ],
+                "parameters": [
+                    {
+                        "name": "language",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/number-formats/options": {
             "get": {
                 "operationId": "hr.number-formats.options",
@@ -10062,6 +10670,156 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/notifications": {
+            "get": {
+                "operationId": "me.notifications",
+                "summary": "Latest notifications and the number unread",
+                "tags": [
+                    "Me: Notifications",
+                    "Notification"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "message": {
+                                                        "type": "string"
+                                                    },
+                                                    "link": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "icon": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "read": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "title",
+                                                    "message",
+                                                    "link",
+                                                    "icon",
+                                                    "read",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "unread": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "unread"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/notifications/read": {
+            "post": {
+                "operationId": "me.notifications.read",
+                "summary": "Mark notifications as read (all, or the given ids)",
+                "tags": [
+                    "Me: Notifications",
+                    "Notification"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ids": {
+                                        "type": [
+                                            "array",
+                                            "null"
+                                        ],
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "unread": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "unread"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -13360,6 +14118,46 @@
                                                 },
                                                 "agreement": {
                                                     "type": "string"
+                                                },
+                                                "letter_templates": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "language": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "subject": {
+                                                                "type": "string"
+                                                            },
+                                                            "salutation": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "closing": {
+                                                                "type": "string"
+                                                            },
+                                                            "signature": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "language",
+                                                            "name",
+                                                            "subject",
+                                                            "salutation",
+                                                            "closing",
+                                                            "signature"
+                                                        ]
+                                                    }
                                                 }
                                             },
                                             "required": [
@@ -13369,7 +14167,8 @@
                                                 "blocker",
                                                 "renewals",
                                                 "contract_types",
-                                                "agreement"
+                                                "agreement",
+                                                "letter_templates"
                                             ]
                                         }
                                     },
@@ -13392,7 +14191,7 @@
         "/self/renewals": {
             "post": {
                 "operationId": "self.renewals.store",
-                "description": "Possible in the last 90 days of the active contract, unless HR has already started the renewal.\nThe request letter explains why; `agreed` confirms the statement in `agreement` (see GET /self/contract).\nSent as multipart form data with optional attachments (PDF, JPG or PNG, up to 5 MB each, at most 5).",
+                "description": "Possible in the last 90 days of the active contract, unless HR has already started the renewal.\nThe employee writes the body of the letter; the subject line and signature come from `letter_templates`\n(GET /self/contract) in the chosen language. `agreed` confirms the statement in `agreement`.\nSent as multipart form data with optional attachments (PDF, JPG or PNG, up to 5 MB each, at most 5).",
                 "summary": "Request renewal of my contract",
                 "tags": [
                     "Self service: Contract",
@@ -13405,9 +14204,17 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "language": {
+                                        "type": "string",
+                                        "description": "Language of the letter template: sw (Kiswahili) or en (English).",
+                                        "enum": [
+                                            "sw",
+                                            "en"
+                                        ]
+                                    },
                                     "letter": {
                                         "type": "string",
-                                        "description": "Request letter (HTML from the rich text editor): why I need my contract renewed.",
+                                        "description": "Body of the request letter (HTML from the rich text editor): why I need my contract renewed.",
                                         "maxLength": 20000
                                     },
                                     "agreed": {
@@ -13426,16 +14233,25 @@
                                             "integer",
                                             "null"
                                         ],
-                                        "description": "Contract type I would like (HR decides)."
+                                        "description": "Contract type I would like (approvers decide). Empty: the type of my current contract."
                                     },
                                     "period": {
                                         "type": [
                                             "integer",
                                             "null"
                                         ],
-                                        "description": "Months I would like (HR decides).",
+                                        "description": "Months I would like (HR decides). Empty: the months of my current contract.",
                                         "minimum": 1,
                                         "maximum": 120
+                                    },
+                                    "basic_salary": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ],
+                                        "description": "Basic salary I propose (approvers decide). Empty: my current basic salary.",
+                                        "minimum": 0,
+                                        "maximum": 999999999999
                                     },
                                     "files": {
                                         "type": [
@@ -13452,6 +14268,7 @@
                                     }
                                 },
                                 "required": [
+                                    "language",
                                     "letter"
                                 ]
                             }
@@ -17521,6 +18338,13 @@
                         ],
                         "description": "The employee's request letter (cleaned HTML)."
                     },
+                    "letter_language": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "sw or en."
+                    },
                     "letter_text": {
                         "type": [
                             "string",
@@ -17569,7 +18393,8 @@
                         "type": [
                             "number",
                             "null"
-                        ]
+                        ],
+                        "description": "Hidden from the employee while approvers are changing it; shown once final."
                     },
                     "files": {
                         "type": "array",
@@ -17692,6 +18517,7 @@
                     "status_label",
                     "comment",
                     "letter",
+                    "letter_language",
                     "letter_text",
                     "agreement",
                     "agreed_at",
@@ -19185,6 +20011,10 @@
                     "process_name": {
                         "type": "string"
                     },
+                    "subject_id": {
+                        "type": "integer",
+                        "description": "Id of the record the request is about (e.g. the contract renewal)."
+                    },
                     "title": {
                         "type": "string"
                     },
@@ -19329,6 +20159,7 @@
                     "id",
                     "process",
                     "process_name",
+                    "subject_id",
                     "title",
                     "lines",
                     "link",
