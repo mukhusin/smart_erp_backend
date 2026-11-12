@@ -18,6 +18,8 @@ use Modules\Hr\Http\Controllers\Api\LicenceTypeController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
+use Modules\Hr\Http\Controllers\Api\RenewalController;
+use Modules\Hr\Http\Controllers\Api\SelfContractController;
 use Modules\Hr\Http\Controllers\Api\SupervisorController;
 
 Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name('hr.')->group(function () {
@@ -31,6 +33,8 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::get('summary', [LookupController::class, 'summary'])->name('summary');
         Route::get('placements', [PlacementController::class, 'index'])->name('placements.index');
         Route::get('job-positions', [JobPositionController::class, 'index'])->name('job-positions.index');
+        Route::get('renewals', [RenewalController::class, 'index'])->name('renewals.index');
+        Route::get('renewals/{renewal}/files/{file}', [RenewalController::class, 'file'])->name('renewals.file');
         Route::get('banks/active', [BankController::class, 'active'])->name('banks.active');
         Route::get('structure/departments', [DepartmentController::class, 'index'])->name('structure.index');
         Route::get('structure/departments/{department}', [DepartmentController::class, 'show'])->name('structure.show');
@@ -44,6 +48,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::prefix('employees/{employee}')->name('employees.')->scopeBindings()->group(function () {
             Route::get('contracts', [EmployeeContractController::class, 'index'])->name('contracts.index');
             Route::get('placements', [PlacementController::class, 'employeeIndex'])->name('placements.index');
+            Route::get('renewals', [RenewalController::class, 'employeeIndex'])->name('renewals.index');
             Route::get('supervisors', [SupervisorController::class, 'index'])->name('supervisors.index');
             Route::get('deductions', [DeductionController::class, 'index'])->name('deductions.index');
             Route::get('qualifications', [EmployeeQualificationController::class, 'index'])->name('qualifications.index');
@@ -103,6 +108,12 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::put('contracts/{contract}', [EmployeeContractController::class, 'update'])->name('contracts.update');
         Route::post('contracts/{contract}/end', [EmployeeContractController::class, 'end'])->name('contracts.end');
         Route::post('contracts/{contract}/revert', [EmployeeContractController::class, 'revert'])->name('contracts.revert');
+        Route::post('renewals', [RenewalController::class, 'store'])->name('renewals.store');
+    });
+
+    Route::middleware('can:hr.contracts.manage')->group(function () {
+        Route::post('renewals/{renewal}/contract', [RenewalController::class, 'complete'])->name('renewals.complete');
+        Route::post('renewals/{renewal}/withdraw', [RenewalController::class, 'withdraw'])->name('renewals.withdraw');
     });
 
     Route::middleware('can:hr.contract-types.manage')->group(function () {
@@ -160,3 +171,11 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::delete('licence-types/{licenceType}', [LicenceTypeController::class, 'destroy'])->name('licence-types.destroy');
     });
 });
+
+Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
+    Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
+    Route::post('renewals', [SelfContractController::class, 'store'])->name('renewals.store');
+    Route::post('renewals/{renewal}/withdraw', [SelfContractController::class, 'withdraw'])->name('renewals.withdraw');
+    Route::get('renewals/{renewal}/files/{file}', [SelfContractController::class, 'file'])->name('renewals.file');
+});
+

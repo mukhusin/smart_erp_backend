@@ -4,6 +4,7 @@ namespace Modules\Workflow\Services;
 
 use App\Services\ModuleAccessService;
 use Modules\Admin\Workflow\UserAccessChangeProcess;
+use Modules\Hr\Workflow\ContractRenewalProcess;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
 /**
@@ -15,6 +16,7 @@ final class WorkflowCatalog
     /** @var list<class-string<WorkflowProcess>> */
     private const PROCESSES = [
         UserAccessChangeProcess::class,
+        ContractRenewalProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

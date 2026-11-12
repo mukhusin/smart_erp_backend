@@ -472,16 +472,22 @@ paused. The tab estimates monthly amounts from the active contract's basic salar
 - Reuses fiscal periods and dimensions from the accounting backbone; budgets can be attached later.
 - Likely link (to confirm): annual plan activities feed the department activities used in performance appraisal below.
 
-### Contract renewal (to build next, 2026-11-12)
+### Contract renewal (built 2026-11-12)
 
-Two ways to renew a contract, both through the dynamic approval workflow (process "Contract renewal"):
+Two ways to renew, both through the dynamic approval workflow (process `contract-renewal`, module hr), in
+`Modules/Hr/Actions/ManageRenewals.php` and `contract_renewals`:
 
-- **HR-initiated:** HR starts a renewal for a specific employee.
-- **Employee-requested:** the employee requests renewal from self-service (details in hrms-gap-list.md E-17).
-
-The two exclude each other per employee: while an employee's own request is open, HR cannot start a renewal for
-them, and while an HR-initiated renewal is open, the employee cannot request one. On approval HR's renewal contract
-is created as `waiting` (§15 rules: last 90 days, starts after the current contract ends).
+- **HR-initiated:** HR → employee → Contracts → "Start renewal" with the terms (type, period, basic salary).
+- **Employee-requested:** Self service → My contract → "Request renewal" with a comment, optional type/period and
+  up to 5 attachments (e.g. a timesheet).
+- **One open renewal per employee** (pending, or approved without contract): while the employee's request is open HR
+  cannot start one, and the other way round; the refusal says why.
+- Opens in the last 90 days of the active contract, never with a waiting contract or for someone who has left.
+- **Approved** with complete terms: the waiting contract is created at once, starting the day after the current one
+  ends. Without complete terms (usually employee requests) HR creates it from the renewal ("Create contract").
+  No workflow set up = approved at once. Rejected keeps the approver's reason; the starter can withdraw while pending.
+- HR → Contract renewals lists them (open by default). Approvers see the current contract, proposal, comment,
+  attachments and previous contracts in the approval request.
 
 ### Performance appraisal (new design, replaces the HRMS one)
 
