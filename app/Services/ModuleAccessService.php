@@ -25,6 +25,7 @@ class ModuleAccessService
             ->get()
             ->map(function (ErpModule $module) use ($enabled) {
                 $module->has_access = $this->ctx->id() !== null && ($module->is_core || in_array($module->slug, $enabled, true));
+
                 return $module;
             });
     }

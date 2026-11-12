@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\AllowanceSheet;
-use App\Models\AttendanceTransa;
-use App\Models\DailyAllowance;
 use App\Models\EmpAllowance;
 use App\Models\EmployeeBankAccount;
 use App\Models\EmployeeContract;
@@ -24,20 +22,19 @@ use App\Models\Relief;
 use App\Models\SaccosContribution;
 use App\Models\SaccosMember;
 use App\Models\Tughe;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PayrollComputationService
 {
     private PayrollDateSetting $setting;
+
     private int $companyId;
 
     public function __construct(int $companyId)
     {
         $this->companyId = $companyId;
-        $this->setting   = PayrollDateSetting::where('company_id', $companyId)
+        $this->setting = PayrollDateSetting::where('company_id', $companyId)
             ->where('is_active', true)
             ->firstOrFail();
     }
@@ -46,10 +43,19 @@ class PayrollComputationService
 
     public function payeAmount(float $taxable): float
     {
-        if ($taxable <= 270000)      return 0;
-        if ($taxable <= 520000)      return 0.08 * ($taxable - 270000);
-        if ($taxable <= 760000)      return 20000 + 0.20 * ($taxable - 520000);
-        if ($taxable <= 1000000)     return 68000 + 0.25 * ($taxable - 760000);
+        if ($taxable <= 270000) {
+            return 0;
+        }
+        if ($taxable <= 520000) {
+            return 0.08 * ($taxable - 270000);
+        }
+        if ($taxable <= 760000) {
+            return 20000 + 0.20 * ($taxable - 520000);
+        }
+        if ($taxable <= 1000000) {
+            return 68000 + 0.25 * ($taxable - 760000);
+        }
+
         return 128000 + 0.30 * ($taxable - 1000000);
     }
 
@@ -84,10 +90,10 @@ class PayrollComputationService
 
     public function grossSalary(int $empId): float
     {
-        $basic    = $this->basicSalary($empId);
-        $relief   = Relief::where('employee_id', $empId)->where('is_active', true)->first();
+        $basic = $this->basicSalary($empId);
+        $relief = Relief::where('employee_id', $empId)->where('is_active', true)->first();
         $allowance = $this->setting->use_allowance ? $this->totalAllowance($empId) : 0;
-        $overtime  = $this->setting->use_overtime  ? $this->totalOvertime($empId)  : 0;
+        $overtime = $this->setting->use_overtime ? $this->totalOvertime($empId) : 0;
 
         return $basic + $allowance + $overtime + ($relief ? $relief->amount : 0);
     }
@@ -99,26 +105,26 @@ class PayrollComputationService
 
     public function totalDeductions(int $empId): float
     {
-        $gross   = $this->grossSalary($empId);
-        $basic   = $this->basicSalary($empId);
-        $nssf    = Nssf::where('employee_id', $empId)->where('is_active', true)->first();
+        $gross = $this->grossSalary($empId);
+        $basic = $this->basicSalary($empId);
+        $nssf = Nssf::where('employee_id', $empId)->where('is_active', true)->first();
         $nssfAmt = $nssf ? ($nssf->emp_rate / 100) * $gross : 0;
         $taxable = $gross - $nssfAmt;
-        $paye    = $this->payeAmount($taxable);
+        $paye = $this->payeAmount($taxable);
 
-        $nhif    = Nhif::where('employee_id', $empId)->where('is_active', true)->first();
+        $nhif = Nhif::where('employee_id', $empId)->where('is_active', true)->first();
         $nhifAmt = $nhif ? ($nhif->emp_rate / 100) * $basic : 0;
 
-        $heslb    = Heslb::where('employee_id', $empId)->where('is_active', true)->first();
+        $heslb = Heslb::where('employee_id', $empId)->where('is_active', true)->first();
         $heslbAmt = $heslb ? ($heslb->emp_rate / 100) * $basic : 0;
 
-        $tughe    = Tughe::where('employee_id', $empId)->where('is_active', true)->first();
+        $tughe = Tughe::where('employee_id', $empId)->where('is_active', true)->first();
         $tugheAmt = $tughe ? ($tughe->emp_rate / 100) * $basic : 0;
 
-        $nic    = Nic::where('employee_id', $empId)->where('is_active', true)->first();
+        $nic = Nic::where('employee_id', $empId)->where('is_active', true)->first();
         $nicAmt = $nic ? $nic->emp_rate : 0;
 
-        $fund    = EmployeeFund::where('employee_id', $empId)->where('is_active', true)->first();
+        $fund = EmployeeFund::where('employee_id', $empId)->where('is_active', true)->first();
         $fundAmt = $fund ? $fund->amount : 0;
 
         $loanAmt = $this->setting->use_loan
@@ -134,14 +140,14 @@ class PayrollComputationService
     public function generate(PayrollSheet $sheet): bool
     {
         $lock = Cache::lock("payroll_generation_{$this->companyId}", 120);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return false;
         }
 
         try {
             $employees = EmployeeContract::with(['employee.bankAccounts', 'employee.jobPosition'])
                 ->where('is_active', true)
-                ->whereHas('employee', fn($q) => $q->where('company_id', $this->companyId))
+                ->whereHas('employee', fn ($q) => $q->where('company_id', $this->companyId))
                 ->get();
 
             foreach ($employees as $contract) {
@@ -149,12 +155,13 @@ class PayrollComputationService
             }
 
             $sheet->payroll_cost = $this->computePayrollCost($sheet->id);
-            $sheet->status       = 'pending';
+            $sheet->status = 'pending';
             $sheet->save();
 
             return true;
         } catch (\Exception $e) {
-            Log::error("Payroll generation failed for company {$this->companyId}: " . $e->getMessage());
+            Log::error("Payroll generation failed for company {$this->companyId}: ".$e->getMessage());
+
             return false;
         } finally {
             $lock->release();
@@ -164,33 +171,33 @@ class PayrollComputationService
     private function processEmployee(EmployeeContract $contract, PayrollSheet $sheet): void
     {
         try {
-            $emp        = $contract->employee;
-            $empId      = $emp->id;
-            $fromDate   = $sheet->payroll_from_date;
-            $toDate     = $sheet->payroll_to_date;
-            $days       = $sheet->number_of_days;
+            $emp = $contract->employee;
+            $empId = $emp->id;
+            $fromDate = $sheet->payroll_from_date;
+            $toDate = $sheet->payroll_to_date;
+            $days = $sheet->number_of_days;
 
-            $basic    = (float) $contract->basic_salary;
-            $bank     = EmployeeBankAccount::where('employee_id', $empId)->where('is_active', true)->first();
+            $basic = (float) $contract->basic_salary;
+            $bank = EmployeeBankAccount::where('employee_id', $empId)->where('is_active', true)->first();
 
-            $nhif    = Nhif::where('employee_id', $empId)->where('is_active', true)->first();
-            $nssf    = Nssf::where('employee_id', $empId)->where('is_active', true)->first();
-            $heslb   = Heslb::where('employee_id', $empId)->where('is_active', true)->first();
-            $tughe   = Tughe::where('employee_id', $empId)->where('is_active', true)->first();
-            $nic     = Nic::where('employee_id', $empId)->where('is_active', true)->first();
-            $fund    = EmployeeFund::where('employee_id', $empId)->where('is_active', true)->first();
-            $relief  = Relief::where('employee_id', $empId)->where('is_active', true)->first();
+            $nhif = Nhif::where('employee_id', $empId)->where('is_active', true)->first();
+            $nssf = Nssf::where('employee_id', $empId)->where('is_active', true)->first();
+            $heslb = Heslb::where('employee_id', $empId)->where('is_active', true)->first();
+            $tughe = Tughe::where('employee_id', $empId)->where('is_active', true)->first();
+            $nic = Nic::where('employee_id', $empId)->where('is_active', true)->first();
+            $fund = EmployeeFund::where('employee_id', $empId)->where('is_active', true)->first();
+            $relief = Relief::where('employee_id', $empId)->where('is_active', true)->first();
 
-            $nhifEmp      = $nhif ? ($nhif->emp_rate      / 100) * $basic : 0;
+            $nhifEmp = $nhif ? ($nhif->emp_rate / 100) * $basic : 0;
             $nhifEmployer = $nhif ? ($nhif->employer_rate / 100) * $basic : 0;
-            $heslbAmt     = $heslb ? ($heslb->emp_rate   / 100) * $basic : 0;
-            $tugheAmt     = $tughe ? ($tughe->emp_rate   / 100) * $basic : 0;
-            $nicAmt       = $nic ? $nic->emp_rate : 0;
-            $efAmt        = $fund ? $fund->amount : 0;
-            $reliefAmt    = $relief ? $relief->amount : 0;
+            $heslbAmt = $heslb ? ($heslb->emp_rate / 100) * $basic : 0;
+            $tugheAmt = $tughe ? ($tughe->emp_rate / 100) * $basic : 0;
+            $nicAmt = $nic ? $nic->emp_rate : 0;
+            $efAmt = $fund ? $fund->amount : 0;
+            $reliefAmt = $relief ? $relief->amount : 0;
 
             $totalAllowance = 0;
-            $totalOvertime  = 0;
+            $totalOvertime = 0;
 
             if ($this->setting->use_allowance) {
                 $totalAllowance = (float) EmpAllowance::where('employee_id', $empId)
@@ -207,12 +214,12 @@ class PayrollComputationService
                     ->sum('amount');
             }
 
-            $gross         = $basic + $totalAllowance + $totalOvertime + $reliefAmt;
-            $nssfEmp       = $nssf ? ($nssf->emp_rate      / 100) * $gross : 0;
-            $nssfEmployer  = $nssf ? ($nssf->employer_rate / 100) * $gross : 0;
-            $taxable       = $gross - $nssfEmp;
+            $gross = $basic + $totalAllowance + $totalOvertime + $reliefAmt;
+            $nssfEmp = $nssf ? ($nssf->emp_rate / 100) * $gross : 0;
+            $nssfEmployer = $nssf ? ($nssf->employer_rate / 100) * $gross : 0;
+            $taxable = $gross - $nssfEmp;
 
-            $empCategory   = $emp->emp_category ?? '';
+            $empCategory = $emp->emp_category ?? '';
             $paye = ($empCategory === 'Secondary')
                 ? (($this->setting->income_tax ?? 30) / 100) * $gross
                 : $this->payeAmount($taxable);
@@ -230,41 +237,41 @@ class PayrollComputationService
             $sdl = $gross * (($this->setting->sdl ?? 3.5) / 100);
 
             $totalDeduction = $nhifEmp + $nssfEmp + $heslbAmt + $tugheAmt + $paye + $efAmt + $nicAmt + $loanAmt;
-            $netSalary      = $gross - $totalDeduction;
+            $netSalary = $gross - $totalDeduction;
 
             $data = [
-                'payroll_sheet_id'     => $sheet->id,
-                'employee_id'          => $empId,
-                'contract_id'          => $contract->id,
-                'full_name'            => $emp->full_name,
-                'job_position'         => optional($emp->jobPosition)->title,
-                'basic_salary'         => $basic,
-                'actual_basic_salary'  => $basic,
-                'total_allowance'      => $totalAllowance,
-                'total_overtime'       => $totalOvertime,
-                'allowance_overtime'   => $totalAllowance + $totalOvertime,
-                'relief'               => $reliefAmt,
-                'gross_salary'         => $gross,
-                'nhif'                 => $nhifEmp,
-                'nhif_employer'        => $nhifEmployer,
-                'nssf'                 => $nssfEmp,
-                'nssf_employer'        => $nssfEmployer,
-                'heslb'                => $heslbAmt,
-                'tughe'                => $tugheAmt,
-                'nic'                  => $nicAmt,
-                'ef'                   => $efAmt,
-                'amount_taxable'       => $taxable,
-                'paye'                 => $paye,
-                'total_loan'           => $loanAmt,
-                'total_deduction'      => $totalDeduction,
-                'net_salary'           => $netSalary,
-                'wcf'                  => $wcf,
-                'sdl'                  => $sdl,
-                'bank_id'              => $bank?->bank_id,
-                'bank_name'            => $bank?->name,
-                'bank_branch'          => $bank?->branch,
-                'bank_account'         => $bank?->account,
-                'bank_code'            => $bank?->bank?->code ?? '',
+                'payroll_sheet_id' => $sheet->id,
+                'employee_id' => $empId,
+                'contract_id' => $contract->id,
+                'full_name' => $emp->full_name,
+                'job_position' => optional($emp->jobPosition)->title,
+                'basic_salary' => $basic,
+                'actual_basic_salary' => $basic,
+                'total_allowance' => $totalAllowance,
+                'total_overtime' => $totalOvertime,
+                'allowance_overtime' => $totalAllowance + $totalOvertime,
+                'relief' => $reliefAmt,
+                'gross_salary' => $gross,
+                'nhif' => $nhifEmp,
+                'nhif_employer' => $nhifEmployer,
+                'nssf' => $nssfEmp,
+                'nssf_employer' => $nssfEmployer,
+                'heslb' => $heslbAmt,
+                'tughe' => $tugheAmt,
+                'nic' => $nicAmt,
+                'ef' => $efAmt,
+                'amount_taxable' => $taxable,
+                'paye' => $paye,
+                'total_loan' => $loanAmt,
+                'total_deduction' => $totalDeduction,
+                'net_salary' => $netSalary,
+                'wcf' => $wcf,
+                'sdl' => $sdl,
+                'bank_id' => $bank?->bank_id,
+                'bank_name' => $bank?->name,
+                'bank_branch' => $bank?->branch,
+                'bank_account' => $bank?->account,
+                'bank_code' => $bank?->bank?->code ?? '',
             ];
 
             $existing = PayrollSheetDetail::where('payroll_sheet_id', $sheet->id)
@@ -299,7 +306,7 @@ class PayrollComputationService
             $this->processSaccosContribution($empId, $detailId, $toDate);
 
         } catch (\Exception $e) {
-            Log::error("Payroll: error for employee {$contract->employee_id}: " . $e->getMessage());
+            Log::error("Payroll: error for employee {$contract->employee_id}: ".$e->getMessage());
         }
     }
 
@@ -316,8 +323,8 @@ class PayrollComputationService
                 ['employee_id' => $empId, 'overtime_id' => $ot->id],
                 [
                     'payroll_sheet_detail_id' => $detailId,
-                    'date_of_task_done'       => $ot->date_of_task_done,
-                    'amount'                  => $ot->amount,
+                    'date_of_task_done' => $ot->date_of_task_done,
+                    'amount' => $ot->amount,
                 ]
             );
             $ot->update(['is_paid' => true]);
@@ -348,28 +355,28 @@ class PayrollComputationService
             ->get();
 
         foreach ($loans as $loan) {
-            $instalment    = min($loan->instalment, $loan->remain);
-            $repaidAmount  = $loan->returned + $instalment;
-            $outstanding   = $loan->amount - $repaidAmount;
+            $instalment = min($loan->instalment, $loan->remain);
+            $repaidAmount = $loan->returned + $instalment;
+            $outstanding = $loan->amount - $repaidAmount;
 
             LoanHistory::updateOrCreate(
                 ['employee_id' => $empId, 'payroll_sheet_detail_id' => $detailId, 'employee_loan_id' => $loan->id],
                 [
-                    'payroll_sheet_id'  => $sheet->id,
-                    'loan_provider'     => $loan->loanProvider?->name ?? '',
-                    'repayment_date'    => $toDate,
-                    'repaid_amount'     => $repaidAmount,
-                    'instalment'        => $instalment,
-                    'principle_amount'  => $loan->amount,
-                    'outstanding_loan'  => max(0, $outstanding),
+                    'payroll_sheet_id' => $sheet->id,
+                    'loan_provider' => $loan->loanProvider?->name ?? '',
+                    'repayment_date' => $toDate,
+                    'repaid_amount' => $repaidAmount,
+                    'instalment' => $instalment,
+                    'principle_amount' => $loan->amount,
+                    'outstanding_loan' => max(0, $outstanding),
                 ]
             );
 
             $loan->returned = $repaidAmount;
-            $loan->remain   = max(0, $outstanding);
+            $loan->remain = max(0, $outstanding);
             if ($loan->remain <= 0) {
                 $loan->is_active = false;
-                $loan->status    = 'disabled';
+                $loan->status = 'disabled';
             }
             $loan->save();
         }
@@ -378,7 +385,9 @@ class PayrollComputationService
     private function processSaccosContribution(int $empId, int $detailId, string $toDate): void
     {
         $member = SaccosMember::where('employee_id', $empId)->where('is_active', true)->first();
-        if (!$member) return;
+        if (! $member) {
+            return;
+        }
 
         $existing = SaccosContribution::where('saccos_member_id', $member->id)
             ->where('payroll_sheet_detail_id', $detailId)
@@ -389,10 +398,10 @@ class PayrollComputationService
             $existing->save();
         } else {
             SaccosContribution::create([
-                'saccos_member_id'        => $member->id,
+                'saccos_member_id' => $member->id,
                 'payroll_sheet_detail_id' => $detailId,
-                'amount'                  => $member->amount,
-                'date_contributed'        => $toDate,
+                'amount' => $member->amount,
+                'date_contributed' => $toDate,
             ]);
         }
 

@@ -33,15 +33,18 @@ class SingleDeviceSessionManager
 
         if (! $registeredSessionId) {
             Cache::put($this->cacheKey($userId), $currentSessionId, $this->ttl());
+
             return true;
         }
 
         if ($registeredSessionId !== $currentSessionId) {
             Log::warning("Single Device: Session mismatch for user {$userId}");
+
             return false;
         }
 
         Cache::put($this->cacheKey($userId), $currentSessionId, $this->ttl());
+
         return true;
     }
 
@@ -56,14 +59,16 @@ class SingleDeviceSessionManager
 
         if ($driver === 'database') {
             DB::table(Config::get('session.table', 'sessions'))->where('id', $sessionId)->delete();
+
             return;
         }
 
         if ($driver === 'file') {
-            $path = storage_path('framework/sessions/' . $sessionId);
+            $path = storage_path('framework/sessions/'.$sessionId);
             if (File::exists($path)) {
                 File::delete($path);
             }
+
             return;
         }
 
@@ -79,12 +84,13 @@ class SingleDeviceSessionManager
 
     protected function cacheKey(int $userId): string
     {
-        return self::CACHE_PREFIX . $userId;
+        return self::CACHE_PREFIX.$userId;
     }
 
     protected function ttl(): CarbonInterface
     {
         $minutes = (int) Config::get('session.lifetime', 120);
+
         return now()->addMinutes($minutes > 0 ? $minutes : 120);
     }
 }

@@ -24,14 +24,18 @@ final class PlannedDay
         public readonly ?string $end = null,
         public readonly bool $crossesMidnight = false,
         public readonly float $hours = 0,
+        public readonly ?string $holiday = null,
+        public readonly ?string $color = null,
+        public readonly bool $overtime = false,
     ) {}
 
-    public static function working(CarbonInterface $date, string $source, ?string $code, string $label, string $start, string $end, int $breakMinutes = 0): self
+    public static function working(CarbonInterface $date, string $source, ?string $code, string $label, string $start, string $end, int $breakMinutes = 0,
+        ?string $holiday = null, ?string $color = null, bool $overtime = false): self
     {
         $cross = $end <= $start;
         $minutes = self::minutes($end) - self::minutes($start) + ($cross ? 1440 : 0) - $breakMinutes;
 
-        return new self($date, self::WORK, $source, $code, $label, $start, $end, $cross, round(max(0, $minutes) / 60, 2));
+        return new self($date, self::WORK, $source, $code, $label, $start, $end, $cross, round(max(0, $minutes) / 60, 2), $holiday, $color, $overtime);
     }
 
     public function isWorking(): bool
@@ -54,6 +58,7 @@ final class PlannedDay
         return [
             'date' => $this->date->toDateString(), 'kind' => $this->kind, 'source' => $this->source, 'code' => $this->code, 'label' => $this->label,
             'start' => $this->start, 'end' => $this->end, 'crosses_midnight' => $this->crossesMidnight, 'hours' => $this->hours,
+            'holiday' => $this->holiday, 'color' => $this->color, 'overtime' => $this->overtime,
         ];
     }
 

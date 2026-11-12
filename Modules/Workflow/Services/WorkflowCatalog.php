@@ -17,6 +17,7 @@ final class WorkflowCatalog
     private const PROCESSES = [
         UserAccessChangeProcess::class,
         ContractRenewalProcess::class,
+        \Modules\Hr\Workflow\DutyRosterProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

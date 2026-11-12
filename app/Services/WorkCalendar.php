@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\EmployeeTimetable;
 use App\Models\PublicHoliday;
+use App\Models\Roster;
 use App\Models\WorkSchedule;
 use Carbon\CarbonInterface;
 use Carbon\CarbonPeriod;
@@ -14,8 +16,9 @@ use Illuminate\Support\Collection;
 /**
  * The planned working day of an employee, without attendance devices.
  *
- * Order: public holiday, then the working hours of the employee's section, department or the company default,
- * then the built-in Monday to Friday 08:00 to 17:00 with a one-hour break (the hours HRMS used when nothing was set).
+ * Order: leave, then the duty on a published duty roster (also on public holidays), then public holidays, then the working
+ * hours of the employee's section, department or the company default, then the built-in Monday to Friday 08:00 to 17:00
+ * with a one-hour break (the hours HRMS used when nothing was set).
  */
 class WorkCalendar
 {
@@ -39,24 +42,52 @@ class WorkCalendar
     public function day(Employee $employee, CarbonInterface|string $date): PlannedDay
     {
         $date = Carbon::parse($date)->startOfDay();
+
+        return $this->resolve($employee, $date, $this->entries($employee, $date, $date)->get($date->toDateString(), collect()));
+    }
+
+    /** @return Collection<int, PlannedDay> */
+    public function days(Employee $employee, CarbonInterface|string $from, CarbonInterface|string $to): Collection
+    {
+        $from = Carbon::parse($from)->startOfDay();
+        $to = Carbon::parse($to)->startOfDay();
+        $entries = $this->entries($employee, $from, $to);
+
+        return collect(CarbonPeriod::create($from, $to))->map(fn ($d) => $this->resolve($employee, $d, $entries->get($d->toDateString(), collect())));
+    }
+
+    /** Leave days and published roster duties of the employee, by date. */
+    private function entries(Employee $employee, CarbonInterface $from, CarbonInterface $to): Collection
+    {
+        return EmployeeTimetable::where('employee_id', $employee->id)
+            ->whereDate('day_date', '>=', $from->toDateString())->whereDate('day_date', '<=', $to->toDateString())
+            ->where(fn ($q) => $q->where('source', '!=', EmployeeTimetable::ROSTER)
+                ->orWhereHas('roster', fn ($r) => $r->where('status', Roster::PUBLISHED)))
+            ->get()->groupBy(fn ($e) => $e->day_date->toDateString());
+    }
+
+    private function resolve(Employee $employee, CarbonInterface $date, Collection $entries): PlannedDay
+    {
         $holiday = $this->holidayOn($date);
+        if ($leave = $entries->firstWhere('source', EmployeeTimetable::LEAVE)) {
+            return new PlannedDay($date, PlannedDay::LEAVE, 'leave', $leave->code, $leave->duty, holiday: $holiday?->title, color: $leave->color);
+        }
+        if ($duty = $entries->firstWhere('source', EmployeeTimetable::ROSTER)) {
+            return $duty->can_punch && $duty->start_time && $duty->end_time
+                ? PlannedDay::working($date, 'roster', $duty->code, $duty->duty, $duty->start_time, $duty->end_time, $duty->break_minutes, $holiday?->title, $duty->color, $duty->overtime)
+                : new PlannedDay($date, PlannedDay::OFF, 'roster', $duty->code, $duty->duty, holiday: $holiday?->title, color: $duty->color);
+        }
         $schedule = $this->scheduleFor($employee);
         $hours = $schedule->dayOf($date->dayOfWeekIso);
 
         if ($holiday) {
-            return new PlannedDay($date, PlannedDay::HOLIDAY, 'schedule', 'PH', $holiday->title);
+            return new PlannedDay($date, PlannedDay::HOLIDAY, 'schedule', 'PH', $holiday->title, holiday: $holiday->title);
         }
         if (! $hours) {
             return new PlannedDay($date, PlannedDay::OFF, 'schedule', 'OFF', 'Day off');
         }
 
         return PlannedDay::working($date, 'schedule', null, $schedule->name, $hours['start'], $hours['end'], $schedule->break_minutes);
-    }
-
-    /** @return Collection<int, PlannedDay> */
-    public function days(Employee $employee, CarbonInterface|string $from, CarbonInterface|string $to): Collection
-    {
-        return collect(CarbonPeriod::create(Carbon::parse($from), Carbon::parse($to)))->map(fn ($d) => $this->day($employee, $d));
     }
 
     public function workingDays(Employee $employee, CarbonInterface|string $from, CarbonInterface|string $to): int

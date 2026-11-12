@@ -16,9 +16,11 @@ use Illuminate\Support\Facades\Auth;
 class CompanyContext
 {
     private ?int $forcedId = null;
+
     private bool $forced = false;
 
     private ?Company $company = null;
+
     private ?int $companyRequestKey = null;
 
     public function id(): ?int

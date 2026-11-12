@@ -21,8 +21,10 @@ use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
 use Modules\Hr\Http\Controllers\Api\Roster\PublicHolidayController;
 use Modules\Hr\Http\Controllers\Api\Roster\RosterCodeController;
+use Modules\Hr\Http\Controllers\Api\Roster\RosterController;
 use Modules\Hr\Http\Controllers\Api\Roster\WorkScheduleController;
 use Modules\Hr\Http\Controllers\Api\SelfContractController;
+use Modules\Hr\Http\Controllers\Api\SelfDutyController;
 use Modules\Hr\Http\Controllers\Api\SupervisorController;
 
 Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name('hr.')->group(function () {
@@ -177,6 +179,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
+    Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
     Route::post('renewals', [SelfContractController::class, 'store'])->name('renewals.store');
     Route::post('renewals/{renewal}/withdraw', [SelfContractController::class, 'withdraw'])->name('renewals.withdraw');
     Route::get('renewals/{renewal}/files/{file}', [SelfContractController::class, 'file'])->name('renewals.file');
@@ -184,6 +187,16 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
 
 
 Route::prefix('roster')->middleware(['auth:sanctum', 'module:roster'])->name('roster.')->group(function () {
+    Route::get('rosters', [RosterController::class, 'index'])->name('rosters.index');
+    Route::get('rosters/options', [RosterController::class, 'options'])->name('rosters.options');
+    Route::get('rosters/{roster}', [RosterController::class, 'show'])->name('rosters.show');
+    Route::post('rosters', [RosterController::class, 'store'])->name('rosters.store');
+    Route::put('rosters/{roster}', [RosterController::class, 'update'])->name('rosters.update');
+    Route::delete('rosters/{roster}', [RosterController::class, 'destroy'])->name('rosters.destroy');
+    Route::put('rosters/{roster}/duties', [RosterController::class, 'duties'])->name('rosters.duties');
+    Route::post('rosters/{roster}/submit', [RosterController::class, 'submit'])->name('rosters.submit');
+    Route::post('rosters/{roster}/withdraw', [RosterController::class, 'withdraw'])->name('rosters.withdraw');
+
     Route::middleware('can:roster.timetables.manage')->group(function () {
         Route::get('codes', [RosterCodeController::class, 'index'])->name('codes.index');
         Route::post('codes', [RosterCodeController::class, 'store'])->name('codes.store');

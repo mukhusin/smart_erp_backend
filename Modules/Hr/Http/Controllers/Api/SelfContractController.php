@@ -68,8 +68,8 @@ class SelfContractController extends Controller
         $data = $request->validate([
             /** Request letter (HTML from the rich text editor): why I need my contract renewed. */
             'letter' => ['required', 'string', 'max:20000', function ($attribute, $value, $fail) {
-                if (mb_strlen(RichText::text((string) $value)) < 50) {
-                    $fail('Your letter is too short; explain why you need the renewal (at least 50 characters).');
+                if (mb_strlen(RichText::text((string) $value)) < 200) {
+                    $fail('Your letter is too short; explain why you need the renewal (at least 200 characters).');
                 }
             }],
             /** I agree to the statement in `agreement`. */

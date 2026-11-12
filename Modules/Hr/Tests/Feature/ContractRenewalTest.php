@@ -102,8 +102,9 @@ class ContractRenewalTest extends TestCase
             'company_branch_id' => null, 'is_active' => true, 'steps' => [['name' => 'Supervisor', 'approver_type' => 'supervisor']],
         ])->assertOk();
 
-        $letter = '<p>Dear HR Manager,</p><p>I request <strong>renewal</strong> of my contract because I want to continue serving in Nursing.</p>';
-        $this->actingAs($this->user)->post('/api/v1/self/renewals', ['letter' => '<p><strong>Too short</strong></p>'.str_repeat('<p></p>', 20), 'agreed' => 'true'], ['Accept' => 'application/json'])
+        $letter = '<p>Dear HR Manager,</p><p>I request <strong>renewal</strong> of my contract because I want to continue serving in Nursing. '
+            .'I have completed my duties well, I have good working relations with my team, and I would like to keep growing my skills here.</p>';
+        $this->actingAs($this->user)->post('/api/v1/self/renewals', ['letter' => '<p><strong>'.str_repeat('Too short. ', 18).'</strong></p>'.str_repeat('<p></p>', 20), 'agreed' => 'true'], ['Accept' => 'application/json'])
             ->assertUnprocessable()->assertJsonValidationErrors(['letter' => 'too short']);
         $this->actingAs($this->user)->post('/api/v1/self/renewals', ['letter' => $letter, 'agreed' => 'false'], ['Accept' => 'application/json'])
             ->assertUnprocessable()->assertJsonValidationErrors(['agreed' => 'Tick the agreement']);
@@ -141,7 +142,7 @@ class ContractRenewalTest extends TestCase
         $id = $this->hrStart()->assertCreated()->assertJsonPath('data.status', 'pending')->json('data.id');
         $this->actingAs($this->user)->getJson('/api/v1/self/contract')->assertJsonPath('data.can_request', false)
             ->assertJsonPath('data.blocker', 'HR has already started your contract renewal.');
-        $this->actingAs($this->user)->post('/api/v1/self/renewals', ['letter' => str_repeat('Please renew my contract. ', 3), 'agreed' => 'true'], ['Accept' => 'application/json'])
+        $this->actingAs($this->user)->post('/api/v1/self/renewals', ['letter' => str_repeat('Please renew my contract. ', 9), 'agreed' => 'true'], ['Accept' => 'application/json'])
             ->assertUnprocessable()->assertJsonValidationErrors(['renewal' => 'HR has already started']);
 
         $this->actingAs($this->admin)->postJson("/api/v1/hr/renewals/{$id}/withdraw")->assertOk()->assertJsonPath('data.status', 'cancelled');
