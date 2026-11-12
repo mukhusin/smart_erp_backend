@@ -4,6 +4,7 @@ namespace Modules\Hr\Workflow;
 
 use App\Models\ContractRenewal;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Core\Support\RichText;
 use Modules\Hr\Actions\ManageRenewals;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
@@ -48,7 +49,7 @@ class ContractRenewalProcess implements WorkflowProcess
                 $subject->period ? $subject->period.' months' : null,
                 $subject->basic_salary !== null ? 'basic salary '.$money($subject->basic_salary) : null,
             ])) : null,
-            $subject->letter ? 'Request letter: '.$subject->letter : null,
+            $subject->letter ? 'Request letter: '.RichText::text($subject->letter) : null,
             $subject->agreed_at ? 'Agreement confirmed on '.$subject->agreed_at->format('d M Y H:i') : null,
             $subject->comment ? 'Comment: '.$subject->comment : null,
             $subject->files()->count() ? 'Attachments: '.$subject->files()->count() : null,

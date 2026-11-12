@@ -10804,9 +10804,8 @@
                                 "properties": {
                                     "letter": {
                                         "type": "string",
-                                        "description": "Request letter: why I need my contract renewed.",
-                                        "minLength": 50,
-                                        "maxLength": 5000
+                                        "description": "Request letter (HTML from the rich text editor): why I need my contract renewed.",
+                                        "maxLength": 20000
                                     },
                                     "agreed": {
                                         "description": "I agree to the statement in `agreement`.",
@@ -14725,7 +14724,14 @@
                             "string",
                             "null"
                         ],
-                        "description": "The employee's request letter."
+                        "description": "The employee's request letter (cleaned HTML)."
+                    },
+                    "letter_text": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The letter as plain text."
                     },
                     "agreement": {
                         "type": [
@@ -14891,6 +14897,7 @@
                     "status_label",
                     "comment",
                     "letter",
+                    "letter_text",
                     "agreement",
                     "agreed_at",
                     "contract_type",

@@ -5,6 +5,7 @@ namespace Modules\Hr\Http\Resources;
 use App\Models\ContractRenewal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Core\Support\RichText;
 
 /**
  * @mixin ContractRenewal
@@ -27,8 +28,10 @@ class RenewalResource extends JsonResource
             'status' => $this->status,
             'status_label' => ContractRenewal::STATUSES[$this->status] ?? $this->status,
             'comment' => $this->comment,
-            /** The employee's request letter. */
+            /** The employee's request letter (cleaned HTML). */
             'letter' => $this->letter,
+            /** The letter as plain text. */
+            'letter_text' => $this->letter ? RichText::text($this->letter) : null,
             /** The statement the employee agreed to, and when. */
             'agreement' => $this->agreement,
             'agreed_at' => $this->agreed_at?->toIso8601String(),

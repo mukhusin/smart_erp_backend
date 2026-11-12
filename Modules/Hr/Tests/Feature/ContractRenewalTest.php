@@ -80,6 +80,17 @@ class ContractRenewalTest extends TestCase
             ->assertJsonPath('data.can_request', false)->assertJsonPath('data.contract.end_date', '2027-05-31');
     }
 
+    public function test_renewal_is_allowed_from_exactly_90_days_before_the_end(): void
+    {
+        $contract = $this->contract('2026-01-01', '2027-02-11');
+        $this->actingAs($this->user)->getJson('/api/v1/self/contract')->assertJsonPath('data.contract.days_left', 91)->assertJsonPath('data.can_request', false);
+        $this->hrStart()->assertUnprocessable()->assertJsonValidationErrors(['renewal' => 'on 13 Nov 2026']);
+
+        $contract->update(['end_date' => '2027-02-10']);
+        $this->actingAs($this->user)->getJson('/api/v1/self/contract')->assertJsonPath('data.contract.days_left', 90)->assertJsonPath('data.can_request', true);
+        $this->hrStart()->assertCreated();
+    }
+
     public function test_employee_request_goes_through_approval_and_blocks_hr(): void
     {
         $this->contract('2026-01-01', '2026-12-31');
@@ -91,15 +102,16 @@ class ContractRenewalTest extends TestCase
             'company_branch_id' => null, 'is_active' => true, 'steps' => [['name' => 'Supervisor', 'approver_type' => 'supervisor']],
         ])->assertOk();
 
-        $letter = 'Dear HR Manager, I request renewal of my contract because I want to continue serving in the Nursing department.';
-        $this->actingAs($this->user)->post('/api/v1/self/renewals', ['letter' => 'Too short', 'agreed' => 'true'], ['Accept' => 'application/json'])
+        $letter = '<p>Dear HR Manager,</p><p>I request <strong>renewal</strong> of my contract because I want to continue serving in Nursing.</p>';
+        $this->actingAs($this->user)->post('/api/v1/self/renewals', ['letter' => '<p><strong>Too short</strong></p>'.str_repeat('<p></p>', 20), 'agreed' => 'true'], ['Accept' => 'application/json'])
             ->assertUnprocessable()->assertJsonValidationErrors(['letter' => 'too short']);
         $this->actingAs($this->user)->post('/api/v1/self/renewals', ['letter' => $letter, 'agreed' => 'false'], ['Accept' => 'application/json'])
             ->assertUnprocessable()->assertJsonValidationErrors(['agreed' => 'Tick the agreement']);
         $request = $this->actingAs($this->user)->post('/api/v1/self/renewals', [
-            'letter' => $letter, 'agreed' => 'true', 'period' => 24, 'files' => [UploadedFile::fake()->create('timesheet.pdf', 80, 'application/pdf')],
+            'letter' => $letter.'<script>alert(1)</script><p onclick="x()">Thanks</p>', 'agreed' => 'true', 'period' => 24, 'files' => [UploadedFile::fake()->create('timesheet.pdf', 80, 'application/pdf')],
         ], ['Accept' => 'application/json'])->assertCreated()
-            ->assertJsonPath('data.letter', $letter)->assertJsonPath('data.agreement', ContractRenewal::AGREEMENT)
+            ->assertJsonPath('data.letter', $letter.'<p>Thanks</p>')->assertJsonPath('data.agreement', ContractRenewal::AGREEMENT)
+            ->assertJsonPath('data.letter_text', fn ($t) => str_starts_with($t, "Dear HR Manager,\nI request renewal"))
             ->assertJsonPath('data.status', 'pending')->assertJsonPath('data.source', 'employee')->assertJsonPath('data.waiting_for', 'Supervisor')
             ->assertJsonPath('data.files.0.name', 'timesheet.pdf')->assertJsonPath('data.can_withdraw', true);
         $id = $request->json('data.id');

@@ -11,6 +11,7 @@ use App\Services\CompanyContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Modules\Core\Support\RichText;
 use Modules\Hr\Actions\ManageContracts;
 use Modules\Hr\Actions\ManageRenewals;
 use Modules\Hr\Http\Resources\ContractResource;
@@ -65,8 +66,12 @@ class SelfContractController extends Controller
             $request->merge(['agreed' => filter_var($request->input('agreed'), FILTER_VALIDATE_BOOLEAN)]);
         }
         $data = $request->validate([
-            /** Request letter: why I need my contract renewed. */
-            'letter' => ['required', 'string', 'min:50', 'max:5000'],
+            /** Request letter (HTML from the rich text editor): why I need my contract renewed. */
+            'letter' => ['required', 'string', 'max:20000', function ($attribute, $value, $fail) {
+                if (mb_strlen(RichText::text((string) $value)) < 50) {
+                    $fail('Your letter is too short; explain why you need the renewal (at least 50 characters).');
+                }
+            }],
             /** I agree to the statement in `agreement`. */
             'agreed' => ['accepted'],
             /** Contract type I would like (HR decides). */
@@ -77,10 +82,10 @@ class SelfContractController extends Controller
             'files.*' => ['file', ...EmployeeFiles::DOCUMENT_RULES],
         ], [
             'letter.required' => 'Write your request letter.',
-            'letter.min' => 'Your letter is too short; explain why you need the renewal (at least 50 characters).',
             'agreed.accepted' => 'Tick the agreement to send your request.',
         ]);
 
+        $data['letter'] = RichText::clean($data['letter']);
         $renewal = $this->renewals->start($employee, ContractRenewal::FROM_EMPLOYEE, collect($data)->except('files')->all(), $request->user(), $request->file('files', []));
 
         return new RenewalResource($renewal->load(['natureOfContract', 'files', 'workflow.steps', 'contract']));
