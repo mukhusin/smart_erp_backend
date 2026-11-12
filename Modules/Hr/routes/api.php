@@ -14,6 +14,7 @@ use Modules\Hr\Http\Controllers\Api\EmployeeExperienceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeLicenceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeQualificationController;
 use Modules\Hr\Http\Controllers\Api\JobPositionController;
+use Modules\Hr\Http\Controllers\Api\Leave\AnnualRosterController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveBalanceController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveRequestController;
 use Modules\Hr\Http\Controllers\Api\Leave\SelfLeaveController;
@@ -193,6 +194,7 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::middleware('module:leave')->group(function () {
         Route::get('leave/balances', [LeaveBalanceController::class, 'mine'])->name('leave.balances');
         Route::get('leave/days', [LeaveBalanceController::class, 'myDays'])->name('leave.days');
+        Route::get('leave/plans', [AnnualRosterController::class, 'mine'])->name('leave.plans');
         Route::get('leave/requests', [SelfLeaveController::class, 'index'])->name('leave.index');
         Route::post('leave/requests', [SelfLeaveController::class, 'store'])->name('leave.store');
         Route::post('leave/requests/{leave}/withdraw', [SelfLeaveController::class, 'withdraw'])->name('leave.withdraw');
@@ -247,6 +249,14 @@ Route::prefix('leave')->middleware(['auth:sanctum', 'module:leave'])->name('leav
         Route::get('settings', [LeaveSettingsController::class, 'show'])->name('settings.show');
         Route::put('settings', [LeaveSettingsController::class, 'update'])->name('settings.update');
     });
+    Route::get('annual-rosters', [AnnualRosterController::class, 'index'])->name('annual-rosters.index');
+    Route::post('annual-rosters', [AnnualRosterController::class, 'store'])->name('annual-rosters.store');
+    Route::get('annual-rosters/{roster}', [AnnualRosterController::class, 'show'])->name('annual-rosters.show');
+    Route::delete('annual-rosters/{roster}', [AnnualRosterController::class, 'destroy'])->name('annual-rosters.destroy');
+    Route::post('annual-rosters/{roster}/publish', [AnnualRosterController::class, 'publish'])->name('annual-rosters.publish');
+    Route::post('annual-rosters/{roster}/plans', [AnnualRosterController::class, 'storePlan'])->name('annual-rosters.plans.store');
+    Route::put('annual-rosters/{roster}/plans/{plan}', [AnnualRosterController::class, 'updatePlan'])->name('annual-rosters.plans.update');
+    Route::delete('annual-rosters/{roster}/plans/{plan}', [AnnualRosterController::class, 'destroyPlan'])->name('annual-rosters.plans.destroy');
     Route::get('requests', [LeaveRequestController::class, 'index'])->name('requests.index');
     Route::get('requests/{leave}', [LeaveRequestController::class, 'review'])->name('requests.review');
     Route::put('requests/{leave}/dates', [LeaveRequestController::class, 'dates'])->name('requests.dates');

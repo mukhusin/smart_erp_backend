@@ -26,9 +26,9 @@ class RosterAccess
         return $this->access->can($user, 'roster.view') || ($this->canList($user) && $this->covers($user, $roster->department_id, $roster->section_id));
     }
 
-    public function canManage(User $user, int $departmentId, ?int $sectionId): bool
+    public function canManage(User $user, int $departmentId, ?int $sectionId, string $permission = 'roster.manage'): bool
     {
-        return $this->access->can($user, 'roster.manage') && $this->covers($user, $departmentId, $sectionId);
+        return $this->access->can($user, $permission) && $this->covers($user, $departmentId, $sectionId);
     }
 
     public function covers(User $user, int $departmentId, ?int $sectionId): bool

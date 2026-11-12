@@ -41,6 +41,8 @@ class LeaveRequestRequest extends FormRequest
             'details.deceased_name' => ['nullable', 'string', 'max:150'],
             'details.relationship' => ['nullable', 'string', 'max:50'],
             'details.death_date' => ['nullable', 'date'],
+            /** Request this planned annual leave (from the annual leave roster). */
+            'annual_plan_id' => ['nullable', 'integer'],
             'files' => ['nullable', 'array', 'max:5'],
             'files.*' => ['file', ...EmployeeFiles::DOCUMENT_RULES],
         ];

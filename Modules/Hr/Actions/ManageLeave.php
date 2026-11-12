@@ -62,6 +62,12 @@ class ManageLeave
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $days = (int) $data['days'];
         $end = $this->days()->endDate($employee, $type, $start, $days);
+        if (! empty($data['annual_plan_id'])) {
+            if (! $type->isAnnual()) {
+                throw ValidationException::withMessages(['annual_plan_id' => 'Planned leave is requested as annual leave.']);
+            }
+            app(ManageAnnualRoster::class)->requestable($employee->id, (int) $data['annual_plan_id']);
+        }
         $this->check($employee, $type, $start, $end, $days, null, $source === 'employee');
         if ($source === 'employee' && $type->requires_document && ! $files) {
             throw ValidationException::withMessages(['files' => "Attach a supporting document for {$type->name} (e.g. a medical certificate)."]);
@@ -79,6 +85,9 @@ class ManageLeave
             ]);
             foreach ($files as $file) {
                 $leave->files()->create(['file_path' => EmployeeFiles::store($file, $employee, 'leave'), 'file_name' => $file->getClientOriginalName(), 'size' => $file->getSize()]);
+            }
+            if (! empty($data['annual_plan_id'])) {
+                app(ManageAnnualRoster::class)->link($leave, (int) $data['annual_plan_id']);
             }
 
             return $leave;
@@ -161,6 +170,7 @@ class ManageLeave
             if ($leave->start_date->lte(now()->startOfDay())) {
                 $leave->update(['status' => EmpLeave::ON_LEAVE, 'is_active' => true]);
             }
+            app(ManageAnnualRoster::class)->sync($leave);
         });
         $this->notify($leave, 'Leave approved', sprintf('Your %s from %s to %s (%s days) is approved.',
             $leave->leaveType?->name ?? 'leave', $leave->start_date->format('d M Y'), $leave->end_date->format('d M Y'), $this->num($leave->days)));
@@ -171,6 +181,7 @@ class ManageLeave
         $withdrawn = $comment === 'Withdrawn by the requester.';
         $leave->update(['status' => $withdrawn ? EmpLeave::CANCELLED : EmpLeave::REJECTED, 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         $this->clearCalendar($leave);
+        app(ManageAnnualRoster::class)->sync($leave);
         if (! $withdrawn) {
             $this->notify($leave, 'Leave not approved', "Your {$leave->leaveType?->name} request from {$leave->start_date->format('d M Y')} was not approved.".($comment ? " Reason: {$comment}" : ''));
         }
@@ -191,6 +202,7 @@ class ManageLeave
         if ($leave->status === EmpLeave::APPROVED && $leave->start_date->gt(now()->startOfDay())) {
             $leave->update(['status' => EmpLeave::CANCELLED, 'decided_at' => now()]);
             $this->clearCalendar($leave);
+            app(ManageAnnualRoster::class)->sync($leave);
 
             return $leave->refresh();
         }
