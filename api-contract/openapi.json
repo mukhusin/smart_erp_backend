@@ -2141,6 +2141,1556 @@
                 }
             }
         },
+        "/self/allowances": {
+            "get": {
+                "operationId": "self.allowances",
+                "summary": "My allowances for a month (default this month)",
+                "tags": [
+                    "Allowance: Allowances",
+                    "AllowanceEntry"
+                ],
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "category": {
+                                                        "type": "string"
+                                                    },
+                                                    "unit": {
+                                                        "type": "string"
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "items": {
+                                                        "type": "number"
+                                                    },
+                                                    "amount_per_item": {
+                                                        "type": "number"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee_id",
+                                                    "category",
+                                                    "unit",
+                                                    "date",
+                                                    "items",
+                                                    "amount_per_item",
+                                                    "amount",
+                                                    "status",
+                                                    "status_label",
+                                                    "source",
+                                                    "description",
+                                                    "waiting_for",
+                                                    "decision_comment"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "month": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "number"
+                                                },
+                                                "categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "category": {
+                                                                "type": "string"
+                                                            },
+                                                            "items": {
+                                                                "type": "number"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "category",
+                                                            "items",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "month",
+                                                "total",
+                                                "categories"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/entries": {
+            "get": {
+                "operationId": "allowance.entries.index",
+                "summary": "Allowances of a month for the employees the user can see: totals per employee and category, and the entries",
+                "tags": [
+                    "Allowance: Allowances",
+                    "AllowanceEntry"
+                ],
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "e.g. 2026-11; default this month",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "pending, approved, rejected, cancelled",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "employee": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "total": {
+                                                        "type": "number"
+                                                    },
+                                                    "categories": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "category": {
+                                                                    "type": "string"
+                                                                },
+                                                                "items": {
+                                                                    "type": "number"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "category",
+                                                                "items",
+                                                                "amount"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "employee",
+                                                    "total",
+                                                    "categories"
+                                                ]
+                                            }
+                                        },
+                                        "entries": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "category": {
+                                                        "type": "string"
+                                                    },
+                                                    "unit": {
+                                                        "type": "string"
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "items": {
+                                                        "type": "number"
+                                                    },
+                                                    "amount_per_item": {
+                                                        "type": "number"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee_id",
+                                                    "category",
+                                                    "unit",
+                                                    "date",
+                                                    "items",
+                                                    "amount_per_item",
+                                                    "amount",
+                                                    "status",
+                                                    "status_label",
+                                                    "source",
+                                                    "description",
+                                                    "waiting_for",
+                                                    "decision_comment"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "month": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "number"
+                                                },
+                                                "can_manage": {
+                                                    "type": "boolean"
+                                                },
+                                                "claim_categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "unit": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "unit"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "month",
+                                                "total",
+                                                "can_manage",
+                                                "claim_categories"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "entries",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/generate": {
+            "post": {
+                "operationId": "allowance.generate",
+                "summary": "Work allowances out again from the roster and working hours for a period (e.g. after changing a roster or a rate)",
+                "tags": [
+                    "Allowance: Allowances",
+                    "AllowanceEntry"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "from": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "to": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "from",
+                                    "to"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "added": {
+                                                    "type": "integer"
+                                                },
+                                                "removed": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "added",
+                                                "removed"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/employees/{employee}/claims": {
+            "post": {
+                "operationId": "allowance.claims.store",
+                "summary": "Claim an allowance for an employee with a count (e.g. theatre cases); it goes through the approval workflow",
+                "tags": [
+                    "Allowance: Allowances",
+                    "AllowanceEntry"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "allowance_category_id": {
+                                        "type": "integer"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "items": {
+                                        "type": "number",
+                                        "description": "How many (e.g. 3 cases).",
+                                        "minimum": 0.5,
+                                        "maximum": 1000
+                                    },
+                                    "description": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "allowance_category_id",
+                                    "date",
+                                    "items"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "employee_id": {
+                                                    "type": "integer"
+                                                },
+                                                "category": {
+                                                    "type": "string"
+                                                },
+                                                "unit": {
+                                                    "type": "string"
+                                                },
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "items": {
+                                                    "type": "number"
+                                                },
+                                                "amount_per_item": {
+                                                    "type": "number"
+                                                },
+                                                "amount": {
+                                                    "type": "number"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "employee_id",
+                                                "category",
+                                                "unit",
+                                                "date",
+                                                "items",
+                                                "amount_per_item",
+                                                "amount",
+                                                "status",
+                                                "status_label",
+                                                "source",
+                                                "description",
+                                                "waiting_for",
+                                                "decision_comment"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/categories": {
+            "get": {
+                "operationId": "allowance.categories.index",
+                "summary": "Allowance categories and the units to choose from",
+                "tags": [
+                    "Allowance: Setup",
+                    "AllowanceSetup"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "unit": {
+                                                        "type": "string"
+                                                    },
+                                                    "unit_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "generation": {
+                                                        "type": "string"
+                                                    },
+                                                    "deduct_leave": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "other_absence": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "taxable": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "rates_count": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "code",
+                                                    "unit",
+                                                    "unit_label",
+                                                    "generation",
+                                                    "deduct_leave",
+                                                    "other_absence",
+                                                    "taxable",
+                                                    "description",
+                                                    "is_active",
+                                                    "rates_count"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "units": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "units"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "allowance.categories.store",
+                "summary": "Add an allowance category",
+                "tags": [
+                    "Allowance: Setup",
+                    "AllowanceSetup"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "code": {
+                                                    "type": "string"
+                                                },
+                                                "unit": {
+                                                    "type": "string"
+                                                },
+                                                "unit_label": {
+                                                    "type": "string"
+                                                },
+                                                "generation": {
+                                                    "type": "string"
+                                                },
+                                                "deduct_leave": {
+                                                    "type": "boolean"
+                                                },
+                                                "other_absence": {
+                                                    "type": "boolean"
+                                                },
+                                                "taxable": {
+                                                    "type": "boolean"
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                },
+                                                "rates_count": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "code",
+                                                "unit",
+                                                "unit_label",
+                                                "generation",
+                                                "deduct_leave",
+                                                "other_absence",
+                                                "taxable",
+                                                "description",
+                                                "is_active",
+                                                "rates_count"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/categories/{category}": {
+            "put": {
+                "operationId": "allowance.categories.update",
+                "summary": "Update an allowance category",
+                "tags": [
+                    "Allowance: Setup",
+                    "AllowanceSetup"
+                ],
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "description": "The category ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "code": {
+                                                    "type": "string"
+                                                },
+                                                "unit": {
+                                                    "type": "string"
+                                                },
+                                                "unit_label": {
+                                                    "type": "string"
+                                                },
+                                                "generation": {
+                                                    "type": "string"
+                                                },
+                                                "deduct_leave": {
+                                                    "type": "boolean"
+                                                },
+                                                "other_absence": {
+                                                    "type": "boolean"
+                                                },
+                                                "taxable": {
+                                                    "type": "boolean"
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                },
+                                                "rates_count": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "code",
+                                                "unit",
+                                                "unit_label",
+                                                "generation",
+                                                "deduct_leave",
+                                                "other_absence",
+                                                "taxable",
+                                                "description",
+                                                "is_active",
+                                                "rates_count"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "allowance.categories.destroy",
+                "summary": "Delete a category that has no allowances paid; otherwise make it inactive",
+                "tags": [
+                    "Allowance: Setup",
+                    "AllowanceSetup"
+                ],
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "description": "The category ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "Allowances have been paid in this category. Make it inactive instead."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/rates": {
+            "get": {
+                "operationId": "allowance.rates.index",
+                "summary": "Allowance rates, with the departments, sections and positions to choose from",
+                "tags": [
+                    "Allowance: Setup",
+                    "AllowanceSetup"
+                ],
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "category": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "unit": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "unit"
+                                                        ]
+                                                    },
+                                                    "department": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ]
+                                                    },
+                                                    "section": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ]
+                                                    },
+                                                    "position": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "title": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "title"
+                                                        ]
+                                                    },
+                                                    "amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "category",
+                                                    "department",
+                                                    "section",
+                                                    "position",
+                                                    "amount",
+                                                    "is_active"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "departments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "parent_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "parent_id"
+                                                        ]
+                                                    }
+                                                },
+                                                "positions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "title": {
+                                                                "type": "string"
+                                                            },
+                                                            "department_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "title",
+                                                            "department_id"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "departments",
+                                                "positions"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "allowance.rates.store",
+                "summary": "Add a rate",
+                "tags": [
+                    "Allowance: Setup",
+                    "AllowanceSetup"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "category": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "unit": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "unit"
+                                                    ]
+                                                },
+                                                "department": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name"
+                                                    ]
+                                                },
+                                                "section": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name"
+                                                    ]
+                                                },
+                                                "position": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "title": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "title"
+                                                    ]
+                                                },
+                                                "amount": {
+                                                    "type": "number"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "category",
+                                                "department",
+                                                "section",
+                                                "position",
+                                                "amount",
+                                                "is_active"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/rates/{rate}": {
+            "put": {
+                "operationId": "allowance.rates.update",
+                "summary": "Update a rate. Allowances already earned keep their amount",
+                "tags": [
+                    "Allowance: Setup",
+                    "AllowanceSetup"
+                ],
+                "parameters": [
+                    {
+                        "name": "rate",
+                        "in": "path",
+                        "required": true,
+                        "description": "The rate ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "category": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "unit": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "unit"
+                                                    ]
+                                                },
+                                                "department": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name"
+                                                    ]
+                                                },
+                                                "section": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name"
+                                                    ]
+                                                },
+                                                "position": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "title": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "title"
+                                                    ]
+                                                },
+                                                "amount": {
+                                                    "type": "number"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "category",
+                                                "department",
+                                                "section",
+                                                "position",
+                                                "amount",
+                                                "is_active"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "allowance.rates.destroy",
+                "summary": "Delete a rate",
+                "tags": [
+                    "Allowance: Setup",
+                    "AllowanceSetup"
+                ],
+                "parameters": [
+                    {
+                        "name": "rate",
+                        "in": "path",
+                        "required": true,
+                        "description": "The rate ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/workflow/inbox": {
             "get": {
                 "operationId": "workflow.inbox",

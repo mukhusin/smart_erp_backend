@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceEntryController;
+use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceSetupController;
 use Modules\Hr\Http\Controllers\Api\BankController;
 use Modules\Hr\Http\Controllers\Api\ContractTypeController;
 use Modules\Hr\Http\Controllers\Api\DeductionController;
@@ -191,6 +193,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
     Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
+    Route::get('allowances', [AllowanceEntryController::class, 'mine'])->middleware('module:allowance')->name('allowances');
     Route::middleware('module:leave')->group(function () {
         Route::get('leave/balances', [LeaveBalanceController::class, 'mine'])->name('leave.balances');
         Route::get('leave/days', [LeaveBalanceController::class, 'myDays'])->name('leave.days');
@@ -268,5 +271,25 @@ Route::prefix('leave')->middleware(['auth:sanctum', 'module:leave'])->name('leav
     Route::middleware('can:leave.balances.manage')->group(function () {
         Route::post('employees/{employee}/adjustments', [LeaveBalanceController::class, 'adjust'])->name('adjustments.store');
         Route::delete('employees/{employee}/adjustments/{adjustment}', [LeaveBalanceController::class, 'removeAdjustment'])->name('adjustments.destroy');
+    });
+});
+
+Route::prefix('allowance')->middleware(['auth:sanctum', 'module:allowance'])->name('allowance.')->group(function () {
+    Route::middleware('can:allowance.categories.manage')->group(function () {
+        Route::get('categories', [AllowanceSetupController::class, 'categories'])->name('categories.index');
+        Route::post('categories', [AllowanceSetupController::class, 'storeCategory'])->name('categories.store');
+        Route::put('categories/{category}', [AllowanceSetupController::class, 'updateCategory'])->name('categories.update');
+        Route::delete('categories/{category}', [AllowanceSetupController::class, 'destroyCategory'])->name('categories.destroy');
+    });
+    Route::middleware('can:allowance.department-ranges.manage')->group(function () {
+        Route::get('rates', [AllowanceSetupController::class, 'rates'])->name('rates.index');
+        Route::post('rates', [AllowanceSetupController::class, 'storeRate'])->name('rates.store');
+        Route::put('rates/{rate}', [AllowanceSetupController::class, 'updateRate'])->name('rates.update');
+        Route::delete('rates/{rate}', [AllowanceSetupController::class, 'destroyRate'])->name('rates.destroy');
+    });
+    Route::get('entries', [AllowanceEntryController::class, 'index'])->name('entries.index');
+    Route::middleware('can:allowance.daily.manage')->group(function () {
+        Route::post('generate', [AllowanceEntryController::class, 'generate'])->name('generate');
+        Route::post('employees/{employee}/claims', [AllowanceEntryController::class, 'claim'])->name('claims.store');
     });
 });

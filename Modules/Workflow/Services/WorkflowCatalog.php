@@ -19,6 +19,7 @@ final class WorkflowCatalog
         ContractRenewalProcess::class,
         \Modules\Hr\Workflow\DutyRosterProcess::class,
         \Modules\Hr\Workflow\LeaveRequestProcess::class,
+        \Modules\Hr\Workflow\AllowanceClaimProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */
