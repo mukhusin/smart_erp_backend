@@ -34,7 +34,7 @@ Status: ✅ done · 🟡 partial · ❌ missing
 interns/residents, departments + heads, positions, banks, supervisors, statutory memberships, leavers.
 Missing: ❌ employee **import (Excel)** and **export (Excel/PDF)**; ❌ **staff patient IDs** (`employee_patient_ids`);
 ❌ **per-employee settings** (`employee_settings`: has annual leave, **has attendance**); ❌ near-retirement / retired / left lists;
-❌ bulk phone-number update; ❌ contract PDF from template; ❌ **change own password / email** (logged-in users).
+❌ bulk phone-number update; ❌ contract PDF from template; ✅ **change own password / email** (My account; email confirmed by a code to the new address, HR record updated).
 
 **Roster & schedule — ✅** duty codes, working hours, holidays, duty rosters (grid, approval, repeat), my duty roster.
 Missing: ❌ roster export (Excel/PDF).
@@ -55,7 +55,7 @@ returns, annual leave roster. Missing: ❌ **absence requests** (official absenc
 sheets via workflow, payslips, bank list, PAYE/NSSF/NHIF/HESLB/WCF/SDL reports, loans & advances.
 ✅ **other deductions** (monthly for N months or until stopped, workflow `other-deduction`); ✅ **salary adjustments** (workflow
 `salary-adjustment`, applied to the contract on the effective date by `hr:salary-adjustments`); ✅ lost-hours deduction;
-❌ basic from days present; ❌ payroll comments & change log; ❌ comparison with last month;
+➖ basic from days present (HRMS pays basic ÷ period days per day with an attendance row: covered by contract pro-rata + lost-time deduction, so not copied: missed device days would underpay); ❌ payroll comments & change log; ❌ comparison with last month;
 ❌ SACCOS member screens; ❌ reliefs screens (calculator reads them); 🟡 statutory member screens exist per employee only.
 
 **Reports & dashboards — ❌** employee reports (birthdays, emails, employed, terminations, internships, practising licences),
@@ -132,8 +132,8 @@ working-hours reports, absence requests, attendance-based allowances.
 ### 5. Suggested order before switching off HRMS
 
 1. Attendance module (section 4) + excuse of duty, admitted staff, absence requests, per-employee attendance setting.
-2. Payroll gaps: ~~assigned allowances, other deductions, salary adjustments~~ (done 2026-11-13); basic from days present, payslip lines for history.
-3. Change own password/email, employee import/export, reports + director dashboard, messaging.
+2. Payroll gaps: ~~assigned allowances, other deductions, salary adjustments~~ (done 2026-11-13); payslip lines for history (with the import).
+3. ~~Change own password/email~~ (done), employee import/export, reports + director dashboard, messaging.
 4. `erp:import-hrms` migration command (all areas in section 3), dry runs on a copy of production.
 5. Parallel run: 1–2 payroll months in both systems, compare every line; then switch.
 

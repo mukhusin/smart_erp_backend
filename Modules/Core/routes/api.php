@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Core\Http\Controllers\Api\AccountController;
 use Modules\Core\Http\Controllers\Api\AuthController;
 use Modules\Core\Http\Controllers\Api\ForgotPasswordController;
 use Modules\Core\Http\Controllers\Api\LoginBrandingController;
@@ -17,5 +18,10 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('me', MeController::class)->middleware('auth:sanctum')->name('me');
+Route::middleware('auth:sanctum')->prefix('me')->name('me.')->group(function () {
+    Route::put('password', [AccountController::class, 'password'])->middleware('throttle:6,1')->name('password');
+    Route::post('email', [AccountController::class, 'email'])->middleware('throttle:3,1')->name('email');
+    Route::post('email/confirm', [AccountController::class, 'confirmEmail'])->middleware('throttle:10,1')->name('email.confirm');
+});
 Route::get('me/notifications', [NotificationController::class, 'index'])->middleware('auth:sanctum')->name('me.notifications');
 Route::post('me/notifications/read', [NotificationController::class, 'read'])->middleware('auth:sanctum')->name('me.notifications.read');
