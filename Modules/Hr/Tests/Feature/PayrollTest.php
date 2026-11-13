@@ -132,6 +132,16 @@ class PayrollTest extends TestCase
         $mine = $this->getJson('/api/v1/self/payslips')->assertJsonCount(1, 'data')->assertJsonPath('data.0.net', 564250)->json('data.0.id');
         $this->getJson("/api/v1/self/payslips/{$mine}")->assertOk()->assertJsonPath('data.employee.name', 'A X')->assertJsonPath('data.taxable', 963000);
         $this->getJson('/api/v1/payroll/sheets')->assertForbidden();
+
+        $this->actingAs($this->admin)->getJson("/api/v1/payroll/sheets/{$id}/reports/paye")->assertOk()->assertJsonPath('data.title', 'PAYE (TRA)')
+            ->assertJsonPath('data.totals.6', 210750)->assertJsonCount(3, 'data.rows')->assertJsonPath('data.missing_bank', 3);
+        $this->getJson("/api/v1/payroll/sheets/{$id}/reports/nssf")->assertJsonCount(1, 'data.rows')->assertJsonPath('data.rows.0.2', 'N1')->assertJsonPath('data.rows.0.6', 214000);
+        $this->getJson("/api/v1/payroll/sheets/{$id}/reports/employer")->assertJsonPath('data.totals.7', 226200);
+        $this->getJson("/api/v1/payroll/sheets/{$id}/reports/unknown")->assertNotFound();
+        $csv = $this->get("/api/v1/payroll/sheets/{$id}/reports/bank/csv")->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('payroll-november-2026-bank-payment-list.csv', $csv->headers->get('Content-Disposition'));
+        $this->assertStringStartsWith("\xEF\xBB\xBF\"Employee no\",Name,Bank", $csv->getContent());
+        $this->assertStringContainsString('Total', $csv->getContent());
     }
 
     public function test_settings_and_tax_bands(): void

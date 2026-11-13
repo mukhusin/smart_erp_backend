@@ -155,7 +155,7 @@ class PayrollCalculator
         $totalLoan = $money(collect($loans)->sum('instalment'));
 
         $advances = $s->use_loan ? EmployeeMonthlyAdvance::where('employee_id', $employee->id)->where('is_active', true)
-            ->where(fn ($q) => $q->where('status', 'pending')->whereNull('payroll_sheet_detail_id')->when($detailId, fn ($q) => $q->orWhere('payroll_sheet_detail_id', $detailId)))
+            ->where(fn ($q) => $q->where('status', 'approved')->whereNull('payroll_sheet_detail_id')->when($detailId, fn ($q) => $q->orWhere('payroll_sheet_detail_id', $detailId)))
             ->whereDate('date_advanced', '<=', $to)->get() : collect();
         $advance = $money($advances->sum('amount'));
         $saccos = $s->use_saccos ? $money(SaccosMember::where('employee_id', $employee->id)->where('is_active', true)->sum('amount')) : 0.0;

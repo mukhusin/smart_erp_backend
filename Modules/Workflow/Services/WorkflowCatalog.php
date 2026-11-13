@@ -22,6 +22,8 @@ final class WorkflowCatalog
         \Modules\Hr\Workflow\AllowanceClaimProcess::class,
         \Modules\Hr\Workflow\OvertimeClaimProcess::class,
         \Modules\Hr\Workflow\PayrollSheetProcess::class,
+        \Modules\Hr\Workflow\LoanProcess::class,
+        \Modules\Hr\Workflow\SalaryAdvanceProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

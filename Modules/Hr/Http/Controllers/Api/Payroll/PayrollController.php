@@ -11,9 +11,11 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\Hr\Actions\ManagePayroll;
 use Modules\Hr\Support\PayrollCalculator;
+use Modules\Hr\Support\PayrollReports;
 
 /**
  * Payroll: settings, monthly payroll sheets and payslips.
@@ -205,6 +207,37 @@ class PayrollController extends Controller
         $taxable = (float) $request->validate(['taxable' => ['required', 'numeric', 'min:0']])['taxable'];
 
         return response()->json(['data' => ['taxable' => $taxable, 'paye' => PayrollCalculator::paye($taxable, PayrollDateSetting::current()->bands())]]);
+    }
+
+    /**
+     * A payroll report as a table: bank, paye, nssf, nhif, heslb, employer or full. `bank_id` limits the bank list to one bank.
+     *
+     * @response array{data: array{title: string, columns: list<string>, rows: list<list<string|float|null>>, totals: list<string|float|null>, types: array<string, string>, banks: list<array{id: int, name: string, employees: int, amount: float}>, missing_bank: int}}
+     */
+    #[QueryParameter('bank_id', type: 'integer')]
+    public function report(Request $request, PayrollSheet $sheet, string $type): JsonResponse
+    {
+        abort_unless(array_key_exists($type, PayrollReports::TYPES), 404);
+        $bankId = $request->validate(['bank_id' => ['nullable', 'integer']])['bank_id'] ?? null;
+        $details = $sheet->details()->get(['bank_id', 'bank_name', 'net_salary', 'bank_account']);
+
+        return response()->json(['data' => app(PayrollReports::class)->build($sheet, $type, $bankId) + [
+            'types' => PayrollReports::TYPES,
+            'banks' => $details->whereNotNull('bank_id')->groupBy('bank_id')->map(fn ($g, $id) => ['id' => (int) $id, 'name' => (string) $g->first()->bank_name, 'employees' => $g->count(), 'amount' => round((float) $g->sum('net_salary'), 2)])->sortBy('name')->values(),
+            'missing_bank' => $details->filter(fn ($d) => ! $d->bank_account)->count(),
+        ]]);
+    }
+
+    /** Download a payroll report as a CSV file (opens in Excel). */
+    #[QueryParameter('bank_id', type: 'integer')]
+    public function reportCsv(Request $request, PayrollSheet $sheet, string $type): \Symfony\Component\HttpFoundation\Response
+    {
+        abort_unless(array_key_exists($type, PayrollReports::TYPES), 404);
+        $reports = app(PayrollReports::class);
+        $report = $reports->build($sheet, $type, $request->integer('bank_id') ?: null);
+        $name = Str::slug($sheet->name.' '.$report['title']).'.csv';
+
+        return response($reports->csv($report), 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => "attachment; filename=\"{$name}\""]);
     }
 
     private function slip(PayrollSheetDetail $d): array

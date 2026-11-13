@@ -1,5 +1,135 @@
 # HRMS → Smart ERP Gap List
 
+## Replacement readiness audit (2026-11-13)
+
+Checked every HRMS route (413), every scheduled job and every table against what the ERP has **today**
+(API + screens, not just tables). Smart ERP replaces HRMS, so each area also says how its **live data** moves.
+This section supersedes the older status columns further down (written before most of the build).
+
+Status: ✅ done · 🟡 partial · ❌ missing
+
+### 1. HRMS daily automatic work (scheduler)
+
+| HRMS job | What it does | ERP |
+|---|---|---|
+| `contract:status` (2 h) | End/start contracts, deactivate leavers | ✅ `contract:status` |
+| `app:sms-notify-three-month-contract` (08:30) | Contract-ending SMS | ✅ `hr:contract-reminders` |
+| `leave:status` (4 h) | Leave started / ended | ✅ `leave:status` (+ planned-leave reminders) |
+| `leave:annualBalance` (6 h) | Recalculate balances | ✅ not needed: balances are calculated live |
+| `app:timetable-command` (22:00) | Copy approved leave into daily timetables | ✅ done on approval |
+| `app:daily-allowance-command` (6 h), night allowance | Daily/night allowances from roster + attendance | ✅ `allowance:generate` (roster/calendar; attendance part ❌, see A) |
+| `app:theater-allowance` (2 h) | Theatre allowance = AfyaBox surgery count × rate | 🟡 claimed by hand; AfyaBox feed ❌ |
+| `attendance:enqueue-sync` (30 min) + jobs | BioTime punches → local mirror, outage-safe | ❌ |
+| `attendance:report` (30 min) | Today's attendance from BioTime | ❌ |
+| `app:calculate-attendance`, `app:daily-basic-salary-command` | Daily attendance figures, salary earned per day | ❌ |
+| `overtime:generate` (10:00, 23:00) | Overtime from punches after the shift | ❌ (overtime is claimed; auto from punches needs A) |
+| `app:excuse-of-duty` (4 h) | Excuse-of-duty statuses | ❌ |
+| `app:admitted-employee-command` | Admitted (hospitalised) staff statuses | ❌ |
+| `app:generate-payroll-command` (04:00, 22:00) | Keep the open payroll up to date | 🟡 manual "Work out again" (can be scheduled) |
+| `app:send-sms-to-third-party` (30 min) | Send queued SMS/messages | 🟡 SMS service + drivers exist; bulk messaging screens ❌ |
+
+### 2. Feature coverage by area
+
+**Employees & contracts — ✅** registration, profile tabs, numbering (HRMS series kept), contracts, renewals (two paths + workflow),
+interns/residents, departments + heads, positions, banks, supervisors, statutory memberships, leavers.
+Missing: ❌ employee **import (Excel)** and **export (Excel/PDF)**; ❌ **staff patient IDs** (`employee_patient_ids`);
+❌ **per-employee settings** (`employee_settings`: has annual leave, **has attendance**); ❌ near-retirement / retired / left lists;
+❌ bulk phone-number update; ❌ contract PDF from template; ❌ **change own password / email** (logged-in users).
+
+**Roster & schedule — ✅** duty codes, working hours, holidays, duty rosters (grid, approval, repeat), my duty roster.
+Missing: ❌ roster export (Excel/PDF).
+
+**Leave — ✅** types/rules, day counting, live balances, leave year + joiner cycle, requests via workflow, date changes,
+returns, annual leave roster. Missing: ❌ **absence requests** (official absence/travel, per diem); ❌ leave family details
+(`leave_family_details`, e.g. maternity/compassionate dependants) — compassionate details are captured differently.
+
+**Attendance — ❌ (the big gap)** — see section 4.
+
+**Allowances — ✅** categories, rates, generated from the calendar, claims via workflow.
+Missing: ❌ **assigned allowances** per employee for a period (HRMS `emp_allowances`, e.g. acting/responsibility allowance,
+used by payroll monthly); ❌ AfyaBox case feed.
+
+**Overtime — ✅** rates, claims checked against the shift, workflow. Missing: ❌ overtime generated from punches (needs attendance).
+
+**Payroll — ✅** settings, calculation (pro-rata, unpaid leave, statutory, PAYE bands, loans, advances, SACCOS, relief),
+sheets via workflow, payslips, bank list, PAYE/NSSF/NHIF/HESLB/WCF/SDL reports, loans & advances.
+Missing: ❌ **other deductions** (HRMS `other_deductions`: amount for N months); ❌ **salary adjustments** (HRMS approval flow; table only);
+❌ attendance mode (lost-hours deduction / basic from days present); ❌ payroll comments & change log; ❌ comparison with last month;
+❌ SACCOS member screens; ❌ reliefs screens (calculator reads them); 🟡 statutory member screens exist per employee only.
+
+**Reports & dashboards — ❌** employee reports (birthdays, emails, employed, terminations, internships, practising licences),
+director dashboard (active staff, on leave, contracts, salaries, payroll, attendance), HR/HOD dashboards with numbers.
+
+**Other HRMS areas — ❌** messaging (bulk SMS/email to staff), audit log viewer, learning & development documents,
+appraisal (new design pending), assets & maintenance (separate ERP module).
+
+### 3. Data migration readiness (live data)
+
+The ERP keeps HRMS ids and employee numbers, so links survive. Per area:
+
+| HRMS data | ERP target | Status / what the script must do |
+|---|---|---|
+| employees, users, dependants, qualifications, experience, licences, documents, bank accounts, supervisors, heads | same tables | ✅ map columns (`isActive`→`is_active`), add `company_id`; copy files to the private disk |
+| employee_contracts, nature_of_contracts | same | ✅ statuses map (active/waiting/ended/terminated) |
+| internship_periods, resident_periods | `employee_placements` | ✅ mapping defined |
+| employee_settings (hasAnnualLeave, **hasAttendance**) | `employees.has_annual_leave`; **attendance flag ❌** | add per-employee attendance setting with the attendance module |
+| employee_patient_ids | ❌ no table | add a column/table |
+| roster_codes, public_holidays, rosters | same | ✅ (HRMS holidays are yearly day/month) |
+| **employee_timetables** (daily duties, live) | `employee_timetables` | 🟡 ERP rows belong to a roster: group HRMS rows per department + month into published rosters; leave rows → `source = leave` from approved leave |
+| roster_day_duties / roaster_emp_duties / roster_timetables | — | old HRMS design, already converted by HRMS into employee_timetables; skip |
+| leave_types | same (+ kind, counting, limits) | ✅ set kind = annual for code 10/AL |
+| emp_leaves | `emp_leaves` | ✅ statuses: On Leave → on_leave, reported/ended → reported |
+| **annual_leave_rosters** (HRMS annual leave *requests*) | `emp_leaves` (type AL) + `annual_leave_rosters` (plans) | 🟡 script: each requested/approved/reported entry → an AL leave; not-requested → plan |
+| annual leave balances (current/last-year balance columns) | `leave_balance_adjustments` | ✅ opening balance per employee for the go-live year |
+| leave_deductions | — | history only (the ERP works unpaid leave out from leave) |
+| allowance_categories, department_allowances | same | ✅ duration → unit; `claimed` → automatic |
+| daily_allowances | same | ✅ statuses → approved; keep `payroll_sheet_detail_id` |
+| **emp_allowances** (assigned) | ❌ | needs "assigned allowances" (gap above) |
+| department_overtimes | `overtime_rates` | ✅ amount + hour/shift |
+| overtimes, overtime_sheets | same | ✅ datetimes parsed; attendance overtime rows keep their minutes |
+| loan_providers, employee_loans, loan_histories, employee_mothly_advances | same / `employee_monthly_advances` | ✅ loan status enabled/disabled; histories `status = applied` |
+| nssfs, nhifs, heslbs, tughes, nics, employee_funds, reliefs, saccos_* | same | ✅ |
+| other_deductions | ❌ | needs "other deductions" |
+| salary_adjustments | table only | needs the feature |
+| **payroll_sheets, payroll_sheet_details** (history) | same | 🟡 import as approved; ERP payslips read itemised `lines` — **build lines from the old columns** for history (to do), or payslips of past months look empty |
+| allowance_sheets, saccos_contributions, payroll_comments | same | ✅ history |
+| uploaded_payrolls / uploaded_payroll_sheets | ❌ | decide: import as history or keep archive |
+| **attendance_transas** (history) | `attendance_transas` | 🟡 table exists; add `area_alias`, `in_area_alias`, late hours, `payroll_date_remark` |
+| attendancy_claims, claim reasons | `attendance_claims`, `attendance_claim_reasons` | 🟡 rename columns |
+| biotime_punch_logs, attendance_sync_days | ❌ | with the attendance module |
+| excuse_of_duties, admitted_employees, absence_requests | ❌ / table only | with the attendance/leave work |
+| workflow_* (HRMS engine) | ERP workflow | 🟡 only pending items matter at switch-over: finish them in HRMS first |
+| messagings, message_recipients, notifications | same / new | history optional |
+| appraisal_*, learning_*, assets, accounts | — | decide per module |
+
+**Migration tooling itself: ❌** — one repeatable, re-runnable `erp:import-hrms` (per module, idempotent, dry-run, counts and
+checks), run several times during the parallel period, final run at switch-over.
+
+### 4. Biometric attendance (to build)
+
+HRMS behaviour to keep: BioTime (ZKTeco) punches mirrored into a local punch log by a queue that survives long outages
+(`emp_code` = employee id); every tracked employee (`hasAttendance`) gets one attendance row per day matched to the planned
+day (roster duty, working hours, night shifts over midnight) with status (present, late, early out, not checked in/out,
+absent, weekend, holiday, on leave, excuse of duty, admitted, excused absence, non-punch duty codes), late minutes, worked
+hours, lost hours and lost amount, overtime minutes; employees claim lost time with a reason (approved → lost hours
+accepted); payroll can deduct lost amounts or pay basic by days present.
+
+ERP design (fits what exists): `attendance` module, optional per company and per employee; punch sources BioTime
+(DB/API), CSV import and manual entry; daily compile from `WorkCalendar` + punches into `attendance_transas`; claims through
+the workflow; excuse of duty and admitted staff as records that feed statuses; overtime suggestions from punches into
+the overtime workflow; payroll setting "use attendance" (deduct lost amounts / days present); reports (daily board,
+monthly compiled, working hours by company/department/section, interns, my attendance). Without attendance, everything
+keeps working on the calendar (as now).
+
+### 5. Suggested order before switching off HRMS
+
+1. Attendance module (section 4) + excuse of duty, admitted staff, absence requests, per-employee attendance setting.
+2. Payroll gaps: assigned allowances, other deductions, salary adjustments, attendance mode, payslip lines for history.
+3. Change own password/email, employee import/export, reports + director dashboard, messaging.
+4. `erp:import-hrms` migration command (all areas in section 3), dry runs on a copy of production.
+5. Parallel run: 1–2 payroll months in both systems, compare every line; then switch.
+
+
 Scope of this pass: features HRMS gained **after smart-erp's last commit (2026-04-28)**,
 from 93 HRMS commits up to 2026-11-05. Each item was checked against the smart-erp code.
 Features both systems had before April are **not** compared here yet (next pass, per module).

@@ -25,6 +25,7 @@ use Modules\Hr\Http\Controllers\Api\Leave\SelfLeaveController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveSettingsController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveTypeController;
 use Modules\Hr\Http\Controllers\Api\LicenceTypeController;
+use Modules\Hr\Http\Controllers\Api\Loans\LoansController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
@@ -196,6 +197,11 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
     Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
     Route::get('allowances', [AllowanceEntryController::class, 'mine'])->middleware('module:allowance')->name('allowances');
+    Route::middleware('module:loans')->group(function () {
+        Route::get('loans', [LoansController::class, 'mine'])->name('loans.index');
+        Route::post('advances', [LoansController::class, 'requestAdvance'])->name('advances.store');
+        Route::post('advances/{advance}/withdraw', [LoansController::class, 'withdrawAdvance'])->name('advances.withdraw');
+    });
     Route::middleware('module:payroll')->group(function () {
         Route::get('payslips', [PayrollController::class, 'myPayslips'])->name('payslips.index');
         Route::get('payslips/{detail}', [PayrollController::class, 'myPayslip'])->name('payslips.show');
@@ -329,6 +335,8 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::get('sheets', [PayrollController::class, 'index'])->name('sheets.index');
         Route::get('sheets/{sheet}', [PayrollController::class, 'show'])->name('sheets.show');
         Route::get('sheets/{sheet}/payslips/{detail}', [PayrollController::class, 'payslip'])->name('sheets.payslip');
+        Route::get('sheets/{sheet}/reports/{type}', [PayrollController::class, 'report'])->name('sheets.report');
+        Route::get('sheets/{sheet}/reports/{type}/csv', [PayrollController::class, 'reportCsv'])->name('sheets.report.csv');
     });
     Route::middleware('can:payroll.create')->group(function () {
         Route::post('sheets', [PayrollController::class, 'store'])->name('sheets.store');
@@ -336,5 +344,25 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::post('sheets/{sheet}/submit', [PayrollController::class, 'submit'])->name('sheets.submit');
         Route::post('sheets/{sheet}/withdraw', [PayrollController::class, 'withdraw'])->name('sheets.withdraw');
         Route::delete('sheets/{sheet}', [PayrollController::class, 'destroy'])->name('sheets.destroy');
+    });
+});
+
+Route::prefix('loans')->middleware(['auth:sanctum', 'module:loans'])->name('loans.')->group(function () {
+    Route::middleware('can:loans.view')->group(function () {
+        Route::get('providers', [LoansController::class, 'providers'])->name('providers.index');
+        Route::get('loans', [LoansController::class, 'index'])->name('loans.index');
+        Route::get('loans/{loan}', [LoansController::class, 'show'])->name('loans.show');
+        Route::get('advances', [LoansController::class, 'advances'])->name('advances.index');
+    });
+    Route::middleware('can:loans.manage')->group(function () {
+        Route::post('providers', [LoansController::class, 'storeProvider'])->name('providers.store');
+        Route::put('providers/{provider}', [LoansController::class, 'updateProvider'])->name('providers.update');
+        Route::delete('providers/{provider}', [LoansController::class, 'destroyProvider'])->name('providers.destroy');
+        Route::post('employees/{employee}/loans', [LoansController::class, 'store'])->name('loans.store');
+        Route::put('loans/{loan}', [LoansController::class, 'update'])->name('loans.update');
+        Route::post('loans/{loan}/pause', [LoansController::class, 'pause'])->name('loans.pause');
+        Route::delete('loans/{loan}', [LoansController::class, 'destroy'])->name('loans.destroy');
+        Route::post('employees/{employee}/advances', [LoansController::class, 'storeAdvance'])->name('advances.store');
+        Route::post('advances/{advance}/cancel', [LoansController::class, 'cancelAdvance'])->name('advances.cancel');
     });
 });
