@@ -64,6 +64,21 @@ return [
             ]) : [],
         ],
 
+        'hrms' => [
+            'driver' => 'mysql',
+            'url' => env('HRMS_DATABASE_URL'),
+            'host' => env('HRMS_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('HRMS_DB_PORT', env('DB_PORT', '3306')),
+            'database' => env('HRMS_DB_DATABASE', 'hrms_db'),
+            'username' => env('HRMS_DB_USERNAME', env('DB_USERNAME')),
+            'password' => env('HRMS_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => false,
+            'engine' => null,
+        ],
+
         'afyabox' => [
             'driver' => 'mysql',
             'url' => env('AFYABOX_DATABASE_URL'),

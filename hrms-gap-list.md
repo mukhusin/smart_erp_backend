@@ -109,8 +109,14 @@ The ERP keeps HRMS ids and employee numbers, so links survive. Per area:
 | messagings, message_recipients, notifications | same / new | history optional |
 | appraisal_*, learning_*, assets, accounts | — | decide per module |
 
-**Migration tooling itself: ❌** — one repeatable, re-runnable `erp:import-hrms` (per module, idempotent, dry-run, counts and
-checks), run several times during the parallel period, final run at switch-over.
+**Migration tooling itself: 🟡 phase 1 done (2026-11-13)** — `erp:import-hrms {company}` (steps, idempotent through
+`legacy_ids`, `--dry-run` in a rolled-back transaction, counts per table, checks: employees, active contracts, their basic
+salary, users). Phase 1 steps: reference (banks, branches, salary scales, contract types, licence types), organisation
+(departments, positions), users (password kept), employees (value mapping, attendance code, settings, leavers from
+contracts), contracts + comments, profiles, statutory schemes, structure (supervisors, heads, internship/residency),
+roles (HRMS roles → ERP system roles or custom roles with mapped permissions, user roles, direct grants), files (photos,
+documents, licences, birth certificates from `--files`). Local dry run: all checks match. Still to do: phase 2 leave,
+roster, allowances, overtime, loans; phase 3 payroll history + payslip lines; phase 4 attendance history.
 
 ### 4. Biometric attendance (core built 2026-11-13)
 

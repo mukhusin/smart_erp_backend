@@ -8,13 +8,15 @@ Companion to `hrms-gap-list.md`: where a column has no ERP target, the gap item 
 
 ## 1. Principles
 
-1. **Keep HRMS primary keys.** Insert every migrated row with its HRMS `id`. Foreign keys then stay valid
-   without lookups, the two systems can be compared row by row during the parallel run, and **BioTime keeps
-   working** (it uses `emp_code` = `employees.id`). The ERP database is fresh, so there are no collisions;
-   reset each table's AUTO_INCREMENT after loading.
+1. **Legacy id map, not HRMS primary keys** (changed 2026-11-13). The ERP is multi-company: the platform admin, company
+   registration and other companies already use low ids, so HRMS ids would collide. Every copied row is recorded in
+   `legacy_ids` (company, source `hrms`, HRMS table, HRMS id → ERP id) and foreign keys are translated through it.
+   **BioTime keeps working** through `employees.attendance_code` = HRMS `employees.id`.
 2. **Read-only source.** Migrate from a copy of the production HRMS database, never the live one. HRMS is never written to.
-3. **Repeatable.** One command truncates the ERP HR tables and reloads everything, in dependency order. Run it nightly
-   during the parallel payroll run; the final run is the cut-over.
+3. **Repeatable.** `php artisan erp:import-hrms {company} [--only=steps] [--files=path] [--dry-run]` inserts new rows and
+   updates rows copied before (HRMS is the master during the parallel run); ERP rows that did not come from HRMS are never
+   touched. User passwords are copied only on first insert, so a password changed in the ERP is kept. Run it nightly during
+   the parallel payroll run; the final run is the cut-over.
 4. **Company scope.** Create the Kairuki company and its branches first. Every row gets that `company_id`;
    HRMS `company_branche_id` → ERP `company_branch_id`.
 5. **Generic renames** (applied automatically): camelCase → snake_case (`isActive` → `is_active`,
