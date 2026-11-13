@@ -41,6 +41,7 @@ use Modules\Hr\Http\Controllers\Api\Roster\RosterController;
 use Modules\Hr\Http\Controllers\Api\Roster\WorkScheduleController;
 use Modules\Hr\Http\Controllers\Api\SelfContractController;
 use Modules\Hr\Http\Controllers\Api\SelfDutyController;
+use Modules\Hr\Http\Controllers\Api\StaffMessageController;
 use Modules\Hr\Http\Controllers\Api\SupervisorController;
 use Modules\Hr\Support\HrReports;
 
@@ -87,6 +88,14 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
             Route::get('dependants', [EmployeeDependantController::class, 'index'])->name('dependants.index');
             Route::get('dependants/{dependant}/file', [EmployeeDependantController::class, 'file'])->name('dependants.file');
         });
+    });
+
+    Route::middleware('can:hr.messages.send')->prefix('messages')->name('messages.')->group(function () {
+        Route::get('/', [StaffMessageController::class, 'index'])->name('index');
+        Route::post('preview', [StaffMessageController::class, 'preview'])->name('preview');
+        Route::post('/', [StaffMessageController::class, 'store'])->middleware('throttle:20,1')->name('store');
+        Route::get('{message}', [StaffMessageController::class, 'show'])->name('show');
+        Route::post('{message}/cancel', [StaffMessageController::class, 'cancel'])->name('cancel');
     });
 
     Route::middleware('can:hr.employees.create')->group(function () {

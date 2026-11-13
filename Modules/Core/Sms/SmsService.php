@@ -70,18 +70,24 @@ class SmsService
                 'status' => MessageRecipient::STATUS_PENDING,
             ]);
         }
-        $messaging->load('recipients');
+        $this->deliver($messaging);
+
+        return $messaging->refresh();
+    }
+
+    /** Pushes the pending recipients of a saved message to the company's driver and records the result. */
+    public function deliver(Messaging $messaging): void
+    {
+        $messaging->load(['recipients' => fn ($q) => $q->where('status', MessageRecipient::STATUS_PENDING)]);
 
         try {
-            $this->driver($settings->driver)->push($messaging);
-            $messaging->recipients()->update(['status' => MessageRecipient::STATUS_SENT]);
+            $this->driver($this->settings()->driver)->push($messaging);
+            $messaging->recipients()->where('status', MessageRecipient::STATUS_PENDING)->update(['status' => MessageRecipient::STATUS_SENT]);
             $messaging->update(['status' => Messaging::STATUS_SENT]);
         } catch (\Throwable $e) {
             Log::error('SMS sending failed', ['messaging_id' => $messaging->id, 'error' => $e->getMessage()]);
-            $messaging->recipients()->update(['status' => MessageRecipient::STATUS_FAILED, 'response' => Str::limit($e->getMessage(), 250)]);
+            $messaging->recipients()->where('status', MessageRecipient::STATUS_PENDING)->update(['status' => MessageRecipient::STATUS_FAILED, 'response' => Str::limit($e->getMessage(), 250)]);
             $messaging->update(['status' => Messaging::STATUS_FAILED, 'response' => Str::limit($e->getMessage(), 250)]);
         }
-
-        return $messaging->refresh();
     }
 }

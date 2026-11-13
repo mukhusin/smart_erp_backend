@@ -66,6 +66,31 @@ final class DefaultRoles
         });
     }
 
+    /** Gives the system roles of every company the default permissions they are missing; never removes any. */
+    public static function addMissingToCompanies(): int
+    {
+        $added = 0;
+        foreach (Company::pluck('id') as $companyId) {
+            app(CompanyContext::class)->run($companyId, function () use (&$added, $companyId) {
+                setPermissionsTeamId($companyId);
+                foreach (self::ROLES as $name => $patterns) {
+                    $role = Role::where('name', $name)->where('guard_name', 'web')->where('company_id', $companyId)->first();
+                    if (! $role) {
+                        continue;
+                    }
+                    $missing = array_values(array_diff(self::expand($patterns), $role->permissions->pluck('name')->all()));
+                    if ($missing) {
+                        $role->givePermissionTo($missing);
+                        $added += count($missing);
+                    }
+                }
+            });
+        }
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return $added;
+    }
+
     /** @param list<string> $patterns  @return list<string> */
     public static function expand(array $patterns): array
     {

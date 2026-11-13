@@ -13237,6 +13237,573 @@
                 }
             }
         },
+        "/hr/messages": {
+            "get": {
+                "operationId": "hr.messages.index",
+                "summary": "Staff messages sent or scheduled (newest first), with delivery counts",
+                "tags": [
+                    "HR: Messages",
+                    "StaffMessage"
+                ],
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "SMS, Email or Notice",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "subject": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "message": {
+                                                        "type": "string"
+                                                    },
+                                                    "audience": {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string"
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "Chosen employees",
+                                                                    "Branch",
+                                                                    "All staff"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "scheduled_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "sent_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "recipients": {
+                                                        "type": "integer"
+                                                    },
+                                                    "sent": {
+                                                        "type": "integer"
+                                                    },
+                                                    "failed": {
+                                                        "type": "integer"
+                                                    },
+                                                    "skipped": {
+                                                        "type": "integer"
+                                                    },
+                                                    "created_by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "type",
+                                                    "subject",
+                                                    "message",
+                                                    "audience",
+                                                    "status",
+                                                    "scheduled_at",
+                                                    "sent_at",
+                                                    "recipients",
+                                                    "sent",
+                                                    "failed",
+                                                    "skipped",
+                                                    "created_by",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "last_page",
+                                                "total",
+                                                "per_page",
+                                                "from",
+                                                "to"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "hr.messages.store",
+                "summary": "Send a message now or schedule it. Employees outside the sender's scope are never included",
+                "tags": [
+                    "HR: Messages",
+                    "StaffMessage"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StaffMessageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "subject": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "audience": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "Chosen employees",
+                                                                "Branch",
+                                                                "All staff"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "scheduled_at": {
+                                                    "type": "string"
+                                                },
+                                                "sent_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "recipients": {
+                                                    "type": "integer"
+                                                },
+                                                "sent": {
+                                                    "type": "integer"
+                                                },
+                                                "failed": {
+                                                    "type": "integer"
+                                                },
+                                                "skipped": {
+                                                    "type": "integer"
+                                                },
+                                                "created_by": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "type",
+                                                "subject",
+                                                "message",
+                                                "audience",
+                                                "status",
+                                                "scheduled_at",
+                                                "sent_at",
+                                                "recipients",
+                                                "sent",
+                                                "failed",
+                                                "skipped",
+                                                "created_by",
+                                                "created_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/hr/messages/preview": {
+            "post": {
+                "operationId": "hr.messages.preview",
+                "summary": "How many employees the chosen recipients cover and who cannot be reached (no phone, email or account)",
+                "tags": [
+                    "HR: Messages",
+                    "StaffMessage"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StaffMessagePreviewRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "reachable": {
+                                                    "type": "integer"
+                                                },
+                                                "missing": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "total",
+                                                "reachable",
+                                                "missing"
+                                            ]
+                                        },
+                                        "sms_max_length": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "sms_max_length"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/hr/messages/{message}": {
+            "get": {
+                "operationId": "hr.messages.show",
+                "summary": "A message with every recipient and their delivery status",
+                "tags": [
+                    "HR: Messages",
+                    "StaffMessage"
+                ],
+                "parameters": [
+                    {
+                        "name": "message",
+                        "in": "path",
+                        "required": true,
+                        "description": "The message ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/messages/{message}/cancel": {
+            "post": {
+                "operationId": "hr.messages.cancel",
+                "summary": "Cancel a scheduled message that has not been sent yet",
+                "tags": [
+                    "HR: Messages",
+                    "StaffMessage"
+                ],
+                "parameters": [
+                    {
+                        "name": "message",
+                        "in": "path",
+                        "required": true,
+                        "description": "The message ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "subject": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "audience": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "Chosen employees",
+                                                                "Branch",
+                                                                "All staff"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "scheduled_at": {
+                                                    "type": "string"
+                                                },
+                                                "sent_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "recipients": {
+                                                    "type": "integer"
+                                                },
+                                                "sent": {
+                                                    "type": "integer"
+                                                },
+                                                "failed": {
+                                                    "type": "integer"
+                                                },
+                                                "skipped": {
+                                                    "type": "integer"
+                                                },
+                                                "created_by": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "type",
+                                                "subject",
+                                                "message",
+                                                "audience",
+                                                "status",
+                                                "scheduled_at",
+                                                "sent_at",
+                                                "recipients",
+                                                "sent",
+                                                "failed",
+                                                "skipped",
+                                                "created_by",
+                                                "created_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/employees/{employee}/qualifications": {
             "get": {
                 "operationId": "hr.employees.qualifications.index",
@@ -36010,7 +36577,6 @@
                                 "admin.settings.manage",
                                 "admin.workflow.manage",
                                 "admin.audit.view",
-                                "admin.messaging.send",
                                 "self-service.use",
                                 "hr.employees.view",
                                 "hr.employees.view-branch",
@@ -36020,6 +36586,7 @@
                                 "hr.employees.edit",
                                 "hr.employees.delete",
                                 "hr.contracts.manage",
+                                "hr.messages.send",
                                 "hr.residents.manage",
                                 "hr.departments.manage",
                                 "hr.positions.manage",
@@ -36248,7 +36815,6 @@
                                 "admin.settings.manage",
                                 "admin.workflow.manage",
                                 "admin.audit.view",
-                                "admin.messaging.send",
                                 "self-service.use",
                                 "hr.employees.view",
                                 "hr.employees.view-branch",
@@ -36258,6 +36824,7 @@
                                 "hr.employees.edit",
                                 "hr.employees.delete",
                                 "hr.contracts.manage",
+                                "hr.messages.send",
                                 "hr.residents.manage",
                                 "hr.departments.manage",
                                 "hr.positions.manage",
@@ -36381,6 +36948,165 @@
                     "roles"
                 ],
                 "title": "SetUserRolesRequest"
+            },
+            "StaffMessagePreviewRequest": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "SMS",
+                            "Email",
+                            "Notice"
+                        ]
+                    },
+                    "recipient_type": {
+                        "type": "string",
+                        "enum": [
+                            "individual",
+                            "department",
+                            "section",
+                            "branch",
+                            "all"
+                        ]
+                    },
+                    "employee_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "maxItems": 2000
+                    },
+                    "department_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "section_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "branch_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "emp_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "full_time",
+                            "part_time",
+                            "internship",
+                            "resident",
+                            "volunteer",
+                            "indirect",
+                            null
+                        ]
+                    }
+                },
+                "required": [
+                    "type",
+                    "recipient_type"
+                ],
+                "title": "StaffMessagePreviewRequest"
+            },
+            "StaffMessageRequest": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "SMS, Email or Notice (in-app).",
+                        "enum": [
+                            "SMS",
+                            "Email",
+                            "Notice"
+                        ]
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "Email subject or notice title.",
+                        "maxLength": 150
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Placeholders: {first_name}, {name}, {employee_no}. SMS is cut at the gateway limit.",
+                        "maxLength": 5000
+                    },
+                    "recipient_type": {
+                        "type": "string",
+                        "description": "individual, department, section, branch or all",
+                        "enum": [
+                            "individual",
+                            "department",
+                            "section",
+                            "branch",
+                            "all"
+                        ]
+                    },
+                    "employee_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "maxItems": 2000
+                    },
+                    "department_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "section_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "branch_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "emp_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Only this employee type.",
+                        "enum": [
+                            "full_time",
+                            "part_time",
+                            "internship",
+                            "resident",
+                            "volunteer",
+                            "indirect",
+                            null
+                        ]
+                    },
+                    "scheduled_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Empty = send now."
+                    }
+                },
+                "required": [
+                    "type",
+                    "subject",
+                    "message",
+                    "recipient_type"
+                ],
+                "title": "StaffMessageRequest"
             },
             "StoreEmployeeRequest": {
                 "type": "object",

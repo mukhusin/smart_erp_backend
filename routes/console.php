@@ -26,4 +26,6 @@ Schedule::command('attendance:sync')->everyThirtyMinutes()->withoutOverlapping()
 
 Schedule::command('allowance:generate')->dailyAt('23:30')
     ->appendOutputTo(storage_path('logs/allowance-generate.log'));
+
+Schedule::command('hr:send-messages')->everyMinute()->withoutOverlapping();
 // Cron entry: * * * * * php /path/to/smart-erp/artisan schedule:run >> /dev/null 2>&1

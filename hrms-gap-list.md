@@ -26,7 +26,7 @@ Status: ✅ done · 🟡 partial · ❌ missing
 | `app:excuse-of-duty` (4 h) | Excuse-of-duty statuses | ❌ |
 | `app:admitted-employee-command` | Admitted (hospitalised) staff statuses | ❌ |
 | `app:generate-payroll-command` (04:00, 22:00) | Keep the open payroll up to date | 🟡 manual "Work out again" (can be scheduled) |
-| `app:send-sms-to-third-party` (30 min) | Send queued SMS/messages | 🟡 SMS service + drivers exist; bulk messaging screens ❌ |
+| `app:send-sms-to-third-party` (30 min) | Send queued SMS/messages | ✅ `hr:send-messages` every minute sends scheduled staff messages |
 
 ### 2. Feature coverage by area
 
@@ -67,7 +67,7 @@ reports only when the module is on (attendance also needs attendance switched on
 `reports.view`, so the overview is their department dashboard (plus their approvals waiting). Not copied: PDF files
 (browser print instead), leave form PDF.
 
-**Other HRMS areas — ❌** messaging (bulk SMS/email to staff), audit log viewer, learning & development documents,
+**Other HRMS areas — ❌** ~~messaging~~ (done 2026-11-13: HR → Messages, SMS/email/in-app notice, all/branch/department/section/chosen people + employee type, names in the text, preview of who is reached, schedule/cancel, delivery per person, within the sender's scope), audit log viewer, learning & development documents,
 appraisal (new design pending), assets & maintenance (separate ERP module).
 
 ### 3. Data migration readiness (live data)
@@ -139,7 +139,7 @@ working-hours reports, absence requests, attendance-based allowances.
 
 1. Attendance module (section 4) + excuse of duty, admitted staff, absence requests, per-employee attendance setting.
 2. Payroll gaps: ~~assigned allowances, other deductions, salary adjustments~~ (done 2026-11-13); payslip lines for history (with the import).
-3. ~~Change own password/email~~ (done), ~~employee import/export~~ (done), ~~reports + director dashboard~~ (done), messaging.
+3. ~~Change own password/email~~ (done), ~~employee import/export~~ (done), ~~reports + director dashboard~~ (done), ~~messaging~~ (done).
 4. `erp:import-hrms` migration command (all areas in section 3), dry runs on a copy of production.
 5. Parallel run: 1–2 payroll months in both systems, compare every line; then switch.
 

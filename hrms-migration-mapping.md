@@ -353,7 +353,7 @@ for the user's branch or for the user.
 | 68 | `department-roster` | Department Management | 9 | 0 | `roster.department.view` |
 | 69 | `department-allowance` | Allowance Management | 7 | 0 | `allowance.department.view` |
 | 70 | `add-daily-allowance` | Allowance Management | 6 | 0 | `allowance.daily.manage` |
-| 71 | `create-messaging` | Messaging | 5 | 0 | `admin.messaging.send` |
+| 71 | `create-messaging` | Messaging | 5 | 0 | `hr.messages.send` |
 | 72 | `add-admin-incharge` | Department Management | 7 | 0 | `admin.roles.assign` |
 | 73 | `role-permission` | Role & Permission Management | 4 | 0 | `admin.roles.manage` |
 | 74 | `view-role` | Role & Permission Management | 5 | 0 | `admin.roles.manage` |

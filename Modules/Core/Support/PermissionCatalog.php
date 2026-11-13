@@ -27,7 +27,6 @@ final class PermissionCatalog
             'admin.settings.manage' => 'Manage company settings',
             'admin.workflow.manage' => 'Manage approval workflows',
             'admin.audit.view' => 'View audit log',
-            'admin.messaging.send' => 'Send SMS and email messages',
         ],
         'self-service' => [
             'self-service.use' => 'Use employee self-service',
@@ -41,6 +40,7 @@ final class PermissionCatalog
             'hr.employees.edit' => 'Edit employees',
             'hr.employees.delete' => 'Delete employees',
             'hr.contracts.manage' => 'Manage contracts',
+            'hr.messages.send' => 'Send SMS, email and notices to staff',
             'hr.residents.manage' => 'Manage interns and residents',
             'hr.departments.manage' => 'Manage departments and sections',
             'hr.positions.manage' => 'Manage job positions',
