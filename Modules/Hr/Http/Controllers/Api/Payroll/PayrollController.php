@@ -29,7 +29,7 @@ class PayrollController extends Controller
     /**
      * Payroll settings: period, statutory rates, PAYE bands and what payroll includes.
      *
-     * @response array{data: array{from_day: int, from_month: string, to_day: int, to_month: string, wcf: float, sdl: float, income_tax: float, emergency_fund: float, nssf_employee: float, nssf_employer: float, nhif_employee: float, nhif_employer: float, heslb: float, tax_bands: list<array{up_to: float|null, rate: float}>, use_overtime: bool, use_loan: bool, use_allowance: bool, use_leave_deduction: bool, use_deduction: bool, use_saccos: bool, use_relief: bool, example_period: string}}
+     * @response array{data: array{from_day: int, from_month: string, to_day: int, to_month: string, wcf: float, sdl: float, income_tax: float, emergency_fund: float, nssf_employee: float, nssf_employer: float, nhif_employee: float, nhif_employer: float, heslb: float, tax_bands: list<array{up_to: float|null, rate: float}>, use_overtime: bool, use_loan: bool, use_allowance: bool, use_leave_deduction: bool, use_deduction: bool, use_saccos: bool, use_relief: bool, use_attendance: bool, example_period: string}}
      */
     public function settings(): JsonResponse
     {
@@ -39,7 +39,7 @@ class PayrollController extends Controller
     /**
      * Save the payroll settings. Draft payrolls follow them when worked out again.
      *
-     * @response array{data: array{from_day: int, from_month: string, to_day: int, to_month: string, wcf: float, sdl: float, income_tax: float, emergency_fund: float, nssf_employee: float, nssf_employer: float, nhif_employee: float, nhif_employer: float, heslb: float, tax_bands: list<array{up_to: float|null, rate: float}>, use_overtime: bool, use_loan: bool, use_allowance: bool, use_leave_deduction: bool, use_deduction: bool, use_saccos: bool, use_relief: bool, example_period: string}}
+     * @response array{data: array{from_day: int, from_month: string, to_day: int, to_month: string, wcf: float, sdl: float, income_tax: float, emergency_fund: float, nssf_employee: float, nssf_employer: float, nhif_employee: float, nhif_employer: float, heslb: float, tax_bands: list<array{up_to: float|null, rate: float}>, use_overtime: bool, use_loan: bool, use_allowance: bool, use_leave_deduction: bool, use_deduction: bool, use_saccos: bool, use_relief: bool, use_attendance: bool, example_period: string}}
      */
     public function updateSettings(Request $request): JsonResponse
     {
@@ -62,6 +62,8 @@ class PayrollController extends Controller
             'tax_bands.*.rate' => ['required', 'numeric', 'between:0,100'],
             'use_overtime' => ['boolean'], 'use_loan' => ['boolean'], 'use_allowance' => ['boolean'], 'use_leave_deduction' => ['boolean'],
             'use_deduction' => ['boolean'], 'use_saccos' => ['boolean'], 'use_relief' => ['boolean'],
+            /** Deduct lost time from biometric attendance (only when attendance is turned on, for tracked employees). */
+            'use_attendance' => ['boolean'],
         ]);
         $bands = collect($d['tax_bands'])->map(fn ($b) => ['up_to' => $b['up_to'] === null || $b['up_to'] === '' ? null : (float) $b['up_to'], 'rate' => (float) $b['rate']])->values();
         $bands = $bands->sortBy(fn ($b) => $b['up_to'] ?? INF)->values();
@@ -109,7 +111,7 @@ class PayrollController extends Controller
             'department' => $d->employee?->department?->name, 'days_paid' => $d->days_paid, 'unpaid_days' => (float) $d->unpaid_days,
             'basic' => $d->basic_salary, 'allowances' => $d->total_allowance, 'overtime' => $d->total_overtime, 'relief' => $d->relief, 'gross' => $d->gross_salary,
             'nssf' => $d->nssf, 'nhif' => $d->nhif, 'heslb' => $d->heslb, 'paye' => $d->paye, 'loans' => round($d->total_loan + $d->advance, 2),
-            'other_deductions' => round($d->tughe + $d->nic + $d->ef + $d->saccos_serving, 2), 'deductions' => $d->total_deduction, 'net' => $d->net_salary,
+            'other_deductions' => round($d->tughe + $d->nic + $d->ef + $d->saccos_serving + (float) $d->attendance_deduction, 2), 'deductions' => $d->total_deduction, 'net' => $d->net_salary,
             'bank' => $d->bank_name, 'account' => $d->bank_account,
         ]);
         $totals = collect(['basic', 'allowances', 'overtime', 'relief', 'gross', 'nssf', 'nhif', 'heslb', 'paye', 'loans', 'other_deductions', 'deductions', 'net'])
@@ -277,7 +279,7 @@ class PayrollController extends Controller
             'nhif_employer' => (float) $s->nhif_employer, 'heslb' => (float) $s->heslb, 'tax_bands' => $s->bands(),
             'use_overtime' => (bool) $s->use_overtime, 'use_loan' => (bool) $s->use_loan, 'use_allowance' => (bool) $s->use_allowance,
             'use_leave_deduction' => (bool) $s->use_leave_deduction, 'use_deduction' => (bool) $s->use_deduction, 'use_saccos' => (bool) $s->use_saccos,
-            'use_relief' => (bool) $s->use_relief, 'example_period' => now()->format('F Y').': '.$from->format('d M').' – '.$to->format('d M Y'),
+            'use_relief' => (bool) $s->use_relief, 'use_attendance' => (bool) $s->use_attendance, 'example_period' => now()->format('F Y').': '.$from->format('d M').' – '.$to->format('d M Y'),
         ];
     }
 

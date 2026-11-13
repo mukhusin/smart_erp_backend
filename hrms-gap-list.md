@@ -19,9 +19,9 @@ Status: ✅ done · 🟡 partial · ❌ missing
 | `app:timetable-command` (22:00) | Copy approved leave into daily timetables | ✅ done on approval |
 | `app:daily-allowance-command` (6 h), night allowance | Daily/night allowances from roster + attendance | ✅ `allowance:generate` (roster/calendar; attendance part ❌, see A) |
 | `app:theater-allowance` (2 h) | Theatre allowance = AfyaBox surgery count × rate | 🟡 claimed by hand; AfyaBox feed ❌ |
-| `attendance:enqueue-sync` (30 min) + jobs | BioTime punches → local mirror, outage-safe | ❌ |
-| `attendance:report` (30 min) | Today's attendance from BioTime | ❌ |
-| `app:calculate-attendance`, `app:daily-basic-salary-command` | Daily attendance figures, salary earned per day | ❌ |
+| `attendance:enqueue-sync` (30 min) + jobs | BioTime punches → local mirror, outage-safe | ✅ `attendance:sync` + `SyncAttendanceDayJob` |
+| `attendance:report` (30 min) | Today's attendance from BioTime | ✅ today is synced and worked out every 30 min |
+| `app:calculate-attendance`, `app:daily-basic-salary-command` | Daily attendance figures, salary earned per day | ✅ in the daily compile (`amount_earned_per_day`) |
 | `overtime:generate` (10:00, 23:00) | Overtime from punches after the shift | ❌ (overtime is claimed; auto from punches needs A) |
 | `app:excuse-of-duty` (4 h) | Excuse-of-duty statuses | ❌ |
 | `app:admitted-employee-command` | Admitted (hospitalised) staff statuses | ❌ |
@@ -43,7 +43,7 @@ Missing: ❌ roster export (Excel/PDF).
 returns, annual leave roster. Missing: ❌ **absence requests** (official absence/travel, per diem); ❌ leave family details
 (`leave_family_details`, e.g. maternity/compassionate dependants) — compassionate details are captured differently.
 
-**Attendance — ❌ (the big gap)** — see section 4.
+**Attendance — ✅ core built (2026-11-13)** — see section 4.
 
 **Allowances — ✅** categories, rates, generated from the calendar, claims via workflow.
 Missing: ❌ **assigned allowances** per employee for a period (HRMS `emp_allowances`, e.g. acting/responsibility allowance,
@@ -105,7 +105,7 @@ The ERP keeps HRMS ids and employee numbers, so links survive. Per area:
 **Migration tooling itself: ❌** — one repeatable, re-runnable `erp:import-hrms` (per module, idempotent, dry-run, counts and
 checks), run several times during the parallel period, final run at switch-over.
 
-### 4. Biometric attendance (to build)
+### 4. Biometric attendance (core built 2026-11-13)
 
 HRMS behaviour to keep: BioTime (ZKTeco) punches mirrored into a local punch log by a queue that survives long outages
 (`emp_code` = employee id); every tracked employee (`hasAttendance`) gets one attendance row per day matched to the planned
@@ -120,6 +120,13 @@ the workflow; excuse of duty and admitted staff as records that feed statuses; o
 the overtime workflow; payroll setting "use attendance" (deduct lost amounts / days present); reports (daily board,
 monthly compiled, working hours by company/department/section, interns, my attendance). Without attendance, everything
 keeps working on the calendar (as now).
+
+Built: company switch **off / biometric (BioTime)**. When off, attendance is not used anywhere (no compile, no payroll
+deduction; allowances and overtime use the roster and calendar only). When on: outage-safe sync, per-employee tracking and
+device code, missed punches by hand or CSV, daily compile (statuses, grace, night shifts, lost hours and amount), excuse of
+duty and admitted, claims via the `attendance-claim` workflow, payroll deduction of lost time (setting `use_attendance`),
+daily board, employee month, my attendance. Still open: overtime suggestions from punches, basic by days present,
+working-hours reports, absence requests, attendance-based allowances.
 
 ### 5. Suggested order before switching off HRMS
 

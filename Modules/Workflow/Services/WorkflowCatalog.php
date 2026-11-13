@@ -4,7 +4,15 @@ namespace Modules\Workflow\Services;
 
 use App\Services\ModuleAccessService;
 use Modules\Admin\Workflow\UserAccessChangeProcess;
+use Modules\Hr\Workflow\AllowanceClaimProcess;
+use Modules\Hr\Workflow\AttendanceClaimProcess;
 use Modules\Hr\Workflow\ContractRenewalProcess;
+use Modules\Hr\Workflow\DutyRosterProcess;
+use Modules\Hr\Workflow\LeaveRequestProcess;
+use Modules\Hr\Workflow\LoanProcess;
+use Modules\Hr\Workflow\OvertimeClaimProcess;
+use Modules\Hr\Workflow\PayrollSheetProcess;
+use Modules\Hr\Workflow\SalaryAdvanceProcess;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
 /**
@@ -17,13 +25,14 @@ final class WorkflowCatalog
     private const PROCESSES = [
         UserAccessChangeProcess::class,
         ContractRenewalProcess::class,
-        \Modules\Hr\Workflow\DutyRosterProcess::class,
-        \Modules\Hr\Workflow\LeaveRequestProcess::class,
-        \Modules\Hr\Workflow\AllowanceClaimProcess::class,
-        \Modules\Hr\Workflow\OvertimeClaimProcess::class,
-        \Modules\Hr\Workflow\PayrollSheetProcess::class,
-        \Modules\Hr\Workflow\LoanProcess::class,
-        \Modules\Hr\Workflow\SalaryAdvanceProcess::class,
+        DutyRosterProcess::class,
+        LeaveRequestProcess::class,
+        AllowanceClaimProcess::class,
+        OvertimeClaimProcess::class,
+        PayrollSheetProcess::class,
+        LoanProcess::class,
+        SalaryAdvanceProcess::class,
+        AttendanceClaimProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

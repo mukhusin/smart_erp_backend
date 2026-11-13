@@ -18,6 +18,9 @@ Schedule::command('hr:contract-reminders')->dailyAt('08:30')
 Schedule::command('leave:status')->everyFourHours()
     ->appendOutputTo(storage_path('logs/leave-status.log'));
 
+Schedule::command('attendance:sync')->everyThirtyMinutes()->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/attendance-sync.log'));
+
 Schedule::command('allowance:generate')->dailyAt('23:30')
     ->appendOutputTo(storage_path('logs/allowance-generate.log'));
 // Cron entry: * * * * * php /path/to/smart-erp/artisan schedule:run >> /dev/null 2>&1

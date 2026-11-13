@@ -3,9 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceEntryController;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceSetupController;
+use Modules\Hr\Http\Controllers\Api\Attendance\AttendanceController;
 use Modules\Hr\Http\Controllers\Api\BankController;
-use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeController;
-use Modules\Hr\Http\Controllers\Api\Payroll\PayrollController;
 use Modules\Hr\Http\Controllers\Api\ContractTypeController;
 use Modules\Hr\Http\Controllers\Api\DeductionController;
 use Modules\Hr\Http\Controllers\Api\DepartmentController;
@@ -21,13 +20,15 @@ use Modules\Hr\Http\Controllers\Api\JobPositionController;
 use Modules\Hr\Http\Controllers\Api\Leave\AnnualRosterController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveBalanceController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveRequestController;
-use Modules\Hr\Http\Controllers\Api\Leave\SelfLeaveController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveSettingsController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveTypeController;
+use Modules\Hr\Http\Controllers\Api\Leave\SelfLeaveController;
 use Modules\Hr\Http\Controllers\Api\LicenceTypeController;
 use Modules\Hr\Http\Controllers\Api\Loans\LoansController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
+use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeController;
+use Modules\Hr\Http\Controllers\Api\Payroll\PayrollController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
 use Modules\Hr\Http\Controllers\Api\RenewalLetterController;
@@ -197,6 +198,10 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
     Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
     Route::get('allowances', [AllowanceEntryController::class, 'mine'])->middleware('module:allowance')->name('allowances');
+    Route::middleware('module:attendance')->group(function () {
+        Route::get('attendance', [AttendanceController::class, 'mine'])->name('attendance.index');
+        Route::post('attendance/{day}/claims', [AttendanceController::class, 'claimMine'])->name('attendance.claim');
+    });
     Route::middleware('module:loans')->group(function () {
         Route::get('loans', [LoansController::class, 'mine'])->name('loans.index');
         Route::post('advances', [LoansController::class, 'requestAdvance'])->name('advances.store');
@@ -364,5 +369,29 @@ Route::prefix('loans')->middleware(['auth:sanctum', 'module:loans'])->name('loan
         Route::delete('loans/{loan}', [LoansController::class, 'destroy'])->name('loans.destroy');
         Route::post('employees/{employee}/advances', [LoansController::class, 'storeAdvance'])->name('advances.store');
         Route::post('advances/{advance}/cancel', [LoansController::class, 'cancelAdvance'])->name('advances.cancel');
+    });
+});
+
+Route::prefix('attendance')->middleware(['auth:sanctum', 'module:attendance'])->name('attendance.')->group(function () {
+    Route::get('days', [AttendanceController::class, 'days'])->name('days.index');
+    Route::get('employees/{employee}/month', [AttendanceController::class, 'month'])->name('employees.month');
+    Route::get('absences', [AttendanceController::class, 'absences'])->name('absences.index');
+    Route::get('claims', [AttendanceController::class, 'claimsIndex'])->name('claims.index');
+    Route::get('reasons', [AttendanceController::class, 'reasons'])->name('reasons.index');
+    Route::middleware('can:attendance.edit')->group(function () {
+        Route::post('compile', [AttendanceController::class, 'compile'])->name('compile');
+        Route::post('punches', [AttendanceController::class, 'addPunch'])->name('punches.store');
+        Route::post('punches/import', [AttendanceController::class, 'importPunches'])->name('punches.import');
+        Route::post('absences', [AttendanceController::class, 'storeAbsence'])->name('absences.store');
+        Route::delete('absences/{kind}/{id}', [AttendanceController::class, 'destroyAbsence'])->whereIn('kind', ['excuse', 'admitted'])->name('absences.destroy');
+        Route::post('reasons', [AttendanceController::class, 'storeReason'])->name('reasons.store');
+        Route::get('employees', [AttendanceController::class, 'employees'])->name('employees.index');
+        Route::put('employees', [AttendanceController::class, 'updateEmployees'])->name('employees.update');
+    });
+    Route::middleware('can:attendance.devices.manage')->group(function () {
+        Route::get('settings', [AttendanceController::class, 'settings'])->name('settings.show');
+        Route::put('settings', [AttendanceController::class, 'updateSettings'])->name('settings.update');
+        Route::post('settings/test', [AttendanceController::class, 'testConnection'])->name('settings.test');
+        Route::post('sync', [AttendanceController::class, 'syncNow'])->name('sync');
     });
 });

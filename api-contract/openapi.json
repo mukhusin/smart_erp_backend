@@ -4211,6 +4211,2572 @@
                 }
             }
         },
+        "/self/attendance": {
+            "get": {
+                "operationId": "self.attendance.index",
+                "summary": "My attendance for a month (default this month)",
+                "tags": [
+                    "Attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned_in": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned_out": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "punch_in": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "punch_out": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "late_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "early_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "overtime_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "worked_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "planned_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "lost_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "lost_amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "accepted_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "claimed": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "area": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "date",
+                                                    "status",
+                                                    "planned",
+                                                    "planned_in",
+                                                    "planned_out",
+                                                    "punch_in",
+                                                    "punch_out",
+                                                    "late_minutes",
+                                                    "early_minutes",
+                                                    "overtime_minutes",
+                                                    "worked_hours",
+                                                    "planned_hours",
+                                                    "lost_hours",
+                                                    "lost_amount",
+                                                    "accepted_hours",
+                                                    "claimed",
+                                                    "area"
+                                                ]
+                                            }
+                                        },
+                                        "punches": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "time": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "area": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "terminal": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "note": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "time",
+                                                    "source",
+                                                    "area",
+                                                    "terminal",
+                                                    "note"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "month": {
+                                                    "type": "string"
+                                                },
+                                                "totals": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "days_present": {
+                                                            "type": "integer"
+                                                        },
+                                                        "days_absent": {
+                                                            "type": "integer"
+                                                        },
+                                                        "late_minutes": {
+                                                            "type": "integer"
+                                                        },
+                                                        "overtime_minutes": {
+                                                            "type": "integer"
+                                                        },
+                                                        "worked_hours": {
+                                                            "type": "number"
+                                                        },
+                                                        "lost_hours": {
+                                                            "type": "number"
+                                                        },
+                                                        "lost_amount": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "days_present",
+                                                        "days_absent",
+                                                        "late_minutes",
+                                                        "overtime_minutes",
+                                                        "worked_hours",
+                                                        "lost_hours",
+                                                        "lost_amount"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "month",
+                                                "totals"
+                                            ]
+                                        },
+                                        "claims": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "lost_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "claimed_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "lost_amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "reason": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "date",
+                                                    "lost_hours",
+                                                    "claimed_hours",
+                                                    "lost_amount",
+                                                    "reason",
+                                                    "description",
+                                                    "status",
+                                                    "waiting_for",
+                                                    "comment"
+                                                ]
+                                            }
+                                        },
+                                        "reasons": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "reason"
+                                                ]
+                                            }
+                                        },
+                                        "tracked": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "punches",
+                                        "meta",
+                                        "claims",
+                                        "reasons",
+                                        "tracked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/attendance/{day}/claims": {
+            "post": {
+                "operationId": "self.attendance.claim",
+                "summary": "Claim a day of my attendance (explain lost time). It goes through the approval workflow",
+                "tags": [
+                    "Attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "day",
+                        "in": "path",
+                        "required": true,
+                        "description": "The day ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "claim_reason_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "description"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "employee": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "department"
+                                                    ]
+                                                },
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "lost_hours": {
+                                                    "type": "number"
+                                                },
+                                                "claimed_hours": {
+                                                    "type": "number"
+                                                },
+                                                "lost_amount": {
+                                                    "type": "number"
+                                                },
+                                                "reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "employee",
+                                                "date",
+                                                "lost_hours",
+                                                "claimed_hours",
+                                                "lost_amount",
+                                                "reason",
+                                                "description",
+                                                "status",
+                                                "waiting_for",
+                                                "comment"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/days": {
+            "get": {
+                "operationId": "attendance.days.index",
+                "summary": "Attendance of a day for the employees the user can see, with counts by status",
+                "tags": [
+                    "Attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned_in": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned_out": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "punch_in": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "punch_out": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "late_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "early_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "overtime_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "worked_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "planned_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "lost_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "lost_amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "accepted_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "claimed": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "area": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "date",
+                                                    "status",
+                                                    "planned",
+                                                    "planned_in",
+                                                    "planned_out",
+                                                    "punch_in",
+                                                    "punch_out",
+                                                    "late_minutes",
+                                                    "early_minutes",
+                                                    "overtime_minutes",
+                                                    "worked_hours",
+                                                    "planned_hours",
+                                                    "lost_hours",
+                                                    "lost_amount",
+                                                    "accepted_hours",
+                                                    "claimed",
+                                                    "area"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "counts": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "lost_amount": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "date",
+                                                "counts",
+                                                "lost_amount"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/employees/{employee}/month": {
+            "get": {
+                "operationId": "attendance.employees.month",
+                "summary": "An employee's attendance for a month, with totals and their punches",
+                "tags": [
+                    "Attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned_in": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "planned_out": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "punch_in": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "punch_out": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "late_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "early_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "overtime_minutes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "worked_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "planned_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "lost_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "lost_amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "accepted_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "claimed": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "area": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "date",
+                                                    "status",
+                                                    "planned",
+                                                    "planned_in",
+                                                    "planned_out",
+                                                    "punch_in",
+                                                    "punch_out",
+                                                    "late_minutes",
+                                                    "early_minutes",
+                                                    "overtime_minutes",
+                                                    "worked_hours",
+                                                    "planned_hours",
+                                                    "lost_hours",
+                                                    "lost_amount",
+                                                    "accepted_hours",
+                                                    "claimed",
+                                                    "area"
+                                                ]
+                                            }
+                                        },
+                                        "punches": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "time": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "area": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "terminal": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "note": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "time",
+                                                    "source",
+                                                    "area",
+                                                    "terminal",
+                                                    "note"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "month": {
+                                                    "type": "string"
+                                                },
+                                                "totals": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "days_present": {
+                                                            "type": "integer"
+                                                        },
+                                                        "days_absent": {
+                                                            "type": "integer"
+                                                        },
+                                                        "late_minutes": {
+                                                            "type": "integer"
+                                                        },
+                                                        "overtime_minutes": {
+                                                            "type": "integer"
+                                                        },
+                                                        "worked_hours": {
+                                                            "type": "number"
+                                                        },
+                                                        "lost_hours": {
+                                                            "type": "number"
+                                                        },
+                                                        "lost_amount": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "days_present",
+                                                        "days_absent",
+                                                        "late_minutes",
+                                                        "overtime_minutes",
+                                                        "worked_hours",
+                                                        "lost_hours",
+                                                        "lost_amount"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "month",
+                                                "totals"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "punches",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/absences": {
+            "get": {
+                "operationId": "attendance.absences.index",
+                "summary": "Excuse of duty (sick note) and admitted staff records of a month",
+                "tags": [
+                    "Attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "start_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "end_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "number_of_days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "hospital_name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "doctor_name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "reason": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "kind",
+                                                    "employee",
+                                                    "start_date",
+                                                    "end_date",
+                                                    "number_of_days",
+                                                    "hospital_name",
+                                                    "doctor_name",
+                                                    "reason",
+                                                    "status"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "attendance.absences.store",
+                "summary": "Record an excuse of duty (kind = excuse) or an admission (kind = admitted); attendance of those days is worked out again",
+                "tags": [
+                    "Attendance"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                            "excuse",
+                                            "admitted"
+                                        ]
+                                    },
+                                    "employee_id": {
+                                        "type": "integer"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "hospital_name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 150
+                                    },
+                                    "doctor_name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 150
+                                    },
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "kind",
+                                    "employee_id",
+                                    "start_date",
+                                    "end_date"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "employee": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "department"
+                                                    ]
+                                                },
+                                                "start_date": {
+                                                    "type": "string"
+                                                },
+                                                "end_date": {
+                                                    "type": "string"
+                                                },
+                                                "number_of_days": {
+                                                    "type": "integer"
+                                                },
+                                                "hospital_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "doctor_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "kind",
+                                                "employee",
+                                                "start_date",
+                                                "end_date",
+                                                "number_of_days",
+                                                "hospital_name",
+                                                "doctor_name",
+                                                "reason",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/claims": {
+            "get": {
+                "operationId": "attendance.claims.index",
+                "summary": "Attendance claims of a month",
+                "tags": [
+                    "Attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "lost_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "claimed_hours": {
+                                                        "type": "number"
+                                                    },
+                                                    "lost_amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "reason": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "date",
+                                                    "lost_hours",
+                                                    "claimed_hours",
+                                                    "lost_amount",
+                                                    "reason",
+                                                    "description",
+                                                    "status",
+                                                    "waiting_for",
+                                                    "comment"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/reasons": {
+            "get": {
+                "operationId": "attendance.reasons.index",
+                "summary": "Claim reasons",
+                "tags": [
+                    "Attendance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "reason",
+                                                    "description",
+                                                    "is_active"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "attendance.reasons.store",
+                "summary": "Add a claim reason",
+                "tags": [
+                    "Attendance"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "description": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    }
+                                },
+                                "required": [
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                },
+                                                "description": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "reason",
+                                                "description",
+                                                "is_active"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/compile": {
+            "post": {
+                "operationId": "attendance.compile",
+                "summary": "Work attendance out again for a period (after punches, rosters, leave or settings change)",
+                "tags": [
+                    "Attendance"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "from": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "to": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "employee_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "from",
+                                    "to"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "days": {
+                                                    "type": "integer"
+                                                },
+                                                "rows": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "days",
+                                                "rows"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/punches": {
+            "post": {
+                "operationId": "attendance.punches.store",
+                "summary": "Add a missed punch by hand (e.g. the device was down)",
+                "tags": [
+                    "Attendance"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "employee_id": {
+                                        "type": "integer"
+                                    },
+                                    "punch_time": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "employee_id",
+                                    "punch_time",
+                                    "note"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "added": {
+                                                    "type": "integer"
+                                                },
+                                                "skipped": {
+                                                    "type": "integer"
+                                                },
+                                                "unknown": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "dates": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "added",
+                                                "skipped",
+                                                "unknown",
+                                                "dates"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/punches/import": {
+            "post": {
+                "operationId": "attendance.punches.import",
+                "summary": "Import missed punches (e.g. exported from a device that was offline) from a CSV file with columns emp_code, punch_time (Y-m-d H:i[:s]) and optionally terminal",
+                "tags": [
+                    "Attendance"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "contentMediaType": "application/octet-stream",
+                                        "description": "Maximum file size: 10240 kilobytes."
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "added": {
+                                                    "type": "integer"
+                                                },
+                                                "skipped": {
+                                                    "type": "integer"
+                                                },
+                                                "unknown": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "dates": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "added",
+                                                "skipped",
+                                                "unknown",
+                                                "dates"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/absences/{kind}/{id}": {
+            "delete": {
+                "operationId": "attendance.absences.destroy",
+                "summary": "Remove an excuse of duty or admission record; those days are worked out again",
+                "tags": [
+                    "Attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/employees": {
+            "get": {
+                "operationId": "attendance.employees.index",
+                "summary": "Employees and their attendance tracking and device code",
+                "tags": [
+                    "Attendance"
+                ],
+                "parameters": [
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "employee_no": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "department": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "attendance_code": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "device_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "has_attendance": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "last_punch": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "employee_no",
+                                                    "department",
+                                                    "attendance_code",
+                                                    "device_code",
+                                                    "has_attendance",
+                                                    "last_punch"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "attendance.employees.update",
+                "summary": "Turn attendance tracking on or off and set device codes for employees",
+                "tags": [
+                    "Attendance"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "employees": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "has_attendance": {
+                                                    "type": "boolean"
+                                                },
+                                                "attendance_code": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Code on the device; empty: the employee id (as HRMS).",
+                                                    "maxLength": 50
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "has_attendance"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 1000
+                                    }
+                                },
+                                "required": [
+                                    "employees"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "updated": {
+                                                    "type": "integer"
+                                                },
+                                                "relinked": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "updated",
+                                                "relinked"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/settings": {
+            "get": {
+                "operationId": "attendance.settings.show",
+                "summary": "Attendance settings (the device password is never returned) and the last 14 sync days",
+                "tags": [
+                    "Attendance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "sources": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "host": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "port": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "database": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "username": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "has_password": {
+                                                    "type": "boolean"
+                                                },
+                                                "grace_minutes": {
+                                                    "type": "integer"
+                                                },
+                                                "sync_days": {
+                                                    "type": "integer"
+                                                },
+                                                "last_synced_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last_error": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "tracked_employees": {
+                                                    "type": "integer"
+                                                },
+                                                "unlinked_punches": {
+                                                    "type": "integer"
+                                                },
+                                                "days": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "punches": {
+                                                                "type": "integer"
+                                                            },
+                                                            "attempts": {
+                                                                "type": "integer"
+                                                            },
+                                                            "error": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "date",
+                                                            "status",
+                                                            "punches",
+                                                            "attempts",
+                                                            "error"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "source",
+                                                "sources",
+                                                "host",
+                                                "port",
+                                                "database",
+                                                "username",
+                                                "has_password",
+                                                "grace_minutes",
+                                                "sync_days",
+                                                "last_synced_at",
+                                                "last_error",
+                                                "tracked_employees",
+                                                "unlinked_punches",
+                                                "days"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "attendance.settings.update",
+                "summary": "Save the attendance settings. Leave the password empty to keep the saved one",
+                "tags": [
+                    "Attendance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "sources": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "host": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "port": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "database": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "username": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "has_password": {
+                                                    "type": "boolean"
+                                                },
+                                                "grace_minutes": {
+                                                    "type": "integer"
+                                                },
+                                                "sync_days": {
+                                                    "type": "integer"
+                                                },
+                                                "last_synced_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last_error": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "tracked_employees": {
+                                                    "type": "integer"
+                                                },
+                                                "unlinked_punches": {
+                                                    "type": "integer"
+                                                },
+                                                "days": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "punches": {
+                                                                "type": "integer"
+                                                            },
+                                                            "attempts": {
+                                                                "type": "integer"
+                                                            },
+                                                            "error": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "date",
+                                                            "status",
+                                                            "punches",
+                                                            "attempts",
+                                                            "error"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "source",
+                                                "sources",
+                                                "host",
+                                                "port",
+                                                "database",
+                                                "username",
+                                                "has_password",
+                                                "grace_minutes",
+                                                "sync_days",
+                                                "last_synced_at",
+                                                "last_error",
+                                                "tracked_employees",
+                                                "unlinked_punches",
+                                                "days"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/settings/test": {
+            "post": {
+                "operationId": "attendance.settings.test",
+                "summary": "Try the device server connection with the given (or saved) details",
+                "tags": [
+                    "Attendance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "ok": {
+                                                    "type": "boolean"
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "ok",
+                                                "message"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/attendance/sync": {
+            "post": {
+                "operationId": "attendance.sync",
+                "summary": "Queue the device sync for the missing days now (instead of waiting for the half-hourly run)",
+                "tags": [
+                    "Attendance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "queued": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "queued"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "operationId": "auth.login",
@@ -20287,6 +22853,9 @@
                                                 "use_relief": {
                                                     "type": "boolean"
                                                 },
+                                                "use_attendance": {
+                                                    "type": "boolean"
+                                                },
                                                 "example_period": {
                                                     "type": "string"
                                                 }
@@ -20313,6 +22882,7 @@
                                                 "use_deduction",
                                                 "use_saccos",
                                                 "use_relief",
+                                                "use_attendance",
                                                 "example_period"
                                             ]
                                         }
@@ -20463,6 +23033,10 @@
                                     },
                                     "use_relief": {
                                         "type": "boolean"
+                                    },
+                                    "use_attendance": {
+                                        "type": "boolean",
+                                        "description": "Deduct lost time from biometric attendance (only when attendance is turned on, for tracked employees)."
                                     }
                                 },
                                 "required": [
@@ -20577,6 +23151,9 @@
                                                 "use_relief": {
                                                     "type": "boolean"
                                                 },
+                                                "use_attendance": {
+                                                    "type": "boolean"
+                                                },
                                                 "example_period": {
                                                     "type": "string"
                                                 }
@@ -20603,6 +23180,7 @@
                                                 "use_deduction",
                                                 "use_saccos",
                                                 "use_relief",
+                                                "use_attendance",
                                                 "example_period"
                                             ]
                                         }

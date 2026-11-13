@@ -15,7 +15,7 @@ class Employee extends Model {
         'id_number','id_type','marital_status','emp_title','employment_date',
         'place_of_recruitment','emp_type','emp_category','termination_date',
         'nssf_no','nhif_no','wcf_no','employment_status','contract_id','contract_status',
-        'probation_start','probation_period','probation_end','updated_by','has_annual_leave',
+        'probation_start','probation_period','probation_end','updated_by','has_annual_leave','attendance_code','has_attendance',
     ];
 
     protected $casts = [
@@ -25,6 +25,7 @@ class Employee extends Model {
         'probation_start'  => 'date',
         'probation_end'    => 'date',
         'has_annual_leave' => 'boolean',
+        'has_attendance'   => 'boolean',
     ];
 
     public function getFullNameAttribute(): string {

@@ -3,6 +3,8 @@
 namespace Modules\Hr\Support;
 
 use App\Models\AllowanceCategory;
+use App\Models\AttendanceSetting;
+use App\Models\AttendanceTransa;
 use App\Models\DailyAllowance;
 use App\Models\EmpLeave;
 use App\Models\Employee;
@@ -36,6 +38,8 @@ use Modules\Hr\Actions\ManageOvertime;
  */
 class PayrollCalculator
 {
+    private ?bool $attendanceOn = null;
+
     public function __construct(private readonly PayrollDateSetting $settings) {}
 
     /** Contracts that pay in the period. @return Collection<int, EmployeeContract> */
@@ -158,10 +162,14 @@ class PayrollCalculator
             ->where(fn ($q) => $q->where('status', 'approved')->whereNull('payroll_sheet_detail_id')->when($detailId, fn ($q) => $q->orWhere('payroll_sheet_detail_id', $detailId)))
             ->whereDate('date_advanced', '<=', $to)->get() : collect();
         $advance = $money($advances->sum('amount'));
+        $attendance = $s->use_attendance && $employee->has_attendance && ($this->attendanceOn ??= AttendanceSetting::current()->enabled())
+            ? $money(AttendanceTransa::where('employee_id', $employee->id)->whereDate('transaction_date', '>=', $from)->whereDate('transaction_date', '<=', $to)->sum('lost_amount'))
+            : 0.0;
         $saccos = $s->use_saccos ? $money(SaccosMember::where('employee_id', $employee->id)->where('is_active', true)->sum('amount')) : 0.0;
 
         foreach ([['PAYE', $secondary ? 'PAYE (secondary employment, '.$s->income_tax.'%)' : 'PAYE', $paye], ['NSSF', 'NSSF', $nssf], ['NHIF', 'NHIF', $nhif], ['HESLB', 'HESLB loan', $heslb],
-            ['TUGHE', 'TUGHE', $tughe], ['NIC', 'NIC', $nic], ['FUND', 'Employee fund', $fund], ['SACCOS', 'SACCOS', $saccos], ['ADVANCE', 'Salary advance', $advance]] as [$code, $label, $amount]) {
+            ['TUGHE', 'TUGHE', $tughe], ['NIC', 'NIC', $nic], ['FUND', 'Employee fund', $fund], ['SACCOS', 'SACCOS', $saccos], ['ADVANCE', 'Salary advance', $advance],
+            ['ATTENDANCE', 'Lost time (attendance)', $attendance]] as [$code, $label, $amount]) {
             if ($amount > 0) {
                 $lines[] = ['group' => 'deduction', 'code' => $code, 'label' => $label, 'amount' => $amount];
             }
@@ -169,7 +177,7 @@ class PayrollCalculator
         foreach ($loans as $l) {
             $lines[] = ['group' => 'deduction', 'code' => 'LOAN', 'label' => 'Loan: '.($l['loan']->loanProvider?->name ?? 'loan'), 'amount' => $l['instalment']];
         }
-        $totalDeduction = $money($paye + $nssf + $nhif + $heslb + $tughe + $nic + $fund + $saccos + $advance + $totalLoan);
+        $totalDeduction = $money($paye + $nssf + $nhif + $heslb + $tughe + $nic + $fund + $saccos + $advance + $totalLoan + $attendance);
         $wcf = $money($gross * (float) $s->wcf / 100);
         $sdl = $money($gross * (float) $s->sdl / 100);
         foreach ([['NSSF_ER', 'NSSF (employer)', $nssfEr], ['NHIF_ER', 'NHIF (employer)', $nhifEr], ['WCF', 'WCF', $wcf], ['SDL', 'SDL', $sdl]] as [$code, $label, $amount]) {
@@ -186,7 +194,7 @@ class PayrollCalculator
                 'total_allowance' => $totalAllowance, 'total_overtime' => $totalOvertime, 'allowance_overtime' => $money($totalAllowance + $totalOvertime), 'relief' => $relief,
                 'gross_salary' => $gross, 'nssf' => $nssf, 'nssf_employer' => $nssfEr, 'nhif' => $nhif, 'nhif_employer' => $nhifEr, 'heslb' => $heslb, 'tughe' => $tughe,
                 'nic' => $nic, 'ef' => $fund, 'amount_taxable' => $taxableIncome, 'paye' => $paye, 'total_loan' => $totalLoan, 'advance' => $advance, 'saccos_serving' => $saccos,
-                'attendance_deduction' => 0, 'total_deduction' => $totalDeduction, 'net_salary' => $money($gross - $totalDeduction), 'wcf' => $wcf, 'sdl' => $sdl,
+                'attendance_deduction' => $attendance, 'total_deduction' => $totalDeduction, 'net_salary' => $money($gross - $totalDeduction), 'wcf' => $wcf, 'sdl' => $sdl,
                 'emp_category' => $employee->emp_category, 'lines' => $lines,
                 'bank_id' => $bank?->bank_id, 'bank_name' => $bank?->bank?->name, 'bank_branch' => $bank?->branch, 'bank_code' => $bank?->bank?->code, 'bank_account' => $bank?->account_number,
             ],
