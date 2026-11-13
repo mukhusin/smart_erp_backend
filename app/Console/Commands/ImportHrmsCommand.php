@@ -3,11 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Models\Company;
+use App\Models\Employee;
+use App\Models\LeaveType;
 use App\Services\CompanyContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Modules\Hr\Import\HrmsImporter;
 use Modules\Hr\Import\LegacyIds;
+use Modules\Hr\Support\LeaveBalances;
 
 class ImportHrmsCommand extends Command
 {
@@ -88,6 +91,30 @@ class ImportHrmsCommand extends Command
                 DB::table('employee_contracts')->whereIn('employee_id', $employees)->where('is_active', true)->whereNull('deleted_at')->count()];
             $checks[] = ['Basic salary of active contracts', round((float) $src->table('employee_contracts')->where('isActive', 1)->whereNull('deleted_at')->sum('basic_salary'), 2),
                 round((float) DB::table('employee_contracts')->whereIn('employee_id', $employees)->where('is_active', true)->whereNull('deleted_at')->sum('basic_salary'), 2)];
+        }
+        if (in_array('leave', $steps, true) && $ids->all('emp_leaves')) {
+            $year = (string) now()->year;
+            $taken = ['reported', 'on leave', 'approved'];
+            $annual = LeaveType::where('kind', 'annual')->first();
+            $checks[] = ['Leave records (non-annual)', $src->table('emp_leaves')->count(), count($ids->all('emp_leaves'))];
+            $checks[] = ["Annual leave days taken in {$year}", (float) $src->table('annual_leave_rosters')->where('leave_year', $year)->whereIn('status', $taken)->sum('days'),
+                (float) DB::table('emp_leaves')->where('leave_type_id', $annual?->id)->where('leave_year', $year)->whereIn('employee_id', $employees)
+                    ->whereIn('status', ['reported', 'on_leave', 'approved'])->whereIn('id', array_values($ids->all('annual_leave_rosters:leave')))->sum('days')];
+            $balances = app(LeaveBalances::class);
+            [$hrms, $erp] = [0.0, 0.0];
+            foreach ($src->table('annual_leave_rosters')->where('leave_year', $year)->orderBy('id')->get()->keyBy('employee_id') as $hrmsEmployee => $row) {
+                $employee = Employee::find($ids->get('employees', $hrmsEmployee));
+                if (! $annual || ! $employee || $employee->employment_status === 'terminated') {
+                    continue;
+                }
+                $balance = $balances->for($employee, $annual);
+                if (! $balance['eligible']) {
+                    continue;
+                }
+                $hrms += (float) $row->actual_balance;
+                $erp += $balance['available'];
+            }
+            $checks[] = ['Annual leave available now (staff with a '.$year.' entry)', round($hrms, 1), round($erp, 1)];
         }
         if (in_array('users', $steps, true) && ($users = $ids->all('users'))) {
             $checks[] = ['Users', $src->table('users')->count(), count($users)];

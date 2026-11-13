@@ -3,6 +3,8 @@
 namespace Modules\Hr\Import;
 
 use App\Models\Company;
+use App\Models\Employee;
+use App\Models\LeaveType;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -15,6 +17,7 @@ use Illuminate\Support\Str;
 use Modules\Core\Support\DefaultRoles;
 use Modules\Hr\Support\EmployeeFiles;
 use Modules\Hr\Support\EmployeeOptions as O;
+use Modules\Hr\Support\LeaveBalances;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -25,7 +28,7 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class HrmsImporter
 {
-    public const STEPS = ['reference', 'organisation', 'users', 'employees', 'contracts', 'profiles', 'statutory', 'structure', 'roles', 'files'];
+    public const STEPS = ['reference', 'organisation', 'users', 'employees', 'contracts', 'profiles', 'statutory', 'structure', 'leave', 'roles', 'files'];
 
     private const ROLE_MAP = [
         'super_admin' => DefaultRoles::COMPANY_ADMIN,
@@ -42,6 +45,16 @@ class HrmsImporter
         'hos' => 'section-head',
         'normal_employee' => 'employee',
     ];
+
+    /** HRMS leave type code => ERP default leave type code (HRMS "SL" is study leave, ERP "SL" is sick leave). */
+    private const LEAVE_TYPE_MATCH = ['AL' => 'AL', 'CLW' => 'CL', 'LWP' => 'UL', 'MLS' => 'ML', 'PLS' => 'PL', 'SLF' => 'SL'];
+
+    private const LEAVE_TYPE_CODE = ['SL' => 'STL'];
+
+    private const LEAVE_STATUS = ['returned' => 'reported', 'reported' => 'reported', 'ended' => 'reported', 'on leave' => 'on_leave',
+        'approved' => 'approved', 'pending' => 'pending', 'rejected' => 'rejected'];
+
+    public const OPENING_BALANCE = 'Opening balance from HRMS';
 
     private const CONTRACT_STATUS = ['contract end' => 'ended', 'vacation_of_office' => 'abscondment', 'expired' => 'ended', 'pending' => 'ended'];
 
@@ -336,6 +349,149 @@ class HrmsImporter
         }
     }
 
+    private function stepLeave(): void
+    {
+        $this->sync('leave_types', 'leave_types', function ($r) {
+            $name = strtolower($r->name);
+            $kind = match (true) {
+                str_contains($name, 'annual') => 'annual', str_contains($name, 'maternity') => 'maternity', str_contains($name, 'paternity') => 'paternity',
+                str_contains($name, 'compassionate') => 'compassionate', str_contains($name, 'sick') => 'sick', str_contains($name, 'study') => 'study',
+                str_contains($name, 'without pay') => 'unpaid', default => 'other',
+            };
+            $gender = strtolower((string) $r->gender);
+
+            return [
+                'company_id' => $this->companyId, 'name' => $r->name, 'code' => self::LEAVE_TYPE_CODE[$r->code] ?? $r->code, 'kind' => $kind,
+                'gender' => in_array($gender, ['female', 'male'], true) ? $gender : null, 'with_pay' => (bool) $r->withPay, 'max_days' => $r->max_days,
+                'day_count' => in_array($kind, ['annual', 'sick', 'maternity', 'study'], true) ? 'calendar' : 'working',
+                'limit_per' => in_array($kind, ['annual', 'sick'], true) ? 'year' : 'request', 'is_active' => (bool) $r->isActive, 'deleted_at' => $r->deleted_at,
+            ];
+        }, match: fn ($r) => isset(self::LEAVE_TYPE_MATCH[$r->code]) ? $this->findBy('leave_types', ['code' => self::LEAVE_TYPE_MATCH[$r->code]]) : null,
+            keepOnUpdate: ['name', 'code', 'kind', 'gender', 'day_count', 'limit_per', 'carry_over_days', 'notice_days', 'requires_document', 'employee_types', 'color']);
+
+        $this->sync('absence_requests', 'absence_requests', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'last_updated_by' => $this->ids->get('employees', $r->last_updated_by),
+            'from_date' => $this->date($r->from_date), 'to_date' => $this->date($r->to_date), 'from_time' => $r->from_time, 'to_time' => $r->to_time,
+            'number_of_days' => $r->number_of_days, 'description' => $r->description, 'address' => $r->address, 'has_per_diem' => (bool) $r->has_per_diem,
+            'status' => strtolower((string) $r->status),
+        ] : "employee {$r->employee_id} not imported");
+
+        $this->sync('emp_leaves', 'emp_leaves', function ($r) {
+            $employee = $this->ids->get('employees', $r->employee_id);
+            $type = $this->ids->get('leave_types', $r->leave_type_id);
+            if (! $employee || ! $type) {
+                return "leave {$r->id}: employee or leave type missing";
+            }
+            $details = array_filter(['deceased_name' => $this->blank($r->jina_la_marehem), 'relationship' => $this->blank($r->uhusiano_na_marehem), 'death_date' => $this->date($r->death_date)]);
+
+            return [
+                'company_id' => $this->companyId, 'employee_id' => $employee, 'leave_type_id' => $type,
+                'hod_id' => $this->ids->get('employees', $r->hod_id), 'hr_id' => $this->ids->get('employees', $r->hr_id), 'department_id' => $this->ids->get('departments', $r->department_id),
+                'start_date' => $this->date($r->start_date), 'end_date' => $this->date($r->end_date),
+                'requested_start_date' => $this->date($r->requested_start_date ?: $r->start_date), 'requested_end_date' => $this->date($r->requested_end_date ?: $r->end_date),
+                'days' => $r->days ?? 0, 'days_requested' => $r->days_requested ?: ($r->days ?? 0), 'leave_year' => $r->leave_year ?: substr((string) $r->start_date, 0, 4),
+                'description' => $r->description, 'details' => $details ? json_encode($details) : null, 'hod_remark' => $r->hod_remark,
+                'hod_is_approved' => (bool) $r->hod_isApproved, 'hr_office_remark' => $r->hr_office_remark, 'hr_office_is_approved' => (bool) $r->hr_office_isApproved,
+                'report_date' => $this->date($r->report_date), 'is_reported' => (bool) $r->isReported, 'leave_phone' => $r->leave_phone, 'leave_address' => $r->leave_address,
+                'days_passed' => $r->days_passed ?? 0, 'balance' => $r->balance ?? 0, 'deducted' => $r->deducted ?? 0, 'amount' => $r->amount ?? 0,
+                'is_active' => (bool) $r->isActive, 'status' => self::LEAVE_STATUS[strtolower(trim((string) $r->status))] ?? 'reported', 'source' => 'employee',
+                'requested_by' => $this->userOfEmployee($r->employee_id),
+            ];
+        });
+
+        $this->sync('rosters', 'rosters', fn ($r) => [
+            'company_id' => $this->companyId, 'type' => 'leave', 'title' => $r->title, 'department_id' => $this->ids->get('departments', $r->department_id),
+            'section_id' => $this->ids->get('departments', $r->section_id), 'roster_year' => $r->roster_year, 'from_date' => $this->date($r->from_date),
+            'to_date' => $this->date($r->to_date), 'status' => $r->status === 'active' ? 'published' : 'pending', 'is_active' => (bool) $r->isActive,
+            'deleted_at' => $r->deleted_at,
+        ], query: fn ($q) => $q->where('type', 'leave')->orderBy('id'));
+
+        $annual = DB::table('leave_types')->where('company_id', $this->companyId)->where('kind', 'annual')->whereNull('deleted_at')->value('id');
+        if (! $annual) {
+            $this->note('annual_leave_rosters', 'no annual leave type in the ERP company, annual leave not copied');
+
+            return;
+        }
+
+        $this->sync('annual_leave_rosters', 'emp_leaves', function ($r) use ($annual) {
+            $status = self::LEAVE_STATUS[strtolower(trim((string) $r->status))] ?? null;
+            $employee = $this->ids->get('employees', $r->employee_id);
+            if (! $status || ! $employee) {
+                return "annual leave {$r->id}: {$r->status}, kept as a plan only";
+            }
+
+            return [
+                'company_id' => $this->companyId, 'employee_id' => $employee, 'leave_type_id' => $annual,
+                'hod_id' => $this->ids->get('employees', $r->hod_id), 'hr_id' => $this->ids->get('employees', $r->hr_id), 'department_id' => $this->ids->get('departments', $r->department_id),
+                'start_date' => $this->date($r->start_date), 'end_date' => $this->date($r->end_date),
+                'requested_start_date' => $this->date($r->changed_start_date ?: $r->start_date), 'requested_end_date' => $this->date($r->changed_end_date ?: $r->end_date),
+                'days' => $r->days ?? 0, 'days_requested' => $r->days ?? 0, 'leave_year' => $r->leave_year, 'description' => $r->description,
+                'hod_remark' => $r->hod_remark, 'hod_is_approved' => (bool) $r->hod_isApproved, 'hr_office_remark' => $r->hr_office_remark,
+                'hr_office_is_approved' => (bool) $r->hr_office_isApproved, 'report_date' => $this->date($r->report_date), 'is_reported' => (bool) $r->isReported,
+                'leave_phone' => $r->leave_phone, 'leave_address' => $r->leave_address, 'days_passed' => $r->days_passed ?? 0, 'balance' => $r->actual_balance ?? 0,
+                'is_active' => (bool) $r->isActive, 'status' => $status, 'source' => 'employee', 'requested_by' => $this->userOfEmployee($r->employee_id),
+            ];
+        }, key: 'annual_leave_rosters:leave');
+
+        $this->sync('annual_leave_rosters', 'annual_leave_rosters', function ($r) {
+            $employee = $this->ids->get('employees', $r->employee_id);
+            if (! $employee) {
+                return "employee {$r->employee_id} not imported";
+            }
+            $leave = $this->ids->get('annual_leave_rosters:leave', $r->id);
+            $status = strtolower((string) $r->status);
+
+            return [
+                'company_id' => $this->companyId, 'roster_id' => $this->ids->get('rosters', $r->roster_id), 'employee_id' => $employee, 'emp_leave_id' => $leave,
+                'hod_id' => $this->ids->get('employees', $r->hod_id), 'hr_id' => $this->ids->get('employees', $r->hr_id), 'department_id' => $this->ids->get('departments', $r->department_id),
+                'start_date' => $this->date($r->start_date), 'end_date' => $this->date($r->end_date), 'days' => $r->days ?? 0, 'leave_year' => $r->leave_year,
+                'report_date' => $this->date($r->report_date), 'is_reported' => (bool) $r->isReported, 'hod_remark' => $r->hod_remark, 'hod_is_approved' => (bool) $r->hod_isApproved,
+                'hr_office_remark' => $r->hr_office_remark, 'hr_office_is_approved' => (bool) $r->hr_office_isApproved, 'description' => $r->description,
+                'leave_phone' => $r->leave_phone, 'leave_address' => $r->leave_address, 'last_year_balance' => $r->last_year_balance ?? 0,
+                'current_balance' => $r->current_balance ?? 0, 'actual_balance' => $r->actual_balance ?? 0,
+                'status' => ! $leave ? 'planned' : ($status === 'pending' ? 'requested' : 'taken'), 'is_active' => (bool) $r->isActive,
+            ];
+        });
+
+        $this->openingBalances($annual);
+    }
+
+    /** Sets each employee's annual leave available now to the HRMS balance of their latest annual leave entry this year. */
+    private function openingBalances(int $annualTypeId): void
+    {
+        $stats = &$this->stats('leave_opening_balances');
+        $type = LeaveType::find($annualTypeId);
+        $balances = app(LeaveBalances::class);
+        $year = (string) now()->year;
+        $latest = $this->src->table('annual_leave_rosters')->where('leave_year', $year)->orderBy('id')->get()->keyBy('employee_id');
+
+        foreach ($latest as $hrmsEmployee => $row) {
+            $stats['read']++;
+            $employee = Employee::find($this->ids->get('employees', $hrmsEmployee));
+            if (! $employee || $employee->employment_status === 'terminated') {
+                $stats['skipped']++;
+
+                continue;
+            }
+            $balances->forget();
+            $period = $balances->for($employee, $type);
+            DB::table('leave_balance_adjustments')->where('employee_id', $employee->id)->where('leave_type_id', $type->id)
+                ->where('leave_year', $period['year'])->where('reason', self::OPENING_BALANCE)->delete();
+            $balances->forget();
+            $current = $balances->for($employee, $type);
+            $raw = $current['entitled'] + $current['carried_over'] + $current['adjustments'] - $current['taken'] - $current['pending'];
+            $days = round((float) $row->actual_balance - $raw, 1);
+            if ($current['eligible'] && abs($days) >= 0.5) {
+                DB::table('leave_balance_adjustments')->insert(['company_id' => $this->companyId, 'employee_id' => $employee->id, 'leave_type_id' => $type->id,
+                    'leave_year' => $current['year'], 'days' => $days, 'reason' => self::OPENING_BALANCE, 'created_at' => now(), 'updated_at' => now()]);
+                $stats['inserted']++;
+            } else {
+                $stats['updated']++;
+            }
+        }
+        $balances->forget();
+    }
+
     private function stepRoles(): void
     {
         $permissions = Permission::pluck('name')->all();
@@ -442,9 +598,10 @@ class HrmsImporter
      * @param  Closure(object): (int|null)|null  $match  existing ERP row to link on the first run
      * @param  list<string>  $keepOnUpdate  columns written only when the row is inserted
      */
-    private function sync(string $from, string $to, Closure $map, ?Closure $query = null, ?Closure $match = null, array $keepOnUpdate = []): void
+    private function sync(string $from, string $to, Closure $map, ?Closure $query = null, ?Closure $match = null, array $keepOnUpdate = [], ?string $key = null): void
     {
-        $stats = &$this->stats($from);
+        $key ??= $from;
+        $stats = &$this->stats($key);
         $source = $this->src->table($from);
         $query ? $query($source) : $source->orderBy('id');
 
@@ -453,13 +610,13 @@ class HrmsImporter
             $data = $map($row);
             if (is_string($data)) {
                 $stats['skipped']++;
-                $this->note($from, $data);
+                $this->note($key, $data);
 
                 continue;
             }
             $data = array_filter($data, fn ($value, $column) => $value !== null || ! in_array($column, $this->required($to), true), ARRAY_FILTER_USE_BOTH);
             $timestamps = array_filter(['created_at' => $row->created_at ?? null, 'updated_at' => $row->updated_at ?? null]);
-            $targetId = $this->ids->get($from, $row->id);
+            $targetId = $this->ids->get($key, $row->id);
             if ($targetId && ! DB::table($to)->where('id', $targetId)->exists()) {
                 $targetId = null;
             }
@@ -475,11 +632,11 @@ class HrmsImporter
                 }
             } catch (QueryException $e) {
                 $stats['skipped']++;
-                $this->note($from, "row {$row->id}: ".Str::limit(strtok($e->getMessage(), '('), 160));
+                $this->note($key, "row {$row->id}: ".Str::limit(strtok($e->getMessage(), '('), 160));
 
                 continue;
             }
-            $this->ids->set($from, (int) $row->id, (int) $targetId);
+            $this->ids->set($key, (int) $row->id, (int) $targetId);
         }
     }
 

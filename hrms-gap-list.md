@@ -115,8 +115,12 @@ salary, users). Phase 1 steps: reference (banks, branches, salary scales, contra
 (departments, positions), users (password kept), employees (value mapping, attendance code, settings, leavers from
 contracts), contracts + comments, profiles, statutory schemes, structure (supervisors, heads, internship/residency),
 roles (HRMS roles → ERP system roles or custom roles with mapped permissions, user roles, direct grants), files (photos,
-documents, licences, birth certificates from `--files`). Local dry run: all checks match. Still to do: phase 2 leave,
-roster, allowances, overtime, loans; phase 3 payroll history + payslip lines; phase 4 attendance history.
+documents, licences, birth certificates from `--files`). Local dry run: all checks match. Phase 2a leave done: leave types (explicit code map, HRMS "SL" = study → `STL`),
+absence requests, leave records, leave rosters, annual leave (taken entries → AL leaves + plans; not requested/postponed →
+plans), opening balances (adjustment so the ERP available days equal the HRMS balance of each employee's {year} entry);
+checks: leave records, AL days taken this year, AL available now — all match. Still to do: pay setup + payroll history
+(+ payslip lines) before allowance/overtime/loan history (they point at payslip rows; `daily_allowances` ~277k rows needs
+a bulk loader), then attendance history.
 
 ### 4. Biometric attendance (core built 2026-11-13)
 
