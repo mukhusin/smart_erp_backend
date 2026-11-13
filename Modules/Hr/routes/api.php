@@ -28,6 +28,7 @@ use Modules\Hr\Http\Controllers\Api\Loans\LoansController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
 use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeController;
+use Modules\Hr\Http\Controllers\Api\Payroll\PayItemsController;
 use Modules\Hr\Http\Controllers\Api\Payroll\PayrollController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
@@ -298,6 +299,12 @@ Route::prefix('leave')->middleware(['auth:sanctum', 'module:leave'])->name('leav
 });
 
 Route::prefix('allowance')->middleware(['auth:sanctum', 'module:allowance'])->name('allowance.')->group(function () {
+    Route::middleware('can:allowance.assign')->group(function () {
+        Route::get('assigned', [PayItemsController::class, 'allowances'])->name('assigned.index');
+        Route::post('employees/{employee}/assigned', [PayItemsController::class, 'storeAllowance'])->name('assigned.store');
+        Route::post('assigned/{allowance}/stop', [PayItemsController::class, 'stopAllowance'])->name('assigned.stop');
+        Route::delete('assigned/{allowance}', [PayItemsController::class, 'destroyAllowance'])->name('assigned.destroy');
+    });
     Route::middleware('can:allowance.categories.manage')->group(function () {
         Route::get('categories', [AllowanceSetupController::class, 'categories'])->name('categories.index');
         Route::post('categories', [AllowanceSetupController::class, 'storeCategory'])->name('categories.store');
@@ -349,6 +356,17 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::post('sheets/{sheet}/submit', [PayrollController::class, 'submit'])->name('sheets.submit');
         Route::post('sheets/{sheet}/withdraw', [PayrollController::class, 'withdraw'])->name('sheets.withdraw');
         Route::delete('sheets/{sheet}', [PayrollController::class, 'destroy'])->name('sheets.destroy');
+    });
+    Route::middleware('can:payroll.deductions.manage')->group(function () {
+        Route::get('deductions', [PayItemsController::class, 'deductions'])->name('deductions.index');
+        Route::post('employees/{employee}/deductions', [PayItemsController::class, 'storeDeduction'])->name('deductions.store');
+        Route::post('deductions/{deduction}/stop', [PayItemsController::class, 'stopDeduction'])->name('deductions.stop');
+        Route::delete('deductions/{deduction}', [PayItemsController::class, 'destroyDeduction'])->name('deductions.destroy');
+    });
+    Route::middleware('can:payroll.salary-adjustments.manage')->group(function () {
+        Route::get('adjustments', [PayItemsController::class, 'adjustments'])->name('adjustments.index');
+        Route::post('employees/{employee}/adjustments', [PayItemsController::class, 'storeAdjustment'])->name('adjustments.store');
+        Route::delete('adjustments/{adjustment}', [PayItemsController::class, 'destroyAdjustment'])->name('adjustments.destroy');
     });
 });
 

@@ -12,6 +12,9 @@ Artisan::command('inspire', function () {
 Schedule::command('contract:status')->everyTwoHours()
     ->appendOutputTo(storage_path('logs/contract-status.log'));
 
+Schedule::command('hr:salary-adjustments')->dailyAt('00:30')
+    ->appendOutputTo(storage_path('logs/salary-adjustments.log'));
+
 Schedule::command('hr:contract-reminders')->dailyAt('08:30')
     ->appendOutputTo(storage_path('logs/contract-reminders.log'));
 

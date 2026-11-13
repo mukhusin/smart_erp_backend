@@ -24,11 +24,11 @@ final class DefaultRoles
         self::COMPANY_ADMIN => ['*'],
         'hr-officer' => [
             'hr.*', 'leave.*', 'roster.*', 'attendance.*', 'allowance.*', 'overtime.*', 'payroll.view',
-            'payroll.create', 'payroll.edit', 'payroll.comment', 'loans.*', 'reports.*', 'self-service.use',
+            'payroll.create', 'payroll.edit', 'payroll.comment', 'payroll.deductions.manage', 'payroll.salary-adjustments.manage', 'loans.*', 'reports.*', 'self-service.use',
         ],
         'hr-manager' => [
             'hr.*', 'leave.*', 'roster.*', 'attendance.*', 'allowance.*', 'overtime.*', 'payroll.view',
-            'payroll.create', 'payroll.edit', 'payroll.comment', 'loans.*', 'reports.*', 'admin.workflow.manage', 'self-service.use',
+            'payroll.create', 'payroll.edit', 'payroll.comment', 'payroll.deductions.manage', 'payroll.salary-adjustments.manage', 'loans.*', 'reports.*', 'admin.workflow.manage', 'self-service.use',
         ],
         'director' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'reports.view', 'self-service.use'],
         'director-general' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'payroll.approve', 'reports.view', 'self-service.use'],

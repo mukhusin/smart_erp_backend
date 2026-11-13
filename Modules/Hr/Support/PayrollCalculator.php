@@ -6,6 +6,7 @@ use App\Models\AllowanceCategory;
 use App\Models\AttendanceSetting;
 use App\Models\AttendanceTransa;
 use App\Models\DailyAllowance;
+use App\Models\EmpAllowance;
 use App\Models\EmpLeave;
 use App\Models\Employee;
 use App\Models\EmployeeContract;
@@ -16,6 +17,7 @@ use App\Models\Heslb;
 use App\Models\Nhif;
 use App\Models\Nic;
 use App\Models\Nssf;
+use App\Models\OtherDeduction;
 use App\Models\Overtime;
 use App\Models\PayrollDateSetting;
 use App\Models\PayrollSheet;
@@ -110,7 +112,12 @@ class PayrollCalculator
                 $nonTaxable += $rows->filter(fn ($r) => $r->allowance_category_id && ! ($taxable[$r->allowance_category_id] ?? true))->sum('amount');
             }
         }
-        $totalAllowance = $money($allowances->sum('amount'));
+        $assigned = $s->use_allowance ? $this->assignedAllowances($employee, $from, $to, $days) : [];
+        foreach ($assigned as $a) {
+            $lines[] = ['group' => 'earning', 'code' => 'ALLOWANCE', 'label' => $a['label'], 'amount' => $a['amount']];
+            $nonTaxable += $a['taxable'] ? 0 : $a['amount'];
+        }
+        $totalAllowance = $money($allowances->sum('amount') + collect($assigned)->sum('amount'));
 
         $overtime = collect();
         if ($s->use_overtime) {
@@ -165,6 +172,11 @@ class PayrollCalculator
         $attendance = $s->use_attendance && $employee->has_attendance && ($this->attendanceOn ??= AttendanceSetting::current()->enabled())
             ? $money(AttendanceTransa::where('employee_id', $employee->id)->whereDate('transaction_date', '>=', $from)->whereDate('transaction_date', '<=', $to)->sum('lost_amount'))
             : 0.0;
+        $others = OtherDeduction::where('employee_id', $employee->id)->where('status', 'approved')->get()->filter(fn ($d) => $d->appliesTo((int) $sheet->year, (int) $sheet->month));
+        foreach ($others as $o) {
+            $lines[] = ['group' => 'deduction', 'code' => 'OTHER', 'label' => $o->name, 'amount' => $money($o->amount)];
+        }
+        $other = $money($others->sum('amount'));
         $saccos = $s->use_saccos ? $money(SaccosMember::where('employee_id', $employee->id)->where('is_active', true)->sum('amount')) : 0.0;
 
         foreach ([['PAYE', $secondary ? 'PAYE (secondary employment, '.$s->income_tax.'%)' : 'PAYE', $paye], ['NSSF', 'NSSF', $nssf], ['NHIF', 'NHIF', $nhif], ['HESLB', 'HESLB loan', $heslb],
@@ -177,7 +189,7 @@ class PayrollCalculator
         foreach ($loans as $l) {
             $lines[] = ['group' => 'deduction', 'code' => 'LOAN', 'label' => 'Loan: '.($l['loan']->loanProvider?->name ?? 'loan'), 'amount' => $l['instalment']];
         }
-        $totalDeduction = $money($paye + $nssf + $nhif + $heslb + $tughe + $nic + $fund + $saccos + $advance + $totalLoan + $attendance);
+        $totalDeduction = $money($paye + $nssf + $nhif + $heslb + $tughe + $nic + $fund + $saccos + $advance + $totalLoan + $attendance + $other);
         $wcf = $money($gross * (float) $s->wcf / 100);
         $sdl = $money($gross * (float) $s->sdl / 100);
         foreach ([['NSSF_ER', 'NSSF (employer)', $nssfEr], ['NHIF_ER', 'NHIF (employer)', $nhifEr], ['WCF', 'WCF', $wcf], ['SDL', 'SDL', $sdl]] as [$code, $label, $amount]) {
@@ -194,12 +206,62 @@ class PayrollCalculator
                 'total_allowance' => $totalAllowance, 'total_overtime' => $totalOvertime, 'allowance_overtime' => $money($totalAllowance + $totalOvertime), 'relief' => $relief,
                 'gross_salary' => $gross, 'nssf' => $nssf, 'nssf_employer' => $nssfEr, 'nhif' => $nhif, 'nhif_employer' => $nhifEr, 'heslb' => $heslb, 'tughe' => $tughe,
                 'nic' => $nic, 'ef' => $fund, 'amount_taxable' => $taxableIncome, 'paye' => $paye, 'total_loan' => $totalLoan, 'advance' => $advance, 'saccos_serving' => $saccos,
-                'attendance_deduction' => $attendance, 'total_deduction' => $totalDeduction, 'net_salary' => $money($gross - $totalDeduction), 'wcf' => $wcf, 'sdl' => $sdl,
+                'attendance_deduction' => $attendance, 'other_deduction' => $other, 'total_deduction' => $totalDeduction, 'net_salary' => $money($gross - $totalDeduction), 'wcf' => $wcf, 'sdl' => $sdl,
                 'emp_category' => $employee->emp_category, 'lines' => $lines,
                 'bank_id' => $bank?->bank_id, 'bank_name' => $bank?->bank?->name, 'bank_branch' => $bank?->branch, 'bank_code' => $bank?->bank?->code, 'bank_account' => $bank?->account_number,
             ],
             'allowance_ids' => $allowances->pluck('id')->all(), 'overtime' => $overtime, 'loans' => $loans, 'advance_ids' => $advances->pluck('id')->all(),
         ];
+    }
+
+    /**
+     * Assigned monthly allowances for the period: pro-rata for the days they cover; less leave days (category "deduct leave")
+     * and absent days from biometric attendance (category "other absence", when attendance is on), as in HRMS.
+     *
+     * @return list<array{label: string, amount: float, taxable: bool}>
+     */
+    private function assignedAllowances(Employee $employee, Carbon $from, Carbon $to, int $days): array
+    {
+        $rows = EmpAllowance::with('allowanceCategory')->where('employee_id', $employee->id)->where('status', 'approved')
+            ->whereDate('start_date', '<=', $to)->where(fn ($q) => $q->whereNull('end_date')->orWhereDate('end_date', '>=', $from))->get();
+        if ($rows->isEmpty()) {
+            return [];
+        }
+        $leaveDays = null;
+        $absentDays = null;
+        $out = [];
+        foreach ($rows as $a) {
+            $cat = $a->allowanceCategory;
+            $start = $a->start_date->max($from);
+            $end = $a->end_date ? $a->end_date->min($to) : $to;
+            $covered = (int) $start->diffInDays($end) + 1;
+            $off = 0;
+            $notes = [];
+            if ($cat?->deduct_leave) {
+                $leaveDays ??= $this->leaveDaysIn($employee, $from, $to);
+                $off += $leaveDays;
+                $leaveDays && $notes[] = "{$leaveDays} leave days";
+            }
+            if ($cat?->other_absence && $employee->has_attendance && ($this->attendanceOn ??= AttendanceSetting::current()->enabled())) {
+                $absentDays ??= AttendanceTransa::where('employee_id', $employee->id)->where('status', 'Absent')->whereDate('transaction_date', '>=', $from)->whereDate('transaction_date', '<=', $to)->count();
+                $off += $absentDays;
+                $absentDays && $notes[] = "{$absentDays} absent days";
+            }
+            $paid = max(0, min($covered, $days) - $off);
+            $amount = $paid >= $days ? (float) $a->amount : round((float) $a->amount * $paid / $days, 2);
+            if ($amount > 0) {
+                $parts = array_merge($paid < $days ? ["{$paid} of {$days} days"] : [], $notes);
+                $out[] = ['label' => $a->category.($parts ? ' ('.implode(', ', $parts).')' : ''), 'amount' => $amount, 'taxable' => (bool) ($cat?->taxable ?? true)];
+            }
+        }
+
+        return $out;
+    }
+
+    private function leaveDaysIn(Employee $employee, Carbon $from, Carbon $to): int
+    {
+        return (int) EmpLeave::where('employee_id', $employee->id)->whereIn('status', EmpLeave::TAKEN)->whereDate('start_date', '<=', $to)->whereDate('end_date', '>=', $from)->get()
+            ->sum(fn ($l) => (int) $l->start_date->max($from)->diffInDays($l->end_date->min($to)) + 1);
     }
 
     /** PAYE on a monthly taxable income by progressive bands. @param list<array{up_to: float|int|null, rate: float|int}> $bands */

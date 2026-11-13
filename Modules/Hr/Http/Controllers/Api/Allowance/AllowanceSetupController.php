@@ -151,14 +151,17 @@ class AllowanceSetupController extends Controller
             'code' => ['required', 'string', 'max:20', Rule::unique('allowance_categories', 'code')->where('company_id', $company)->ignore($category?->id)],
             /** month, day (working day), night (night shift), holiday (public holiday worked) or case (counted items). */
             'unit' => ['required', Rule::in(array_keys(AllowanceCategory::UNITS))],
-            /** auto: worked out from the roster and working hours; claim: entered with a count and approved. Per-case allowances are always claimed. */
-            'generation' => ['required', 'in:auto,claim'],
+            /** auto: worked out from the roster and working hours; claim: entered with a count and approved; assigned (monthly only): a fixed amount set per employee. Per-case allowances are always claimed. */
+            'generation' => ['required', 'in:auto,claim,assigned'],
             /** Not paid on absent days (when attendance is used). */
             'other_absence' => ['boolean'],
             'taxable' => ['boolean'],
             'description' => ['nullable', 'string', 'max:500'],
             'is_active' => ['boolean'],
         ], ['name.unique' => 'Another category has this name.', 'code.unique' => 'Another category has this code.']);
+        if ($d['generation'] === 'assigned' && $d['unit'] !== 'month') {
+            throw \Illuminate\Validation\ValidationException::withMessages(['generation' => 'Only monthly allowances can be assigned to employees.']);
+        }
 
         return [
             'category' => trim($d['name']), 'code' => strtoupper(trim($d['code'])), 'duration' => $d['unit'], 'generation' => $d['unit'] === 'case' ? 'claim' : $d['generation'],

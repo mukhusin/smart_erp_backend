@@ -110,6 +110,7 @@ final class PermissionCatalog
             'payroll.reliefs.manage' => 'Manage reliefs',
             'payroll.statutory.manage' => 'Manage statutory memberships (HESLB, NSSF, NHIF...)',
             'payroll.salary-adjustments.manage' => 'Manage salary adjustments',
+            'payroll.deductions.manage' => 'Manage other deductions',
             'payroll.salary-adjustments.submit' => 'Submit salary adjustments to director',
             'payroll.salary-adjustments.finance-comment' => 'Comment on salary adjustments as finance',
             'payroll.salary-adjustments.approve' => 'Approve salary adjustments',

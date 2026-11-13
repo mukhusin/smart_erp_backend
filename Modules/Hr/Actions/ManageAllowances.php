@@ -156,6 +156,9 @@ class ManageAllowances
         if ($category->auto()) {
             throw ValidationException::withMessages(['allowance_category_id' => "{$category->category} is worked out automatically from the roster and working hours."]);
         }
+        if ($category->generation === 'assigned') {
+            throw ValidationException::withMessages(['allowance_category_id' => "{$category->category} is assigned to employees as a monthly amount."]);
+        }
         if (! $this->eligible($employee)) {
             throw ValidationException::withMessages(['employee_id' => "{$employee->full_name}'s contract does not give allowances."]);
         }

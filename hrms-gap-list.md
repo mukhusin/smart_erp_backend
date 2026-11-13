@@ -46,15 +46,16 @@ returns, annual leave roster. Missing: ❌ **absence requests** (official absenc
 **Attendance — ✅ core built (2026-11-13)** — see section 4.
 
 **Allowances — ✅** categories, rates, generated from the calendar, claims via workflow.
-Missing: ❌ **assigned allowances** per employee for a period (HRMS `emp_allowances`, e.g. acting/responsibility allowance,
-used by payroll monthly); ❌ AfyaBox case feed.
+✅ **assigned allowances** (2026-11-13): monthly categories set to "assigned", amount per employee for a period, workflow
+`assigned-allowance`, paid pro-rata less leave/absent days as HRMS. Missing: ❌ AfyaBox case feed.
 
 **Overtime — ✅** rates, claims checked against the shift, workflow. Missing: ❌ overtime generated from punches (needs attendance).
 
 **Payroll — ✅** settings, calculation (pro-rata, unpaid leave, statutory, PAYE bands, loans, advances, SACCOS, relief),
 sheets via workflow, payslips, bank list, PAYE/NSSF/NHIF/HESLB/WCF/SDL reports, loans & advances.
-Missing: ❌ **other deductions** (HRMS `other_deductions`: amount for N months); ❌ **salary adjustments** (HRMS approval flow; table only);
-❌ attendance mode (lost-hours deduction / basic from days present); ❌ payroll comments & change log; ❌ comparison with last month;
+✅ **other deductions** (monthly for N months or until stopped, workflow `other-deduction`); ✅ **salary adjustments** (workflow
+`salary-adjustment`, applied to the contract on the effective date by `hr:salary-adjustments`); ✅ lost-hours deduction;
+❌ basic from days present; ❌ payroll comments & change log; ❌ comparison with last month;
 ❌ SACCOS member screens; ❌ reliefs screens (calculator reads them); 🟡 statutory member screens exist per employee only.
 
 **Reports & dashboards — ❌** employee reports (birthdays, emails, employed, terminations, internships, practising licences),
@@ -84,12 +85,12 @@ The ERP keeps HRMS ids and employee numbers, so links survive. Per area:
 | leave_deductions | — | history only (the ERP works unpaid leave out from leave) |
 | allowance_categories, department_allowances | same | ✅ duration → unit; `claimed` → automatic |
 | daily_allowances | same | ✅ statuses → approved; keep `payroll_sheet_detail_id` |
-| **emp_allowances** (assigned) | ❌ | needs "assigned allowances" (gap above) |
+| **emp_allowances** (assigned) | `emp_allowances` | ✅ dates parsed; `allowance_category_id` from the category name (category set to "assigned"); status approved when HRMS isActive |
 | department_overtimes | `overtime_rates` | ✅ amount + hour/shift |
 | overtimes, overtime_sheets | same | ✅ datetimes parsed; attendance overtime rows keep their minutes |
 | loan_providers, employee_loans, loan_histories, employee_mothly_advances | same / `employee_monthly_advances` | ✅ loan status enabled/disabled; histories `status = applied` |
 | nssfs, nhifs, heslbs, tughes, nics, employee_funds, reliefs, saccos_* | same | ✅ |
-| other_deductions | ❌ | needs "other deductions" |
+| other_deductions | `other_deductions` | ✅ `from_date` → `start_month`, `duration_month` → `months`, description → name; approved when isActive |
 | salary_adjustments | table only | needs the feature |
 | **payroll_sheets, payroll_sheet_details** (history) | same | 🟡 import as approved; ERP payslips read itemised `lines` — **build lines from the old columns** for history (to do), or payslips of past months look empty |
 | allowance_sheets, saccos_contributions, payroll_comments | same | ✅ history |
@@ -131,7 +132,7 @@ working-hours reports, absence requests, attendance-based allowances.
 ### 5. Suggested order before switching off HRMS
 
 1. Attendance module (section 4) + excuse of duty, admitted staff, absence requests, per-employee attendance setting.
-2. Payroll gaps: assigned allowances, other deductions, salary adjustments, attendance mode, payslip lines for history.
+2. Payroll gaps: ~~assigned allowances, other deductions, salary adjustments~~ (done 2026-11-13); basic from days present, payslip lines for history.
 3. Change own password/email, employee import/export, reports + director dashboard, messaging.
 4. `erp:import-hrms` migration command (all areas in section 3), dry runs on a copy of production.
 5. Parallel run: 1–2 payroll months in both systems, compare every line; then switch.

@@ -5,13 +5,16 @@ namespace Modules\Workflow\Services;
 use App\Services\ModuleAccessService;
 use Modules\Admin\Workflow\UserAccessChangeProcess;
 use Modules\Hr\Workflow\AllowanceClaimProcess;
+use Modules\Hr\Workflow\AssignedAllowanceProcess;
 use Modules\Hr\Workflow\AttendanceClaimProcess;
 use Modules\Hr\Workflow\ContractRenewalProcess;
 use Modules\Hr\Workflow\DutyRosterProcess;
 use Modules\Hr\Workflow\LeaveRequestProcess;
 use Modules\Hr\Workflow\LoanProcess;
+use Modules\Hr\Workflow\OtherDeductionProcess;
 use Modules\Hr\Workflow\OvertimeClaimProcess;
 use Modules\Hr\Workflow\PayrollSheetProcess;
+use Modules\Hr\Workflow\SalaryAdjustmentProcess;
 use Modules\Hr\Workflow\SalaryAdvanceProcess;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
@@ -33,6 +36,9 @@ final class WorkflowCatalog
         LoanProcess::class,
         SalaryAdvanceProcess::class,
         AttendanceClaimProcess::class,
+        AssignedAllowanceProcess::class,
+        OtherDeductionProcess::class,
+        SalaryAdjustmentProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

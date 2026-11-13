@@ -111,7 +111,7 @@ class PayrollController extends Controller
             'department' => $d->employee?->department?->name, 'days_paid' => $d->days_paid, 'unpaid_days' => (float) $d->unpaid_days,
             'basic' => $d->basic_salary, 'allowances' => $d->total_allowance, 'overtime' => $d->total_overtime, 'relief' => $d->relief, 'gross' => $d->gross_salary,
             'nssf' => $d->nssf, 'nhif' => $d->nhif, 'heslb' => $d->heslb, 'paye' => $d->paye, 'loans' => round($d->total_loan + $d->advance, 2),
-            'other_deductions' => round($d->tughe + $d->nic + $d->ef + $d->saccos_serving + (float) $d->attendance_deduction, 2), 'deductions' => $d->total_deduction, 'net' => $d->net_salary,
+            'other_deductions' => round($d->tughe + $d->nic + $d->ef + $d->saccos_serving + (float) $d->attendance_deduction + (float) $d->other_deduction, 2), 'deductions' => $d->total_deduction, 'net' => $d->net_salary,
             'bank' => $d->bank_name, 'account' => $d->bank_account,
         ]);
         $totals = collect(['basic', 'allowances', 'overtime', 'relief', 'gross', 'nssf', 'nhif', 'heslb', 'paye', 'loans', 'other_deductions', 'deductions', 'net'])
