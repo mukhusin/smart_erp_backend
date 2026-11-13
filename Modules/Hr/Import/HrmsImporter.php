@@ -153,7 +153,7 @@ class HrmsImporter
 
             return [
                 'company_id' => $this->companyId, 'company_branch_id' => $this->ids->get('company_branches', $branches[$r->id] ?? null),
-                'username' => $username, 'email' => $email, 'role_as' => $r->role_as, 'email_verified_at' => $r->email_verified_at,
+                'username' => $username, 'email' => $email, 'role_as' => $r->role_as, 'email_verified_at' => $r->email_verified_at ?? $r->created_at ?? now(),
                 'password' => $r->password, 'is_active' => (bool) $r->isActive, 'is_platform_admin' => false, 'deleted_at' => $r->deleted_at,
             ];
         }, match: fn ($r) => DB::table('users')->where('company_id', $this->companyId)

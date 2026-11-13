@@ -9881,6 +9881,14 @@
                         }
                     },
                     {
+                        "name": "filter[view]",
+                        "in": "query",
+                        "description": "`active`, `no_contract`, `contract_ending`, `invite_pending`, `licence_expiring` (same as the HR summary counts).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "sort",
                         "in": "query",
                         "description": "`employee_no`, `fname`, `employment_date`, `created_at`; prefix `-` for descending.",
@@ -31631,6 +31639,530 @@
                     }
                 }
             }
+        },
+        "/self/profile": {
+            "get": {
+                "operationId": "self.profile",
+                "summary": "My profile: personal and job details (read-only), contact details (editable), and my records per section with\ntheir approval status. Records I add wait for HR approval",
+                "tags": [
+                    "Self service: Profile",
+                    "SelfProfile"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "personal": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "employee_no": {
+                                                            "type": "string"
+                                                        },
+                                                        "title": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "fname": {
+                                                            "type": "string"
+                                                        },
+                                                        "mname": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "lname": {
+                                                            "type": "string"
+                                                        },
+                                                        "gender": {
+                                                            "type": "string"
+                                                        },
+                                                        "date_of_birth": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "place_of_birth": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "nationality": {
+                                                            "type": "string"
+                                                        },
+                                                        "marital_status": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "id_type": {
+                                                            "type": "string"
+                                                        },
+                                                        "id_number": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "tin": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "nssf_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "nhif_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "employee_no",
+                                                        "title",
+                                                        "fname",
+                                                        "mname",
+                                                        "lname",
+                                                        "gender",
+                                                        "date_of_birth",
+                                                        "place_of_birth",
+                                                        "nationality",
+                                                        "marital_status",
+                                                        "id_type",
+                                                        "id_number",
+                                                        "tin",
+                                                        "nssf_no",
+                                                        "nhif_no"
+                                                    ]
+                                                },
+                                                "job": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "branch": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "section": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "position": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "emp_type": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "employment_date": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "employment_status": {
+                                                            "type": "string"
+                                                        },
+                                                        "contract_type": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "contract_end": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "branch",
+                                                        "department",
+                                                        "section",
+                                                        "position",
+                                                        "emp_type",
+                                                        "employment_date",
+                                                        "employment_status",
+                                                        "contract_type",
+                                                        "contract_end"
+                                                    ]
+                                                },
+                                                "contact": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "phone_number": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "email": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "home_address": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "phone_number",
+                                                        "email",
+                                                        "home_address"
+                                                    ]
+                                                },
+                                                "sections": {
+                                                    "type": "string"
+                                                },
+                                                "options": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "education_levels": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "document_types": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "relationships": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "genders": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "licence_types": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "value": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "value",
+                                                                    "label"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "education_levels",
+                                                        "document_types",
+                                                        "relationships",
+                                                        "genders",
+                                                        "licence_types"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "personal",
+                                                "job",
+                                                "contact",
+                                                "sections",
+                                                "options"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/profile/contact": {
+            "put": {
+                "operationId": "self.profile.contact",
+                "summary": "Update my phone number and home address. My email is changed under My account (it needs a code)",
+                "tags": [
+                    "Self service: Profile",
+                    "SelfProfile"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "phone_number": {
+                                        "type": "string",
+                                        "pattern": "^[0-9\\s\\-\\+\\(\\)]+$",
+                                        "maxLength": 30
+                                    },
+                                    "home_address": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "phone_number"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "phone_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "email": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "home_address": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "phone_number",
+                                                "email",
+                                                "home_address"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/profile/{section}": {
+            "post": {
+                "operationId": "self.profile.store",
+                "summary": "Add a record to a section (multipart when it has a file). It waits for HR approval",
+                "tags": [
+                    "Self service: Profile",
+                    "SelfProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "section",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/profile/{section}/{id}": {
+            "delete": {
+                "operationId": "self.profile.destroy",
+                "summary": "Withdraw a record waiting for approval, or remove one HR did not approve",
+                "tags": [
+                    "Self service: Profile",
+                    "SelfProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "section",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/profile/{section}/{id}/file": {
+            "get": {
+                "operationId": "self.profile.file",
+                "summary": "Download the file of one of my records",
+                "tags": [
+                    "Self service: Profile",
+                    "SelfProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "section",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -32889,6 +33421,15 @@
                     "id": {
                         "type": "integer"
                     },
+                    "approval_status": {
+                        "description": "approved, pending (added by the employee, waiting for HR) or rejected"
+                    },
+                    "decision_comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "fullname": {
                         "type": "string"
                     },
@@ -32955,6 +33496,8 @@
                 },
                 "required": [
                     "id",
+                    "approval_status",
+                    "decision_comment",
                     "fullname",
                     "gender",
                     "relationship",
@@ -33012,6 +33555,15 @@
                     "id": {
                         "type": "integer"
                     },
+                    "approval_status": {
+                        "description": "approved, pending (added by the employee, waiting for HR) or rejected"
+                    },
+                    "decision_comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "file_type": {
                         "type": "string"
                     },
@@ -33058,6 +33610,8 @@
                 },
                 "required": [
                     "id",
+                    "approval_status",
+                    "decision_comment",
                     "file_type",
                     "file_type_label",
                     "description",
@@ -33662,6 +34216,15 @@
                     "id": {
                         "type": "integer"
                     },
+                    "approval_status": {
+                        "description": "approved, pending (added by the employee, waiting for HR) or rejected"
+                    },
+                    "decision_comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "company_name": {
                         "type": "string"
                     },
@@ -33696,6 +34259,8 @@
                 },
                 "required": [
                     "id",
+                    "approval_status",
+                    "decision_comment",
                     "company_name",
                     "position",
                     "start_date",
@@ -34408,6 +34973,26 @@
                     "id": {
                         "type": "integer"
                     },
+                    "approval_status": {
+                        "description": "approved, pending (added by the employee, waiting for HR) or rejected",
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "approved"
+                                ]
+                            }
+                        ]
+                    },
+                    "decision_comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "licence": {
                         "type": [
                             "object",
@@ -34485,6 +35070,8 @@
                 },
                 "required": [
                     "id",
+                    "approval_status",
+                    "decision_comment",
                     "licence",
                     "licence_no",
                     "start_date",
@@ -35691,6 +36278,15 @@
                     "id": {
                         "type": "integer"
                     },
+                    "approval_status": {
+                        "description": "approved, pending (added by the employee, waiting for HR) or rejected"
+                    },
+                    "decision_comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "education_level": {
                         "type": "string"
                     },
@@ -35748,6 +36344,8 @@
                 },
                 "required": [
                     "id",
+                    "approval_status",
+                    "decision_comment",
                     "education_level",
                     "education_level_label",
                     "institution",

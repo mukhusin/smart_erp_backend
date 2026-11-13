@@ -17,6 +17,9 @@ class DependantResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            /** approved, pending (added by the employee, waiting for HR) or rejected */
+            'approval_status' => $this->getAttribute('status') ?? 'approved',
+            'decision_comment' => $this->decision_comment,
             'fullname' => $this->fullname,
             'gender' => $this->gender,
             'relationship' => $this->relationship,

@@ -2,6 +2,18 @@
 
 Steps to run on the server when a release needs more than pulling the code. Newest release first.
 
+## Self-service profile (2026-11-13)
+
+1. Run the migration. It adds `status`, `submitted_by` and `decision_comment` to the qualification, licence, experience,
+   dependant and document tables. Existing records become `approved`.
+
+   ```bash
+   php artisan migrate
+   ```
+
+2. Companies registered before this release have no approval workflow for "Profile update by employee". Add one in
+   Administration → Workflows (one HR step). Without it, records employees add are saved straight away.
+
 ## HRMS import, phase 1 (2026-11-13)
 
 1. Run the migration. It adds the `legacy_ids` table (HRMS id → ERP id per table).

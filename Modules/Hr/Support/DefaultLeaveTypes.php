@@ -7,6 +7,7 @@ use App\Models\LeaveType;
 use App\Services\CompanyContext;
 use Modules\Hr\Workflow\LeaveRequestProcess;
 use Modules\Hr\Workflow\OvertimeClaimProcess;
+use Modules\Hr\Workflow\ProfileItemProcess;
 use Modules\Workflow\Models\WorkflowTemplate;
 use Spatie\Permission\Models\Role;
 
@@ -42,6 +43,17 @@ final class DefaultLeaveTypes
     {
         self::supervisorThenHr(LeaveRequestProcess::KEY);
         self::supervisorThenHr(OvertimeClaimProcess::KEY);
+        self::hrOnly(ProfileItemProcess::KEY);
+    }
+
+    public static function hrOnly(string $process): void
+    {
+        $hr = Role::where('name', 'hr-officer')->where('company_id', app(CompanyContext::class)->id())->first();
+        if (! $hr || WorkflowTemplate::where('process', $process)->exists()) {
+            return;
+        }
+        $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+        $template->steps()->create(['step_order' => 1, 'name' => 'HR', 'approver_type' => 'role', 'role_id' => $hr->id, 'allow_send_back' => false]);
     }
 
     public static function supervisorThenHr(string $process): void

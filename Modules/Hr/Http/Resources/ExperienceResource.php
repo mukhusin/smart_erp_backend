@@ -15,6 +15,9 @@ class ExperienceResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            /** approved, pending (added by the employee, waiting for HR) or rejected */
+            'approval_status' => $this->getAttribute('status') ?? 'approved',
+            'decision_comment' => $this->decision_comment,
             'company_name' => $this->company_name,
             'position' => $this->position,
             'start_date' => $this->start_date->toDateString(),

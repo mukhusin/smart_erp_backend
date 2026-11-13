@@ -17,6 +17,9 @@ class QualificationResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            /** approved, pending (added by the employee, waiting for HR) or rejected */
+            'approval_status' => $this->getAttribute('status') ?? 'approved',
+            'decision_comment' => $this->decision_comment,
             'education_level' => $this->education_level,
             'education_level_label' => O::EDUCATION_LEVELS[$this->education_level] ?? $this->education_level,
             'institution' => $this->institution,

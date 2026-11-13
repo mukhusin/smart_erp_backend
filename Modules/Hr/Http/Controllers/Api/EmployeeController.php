@@ -46,6 +46,7 @@ class EmployeeController extends Controller
     #[QueryParameter('filter[employment_status]', type: 'string')]
     #[QueryParameter('filter[emp_type]', type: 'string')]
     #[QueryParameter('filter[has_account]', type: 'boolean')]
+    #[QueryParameter('filter[view]', description: '`active`, `no_contract`, `contract_ending`, `invite_pending`, `licence_expiring` (same as the HR summary counts).', type: 'string')]
     #[QueryParameter('sort', description: '`employee_no`, `fname`, `employment_date`, `created_at`; prefix `-` for descending.', type: 'string', default: '-created_at')]
     #[QueryParameter('page', type: 'integer', default: 1)]
     #[QueryParameter('per_page', description: 'Max 100.', type: 'integer', default: 25)]
@@ -72,6 +73,14 @@ class EmployeeController extends Controller
                 AllowedFilter::exact('job_position_id'),
                 AllowedFilter::exact('employment_status'),
                 AllowedFilter::exact('emp_type'),
+                AllowedFilter::callback('view', fn ($q, $v) => match ($v) {
+                    'active' => $q->active(),
+                    'no_contract' => $q->withoutContract(),
+                    'contract_ending' => $q->contractEnding(),
+                    'invite_pending' => $q->invitePending(),
+                    'licence_expiring' => $q->licenceExpiring(),
+                    default => $q,
+                }),
                 AllowedFilter::callback('has_account', fn ($q, $v) => filter_var($v, FILTER_VALIDATE_BOOLEAN) ? $q->whereNotNull('user_id') : $q->whereNull('user_id')),
             )
             ->allowedSorts('employee_no', 'fname', 'employment_date', 'created_at')

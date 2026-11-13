@@ -149,7 +149,7 @@ working-hours reports, absence requests, attendance-based allowances.
 
 1. Attendance module (section 4) + excuse of duty, admitted staff, absence requests, per-employee attendance setting.
 2. Payroll gaps: ~~assigned allowances, other deductions, salary adjustments~~ (done 2026-11-13); payslip lines for history (with the import).
-3. ~~Change own password/email~~ (done), ~~employee import/export~~ (done), ~~reports + director dashboard~~ (done), ~~messaging~~ (done).
+3. ~~Self-service profile~~ (done 2026-11-13: employee sees details; edits phone and address; adds qualifications, licences, experience, dependants, documents → HR approves through the workflow), ~~Change own password/email~~ (done), ~~employee import/export~~ (done), ~~reports + director dashboard~~ (done), ~~messaging~~ (done).
 4. `erp:import-hrms` migration command (all areas in section 3), dry runs on a copy of production.
 5. Parallel run: 1–2 payroll months in both systems, compare every line; then switch.
 

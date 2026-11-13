@@ -21,6 +21,9 @@ class LicenceResource extends JsonResource
 
         return [
             'id' => $this->id,
+            /** approved, pending (added by the employee, waiting for HR) or rejected */
+            'approval_status' => $this->getRawOriginal('status') ?? 'approved',
+            'decision_comment' => $this->decision_comment,
             /** @var array{id: int, name: string, provider_name: string|null, short_name: string|null}|null */
             'licence' => $type ? ['id' => $type->id, 'name' => $type->name, 'provider_name' => $type->provider_name, 'short_name' => $type->short_name] : null,
             'licence_no' => $this->licence_no,

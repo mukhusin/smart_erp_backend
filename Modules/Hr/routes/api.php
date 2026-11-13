@@ -41,6 +41,7 @@ use Modules\Hr\Http\Controllers\Api\Roster\RosterController;
 use Modules\Hr\Http\Controllers\Api\Roster\WorkScheduleController;
 use Modules\Hr\Http\Controllers\Api\SelfContractController;
 use Modules\Hr\Http\Controllers\Api\SelfDutyController;
+use Modules\Hr\Http\Controllers\Api\SelfProfileController;
 use Modules\Hr\Http\Controllers\Api\StaffMessageController;
 use Modules\Hr\Http\Controllers\Api\SupervisorController;
 use Modules\Hr\Support\HrReports;
@@ -212,6 +213,11 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
+    Route::get('profile', [SelfProfileController::class, 'show'])->name('profile');
+    Route::put('profile/contact', [SelfProfileController::class, 'updateContact'])->name('profile.contact');
+    Route::post('profile/{section}', [SelfProfileController::class, 'store'])->where('section', 'qualifications|licences|experiences|dependants|documents')->middleware('throttle:20,1')->name('profile.store');
+    Route::delete('profile/{section}/{id}', [SelfProfileController::class, 'destroy'])->where('section', 'qualifications|licences|experiences|dependants|documents')->whereNumber('id')->name('profile.destroy');
+    Route::get('profile/{section}/{id}/file', [SelfProfileController::class, 'file'])->where('section', 'qualifications|licences|experiences|dependants|documents')->whereNumber('id')->name('profile.file');
     Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
     Route::get('allowances', [AllowanceEntryController::class, 'mine'])->middleware('module:allowance')->name('allowances');
     Route::middleware('module:attendance')->group(function () {

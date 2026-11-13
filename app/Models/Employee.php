@@ -60,6 +60,38 @@ class Employee extends Model {
             ->where(fn ($q) => $q->whereHas('contracts', fn ($c) => $c->where('is_active', true))->orWhereHas('placements', fn ($p) => $p->where('status', 'active')));
     }
 
+    /** Current staff (not left, not interns) with no active or waiting contract. */
+    public function scopeWithoutContract($query)
+    {
+        return $query->staff()->where('employment_status', '!=', 'terminated')
+            ->whereDoesntHave('contracts', fn ($c) => $c->whereIn('status', ['active', 'waiting']));
+    }
+
+    /** Active staff whose contract ends within the renewal window and who have no next contract waiting. */
+    public function scopeContractEnding($query)
+    {
+        $soon = now()->addDays(\Modules\Hr\Support\EmployeeOptions::RENEWAL_WINDOW_DAYS)->toDateString();
+
+        return $query->active()->whereHas('contracts', fn ($c) => $c->where('is_active', true)->whereDate('end_date', '<=', $soon))
+            ->whereDoesntHave('contracts', fn ($c) => $c->where('status', 'waiting'));
+    }
+
+    /** Active staff with a licence (latest of its type) expired or ending within the renewal window. */
+    public function scopeLicenceExpiring($query)
+    {
+        $soon = now()->addDays(\Modules\Hr\Support\EmployeeOptions::RENEWAL_WINDOW_DAYS)->toDateString();
+
+        return $query->active()->whereHas('licences', fn ($l) => $l->whereDate('end_date', '<=', $soon)
+            ->whereNotExists(fn ($n) => $n->selectRaw('1')->from('employee_licences as n')->whereColumn('n.employee_id', 'employee_licences.employee_id')
+                ->whereColumn('n.professional_licence_id', 'employee_licences.professional_licence_id')->whereColumn('n.end_date', '>', 'employee_licences.end_date')));
+    }
+
+    /** Active staff whose account invite has not been accepted yet. */
+    public function scopeInvitePending($query)
+    {
+        return $query->active()->whereHas('user', fn ($u) => $u->whereNull('email_verified_at'));
+    }
+
     /** Staff records, whatever their status; interns and residents are not staff. */
     public function scopeStaff($query)
     {

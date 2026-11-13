@@ -14,6 +14,7 @@ use Modules\Hr\Workflow\LoanProcess;
 use Modules\Hr\Workflow\OtherDeductionProcess;
 use Modules\Hr\Workflow\OvertimeClaimProcess;
 use Modules\Hr\Workflow\PayrollSheetProcess;
+use Modules\Hr\Workflow\ProfileItemProcess;
 use Modules\Hr\Workflow\SalaryAdjustmentProcess;
 use Modules\Hr\Workflow\SalaryAdvanceProcess;
 use Modules\Workflow\Contracts\WorkflowProcess;
@@ -39,6 +40,7 @@ final class WorkflowCatalog
         AssignedAllowanceProcess::class,
         OtherDeductionProcess::class,
         SalaryAdjustmentProcess::class,
+        ProfileItemProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */
