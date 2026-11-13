@@ -30,14 +30,14 @@ final class DefaultRoles
             'hr.*', 'leave.*', 'roster.*', 'attendance.*', 'allowance.*', 'overtime.*', 'payroll.view',
             'payroll.create', 'payroll.edit', 'payroll.comment', 'payroll.deductions.manage', 'payroll.salary-adjustments.manage', 'loans.*', 'reports.*', 'admin.workflow.manage', 'self-service.use',
         ],
-        'director' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'reports.view', 'self-service.use'],
-        'director-general' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'payroll.approve', 'reports.view', 'self-service.use'],
+        'director' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'reports.view', 'reports.generate', 'self-service.use'],
+        'director-general' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'payroll.approve', 'reports.view', 'reports.generate', 'self-service.use'],
         'hod' => [
             'hr.employees.view-department', 'leave.department.view', 'leave.approve-hod', 'leave.annual-roster.manage', 'roster.department.view', 'roster.manage',
-            'attendance.working-hours.department', 'allowance.department.view', 'allowance.daily.manage', 'overtime.view', 'self-service.use',
+            'attendance.working-hours.department', 'allowance.department.view', 'allowance.daily.manage', 'overtime.view', 'reports.view', 'self-service.use',
         ],
         'section-head' => [
-            'hr.employees.view-section', 'roster.section.view', 'attendance.working-hours.section', 'self-service.use',
+            'hr.employees.view-section', 'roster.section.view', 'attendance.working-hours.section', 'reports.view', 'self-service.use',
         ],
         'employee' => ['self-service.use'],
     ];

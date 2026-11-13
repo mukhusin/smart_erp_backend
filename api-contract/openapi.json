@@ -27101,6 +27101,649 @@
                 }
             }
         },
+        "/reports/overview": {
+            "get": {
+                "operationId": "reports.overview",
+                "summary": "Management overview: staff numbers, movement over 12 months, leave, contracts; salary bill, payroll and today's\nattendance only when the user may see them (otherwise null). Limited to the user's employee scope",
+                "tags": [
+                    "Reports"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "scope": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "all": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "label": {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "string"
+                                                                        },
+                                                                        {
+                                                                            "type": "string",
+                                                                            "enum": [
+                                                                                "No employees"
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "all",
+                                                                "label"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "all": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "All employees"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "all",
+                                                                "label"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "my_approvals": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                },
+                                                "staff": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "female": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "male": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "probation": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "by_type": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "key": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "full_time",
+                                                                            "part_time",
+                                                                            "internship",
+                                                                            "resident",
+                                                                            "volunteer",
+                                                                            "indirect"
+                                                                        ]
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string",
+                                                                        "enum": [
+                                                                            "Full time",
+                                                                            "Part time",
+                                                                            "Internship",
+                                                                            "Resident",
+                                                                            "Volunteer",
+                                                                            "Indirect employee"
+                                                                        ]
+                                                                    },
+                                                                    "count": {
+                                                                        "type": "integer",
+                                                                        "minimum": 0
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "key",
+                                                                    "label",
+                                                                    "count"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "joined_this_month": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "left_this_month": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "interns": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "retiring_12_months": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "active",
+                                                        "female",
+                                                        "male",
+                                                        "probation",
+                                                        "by_type",
+                                                        "joined_this_month",
+                                                        "left_this_month",
+                                                        "interns",
+                                                        "retiring_12_months"
+                                                    ]
+                                                },
+                                                "departments": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                "movement": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "month": {
+                                                                "type": "string"
+                                                            },
+                                                            "joined": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "integer",
+                                                                        "enum": [
+                                                                            0
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "left": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string"
+                                                                    },
+                                                                    {
+                                                                        "type": "integer",
+                                                                        "enum": [
+                                                                            0
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "month",
+                                                            "joined",
+                                                            "left"
+                                                        ]
+                                                    }
+                                                },
+                                                "leave": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "on_leave_today": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "starting_7_days": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "on_leave_today",
+                                                        "starting_7_days",
+                                                        "pending"
+                                                    ]
+                                                },
+                                                "contracts": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "ending_30_days": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "ending_90_days": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "without_contract": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "licences_expired": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "ending_30_days",
+                                                        "ending_90_days",
+                                                        "without_contract",
+                                                        "licences_expired"
+                                                    ]
+                                                },
+                                                "salary": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "monthly_basic": {
+                                                            "type": "number"
+                                                        },
+                                                        "contracts": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "monthly_basic",
+                                                        "contracts"
+                                                    ]
+                                                },
+                                                "payroll": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "period": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "status_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "employees": {
+                                                                "type": "integer"
+                                                            },
+                                                            "gross": {
+                                                                "type": "number"
+                                                            },
+                                                            "deductions": {
+                                                                "type": "number"
+                                                            },
+                                                            "net": {
+                                                                "type": "number"
+                                                            },
+                                                            "employer": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "period",
+                                                            "status",
+                                                            "status_label",
+                                                            "employees",
+                                                            "gross",
+                                                            "deductions",
+                                                            "net",
+                                                            "employer"
+                                                        ]
+                                                    }
+                                                },
+                                                "attendance": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "date": {
+                                                            "type": "string"
+                                                        },
+                                                        "tracked": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "statuses": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "date",
+                                                        "tracked",
+                                                        "statuses"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "scope",
+                                                "my_approvals",
+                                                "staff",
+                                                "departments",
+                                                "movement",
+                                                "leave",
+                                                "contracts",
+                                                "salary",
+                                                "payroll",
+                                                "attendance"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/reports/hr": {
+            "get": {
+                "operationId": "reports.hr.index",
+                "summary": "Available reports with their filters (`type`: date, number or select; `default` is used when empty)",
+                "tags": [
+                    "Reports"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/reports/hr/{report}": {
+            "get": {
+                "operationId": "reports.hr.show",
+                "summary": "Run a report. Pass the report's filters as query parameters",
+                "tags": [
+                    "Reports"
+                ],
+                "parameters": [
+                    {
+                        "name": "report",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "age",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "months",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "days",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "reason",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "emp_type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "licence_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "leave_type_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "branch_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "subtitle": {
+                                                    "type": "string"
+                                                },
+                                                "columns": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "rows": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "additionalProperties": {}
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "title",
+                                                "subtitle",
+                                                "columns",
+                                                "rows",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/reports/hr/{report}/csv": {
+            "get": {
+                "operationId": "reports.hr.csv",
+                "summary": "Download a report as CSV (opens in Excel). Same filters as showing it",
+                "tags": [
+                    "Reports"
+                ],
+                "parameters": [
+                    {
+                        "name": "report",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/roster/codes": {
             "get": {
                 "operationId": "roster.codes.index",

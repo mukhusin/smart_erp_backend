@@ -58,8 +58,14 @@ sheets via workflow, payslips, bank list, PAYE/NSSF/NHIF/HESLB/WCF/SDL reports, 
 ➖ basic from days present (HRMS pays basic ÷ period days per day with an attendance row: covered by contract pro-rata + lost-time deduction, so not copied: missed device days would underpay); ❌ payroll comments & change log; ❌ comparison with last month;
 ❌ SACCOS member screens; ❌ reliefs screens (calculator reads them); 🟡 statutory member screens exist per employee only.
 
-**Reports & dashboards — ❌** employee reports (birthdays, emails, employed, terminations, internships, practising licences),
-director dashboard (active staff, on leave, contracts, salaries, payroll, attendance), HR/HOD dashboards with numbers.
+**Reports & dashboards — 🟡 (2026-11-13)** Reports module: management overview (staff, joined/left 12 months, departments,
+leave, contracts, licences, retirement; salary bill, last 6 payrolls and today's attendance only for allowed users) and HR
+reports on screen + print + CSV (headcount, contacts, birthdays, retirement, joiners, leavers, contracts ending, licences,
+interns, on leave; leave requests and balances; overtime claims and per employee; attendance by day, per employee and
+lost-hours claims), all within the employee scope; money columns only for salary/payroll users; leave/overtime/attendance
+reports only when the module is on (attendance also needs attendance switched on). HODs and section heads get
+`reports.view`, so the overview is their department dashboard (plus their approvals waiting). Not copied: PDF files
+(browser print instead), leave form PDF.
 
 **Other HRMS areas — ❌** messaging (bulk SMS/email to staff), audit log viewer, learning & development documents,
 appraisal (new design pending), assets & maintenance (separate ERP module).
@@ -133,7 +139,7 @@ working-hours reports, absence requests, attendance-based allowances.
 
 1. Attendance module (section 4) + excuse of duty, admitted staff, absence requests, per-employee attendance setting.
 2. Payroll gaps: ~~assigned allowances, other deductions, salary adjustments~~ (done 2026-11-13); payslip lines for history (with the import).
-3. ~~Change own password/email~~ (done), ~~employee import/export~~ (done), reports + director dashboard, messaging.
+3. ~~Change own password/email~~ (done), ~~employee import/export~~ (done), ~~reports + director dashboard~~ (done), messaging.
 4. `erp:import-hrms` migration command (all areas in section 3), dry runs on a copy of production.
 5. Parallel run: 1–2 payroll months in both systems, compare every line; then switch.
 
@@ -312,7 +318,7 @@ and contract types carry the same flags (`has_payroll`, `has_overtime`, `has_all
 | E-12 | Per-employee settings: `hasAttendance`, `hasAnnualLeave` | ❌ | Needed for payroll Mode A/B per employee |
 | E-13 | Registered on attendance device at creation, "send to biometric" | ❌ | Do it through the `AttendanceSource` adapter, only when switched on |
 | E-14 | Patient ID (staff member's record number in the HMS, used for excuse-of-duty) | ❌ | Make it a generic "external IDs" list on the employee (system → ID), not an HMS field |
-| E-15 | Reports: employee export with chosen columns, phone numbers, birthdays, emails, termination report, employed report | 🟡 | Export with chosen columns done (2026-11-13); other reports with the reports slice |
+| E-15 | Reports: employee export with chosen columns, phone numbers, birthdays, emails, termination report, employed report | ✅ | ✅ 2026-11-13: export with chosen columns; contacts, birthdays, joiners, leavers, licences, interns, retirement in Reports |
 | E-16 | Audit trail / contract history view | ❌ | See #13 |
 
 ### New feature: employee contract renewal request (not in HRMS)
@@ -414,7 +420,7 @@ fills `attendance_transas`. The attendance page lists an empty table.
 | A-4 | Lost-hours claims: reason, HR accepts, set lost hours to zero, through the workflow | 🟡 | ERP has claim CRUD. Check that approval updates `lost_hour`/payroll, and move it onto the workflow engine (#11) |
 | A-5 | Absence requests | ✅/❓ | ERP `absence_requests` exists. Check it against HRMS behaviour |
 | A-6 | Excuse-of-duty and admitted staff | ❌ | Manual entry + optional external source (P-8) |
-| A-7 | Reports: compiled report with filters + Excel, summary, statistics, per-employee detail, director view, internship attendance, lost-hours claims list | ❌ | ERP `AttendanceController` only has an index |
+| A-7 | Reports: compiled report with filters + Excel, summary, statistics, per-employee detail, director view, internship attendance, lost-hours claims list | ✅ | 2026-11-13 Reports module: by day, per employee (filter type = internship), claims; overview shows today |
 | A-8 | Device screens: devices, areas, punch transactions, employees not enrolled on a device (+ PDF) | ❌ | Part of the attendance integration screens |
 | A-9 | Visibility by role/department/section | 🟡 | See #18 |
 
@@ -452,7 +458,7 @@ and never gives anyone an annual entitlement.
 | L-8 | Roster entries move with the employee on department change | ❌ | See #17 |
 | L-9 | Report back from leave (`report_date`, reported to HR), statuses `ended` (replaced `reported`) and `postponed` | 🟡 | ERP still uses `reported`. See #15 |
 | L-10 | Unpaid leave → `leave_deductions` → payroll, group sync | 🟡 | Table only. See P-3 / #2 |
-| L-11 | Views: employee history incl. last year, leave progress, leave form PDF, department and HR lists by status, director "on leave" list, actual balance page | 🟡 | ERP has basic lists only |
+| L-11 | Views: employee history incl. last year, leave progress, leave form PDF, department and HR lists by status, director "on leave" list, actual balance page | 🟡 | 2026-11-13: requests by status, balances, on leave in Reports. Open: leave form PDF |
 | L-12 | Absence requests (with per diem) | ✅/❓ | Check behaviour against HRMS |
 
 ### Design requirement: configurable leave rules
@@ -511,7 +517,7 @@ allowances or overtime automatically.
 | OT-4 | Approval HOD → HOS (head of section) → HR (3 levels, workflow) | ❌ | ERP has HOD/HR columns only, no HOS level, no approve actions |
 | OT-5 | Paid flag + overtime lines per payslip | 🟡 | ERP sets `is_paid`, but pays **all** approved unpaid overtime regardless of date. Should be limited to the payroll period, with older items shown for HR to confirm |
 | OT-6 | Max overtime hours per duty | ❌ | `employee_timetables.max_overtime_hours` (R-1) |
-| OT-7 | Reports: department overtime list + PDF, HR department overtime, payroll overtime report, employee self view | ❌ | |
+| OT-7 | Reports: department overtime list + PDF, HR department overtime, payroll overtime report, employee self view | ✅ | 2026-11-13 Reports module: claims list and per-employee totals (print instead of PDF) |
 
 ### Design note: overtime and allowances in both payroll modes
 Automatic overtime and daily allowances in HRMS depend on attendance. So the two payroll modes need two paths:

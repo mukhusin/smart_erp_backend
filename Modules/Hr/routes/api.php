@@ -34,6 +34,7 @@ use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
 use Modules\Hr\Http\Controllers\Api\RenewalLetterController;
 use Modules\Hr\Http\Controllers\Api\RenewalReviewController;
+use Modules\Hr\Http\Controllers\Api\ReportsController;
 use Modules\Hr\Http\Controllers\Api\Roster\PublicHolidayController;
 use Modules\Hr\Http\Controllers\Api\Roster\RosterCodeController;
 use Modules\Hr\Http\Controllers\Api\Roster\RosterController;
@@ -41,6 +42,7 @@ use Modules\Hr\Http\Controllers\Api\Roster\WorkScheduleController;
 use Modules\Hr\Http\Controllers\Api\SelfContractController;
 use Modules\Hr\Http\Controllers\Api\SelfDutyController;
 use Modules\Hr\Http\Controllers\Api\SupervisorController;
+use Modules\Hr\Support\HrReports;
 
 Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name('hr.')->group(function () {
     Route::group([], function () {
@@ -416,4 +418,11 @@ Route::prefix('attendance')->middleware(['auth:sanctum', 'module:attendance'])->
         Route::post('settings/test', [AttendanceController::class, 'testConnection'])->name('settings.test');
         Route::post('sync', [AttendanceController::class, 'syncNow'])->name('sync');
     });
+});
+
+Route::prefix('reports')->middleware(['auth:sanctum', 'module:reports', 'can:reports.view'])->name('reports.')->group(function () {
+    Route::get('overview', [ReportsController::class, 'overview'])->name('overview');
+    Route::get('hr', [ReportsController::class, 'index'])->name('hr.index');
+    Route::get('hr/{report}', [ReportsController::class, 'show'])->whereIn('report', array_keys(HrReports::REPORTS))->name('hr.show');
+    Route::get('hr/{report}/csv', [ReportsController::class, 'csv'])->whereIn('report', array_keys(HrReports::REPORTS))->middleware('can:reports.generate')->name('hr.csv');
 });
