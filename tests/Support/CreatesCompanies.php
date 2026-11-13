@@ -32,6 +32,17 @@ trait CreatesCompanies
         return [$company, $admin];
     }
 
+    /** Gives every current employee of the company without an active contract one, so they count as active staff. */
+    protected function giveActiveContracts(Company $company): void
+    {
+        $typeId = \App\Models\NatureOfContract::withoutCompanyScope()->where('company_id', $company->id)->value('id')
+            ?? \App\Models\NatureOfContract::withoutCompanyScope()->create(['company_id' => $company->id, 'contract_name' => 'Permanent', 'code' => 'PERM', 'employment_type' => 'full_time', 'is_active' => true])->id;
+        \App\Models\Employee::withoutCompanyScope()->where('company_id', $company->id)->where('employment_status', '!=', 'terminated')
+            ->whereDoesntHave('contracts', fn ($q) => $q->where('is_active', true))->get()
+            ->each(fn ($e) => \App\Models\EmployeeContract::create(['employee_id' => $e->id, 'nature_of_contract_id' => $typeId, 'contract_no' => $e->employee_no,
+                'basic_salary' => 500000, 'period' => 12, 'start_date' => '2020-01-01', 'end_date' => '2030-12-31', 'status' => 'active', 'is_active' => true]));
+    }
+
     protected function createPlatformAdmin(): User
     {
         return User::factory()->create(['username' => 'owner', 'is_platform_admin' => true, 'company_id' => null]);

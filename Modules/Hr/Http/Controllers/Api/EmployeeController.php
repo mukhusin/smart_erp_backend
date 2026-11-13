@@ -60,7 +60,9 @@ class EmployeeController extends Controller
 
     private function query(Request $request, EmployeeScope $scope): QueryBuilder
     {
-        return QueryBuilder::for($scope->apply(Employee::with(self::WITH), $request->user()))
+        $base = Employee::with(self::WITH)->when(! in_array($request->input('filter.emp_type'), ['internship', 'resident'], true), fn ($q) => $q->staff());
+
+        return QueryBuilder::for($scope->apply($base, $request->user()))
             ->allowedFilters(
                 AllowedFilter::callback('search', fn ($q, $v) => $q->where(fn ($q) => $q
                     ->where('fname', 'like', "%{$v}%")->orWhere('lname', 'like', "%{$v}%")->orWhere('mname', 'like', "%{$v}%")

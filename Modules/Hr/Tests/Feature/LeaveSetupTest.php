@@ -42,6 +42,7 @@ class LeaveSetupTest extends TestCase
             $this->driver = Employee::create(['employee_no' => 'D1', 'fname' => 'Juma', 'lname' => 'Musa', 'gender' => 'Male', 'department_id' => $ward->id,
                 'emp_type' => 'part_time', 'employment_status' => 'confirmed', 'has_annual_leave' => false, 'employment_date' => '2020-01-01']);
         });
+        $this->giveActiveContracts($this->company);
     }
 
     private function inCompany(callable $fn): mixed

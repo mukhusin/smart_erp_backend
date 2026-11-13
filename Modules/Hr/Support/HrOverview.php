@@ -24,8 +24,9 @@ class HrOverview
     public function build(User $user): array
     {
         $today = CarbonImmutable::today();
-        $active = $this->scope->apply(Employee::where('employment_status', '!=', 'terminated'), $user);
-        $all = $this->scope->apply(Employee::query(), $user);
+        $current = $this->scope->apply(Employee::where('employment_status', '!=', 'terminated'), $user);
+        $active = $this->scope->apply(Employee::query()->active(), $user);
+        $all = $this->scope->apply(Employee::query()->staff(), $user);
         $ids = (clone $active)->select('id');
         $allIds = (clone $all)->select('id');
         $leaving = array_diff(array_keys(O::CONTRACT_END_REASONS), O::CONTRACT_KEEPS_EMPLOYEE);
@@ -44,7 +45,7 @@ class HrOverview
                 'joined_this_month' => (clone $all)->whereDate('employment_date', '>=', $today->startOfMonth())->whereDate('employment_date', '<=', $today)->count(),
                 'left_this_month' => EmployeeContract::whereIn('employee_id', $allIds)->where('is_active', false)->whereIn('status', $leaving)
                     ->whereDate('date_of_change', '>=', $today->startOfMonth())->whereDate('date_of_change', '<=', $today)->distinct('employee_id')->count('employee_id'),
-                'interns' => EmployeePlacement::whereIn('employee_id', $ids)->where('status', 'active')->count(),
+                'interns' => EmployeePlacement::whereIn('employee_id', (clone $current)->select('id'))->where('status', 'active')->count(),
                 'retiring_12_months' => $staff->filter(fn ($e) => $e->date_of_birth && $e->date_of_birth->copy()->addYears(60)->lte($today->addYear()))->count(),
             ],
             'departments' => $this->departments($user),
@@ -59,7 +60,7 @@ class HrOverview
             'contracts' => [
                 'ending_30_days' => $this->ending($ids, $today->addDays(30)),
                 'ending_90_days' => $this->ending($ids, $today->addDays(O::RENEWAL_WINDOW_DAYS)),
-                'without_contract' => (clone $active)->whereDoesntHave('contracts', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
+                'without_contract' => (clone $current)->whereDoesntHave('contracts', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
                     ->whereDoesntHave('placements', fn ($q) => $q->whereIn('status', ['active', 'upcoming']))->count(),
                 'licences_expired' => EmployeeLicence::whereIn('employee_id', $ids)->whereDate('end_date', '<', $today)
                     ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('employee_licences as n')->whereColumn('n.employee_id', 'employee_licences.employee_id')
@@ -106,7 +107,7 @@ class HrOverview
 
     private function departments(User $user): array
     {
-        return $this->scope->apply(Employee::where('employment_status', '!=', 'terminated')->with('department:id,name'), $user)->get(['id', 'department_id'])
+        return $this->scope->apply(Employee::query()->active()->with('department:id,name'), $user)->get(['id', 'department_id'])
             ->groupBy(fn ($e) => $e->department?->name ?? 'No department')
             ->map(fn ($g, $name) => ['name' => $name, 'count' => $g->count()])->sortByDesc('count')->values()->all();
     }

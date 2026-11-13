@@ -24,6 +24,7 @@ class DepartmentStructureTest extends TestCase
         [$this->company, $this->admin] = $this->createCompany('Alpha', ['modules' => [['slug' => 'hr'], ['slug' => 'admin']]]);
         setPermissionsTeamId($this->company->id);
         $this->actingAs($this->admin);
+        $this->giveActiveContracts($this->company);
     }
 
     private function staff(string $name, int $department, ?int $section = null): Employee
@@ -65,6 +66,7 @@ class DepartmentStructureTest extends TestCase
         $this->assertTrue($second->user->refresh()->hasRole('section-head'));
         $this->assertSame(HeadOfDepartment::SECTION, HeadOfDepartment::where('department_id', $ward)->value('level'));
 
+        $this->giveActiveContracts($this->company);
         $this->getJson('/api/v1/hr/structure/departments')->assertOk()
             ->assertJsonPath('data.0.name', 'Human Resources')
             ->assertJsonFragment(['name' => 'Nursing', 'staff_count' => 2])

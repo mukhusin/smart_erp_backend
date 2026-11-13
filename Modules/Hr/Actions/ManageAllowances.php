@@ -83,7 +83,7 @@ class ManageAllowances
         $calendar = app(WorkCalendar::class);
         $added = $removed = 0;
 
-        $employees = Employee::whereIn('department_id', $departments)->where('employment_status', '!=', 'terminated')
+        $employees = Employee::whereIn('department_id', $departments)->active()
             ->when($employeeIds, fn ($q) => $q->whereIn('id', $employeeIds))->get();
         foreach ($employees as $employee) {
             $due = [];

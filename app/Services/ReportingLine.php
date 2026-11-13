@@ -76,7 +76,7 @@ class ReportingLine
         $byDepartment = $headed->isEmpty() ? collect() : Employee::withoutGlobalScopes()->with('jobPosition')
             ->where('company_id', $boss->company_id)->whereNull('deleted_at')
             ->whereIn('department_id', $headed->pluck('department_id'))
-            ->where('employment_status', '!=', 'terminated')->whereKeyNot($boss->id)
+            ->active()->whereKeyNot($boss->id)
             ->whereDoesntHave('supervisors')->get()
             ->map(fn ($e) => ['employee' => $e, 'source' => self::DEPARTMENT_HEAD, 'since' => $headed->firstWhere('department_id', $e->department_id)?->started_at]);
 

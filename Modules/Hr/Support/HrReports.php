@@ -169,12 +169,17 @@ class HrReports
         return $csv;
     }
 
-    private function employees(array $v, User $user, bool $activeOnly = true): Builder
+    /** @param 'active'|'staff'|'duty'|'people'|bool $who */
+    private function employees(array $v, User $user, bool|string $who = 'active'): Builder
     {
+        $who = $who === true ? 'active' : ($who === false ? 'staff' : $who);
         $query = $this->scope->apply(Employee::query()->with(['department', 'section', 'jobPosition', 'branch']), $user);
-        if ($activeOnly) {
-            $query->where('employment_status', '!=', 'terminated');
-        }
+        match ($who) {
+            'active' => $query->active(),
+            'staff' => $query->staff(),
+            'duty' => $query->onDuty(),
+            default => null,
+        };
         if (! empty($v['branch_id'])) {
             $query->where('company_branch_id', (int) $v['branch_id']);
         }
@@ -360,7 +365,7 @@ class HrReports
 
     private function reportInterns(array $v, User $user): array
     {
-        $ids = $this->employees($v, $user, false)->select('id');
+        $ids = $this->employees($v, $user, 'people')->select('id');
         $rows = EmployeePlacement::with(['employee.department', 'employee.section', 'employee.jobPosition'])
             ->whereIn('employee_id', $ids)->where('status', '!=', 'cancelled')
             ->when($v['type'], fn ($q, $t) => $q->where('type', $t))
@@ -492,7 +497,7 @@ class HrReports
     private function reportAttendanceDaily(array $v, User $user): array
     {
         $money = $this->money($user);
-        $ids = $this->employees($v, $user)->where('has_attendance', true)->select('id');
+        $ids = $this->employees($v, $user, 'duty')->where('has_attendance', true)->select('id');
         $time = fn ($t) => $t ? CarbonImmutable::parse($t)->format('H:i') : null;
         $rows = AttendanceTransa::with(['employee.department', 'employee.section', 'employee.jobPosition'])
             ->whereIn('employee_id', $ids)
@@ -517,7 +522,7 @@ class HrReports
     private function reportAttendanceSummary(array $v, User $user): array
     {
         $money = $this->money($user);
-        $employees = $this->employees($v, $user)->where('has_attendance', true)->orderBy('fname')->get()->keyBy('id');
+        $employees = $this->employees($v, $user, 'duty')->where('has_attendance', true)->orderBy('fname')->get()->keyBy('id');
         $days = AttendanceTransa::whereIn('employee_id', $employees->keys())
             ->whereDate('transaction_date', '>=', $v['from'])->whereDate('transaction_date', '<=', $v['to'])
             ->get(['employee_id', 'status', 'punch_in_late_minutes', 'lost_hour', 'lost_amount'])->groupBy('employee_id');
@@ -548,7 +553,7 @@ class HrReports
     private function reportAttendanceClaims(array $v, User $user): array
     {
         $money = $this->money($user);
-        $ids = $this->employees($v, $user, false)->select('id');
+        $ids = $this->employees($v, $user, 'people')->select('id');
         $labels = ['pending' => 'Waiting for approval', 'approved' => 'Approved', 'rejected' => 'Not approved', 'cancelled' => 'Withdrawn'];
         $rows = AttendanceClaim::with(['employee.department', 'employee.section', 'employee.jobPosition', 'transaction', 'reason'])
             ->whereIn('employee_id', $ids)

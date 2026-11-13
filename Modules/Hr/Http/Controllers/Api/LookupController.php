@@ -122,8 +122,10 @@ class LookupController extends Controller
      */
     public function summary(EmployeeScope $scope): JsonResponse
     {
-        $active = $scope->apply(Employee::where('employment_status', '!=', 'terminated'), request()->user());
+        $current = $scope->apply(Employee::where('employment_status', '!=', 'terminated'), request()->user());
+        $active = $scope->apply(Employee::query()->active(), request()->user());
         $ids = (clone $active)->select('id');
+        $currentIds = (clone $current)->select('id');
         $soon = CarbonImmutable::today()->addDays(EmployeeOptions::RENEWAL_WINDOW_DAYS)->toDateString();
 
         return response()->json(['data' => [
@@ -131,7 +133,7 @@ class LookupController extends Controller
             'probation' => (clone $active)->where('employment_status', 'probation')->count(),
             'without_account' => (clone $active)->whereNull('user_id')->count(),
             'invited' => (clone $active)->whereHas('user', fn ($u) => $u->whereNull('email_verified_at'))->count(),
-            'without_contract' => (clone $active)->whereDoesntHave('contracts', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
+            'without_contract' => (clone $current)->whereDoesntHave('contracts', fn ($q) => $q->whereIn('status', ['active', 'waiting']))
                 ->whereDoesntHave('placements', fn ($q) => $q->whereIn('status', ['active', 'upcoming']))->count(),
             'contracts_ending' => EmployeeContract::whereIn('employee_id', $ids)->where('is_active', true)->whereDate('end_date', '<=', $soon)
                 ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('employee_contracts as w')->whereColumn('w.employee_id', 'employee_contracts.employee_id')
@@ -139,8 +141,8 @@ class LookupController extends Controller
             'licences_expiring' => EmployeeLicence::whereIn('employee_id', $ids)->whereDate('end_date', '<=', $soon)
                 ->whereNotExists(fn ($q) => $q->selectRaw('1')->from('employee_licences as n')->whereColumn('n.employee_id', 'employee_licences.employee_id')
                     ->whereColumn('n.professional_licence_id', 'employee_licences.professional_licence_id')->whereColumn('n.end_date', '>', 'employee_licences.end_date'))->count(),
-            'placements_active' => EmployeePlacement::whereIn('employee_id', $ids)->where('status', 'active')->count(),
-            'placements_ending' => EmployeePlacement::whereIn('employee_id', $ids)->where('status', 'active')->whereDate('end_date', '<=', CarbonImmutable::today()->addDays(30))->count(),
+            'placements_active' => EmployeePlacement::whereIn('employee_id', $currentIds)->where('status', 'active')->count(),
+            'placements_ending' => EmployeePlacement::whereIn('employee_id', $currentIds)->where('status', 'active')->whereDate('end_date', '<=', CarbonImmutable::today()->addDays(30))->count(),
             'scope' => $scope->describe(request()->user()),
         ]]);
     }

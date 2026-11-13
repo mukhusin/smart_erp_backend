@@ -25,6 +25,7 @@ class SupervisorDeductionTest extends TestCase
         [$this->company, $this->admin] = $this->createCompany('Alpha', ['modules' => [['slug' => 'hr'], ['slug' => 'payroll']]]);
         setPermissionsTeamId($this->company->id);
         $this->actingAs($this->admin);
+        $this->giveActiveContracts($this->company);
     }
 
     private function employee(string $no): Employee
@@ -61,6 +62,7 @@ class SupervisorDeductionTest extends TestCase
         $nursing = $this->postJson('/api/v1/hr/structure/departments', ['name' => 'Nursing'])->json('data.id');
         $make = fn (string $no) => Employee::withoutCompanyScope()->create(['company_id' => $this->company->id, 'employee_no' => $no, 'fname' => $no, 'lname' => 'Test', 'gender' => 'Male', 'employment_status' => 'confirmed', 'department_id' => $nursing]);
         [$head, $nurse, $nurse2] = [$make('HEAD'), $make('N1'), $make('N2')];
+        $this->giveActiveContracts($this->company);
         $this->postJson("/api/v1/hr/structure/departments/{$nursing}/head", ['employee_id' => $head->id])->assertOk();
 
         $this->getJson("/api/v1/hr/employees/{$nurse->id}/supervisors")->assertOk()

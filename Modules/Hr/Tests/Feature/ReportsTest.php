@@ -63,6 +63,7 @@ class ReportsTest extends TestCase
                 'lost_amount' => 2000, 'description' => 'Traffic', 'claim_status' => 'pending']);
             EmpLeave::create(['employee_id' => $asha->id, 'leave_type_id' => $leave->id, 'start_date' => '2026-11-10', 'end_date' => '2026-11-20', 'requested_start_date' => '2026-11-10', 'requested_end_date' => '2026-11-20', 'days' => 9, 'days_requested' => 9, 'leave_year' => 2026, 'status' => 'on_leave']);
         });
+        $this->giveActiveContracts($this->company);
     }
 
     public function test_lists_reports_and_runs_them(): void
@@ -132,6 +133,7 @@ class ReportsTest extends TestCase
         app(CompanyContext::class)->run($this->company, fn () => Employee::create(['employee_no' => 'H1', 'fname' => 'Hamisi', 'lname' => 'Y', 'gender' => 'Male',
             'emp_type' => 'full_time', 'employment_status' => 'confirmed', 'department_id' => $this->other, 'user_id' => $hod->id]));
 
+        $this->giveActiveContracts($this->company);
         $data = $this->actingAs($hod)->getJson('/api/v1/reports/overview')->assertOk()->json('data');
         $this->assertSame(2, $data['staff']['active']);
         $this->assertNull($data['salary']);
@@ -149,7 +151,7 @@ class ReportsTest extends TestCase
         $this->assertSame(1, $data['staff']['retiring_12_months']);
         $this->assertSame(1, $data['leave']['on_leave_today']);
         $this->assertSame(1, $data['contracts']['ending_30_days']);
-        $this->assertEquals(1500000, $data['salary']['monthly_basic']);
+        $this->assertEquals(2000000, $data['salary']['monthly_basic']);
         $this->assertSame(['month' => '2026-11', 'joined' => 1, 'left' => 1], end($data['movement']));
         $this->assertNull($data['payroll']);
 

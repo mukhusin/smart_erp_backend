@@ -46,6 +46,26 @@ class Employee extends Model {
     public function experiences()   { return $this->hasMany(EmployeeExperience::class); }
     public function dependants()    { return $this->hasMany(EmployeeDependant::class); }
     public function contracts()     { return $this->hasMany(EmployeeContract::class); }
+
+    /** Active staff: not left and with an active contract. Interns and residents (placements only) are not staff. */
+    public function scopeActive($query)
+    {
+        return $query->where('employment_status', '!=', 'terminated')->whereHas('contracts', fn ($c) => $c->where('is_active', true));
+    }
+
+    /** People who work duties: active staff plus interns and residents with an active placement. */
+    public function scopeOnDuty($query)
+    {
+        return $query->where('employment_status', '!=', 'terminated')
+            ->where(fn ($q) => $q->whereHas('contracts', fn ($c) => $c->where('is_active', true))->orWhereHas('placements', fn ($p) => $p->where('status', 'active')));
+    }
+
+    /** Staff records, whatever their status; interns and residents are not staff. */
+    public function scopeStaff($query)
+    {
+        return $query->where(fn ($q) => $q->whereNull('emp_type')->orWhereNotIn('emp_type', ['internship', 'resident']));
+    }
+
     public function activeContract(){ return $this->hasOne(EmployeeContract::class)->where('is_active', true)->latest('id'); }
     public function waitingContract(){ return $this->hasOne(EmployeeContract::class)->where('status', 'waiting')->latest('id'); }
     public function licences()      { return $this->hasMany(EmployeeLicence::class); }

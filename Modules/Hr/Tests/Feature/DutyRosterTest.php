@@ -58,6 +58,7 @@ class DutyRosterTest extends TestCase
                     'pass_day' => (bool) $day?->crossesMidnight, 'work_hour' => $day?->hours ?? 0, 'color' => 'blue'])->id;
             }
         });
+        $this->giveActiveContracts($this->company);
     }
 
     private function inCompany(callable $fn): mixed

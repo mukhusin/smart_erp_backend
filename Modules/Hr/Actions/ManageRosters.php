@@ -82,7 +82,7 @@ class ManageRosters
 
         return Employee::with('jobPosition')
             ->where(fn ($q) => $q
-                ->where(fn ($q) => $q->where('department_id', $roster->department_id)->where('employment_status', '!=', 'terminated')
+                ->where(fn ($q) => $q->where('department_id', $roster->department_id)->onDuty()
                     ->when($roster->section_id, fn ($q) => $q->where('section_id', $roster->section_id)))
                 ->orWhereIn('id', $inRoster))
             ->orderBy('fname')->orderBy('lname')->get();

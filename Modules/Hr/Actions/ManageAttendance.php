@@ -55,7 +55,7 @@ class ManageAttendance
         if ($to->lt($from) || ! $this->settings()->enabled()) {
             return ['days' => 0, 'rows' => 0];
         }
-        $employees = Employee::where('has_attendance', true)->where('employment_status', '!=', 'terminated')
+        $employees = Employee::where('has_attendance', true)->onDuty()
             ->when($employeeIds, fn ($q) => $q->whereIn('id', $employeeIds))->get();
         foreach ($employees as $employee) {
             foreach (CarbonPeriod::create($from, $to) as $date) {

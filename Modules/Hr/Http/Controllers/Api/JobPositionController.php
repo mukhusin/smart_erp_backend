@@ -36,7 +36,7 @@ class JobPositionController extends Controller
     #[QueryParameter('per_page', description: 'Max 100.', type: 'integer', default: 25)]
     public function index(Request $request): AnonymousResourceCollection
     {
-        $positions = QueryBuilder::for(JobPosition::with(self::WITH)->withCount(['employees as staff_count' => fn ($q) => $q->where('employment_status', '!=', 'terminated')]))
+        $positions = QueryBuilder::for(JobPosition::with(self::WITH)->withCount(['employees as staff_count' => fn ($q) => $q->active()]))
             ->allowedFilters(
                 AllowedFilter::callback('search', fn ($q, $v) => $q->where('title', 'like', "%{$v}%")),
                 AllowedFilter::exact('department_id'),
@@ -69,7 +69,7 @@ class JobPositionController extends Controller
     {
         $jobPosition->update($request->validated());
 
-        return new JobPositionResource($jobPosition->load(self::WITH)->loadCount(['employees as staff_count' => fn ($q) => $q->where('employment_status', '!=', 'terminated')]));
+        return new JobPositionResource($jobPosition->load(self::WITH)->loadCount(['employees as staff_count' => fn ($q) => $q->active()]));
     }
 
     /**

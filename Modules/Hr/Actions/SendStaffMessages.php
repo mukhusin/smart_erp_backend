@@ -28,7 +28,7 @@ class SendStaffMessages
 
     public function employees(array $data, User $user): Builder
     {
-        $query = $this->scope->apply(Employee::query()->where('employment_status', '!=', 'terminated'), $user);
+        $query = $this->scope->apply(Employee::query()->active(), $user);
 
         $query = match ($data['recipient_type']) {
             Messaging::RECIPIENT_INDIVIDUAL => $query->whereIn('id', $data['employee_ids'] ?? []),

@@ -59,6 +59,7 @@ class EmployeeScopeTest extends TestCase
             $make('pharmacist', $this->pharmacy);
             HeadOfDepartment::create(['employee_id' => $this->staff['hod']->id, 'department_id' => $this->lab->id]);
         });
+        $this->giveActiveContracts($this->company);
     }
 
     private function userFor(string $employee, array $permissions): User

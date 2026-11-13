@@ -44,6 +44,7 @@ class StaffMessageTest extends TestCase
             $make(['employee_no' => 'W2', 'fname' => 'Juma', 'phone_number' => '0755123456', 'email' => 'juma@alpha.test']);
             $make(['employee_no' => 'W3', 'fname' => 'Neema']);
         });
+        $this->giveActiveContracts($this->company);
     }
 
     private function sms(array $o = []): array

@@ -60,6 +60,7 @@ class AnnualLeaveRosterTest extends TestCase
             HeadOfDepartment::create(['employee_id' => $matron->id, 'department_id' => $this->nursing->id, 'is_active' => true]);
             LeaveType::query()->update(['created_at' => '2026-01-01 00:00:00']);
         });
+        $this->giveActiveContracts($this->company);
     }
 
     private function inCompany(callable $fn): mixed

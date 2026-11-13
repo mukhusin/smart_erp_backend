@@ -32,6 +32,7 @@ class JobPositionTest extends TestCase
         $this->hq = CompanyBranch::withoutCompanyScope()->where('company_id', $this->company->id)->where('is_headquarters', true)->value('id');
         $this->arusha = CompanyBranch::withoutCompanyScope()->where('company_id', $this->company->id)->where('name', 'Arusha')->value('id');
         $this->actingAs($this->admin);
+        $this->giveActiveContracts($this->company);
     }
 
     private function department(string $name, ?int $branch, array $extra = []): TestResponse
@@ -71,6 +72,7 @@ class JobPositionTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors(['job_position_id' => 'chosen department']);
         $this->postJson('/api/v1/hr/employees', $base + ['company_branch_id' => $this->arusha, 'department_id' => $aruNursing, 'job_position_id' => $aruNurse])->assertCreated();
 
+        $this->giveActiveContracts($this->company);
         $this->deleteJson("/api/v1/hr/job-positions/{$aruNurse}")->assertStatus(422);
         $this->putJson("/api/v1/hr/job-positions/{$aruNurse}", ['title' => 'Registered Nurse', 'department_id' => $aruNursing, 'is_active' => false])->assertOk()->assertJsonPath('data.staff_count', 1);
         $this->getJson('/api/v1/hr/positions?department_id='.$aruNursing)->assertJsonMissing(['id' => $aruNurse]);

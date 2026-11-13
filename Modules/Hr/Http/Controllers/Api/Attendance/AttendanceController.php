@@ -87,7 +87,7 @@ class AttendanceController extends Controller
     public function employees(Request $request): JsonResponse
     {
         $f = $request->validate(['department_id' => ['nullable', 'integer'], 'search' => ['nullable', 'string', 'max:100']]);
-        $rows = app(EmployeeScope::class)->apply(Employee::with('department')->where('employment_status', '!=', 'terminated'), $request->user())
+        $rows = app(EmployeeScope::class)->apply(Employee::with('department')->onDuty(), $request->user())
             ->when($f['department_id'] ?? null, fn ($q, $d) => $q->where(fn ($q) => $q->where('department_id', $d)->orWhere('section_id', $d)))
             ->when($f['search'] ?? null, fn ($q, $t) => $q->where(fn ($q) => $q->where('fname', 'like', "%$t%")->orWhere('lname', 'like', "%$t%")->orWhere('employee_no', 'like', "%$t%")))
             ->orderBy('fname')->limit(500)->get();

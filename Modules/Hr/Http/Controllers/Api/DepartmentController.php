@@ -42,7 +42,7 @@ class DepartmentController extends Controller
     {
         return new DepartmentResource($this->withDetails(Department::whereKey($department->id))
             ->with(['heads.employee', 'sections' => fn ($q) => $this->withDetails($q)->orderBy('name'),
-                'positions' => fn ($q) => $q->withCount(['employees as staff_count' => fn ($e) => $e->where('employment_status', '!=', 'terminated')])->orderByDesc('is_active')->orderBy('title')])
+                'positions' => fn ($q) => $q->withCount(['employees as staff_count' => fn ($e) => $e->active()])->orderByDesc('is_active')->orderBy('title')])
             ->firstOrFail());
     }
 
@@ -118,7 +118,7 @@ class DepartmentController extends Controller
     private function withDetails(Builder|Relation $query): Builder|Relation
     {
         return $query->with(['branch', 'headOfDepartment.employee.jobPosition'])
-            ->withCount(['employees as staff_count' => fn ($q) => $q->where('employment_status', '!=', 'terminated')])
-            ->withCount(['sectionEmployees as section_staff_count' => fn ($q) => $q->where('employment_status', '!=', 'terminated')]);
+            ->withCount(['employees as staff_count' => fn ($q) => $q->active()])
+            ->withCount(['sectionEmployees as section_staff_count' => fn ($q) => $q->active()]);
     }
 }
