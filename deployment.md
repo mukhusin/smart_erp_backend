@@ -14,6 +14,14 @@ Steps to run on the server when a release needs more than pulling the code. Newe
 2. Companies registered before this release have no approval workflow for "Profile update by employee". Add one in
    Administration → Workflows (one HR step). Without it, records employees add are saved straight away.
 
+3. The same for "Salary advance": new companies get Supervisor → HR; companies registered before need it added in
+   Administration → Workflows. Without it, an advance applies as soon as it is entered.
+
+## HRMS import, all phases (2026-11-13)
+
+Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll_rows`, and widen
+`employee_timetables.code` to 50 characters. Run `php artisan migrate`, then the import as below (all steps run by default).
+
 ## HRMS import, phase 1 (2026-11-13)
 
 1. Run the migration. It adds the `legacy_ids` table (HRMS id → ERP id per table).

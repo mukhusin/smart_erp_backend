@@ -28,6 +28,29 @@ class LegacyIds
             ->where('table_name', $table)->pluck('target_id', 'legacy_id')->map(fn ($v) => (int) $v)->all();
     }
 
+    /** @return array<int, string> HRMS id => source updated_at stored at the last copy */
+    public function stamps(string $table): array
+    {
+        return DB::table('legacy_ids')->where('company_id', $this->companyId)->where('source', $this->source)->where('table_name', $table)
+            ->pluck('updated_at', 'legacy_id')->map(fn ($v) => (string) $v)->all();
+    }
+
+    /** @param list<array{legacy: int, target: int, stamp: string|null}> $rows */
+    public function insertMany(string $table, array $rows): void
+    {
+        foreach (array_chunk($rows, 1000) as $chunk) {
+            DB::table('legacy_ids')->insert(array_map(fn ($r) => ['company_id' => $this->companyId, 'source' => $this->source, 'table_name' => $table,
+                'legacy_id' => $r['legacy'], 'target_id' => $r['target'], 'created_at' => now(), 'updated_at' => $r['stamp'] ?? now()], $chunk));
+        }
+        unset($this->cache[$table]);
+    }
+
+    public function touch(string $table, int $legacyId, ?string $stamp): void
+    {
+        DB::table('legacy_ids')->where('company_id', $this->companyId)->where('source', $this->source)->where('table_name', $table)
+            ->where('legacy_id', $legacyId)->update(['updated_at' => $stamp ?? now()]);
+    }
+
     public function set(string $table, int $legacyId, int $targetId): void
     {
         $this->all($table);

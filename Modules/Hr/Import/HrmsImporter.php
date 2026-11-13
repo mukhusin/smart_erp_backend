@@ -28,7 +28,7 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class HrmsImporter
 {
-    public const STEPS = ['reference', 'organisation', 'users', 'employees', 'contracts', 'profiles', 'statutory', 'structure', 'leave', 'roles', 'files'];
+    public const STEPS = ['reference', 'organisation', 'users', 'employees', 'contracts', 'profiles', 'statutory', 'structure', 'leave', 'pay', 'payroll', 'transactions', 'roster', 'attendance', 'archive', 'roles', 'files'];
 
     private const ROLE_MAP = [
         'super_admin' => DefaultRoles::COMPANY_ADMIN,
@@ -492,6 +492,495 @@ class HrmsImporter
         $balances->forget();
     }
 
+    private function stepPay(): void
+    {
+        $this->sync('loan_providers', 'loan_providers', fn ($r) => [
+            'company_id' => $this->companyId, 'name' => $r->name, 'short_name' => $r->short_name, 'description' => $r->description,
+            'is_active' => (bool) $r->isActive, 'deleted_at' => $r->deleted_at,
+        ], match: fn ($r) => $this->findBy('loan_providers', ['name' => $r->name]));
+
+        $this->sync('allowance_categories', 'allowance_categories', fn ($r) => [
+            'company_id' => $this->companyId, 'category' => trim($r->category), 'code' => $r->code,
+            'duration' => in_array($r->duration, ['month', 'day', 'night', 'holiday', 'case'], true) ? $r->duration : 'month',
+            'generation' => $r->claimed ? 'claim' : 'auto', 'claimed' => (bool) $r->claimed, 'deduct_leave' => (bool) $r->deduct_leave,
+            'other_absence' => (bool) $r->other_absence, 'is_active' => (bool) $r->isActive,
+        ], match: fn ($r) => $this->findBy('allowance_categories', ['category' => trim($r->category)]), keepOnUpdate: ['taxable', 'description']);
+
+        $this->sync('department_allowances', 'department_allowances', fn ($r) => ($category = $this->ids->get('allowance_categories', $r->category_id)) ? [
+            'company_id' => $this->companyId, 'department_id' => $this->ids->get('departments', $r->department_id), 'section_id' => $this->ids->get('departments', $r->section_id),
+            'category_id' => $category, 'job_position_id' => $this->ids->get('job_positions', $r->job_position_id), 'amount' => $r->amount ?? 0,
+            'total_amount' => $r->total_amount, 'rate_payroll_period' => $r->rate_payroll_period, 'is_active' => (bool) $r->isActive,
+        ] : "rate {$r->id}: allowance category {$r->category_id} missing");
+
+        $this->sync('department_overtimes', 'overtime_rates', fn ($r) => [
+            'company_id' => $this->companyId, 'department_id' => $this->ids->get('departments', $r->department_id), 'section_id' => $this->ids->get('departments', $r->section_id),
+            'job_position_id' => $this->ids->get('job_positions', $r->job_position_id), 'unit' => 'hour', 'amount' => $r->amount ?? 0, 'is_active' => (bool) $r->isActive,
+        ]);
+
+        $this->sync('reliefs', 'reliefs', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'employee_id' => $employee, 'amount' => $r->amount ?? 0, 'is_active' => (bool) $r->is_active && (! $r->end_date || $r->end_date >= now()->toDateString()),
+            'description' => trim(($r->start_date ? 'From '.$r->start_date : '').($r->end_date ? ' to '.$r->end_date : '')) ?: null,
+        ] : "employee {$r->employee_id} not imported");
+
+        $this->sync('saccos_members', 'saccos_members', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'employee_id' => $employee, 'amount' => $r->amount ?? 0, 'total_contribution' => $r->total_contribution ?? 0,
+            'from_date' => $this->date($r->from_date), 'is_active' => (bool) $r->isActive,
+        ] : "employee {$r->employee_id} not imported");
+    }
+
+    private function stepPayroll(): void
+    {
+        $months = array_flip(array_map(fn ($m) => strtolower(CarbonImmutable::create(2000, $m, 1)->format('F')), range(1, 12)));
+        $latest = $this->src->table('payroll_sheets')->max('id');
+
+        $this->sync('payroll_sheets', 'payroll_sheets', function ($r) use ($months, $latest) {
+            $month = is_numeric($r->month) ? (int) $r->month : (($months[strtolower(trim((string) $r->month))] ?? -1) + 1);
+            if ($month < 1) {
+                return "sheet {$r->id}: month \"{$r->month}\" not understood";
+            }
+            $open = (int) $r->id === (int) $latest && strtolower((string) $r->status) === 'on process';
+
+            return [
+                'company_id' => $this->companyId, 'name' => $r->name, 'month' => (string) $month, 'year' => (string) $r->year,
+                'payroll_from_date' => $this->date($r->payroll_from_date), 'payroll_to_date' => $this->date($r->payroll_to_date), 'number_of_days' => $r->number_of_days,
+                'payroll_cost' => $r->payroll_cost, 'hr_approved' => (bool) $r->hrApproved, 'payroll_approved' => (bool) $r->payrollApproved,
+                'director_approved' => (bool) $r->directorAproved, 'status' => $open ? 'draft' : 'approved',
+                'approved_at' => $open ? null : ($r->approved_at ?? $r->updated_at), 'generated_at' => $r->created_at,
+            ];
+        }, match: fn ($r) => DB::table('payroll_sheets')->where('company_id', $this->companyId)->where('year', (string) $r->year)
+            ->where('month', (string) (is_numeric($r->month) ? (int) $r->month : (($months[strtolower(trim((string) $r->month))] ?? -1) + 1)))
+            ->whereNotIn('id', array_values($this->ids->all('payroll_sheets')))->value('id'));
+
+        $this->bulkSync('payroll_sheet_details', 'payroll_sheet_details', function ($r) {
+            $sheet = $this->ids->get('payroll_sheets', $r->payroll_sheet_id);
+            $employee = $this->ids->get('employees', $r->employee_id);
+            if (! $sheet || ! $employee) {
+                return "payslip {$r->id}: sheet or employee missing";
+            }
+            $n = fn ($v) => round((float) $v, 2);
+
+            return [
+                'payroll_sheet_id' => $sheet, 'employee_id' => $employee, 'contract_id' => $this->ids->get('employee_contracts', $r->contract_id),
+                'full_name' => $r->full_name, 'job_position' => $r->job_position, 'basic_salary' => $n($r->basic_salary), 'actual_basic_salary' => $n($r->actual_basic_salary),
+                'total_allowance' => $n($r->total_allowance), 'total_overtime' => $n($r->total_overtime), 'allowance_overtime' => $n($r->allowance_overtime),
+                'leave_deduction' => $n($r->leave_deduction), 'attendance_deduction' => $n($r->attendance_deduction), 'other_deduction' => 0,
+                'total_loan' => $n($r->total_loan), 'saccos_serving' => $n($r->saccos_serving), 'nssf' => $n($r->NSSF), 'nssf_employer' => $n($r->NSSF_EMPLOYER),
+                'nhif' => $n($r->NHIF), 'nhif_employer' => $n($r->NHIF_EMPLOYER), 'heslb' => $n($r->HESLB), 'tughe' => $n($r->TUGHE), 'amount_taxable' => $n($r->amount_taxable),
+                'paye' => $n($r->PAYE), 'ef' => $n($r->EF), 'nic' => $n($r->NIC), 'relief' => $n($r->relief), 'gross_salary' => $n($r->gross_salary),
+                'total_deduction' => $n($r->total_deduction), 'net_salary' => $n($r->net_salary), 'wcf' => $n($r->WCF), 'sdl' => $n($r->SDL),
+                'allowances' => $r->allowances, 'lines' => json_encode($this->payslipLines($r)), 'bank_id' => $this->ids->get('banks', $r->bank_id),
+                'bank_name' => $r->bank_name, 'bank_branch' => $r->bank_branch, 'bank_code' => $r->bank_code, 'bank_account' => $r->bank_account,
+                'is_active' => (bool) $r->isActive, 'deleted_at' => $r->deleted_at,
+            ];
+        });
+
+        foreach (array_values($this->ids->all('payroll_sheets')) as $sheetId) {
+            $t = DB::table('payroll_sheet_details')->where('payroll_sheet_id', $sheetId)->whereNull('deleted_at')
+                ->selectRaw('count(*) n, sum(gross_salary) g, sum(total_deduction) d, sum(net_salary) net, sum(nssf_employer + nhif_employer + wcf + sdl) er')->first();
+            DB::table('payroll_sheets')->where('id', $sheetId)->update(['employees_count' => (int) $t->n, 'gross_total' => round((float) $t->g, 2),
+                'deduction_total' => round((float) $t->d, 2), 'net_total' => round((float) $t->net, 2), 'employer_total' => round((float) $t->er, 2)]);
+        }
+
+        $this->sync('payroll_comments', 'payroll_comments', fn ($r) => ($sheet = $this->ids->get('payroll_sheets', $r->payroll_sheet_id)) ? [
+            'payroll_sheet_id' => $sheet, 'employee_id' => $this->ids->get('employees', $r->employee_id), 'comment' => $r->comment, 'remarks' => $r->remarks,
+        ] : "comment {$r->id}: sheet missing");
+    }
+
+    /** Itemised payslip lines rebuilt from the HRMS totals (gross = basic + allowances + overtime + relief). */
+    private function payslipLines(object $r): array
+    {
+        $lines = [];
+        $add = function (string $group, string $code, string $label, mixed $amount) use (&$lines) {
+            $amount = round((float) $amount, 2);
+            if (abs($amount) >= 0.01) {
+                $lines[] = ['group' => $group, 'code' => $code, 'label' => $label, 'amount' => $amount];
+            }
+        };
+        $basic = (float) $r->basic_salary;
+        $full = (float) $r->actual_basic_salary;
+        $add('earning', 'BASIC', 'Basic salary'.($full > 0 && $basic < $full - 1 ? ' (of '.number_format($full, 0).')' : ''), $basic);
+        $add('earning', 'ALLOWANCE', 'Allowances', $r->total_allowance);
+        $add('earning', 'OVERTIME', 'Overtime', $r->total_overtime);
+        $add('earning', 'RELIEF', 'Relief', $r->relief);
+        foreach ([['PAYE', 'PAYE', $r->PAYE], ['NSSF', 'NSSF', $r->NSSF], ['NHIF', 'NHIF', $r->NHIF], ['HESLB', 'HESLB loan', $r->HESLB], ['TUGHE', 'TUGHE', $r->TUGHE],
+            ['NIC', 'NIC', $r->NIC], ['FUND', 'Employee fund', $r->EF], ['SACCOS', 'SACCOS', $r->saccos_serving], ['LOAN', 'Loans', $r->total_loan]] as [$code, $label, $amount]) {
+            $add('deduction', $code, $label, $amount);
+        }
+        foreach ([['NSSF_ER', 'NSSF (employer)', $r->NSSF_EMPLOYER], ['NHIF_ER', 'NHIF (employer)', $r->NHIF_EMPLOYER], ['WCF', 'WCF', $r->WCF], ['SDL', 'SDL', $r->SDL]] as [$code, $label, $amount]) {
+            $add('employer', $code, $label, $amount);
+        }
+
+        return $lines;
+    }
+
+    private function stepTransactions(): void
+    {
+        $categories = DB::table('allowance_categories')->where('company_id', $this->companyId)->pluck('id', 'category')->mapWithKeys(fn ($id, $name) => [strtolower(trim($name)) => $id])->all();
+        $staleBefore = now()->subDays(60)->toDateString();
+
+        $this->sync('emp_allowances', 'emp_allowances', function ($r) use ($categories) {
+            $employee = $this->ids->get('employees', $r->employee_id);
+            if (! $employee) {
+                return "employee {$r->employee_id} not imported";
+            }
+            $category = $categories[strtolower(trim((string) $r->category))] ?? null;
+
+            return [
+                'company_id' => $this->companyId, 'employee_id' => $employee, 'department_allowance_id' => $this->ids->get('department_allowances', $r->department_allowance_id),
+                'allowance_category_id' => $category, 'category' => $r->category, 'duration' => $r->duration, 'items' => $r->items, 'amount_per_item' => $r->amount_per_item,
+                'amount' => $r->amount ?? 0, 'start_date' => $this->date($r->start_date), 'end_date' => $this->date($r->end_date),
+                'hod_approved' => $this->ids->get('employees', $r->hod_approved), 'hr_approved' => $this->ids->get('employees', $r->hr_approved),
+                'is_hod_approved' => (bool) $r->is_hod_approved, 'is_hr_approved' => (bool) $r->is_hr_approved, 'hod_comment' => $r->hod_comment, 'hr_comment' => $r->hr_comment,
+                'is_active' => (bool) $r->isActive, 'description' => $r->description, 'deleted_at' => $r->deleted_at,
+                'status' => $r->status === 'approved' && $r->isActive ? 'approved' : ($r->status === 'pending' ? 'pending' : 'cancelled'),
+            ];
+        });
+
+        $this->bulkSync('daily_allowances', 'daily_allowances', function ($r) use ($categories) {
+            $employee = $this->ids->get('employees', $r->employee_id);
+            if (! $employee) {
+                return "employee {$r->employee_id} not imported";
+            }
+
+            return [
+                'company_id' => $this->companyId, 'employee_id' => $employee, 'department_allowance_id' => $this->ids->get('department_allowances', $r->department_allowance_id),
+                'allowance_category_id' => $categories[strtolower(trim((string) $r->category))] ?? null,
+                'payroll_sheet_detail_id' => $this->ids->get('payroll_sheet_details', $r->payroll_sheet_detail_id),
+                'hod_approved' => $this->ids->get('employees', $r->hod_approved), 'hr_approved' => $this->ids->get('employees', $r->hr_approved),
+                'is_hod_approved' => (bool) $r->is_hod_approved, 'is_hr_approved' => (bool) $r->is_hr_approved, 'hod_comment' => $r->hod_comment, 'hr_comment' => $r->hr_comment,
+                'category' => $r->category, 'duration' => $r->duration ?: 'month', 'items' => $r->items, 'amount' => $r->amount ?? 0, 'amount_per_item' => $r->amount_per_item,
+                'start_date' => $this->date($r->start_date), 'end_date' => $this->date($r->end_date ?: $r->start_date), 'is_active' => (bool) $r->isActive,
+                'description' => $r->description, 'status' => 'approved', 'source' => 'generated', 'deleted_at' => $r->deleted_at,
+            ];
+        });
+
+        $this->bulkSync('allowance_sheets', 'allowance_sheets', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'employee_id' => $employee, 'payroll_sheet_detail_id' => $this->ids->get('payroll_sheet_details', $r->payroll_sheet_detail_id),
+            'emp_allowance_id' => $this->ids->get('emp_allowances', $r->emp_allowance_id), 'daily_allowance_id' => $this->ids->get('daily_allowances', $r->daily_allowance_id),
+            'allowance_name' => $r->allowance_name, 'comment' => $r->comment, 'amount' => $r->amount ?? 0,
+        ] : "employee {$r->employee_id} not imported");
+
+        $paidOvertime = $this->src->table('overtime_sheets')->pluck('overtime_id')->flip()->all();
+        $this->sync('overtimes', 'overtimes', function ($r) use ($staleBefore, $paidOvertime) {
+            $employee = $this->ids->get('employees', $r->employee_id);
+            if (! $employee) {
+                return "employee {$r->employee_id} not imported";
+            }
+            $stale = $r->status === 'pending' && $r->date_of_task_done < $staleBefore;
+
+            return [
+                'company_id' => $this->companyId, 'employee_id' => $employee, 'department_id' => $this->ids->get('departments', $r->department_id),
+                'section_id' => $this->ids->get('departments', $r->section_id), 'hod_approved' => $this->ids->get('employees', $r->hod_approved),
+                'hr_approved' => $this->ids->get('employees', $r->hr_approved), 'is_hod_approved' => (bool) $r->is_hod_approved, 'is_hr_approved' => (bool) $r->is_hr_approved,
+                'is_paid' => (bool) $r->isPaid || isset($paidOvertime[$r->id]), 'hours' => (int) $r->hours, 'minutes' => (int) $r->minutes,
+                'overtime_minutes' => (int) $r->hours * 60 + (int) $r->minutes, 'rate_unit' => 'hour', 'rate_amount' => $r->amount_per_duration,
+                'amount_per_minute' => $r->amount_per_minute, 'amount' => $r->amount ?? 0, 'task_title' => $r->task_title ?: 'Overtime',
+                'date_of_task_done' => $this->date($r->date_of_task_done), 'from_datetime' => $r->from_datetime, 'to_datetime' => $r->to_datetime,
+                'type' => 'overtime', 'description' => $r->description, 'hod_comment' => $r->hod_comment, 'hr_comment' => $r->hr_comment,
+                'status' => $stale ? 'cancelled' : ($r->status === 'approved' ? 'approved' : 'pending'), 'source' => $r->attendance_checkin ? 'attendance' : 'employee',
+                'decision_comment' => $stale ? 'Not approved in HRMS' : null, 'is_active' => (bool) $r->isActive,
+            ];
+        });
+        $open = $this->src->table('overtimes')->where('status', 'pending')->where('date_of_task_done', '>=', $staleBefore)->count();
+        if ($open) {
+            $this->note('overtimes', "{$open} recent claims still pending: approve or reject them in HRMS before the switch-over");
+        }
+
+        $this->sync('overtime_sheets', 'overtime_sheets', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'employee_id' => $employee, 'payroll_sheet_detail_id' => $this->ids->get('payroll_sheet_details', $r->payroll_sheet_detail_id),
+            'overtime_id' => $this->ids->get('overtimes', $r->overtime_id), 'date_of_task_done' => $this->date($r->date_of_task_done), 'amount' => $r->amount ?? 0,
+        ] : "employee {$r->employee_id} not imported");
+
+        $this->sync('employee_loans', 'employee_loans', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'loan_provider_id' => $this->ids->get('loan_providers', $r->loan_provider_id),
+            'updated_by' => $this->userOfEmployee($r->updated_by), 'date_of_loan' => $this->date($r->date_of_loan), 'amount' => $r->amount ?? 0,
+            'instalment' => $r->instalment ?? 0, 'returned' => $r->returned ?? 0, 'remain' => $r->remain ?? 0, 'end_date' => $this->date($r->end_date),
+            'is_active' => (bool) $r->isActive, 'status' => in_array($r->status, ['enabled', 'disabled', 'paused'], true) ? $r->status : 'disabled', 'deleted_at' => $r->deleted_at,
+        ] : "employee {$r->employee_id} not imported");
+
+        $this->sync('loan_histories', 'loan_histories', function ($r) {
+            $employee = $this->ids->get('employees', $r->employee_id);
+            $sheet = $this->ids->get('payroll_sheets', $r->payroll_sheet_id);
+            $detail = $this->ids->get('payroll_sheet_details', $r->payroll_sheet_detail_id);
+            if (! $employee || ! $sheet || ! $detail) {
+                return "repayment {$r->id}: payroll sheet {$r->payroll_sheet_id} or its payslip no longer exists in HRMS";
+            }
+
+            return ['employee_id' => $employee, 'payroll_sheet_id' => $sheet, 'payroll_sheet_detail_id' => $detail, 'employee_loan_id' => $this->ids->get('employee_loans', $r->employee_loan_id),
+                'loan_provider' => $r->loan_provider, 'repayment_date' => $this->date($r->repayment_date), 'repaid_amount' => $r->repaid_amount ?? 0,
+                'instalment' => $r->instalment ?? 0, 'principle_amount' => $r->principle_amount ?? 0, 'outstanding_loan' => $r->out_standing_loan ?? 0,
+                'status' => 'applied', 'deleted_at' => $r->deleted_at];
+        });
+
+        $this->sync('employee_mothly_advances', 'employee_monthly_advances', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'amount' => $r->amount ?? 0, 'date_advanced' => $this->date($r->date_advanced),
+            'month' => (int) substr((string) $r->date_advanced, 5, 2), 'year' => (int) substr((string) $r->date_advanced, 0, 4),
+            'status' => 'approved', 'source' => 'hr', 'is_active' => (bool) $r->isActive, 'deleted_at' => $r->deleted_at,
+        ] : "employee {$r->employee_id} not imported");
+
+        $this->sync('other_deductions', 'other_deductions', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'name' => Str::limit((string) ($r->description ?: 'Deduction'), 100, ''),
+            'description' => $r->description, 'amount' => $r->amount ?? 0, 'start_month' => substr((string) $r->from_date, 0, 7), 'months' => $r->duration_month,
+            'status' => $r->isActive ? 'approved' : 'stopped', 'deleted_at' => $r->deleted_at,
+        ] : "employee {$r->employee_id} not imported");
+
+        $this->sync('salary_adjustments', 'salary_adjustments', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'contract_id' => $this->ids->get('employee_contracts', $r->contract_id),
+            'adjustment_type' => $r->adjustment_type, 'current_salary' => $r->current_salary ?? 0, 'percentage' => $r->percentage, 'amount' => $r->amount ?? 0,
+            'new_salary' => $r->new_salary ?? 0, 'reason' => $r->reason ?: 'other', 'effective_date' => $this->date($r->effective_date),
+            'hr_comment' => $r->hr_comment, 'finance_comment' => $r->finance_comment, 'director_comment' => $r->director_comment, 'description' => $r->description,
+            'status' => $r->status === 'pending' ? 'cancelled' : $r->status, 'is_active' => (bool) $r->is_active,
+        ] : "employee {$r->employee_id} not imported");
+        if ($pending = $this->src->table('salary_adjustments')->where('status', 'pending')->count()) {
+            $this->note('salary_adjustments', "{$pending} pending in HRMS imported as cancelled history; enter any still wanted in the ERP");
+        }
+
+        $this->bulkSync('saccos_contributions', 'saccos_contributions', fn ($r) => ($member = $this->ids->get('saccos_members', $r->saccos_member_id)) ? [
+            'saccos_member_id' => $member, 'payroll_sheet_detail_id' => $this->ids->get('payroll_sheet_details', $r->payroll_sheet_detail_id),
+            'amount' => $r->amount ?? 0, 'date_contributed' => $this->date($r->date_contributed),
+        ] : "member {$r->saccos_member_id} not imported");
+    }
+
+    /**
+     * For large tables: new rows are inserted in chunks, rows unchanged since the last copy (by `updated_at`) are skipped.
+     *
+     * @param  Closure(object): (array<string, mixed>|string)  $map
+     */
+    private function bulkSync(string $from, string $to, Closure $map, int $chunk = 2000, array $unique = []): void
+    {
+        $stats = &$this->stats($from);
+        $mapped = $this->ids->all($from);
+        $stamps = $this->ids->stamps($from);
+        $required = $this->required($to);
+        $defaults = collect(Schema::getColumns($to))->where('nullable', false)->filter(fn ($c) => $c['default'] !== null)
+            ->mapWithKeys(fn ($c) => [$c['name'] => trim((string) $c['default'], "'")])->all();
+
+        $this->src->table($from)->orderBy('id')->chunkById($chunk, function ($rows) use (&$stats, $from, $to, $map, $mapped, $stamps, $required, $unique, $defaults) {
+            $new = [];
+            $links = [];
+            foreach ($rows as $row) {
+                $stats['read']++;
+                $stamp = (string) ($row->updated_at ?? $row->created_at ?? '');
+                if (isset($mapped[$row->id]) && $stamp !== '' && ($stamps[$row->id] ?? '') >= $stamp) {
+                    $stats['unchanged']++;
+
+                    continue;
+                }
+                $data = $map($row);
+                if (is_string($data)) {
+                    $stats['skipped']++;
+                    $this->note($from, $data);
+
+                    continue;
+                }
+                foreach ($defaults as $c => $default) {
+                    if (array_key_exists($c, $data) && $data[$c] === null) {
+                        $data[$c] = $default;
+                    }
+                }
+                if ($missing = array_filter($required, fn ($c) => array_key_exists($c, $data) && $data[$c] === null)) {
+                    $stats['skipped']++;
+                    $this->note($from, "row {$row->id}: missing ".implode(', ', $missing));
+
+                    continue;
+                }
+                $data += ['created_at' => $row->created_at ?? now(), 'updated_at' => $row->updated_at ?? now()];
+                if (isset($mapped[$row->id])) {
+                    DB::table($to)->where('id', $mapped[$row->id])->update($data);
+                    $this->ids->touch($from, (int) $row->id, $stamp ?: null);
+                    $stats['updated']++;
+
+                    continue;
+                }
+                $new[] = [$row->id, $data, $stamp ?: null];
+            }
+            if (! $new) {
+                return;
+            }
+            $key = fn (array $d) => implode('|', array_map(fn ($c) => (string) ($d[$c] ?? ''), $unique));
+            $taken = [];
+            if ($unique) {
+                $query = DB::table($to)->select(array_merge(['id'], $unique));
+                foreach ($unique as $c) {
+                    $query->whereIn($c, array_values(array_unique(array_map(fn ($n) => $n[1][$c] ?? null, $new))));
+                }
+                foreach ($query->get() as $existing) {
+                    $taken[$key((array) $existing)] = (int) $existing->id;
+                }
+            }
+            $next = (int) DB::table($to)->max('id') + 1;
+            $columns = array_keys(array_merge(...array_map(fn ($n) => $n[1], $new)));
+            $insert = [];
+            foreach ($new as [$legacy, $data, $stamp]) {
+                if ($unique && isset($taken[$key($data)])) {
+                    $target = $taken[$key($data)];
+                    $pending = array_search($target, array_column($insert, 'id'), true);
+                    $pending !== false ? $insert[$pending] = ['id' => $target] + array_merge(array_fill_keys($columns, null), $data) : DB::table($to)->where('id', $target)->update($data);
+                    $links[] = ['legacy' => (int) $legacy, 'target' => $target, 'stamp' => $stamp];
+                    $stats['updated']++;
+
+                    continue;
+                }
+                $id = $next++;
+                $insert[] = ['id' => $id] + array_merge(array_fill_keys($columns, null), $data);
+                $links[] = ['legacy' => (int) $legacy, 'target' => $id, 'stamp' => $stamp];
+                if ($unique) {
+                    $taken[$key($data)] = $id;
+                }
+            }
+            foreach (array_chunk($insert, 500) as $part) {
+                DB::table($to)->insert($part);
+            }
+            $this->ids->insertMany($from, $links);
+            $stats['inserted'] += count($insert);
+        });
+    }
+
+    private function stepRoster(): void
+    {
+        $time = fn ($t) => $t && preg_match('/^\d{1,2}:\d{2}/', (string) $t) ? substr((string) $t, 0, 5) : null;
+
+        $this->sync('roster_codes', 'roster_codes', fn ($r) => [
+            'company_id' => $this->companyId, 'code' => trim($r->code), 'duty' => trim($r->duty), 'description' => $r->description,
+            'can_punch' => (bool) $r->can_punch, 'pass_day' => (bool) $r->pass_day, 'start_time' => $time($r->start_time), 'end_time' => $time($r->end_time),
+            'work_hour' => $r->work_hour ?? 0, 'is_active' => true,
+        ], match: fn ($r) => $this->findBy('roster_codes', ['code' => trim($r->code)]), keepOnUpdate: ['color', 'break_minutes', 'is_active']);
+
+        $this->sync('public_holidays', 'public_holidays', fn ($r) => [
+            'company_id' => $this->companyId, 'title' => $r->title, 'day_number' => $r->day_number, 'month_number' => $r->month_number, 'is_active' => (bool) $r->isActive,
+        ], match: fn ($r) => DB::table('public_holidays')->where('company_id', $this->companyId)->where('day_number', $r->day_number)
+            ->where('month_number', $r->month_number)->whereNotIn('id', array_values($this->ids->all('public_holidays')))->value('id'));
+
+        $departments = DB::table('employees')->where('company_id', $this->companyId)->pluck('department_id', 'id')->all();
+        $rosters = DB::table('rosters')->where('company_id', $this->companyId)->where('type', 'duty')->where('title', 'like', 'HRMS duties %')
+            ->get(['id', 'department_id', 'from_date'])->mapWithKeys(fn ($r) => [$r->department_id.'|'.substr((string) $r->from_date, 0, 7) => $r->id])->all();
+        $rosterFor = function (int $departmentId, string $date) use (&$rosters): int {
+            $key = $departmentId.'|'.substr($date, 0, 7);
+            if (! isset($rosters[$key])) {
+                $month = CarbonImmutable::parse(substr($date, 0, 7).'-01');
+                $rosters[$key] = DB::table('rosters')->insertGetId([
+                    'company_id' => $this->companyId, 'department_id' => $departmentId, 'title' => 'HRMS duties '.$month->format('M Y'), 'type' => 'duty',
+                    'from_date' => $month->toDateString(), 'to_date' => $month->endOfMonth()->toDateString(), 'roster_year' => (string) $month->year,
+                    'status' => 'published', 'published_at' => now(), 'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+
+            return $rosters[$key];
+        };
+
+        $this->bulkSync('employee_timetables', 'employee_timetables', function ($r) use ($time, $departments, $rosterFor) {
+            $employee = $this->ids->get('employees', $r->employee_id);
+            $date = $this->date($r->day_date);
+            if (! $employee || ! $date || $date < '2000-01-01' || $date > '2100-01-01') {
+                return "duty {$r->id}: employee missing or date {$r->day_date} not valid";
+            }
+            $leave = in_array($r->source, ['annual_leave', 'other_leave'], true);
+            $department = $departments[$employee] ?? null;
+            if (! $leave && ! $department) {
+                return "duty {$r->id}: employee has no department";
+            }
+
+            return [
+                'company_id' => $this->companyId, 'employee_id' => $employee, 'roster_id' => $leave ? null : $rosterFor((int) $department, $date),
+                'roster_code_id' => $this->ids->get('roster_codes', $r->roster_code_id), 'day_date' => $date, 'code' => trim((string) $r->code) ?: '-',
+                'duty' => trim((string) $r->duty) ?: '-', 'can_punch' => (bool) $r->can_punch, 'pass_day' => (bool) $r->pass_day,
+                'start_time' => $time($r->start_time), 'end_time' => $time($r->end_time), 'source' => $leave ? 'leave' : 'roster',
+                'overtime' => (bool) $r->overtime, 'max_overtime_hours' => $r->max_overtime_hours,
+            ];
+        }, unique: ['employee_id', 'day_date', 'source']);
+    }
+
+    private function stepAttendance(): void
+    {
+        $this->sync('attendance_claim_reasons', 'attendance_claim_reasons', fn ($r) => [
+            'company_id' => $this->companyId, 'reason' => $r->reason, 'description' => $r->description, 'is_active' => (bool) $r->isActive,
+        ], match: fn ($r) => $this->findBy('attendance_claim_reasons', ['reason' => $r->reason]));
+
+        $status = fn ($r) => match (strtolower(trim((string) $r->status))) {
+            'present' => (int) $r->punch_in_late_minutes > 0 ? 'Late' : 'Present',
+            'absent' => 'Absent',
+            'on leave', 'leave(l)' => 'On leave',
+            default => $r->status,
+        };
+        $this->bulkSync('attendance_transas', 'attendance_transas', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'contract_id' => $this->ids->get('employee_contracts', $r->contract_id),
+            'timetable_detail' => $r->timetable_detail, 'transaction_date' => $this->date($r->transaction_date), 'pass_day' => (bool) $r->pass_day,
+            'attendance_in_time' => $r->attendance_in_time, 'punch_in_time' => $r->punch_in_time, 'punch_out_time' => $r->punch_out_time,
+            'attendance_out_time' => $r->attendance_out_time, 'punch_in_time_loss' => $r->punch_in_time_loss, 'punch_out_time_loss' => $r->punch_out_time_loss,
+            'worktime_hour' => $r->worktime_hour, 'worked_hour' => $r->worked_hour, 'basic_salary' => $r->basic_salary, 'amount_per_day' => $r->amount_per_day,
+            'amount_earned_per_day' => $r->amount_earned_per_day, 'actual_hour' => $r->actual_hour, 'deduct_leave' => (bool) $r->deduct_leave,
+            'lost_hour' => $r->lost_hour, 'lost_amount' => $r->lost_amount, 'percent' => $r->percent, 'punch_out_status' => $r->punch_out_status,
+            'punch_in_status' => $r->punch_in_status, 'status' => $status($r), 'area_alias' => $r->area_alias, 'in_area_alias' => $r->in_area_alias,
+            'punch_in_late_minutes' => $r->punch_in_late_minutes, 'punch_in_late_hour' => $r->punch_in_late_hour, 'punch_out_late_minutes' => $r->punch_out_late_minutes,
+            'punch_out_late_hour' => $r->punch_out_late_hour, 'overtime_hr' => $r->overtime_hr, 'overtime_minutes' => $r->overtime_minutes,
+            'has_overtime' => (bool) $r->hasOvertime, 'is_claimed' => (bool) $r->isClaimed, 'description' => $r->description, 'payroll_date_remark' => $r->payroll_date_remark,
+        ] : "employee {$r->employee_id} not imported", unique: ['employee_id', 'transaction_date']);
+
+        $this->sync('attendance_claims', 'attendance_claims', function ($r) {
+            $day = $this->ids->get('attendance_transas', $r->attendancy_transa_id);
+            $employee = $this->ids->get('employees', $r->employee_id);
+            if (! $day || ! $employee) {
+                return "claim {$r->id}: attendance day or employee missing";
+            }
+
+            return [
+                'attendance_transa_id' => $day, 'employee_id' => $employee, 'claim_reason_id' => $this->ids->get('attendance_claim_reasons', $r->claim_reason_id),
+                'approved_by' => $this->ids->get('employees', $r->approved_by), 'requested_by' => $this->userOfEmployee($r->employee_id),
+                'claim_date' => $this->date($r->claim_date ?: $r->created_at), 'approved_at' => $r->approved_at, 'set_lost_hr_zero' => (bool) $r->setLostHrZero,
+                'hr_accepted' => $r->hr_accepted, 'lost_hour' => $r->lost_hour, 'lost_amount' => $r->lost_amount, 'percent' => $r->percent, 'remark' => $r->remark,
+                'description' => $r->description ?: ($r->remark ?: 'Claim from HRMS'), 'comment' => $r->comment,
+                'claim_status' => ['pending' => 'pending', 'approved' => 'approved', 'rejected' => 'rejected'][strtolower((string) $r->claim_status)] ?? 'pending',
+            ];
+        });
+        if ($pending = $this->src->table('attendance_claims')->where('claim_status', 'Pending')->count()) {
+            $this->note('attendance_claims', "{$pending} claims pending in HRMS: decide them in HRMS before the switch-over (they have no ERP approval request)");
+        }
+
+        $today = now()->toDateString();
+        $this->sync('excuse_of_duties', 'excuse_of_duties', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'start_date' => $this->date($r->start_date), 'end_date' => $this->date($r->end_date ?: $r->start_date),
+            'number_of_days' => $r->number_of_days ?? 1, 'hospital_name' => $r->hospital_name, 'doctor_name' => $r->doctor_name, 'patient_address' => $r->patient_address,
+            'reason' => $r->reason, 'status' => $this->date($r->end_date) >= $today ? 'active' : 'ended',
+        ] : "employee {$r->employee_id} not imported");
+
+        $this->sync('admitted_employees', 'admitted_employees', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'start_date' => $this->date($r->admission_date), 'end_date' => $this->date($r->discharge_date ?: $r->admission_date),
+            'number_of_days' => $r->number_of_days ?? 1, 'hospital_name' => $r->hospital_name, 'admission_reason' => $r->admission_reason,
+            'release_reason' => $r->release_reason, 'remark' => $r->remark, 'status' => $this->date($r->discharge_date) >= $today ? 'active' : 'ended',
+        ] : "employee {$r->employee_id} not imported");
+    }
+
+    private function stepArchive(): void
+    {
+        $this->sync('employee_patient_ids', 'employee_patient_ids', fn ($r) => ($employee = $this->ids->get('employees', $r->employee_id)) ? [
+            'company_id' => $this->companyId, 'employee_id' => $employee, 'patient_id' => trim((string) $r->patient_id),
+        ] : "employee {$r->employee_id} not imported");
+
+        $months = array_flip(array_map(fn ($m) => strtolower(CarbonImmutable::create(2000, $m, 1)->format('F')), range(1, 12)));
+        $this->sync('uploaded_payrolls', 'uploaded_payrolls', function ($r) use ($months) {
+            $month = is_numeric($r->of_month) ? (int) $r->of_month : (($months[strtolower(trim((string) $r->of_month))] ?? -1) + 1);
+
+            return $month >= 1 ? ['company_id' => $this->companyId, 'uploaded_by' => $this->ids->get('employees', $r->employee_id), 'month' => $month,
+                'year' => (int) $r->of_year, 'file_name' => $r->fileName] : "upload {$r->id}: month \"{$r->of_month}\" not understood";
+        });
+
+        $byNumber = DB::table('employees')->where('company_id', $this->companyId)->pluck('id', 'employee_no')->all();
+        $this->bulkSync('uploaded_payroll_sheets', 'uploaded_payroll_rows', function ($r) use ($byNumber) {
+            $upload = $this->ids->get('uploaded_payrolls', $r->uploaded_payrolly_id);
+            if (! $upload) {
+                return "row {$r->id}: upload {$r->uploaded_payrolly_id} missing";
+            }
+            $data = collect((array) $r)->except(['id', 'employee_id', 'uploaded_payrolly_id', 'created_at', 'updated_at'])->all();
+            $number = trim((string) $r->ST_NO);
+
+            return [
+                'uploaded_payroll_id' => $upload, 'employee_id' => $this->ids->get('employees', $r->employee_id) ?? ($byNumber[$number] ?? null),
+                'employee_no' => $number ?: null, 'gross_salary' => is_numeric($r->GROSS_SALARY) ? $r->GROSS_SALARY : null,
+                'net_pay' => is_numeric($r->NET_PAY) ? $r->NET_PAY : null, 'data' => json_encode($data),
+            ];
+        });
+    }
+
     private function stepRoles(): void
     {
         $permissions = Permission::pluck('name')->all();
@@ -648,7 +1137,7 @@ class HrmsImporter
 
     private function &stats(string $table): array
     {
-        $this->report[$table] ??= ['read' => 0, 'inserted' => 0, 'updated' => 0, 'skipped' => 0, 'notes' => []];
+        $this->report[$table] ??= ['read' => 0, 'inserted' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'notes' => []];
 
         return $this->report[$table];
     }

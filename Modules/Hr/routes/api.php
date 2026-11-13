@@ -214,6 +214,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
     Route::get('profile', [SelfProfileController::class, 'show'])->name('profile');
+    Route::get('profile/photo', [SelfProfileController::class, 'photo'])->name('profile.photo');
     Route::put('profile/contact', [SelfProfileController::class, 'updateContact'])->name('profile.contact');
     Route::post('profile/{section}', [SelfProfileController::class, 'store'])->where('section', 'qualifications|licences|experiences|dependants|documents')->middleware('throttle:20,1')->name('profile.store');
     Route::delete('profile/{section}/{id}', [SelfProfileController::class, 'destroy'])->where('section', 'qualifications|licences|experiences|dependants|documents')->whereNumber('id')->name('profile.destroy');

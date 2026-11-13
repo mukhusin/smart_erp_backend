@@ -118,9 +118,17 @@ roles (HRMS roles → ERP system roles or custom roles with mapped permissions, 
 documents, licences, birth certificates from `--files`). Local dry run: all checks match. Phase 2a leave done: leave types (explicit code map, HRMS "SL" = study → `STL`),
 absence requests, leave records, leave rosters, annual leave (taken entries → AL leaves + plans; not requested/postponed →
 plans), opening balances (adjustment so the ERP available days equal the HRMS balance of each employee's {year} entry);
-checks: leave records, AL days taken this year, AL available now — all match. Still to do: pay setup + payroll history
-(+ payslip lines) before allowance/overtime/loan history (they point at payslip rows; `daily_allowances` ~277k rows needs
-a bulk loader), then attendance history.
+checks: leave records, AL days taken this year, AL available now — all match. Phase 2b/3 done: pay setup (loan providers, allowance
+categories + rates, overtime rates, reliefs, SACCOS members), payroll history (23 sheets, 9,203 payslips with itemised
+lines rebuilt from the HRMS totals, comments), transactions (assigned + daily allowances, allowance sheets, overtime,
+loans + repayments, advances, other deductions, salary adjustments, SACCOS contributions) with a bulk loader that skips
+unchanged rows. Checks: payslips, gross/net/PAYE (cents rounding), loan balance, daily allowance amount — all match.
+Rules: HRMS generated allowances → approved; pending overtime older than 60 days → cancelled; pending salary adjustments →
+cancelled history. Phase 4 done: roster (shift codes, public holidays,
+duty plans grouped into one published roster per department per month, duplicates merged), attendance (559,569 days,
+claim reasons, claims, excuse of duty, admitted staff), archive (staff patient IDs, HRMS uploaded payroll files and rows
+kept as JSON). All 15 checks match on a full run (~36 s; first load ~3 min). Open: 110 attendance claims pending in HRMS
+have no ERP approval request (decide them in HRMS before switch-over).
 
 ### 4. Biometric attendance (core built 2026-11-13)
 

@@ -34,6 +34,7 @@ class SelfProfileController extends Controller
         }
 
         return response()->json(['data' => [
+            'photo_url' => $employee->profile_image ? route('self.profile.photo', [], false).'?v='.substr(md5($employee->profile_image), 0, 8) : null,
             'personal' => [
                 'employee_no' => $employee->employee_no, 'title' => $employee->emp_title, 'fname' => $employee->fname, 'mname' => $employee->mname, 'lname' => $employee->lname,
                 'gender' => $employee->gender, 'date_of_birth' => $employee->date_of_birth?->toDateString(), 'place_of_birth' => $employee->place_of_birth,
@@ -56,6 +57,14 @@ class SelfProfileController extends Controller
                 'licence_types' => ProfessionalLicence::where('is_active', true)->orderBy('name')->get(['id', 'name'])->map(fn ($l) => ['value' => (string) $l->id, 'label' => $l->name])->all(),
             ],
         ]]);
+    }
+
+    /**
+     * My photo.
+     */
+    public function photo(Request $request): StreamedResponse
+    {
+        return EmployeeFiles::response($this->employee($request)->profile_image);
     }
 
     /**

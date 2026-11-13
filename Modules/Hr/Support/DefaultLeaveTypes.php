@@ -8,6 +8,7 @@ use App\Services\CompanyContext;
 use Modules\Hr\Workflow\LeaveRequestProcess;
 use Modules\Hr\Workflow\OvertimeClaimProcess;
 use Modules\Hr\Workflow\ProfileItemProcess;
+use Modules\Hr\Workflow\SalaryAdvanceProcess;
 use Modules\Workflow\Models\WorkflowTemplate;
 use Spatie\Permission\Models\Role;
 
@@ -44,6 +45,7 @@ final class DefaultLeaveTypes
         self::supervisorThenHr(LeaveRequestProcess::KEY);
         self::supervisorThenHr(OvertimeClaimProcess::KEY);
         self::hrOnly(ProfileItemProcess::KEY);
+        self::supervisorThenHr(SalaryAdvanceProcess::KEY);
     }
 
     public static function hrOnly(string $process): void

@@ -31659,6 +31659,12 @@
                                         "data": {
                                             "type": "object",
                                             "properties": {
+                                                "photo_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "personal": {
                                                     "type": "object",
                                                     "properties": {
@@ -31899,6 +31905,7 @@
                                                 }
                                             },
                                             "required": [
+                                                "photo_url",
                                                 "personal",
                                                 "job",
                                                 "contact",
@@ -31909,6 +31916,46 @@
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/profile/photo": {
+            "get": {
+                "operationId": "self.profile.photo",
+                "summary": "My photo",
+                "tags": [
+                    "Self service: Profile",
+                    "SelfProfile"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
                                     ]
                                 }
                             }

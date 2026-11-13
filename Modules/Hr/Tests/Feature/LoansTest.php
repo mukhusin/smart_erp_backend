@@ -92,6 +92,7 @@ class LoansTest extends TestCase
         $approver = $this->inCompany(fn () => tap(User::factory()->create(['company_id' => $this->company->id]))->assignRole('employee'));
         $this->inCompany(function () use ($approver) {
             foreach (['salary-advance', 'employee-loan'] as $process) {
+                WorkflowTemplate::where('process', $process)->get()->each->delete();
                 WorkflowTemplate::create(['process' => $process, 'is_active' => true])->steps()->create(['step_order' => 1, 'name' => 'Finance', 'approver_type' => 'user', 'user_id' => $approver->id]);
             }
         });

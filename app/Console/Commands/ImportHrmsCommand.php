@@ -63,19 +63,25 @@ class ImportHrmsCommand extends Command
             return self::FAILURE;
         }
 
-        $this->table(['HRMS table', 'Read', 'Inserted', 'Updated', 'Skipped'], collect($report)->map(fn ($s, $t) => [$t, $s['read'], $s['inserted'], $s['updated'], $s['skipped']])->values()->all());
+        $this->table(['HRMS table', 'Read', 'Inserted', 'Updated', 'Unchanged', 'Skipped'], collect($report)->map(fn ($s, $t) => [$t, $s['read'], $s['inserted'], $s['updated'], $s['unchanged'] ?? 0, $s['skipped']])->values()->all());
         foreach ($report as $table => $s) {
             foreach ($s['notes'] as $note) {
                 $this->line("  <comment>{$table}</comment>: {$note}");
             }
         }
-        $this->table(['Check', 'HRMS', 'ERP', 'Result'], array_map(fn ($c) => [$c[0], $c[1], $c[2], $c[1] == $c[2] ? 'OK' : 'DIFFERENT'], $checks));
+        $this->table(['Check', 'HRMS', 'ERP', 'Result'], array_map(fn ($c) => [$c[0], $c[1], $c[2], $this->same($c) ? 'OK' : 'DIFFERENT'], $checks));
         $this->info(sprintf('%s in %.1fs.', $dry ? 'Dry run rolled back' : 'Done', microtime(true) - $started));
 
-        return collect($checks)->contains(fn ($c) => $c[1] != $c[2]) ? self::FAILURE : self::SUCCESS;
+        return collect($checks)->contains(fn ($c) => ! $this->same($c)) ? self::FAILURE : self::SUCCESS;
     }
 
-    /** @return list<array{0: string, 1: int|float, 2: int|float}> */
+    /** A check passes when both sides match, or differ by no more than its rounding allowance (4th value). */
+    private function same(array $check): bool
+    {
+        return abs((float) $check[1] - (float) $check[2]) <= ($check[3] ?? 0);
+    }
+
+    /** @return list<array{0: string, 1: int|float, 2: int|float, 3?: float}> */
     private function checks(int $companyId, array $steps): array
     {
         $src = DB::connection('hrms');
@@ -115,6 +121,29 @@ class ImportHrmsCommand extends Command
                 $erp += $balance['available'];
             }
             $checks[] = ['Annual leave available now (staff with a '.$year.' entry)', round($hrms, 1), round($erp, 1)];
+        }
+        if (in_array('payroll', $steps, true) && ($sheets = $ids->all('payroll_sheets'))) {
+            $checks[] = ['Payslips', $src->table('payroll_sheet_details')->whereNull('deleted_at')->count(),
+                DB::table('payroll_sheet_details')->whereIn('payroll_sheet_id', array_values($sheets))->whereNull('deleted_at')->count()];
+            foreach (['gross_salary' => 'Gross pay, all payrolls', 'net_salary' => 'Net pay, all payrolls', 'paye' => 'PAYE, all payrolls'] as $column => $label) {
+                $checks[] = [$label.' (rounded to cents per payslip)', round((float) $src->table('payroll_sheet_details')->whereNull('deleted_at')->sum(strtoupper($column) === 'PAYE' ? 'PAYE' : $column), 2),
+                    round((float) DB::table('payroll_sheet_details')->whereIn('payroll_sheet_id', array_values($sheets))->whereNull('deleted_at')->sum($column), 2),
+                    round(0.005 * $src->table('payroll_sheet_details')->whereNull('deleted_at')->count(), 2)];
+            }
+        }
+        if (in_array('transactions', $steps, true) && $ids->all('employee_loans')) {
+            $checks[] = ['Loan balance remaining', round((float) $src->table('employee_loans')->whereNull('deleted_at')->sum('remain'), 2),
+                round((float) DB::table('employee_loans')->whereIn('id', array_values($ids->all('employee_loans')))->whereNull('deleted_at')->sum('remain'), 2)];
+            $checks[] = ['Daily allowance amount', round((float) $src->table('daily_allowances')->whereNull('deleted_at')->sum('amount'), 2),
+                round((float) DB::table('daily_allowances')->where('company_id', $companyId)->whereIn('id', DB::table('legacy_ids')->select('target_id')->where('company_id', $companyId)->where('source', 'hrms')->where('table_name', 'daily_allowances'))->whereNull('deleted_at')->sum('amount'), 2)];
+        }
+        if (in_array('attendance', $steps, true)) {
+            $legacy = fn (string $table) => DB::table('legacy_ids')->select('target_id')->where('company_id', $companyId)->where('source', 'hrms')->where('table_name', $table);
+            $latest = $src->table('attendance_transas')->selectRaw('max(id)')->groupBy('employee_id')->groupByRaw('date(transaction_date)');
+            $checks[] = ['Attendance days (one per employee per day)', $src->table('attendance_transas')->whereIn('id', $latest)->count(),
+                DB::table('attendance_transas')->whereIn('id', $legacy('attendance_transas'))->count()];
+            $checks[] = ['Attendance lost amount', round((float) $src->table('attendance_transas')->whereIn('id', $latest)->sum('lost_amount'), 2),
+                round((float) DB::table('attendance_transas')->whereIn('id', $legacy('attendance_transas'))->sum('lost_amount'), 2), 1.0];
         }
         if (in_array('users', $steps, true) && ($users = $ids->all('users'))) {
             $checks[] = ['Users', $src->table('users')->count(), count($users)];
