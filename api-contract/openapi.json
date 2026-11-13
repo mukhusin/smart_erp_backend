@@ -10162,6 +10162,268 @@
                 }
             }
         },
+        "/hr/employees/export": {
+            "get": {
+                "operationId": "hr.employees.export",
+                "summary": "Export employees as CSV (opens in Excel). Same filters and scope as the list",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "parameters": [
+                    {
+                        "name": "filter[search]",
+                        "in": "query",
+                        "description": "Name, employee number, email or phone.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[branch_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[department_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[job_position_id]",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "filter[employment_status]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[emp_type]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "filter[has_account]",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "columns",
+                        "in": "query",
+                        "description": "Comma-separated keys from export-columns; default set when empty.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/export-columns": {
+            "get": {
+                "operationId": "hr.employees.export-columns",
+                "summary": "Columns available for the employee export (salary only with `hr.contracts.manage` or `payroll.view`)",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        },
+                                        "default": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "default"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/import-template": {
+            "get": {
+                "operationId": "hr.employees.import-template",
+                "summary": "Download the employee import template (CSV with one example row)",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string",
+                                    "const": "attachment; filename=\"employee-import-template.csv\""
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/import": {
+            "post": {
+                "operationId": "hr.employees.import",
+                "description": "Every row is checked first. With `commit` false only the check runs; with `commit` true employees are created\nonly when no row has errors (all or nothing). Branch, department, section and position are matched by name.\nAn empty `employee_no` takes the next number. `create_account` yes sends the invite.",
+                "summary": "Import employees from CSV",
+                "tags": [
+                    "HR: Employees",
+                    "Employee"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportEmployeesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "line": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee_no": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "errors": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "line",
+                                                    "employee_no",
+                                                    "name",
+                                                    "errors"
+                                                ]
+                                            }
+                                        },
+                                        "valid": {
+                                            "type": "integer"
+                                        },
+                                        "invalid": {
+                                            "type": "integer"
+                                        },
+                                        "created": {
+                                            "type": "integer"
+                                        },
+                                        "invites_sent": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "rows",
+                                        "valid",
+                                        "invalid",
+                                        "created",
+                                        "invites_sent"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/hr/employees/next-number": {
             "get": {
                 "operationId": "hr.employees.next-number",
@@ -32345,6 +32607,25 @@
                     "revoked_at"
                 ],
                 "title": "HandoverResource"
+            },
+            "ImportEmployeesRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "CSV in the template layout, max 5 MB."
+                    },
+                    "commit": {
+                        "type": "boolean",
+                        "description": "False = check only."
+                    }
+                },
+                "required": [
+                    "file"
+                ],
+                "title": "ImportEmployeesRequest"
             },
             "JobPositionRequest": {
                 "type": "object",

@@ -8,17 +8,20 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Modules\Hr\Actions\CreateEmployeeAccount;
 use Modules\Hr\Actions\ManageContracts;
 use Modules\Hr\Actions\ManagePlacements;
 use Modules\Hr\Actions\RegisterEmployee;
 use Modules\Hr\Actions\UpdateEmployee;
 use Modules\Hr\Http\Requests\CreateAccountRequest;
+use Modules\Hr\Http\Requests\ImportEmployeesRequest;
 use Modules\Hr\Http\Requests\StoreEmployeeRequest;
 use Modules\Hr\Http\Requests\UpdateEmployeeRequest;
 use Modules\Hr\Http\Resources\EmployeeResource;
 use Modules\Hr\Support\EmployeeFiles;
 use Modules\Hr\Support\EmployeeScope;
+use Modules\Hr\Support\EmployeeSheet;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -48,7 +51,16 @@ class EmployeeController extends Controller
     #[QueryParameter('per_page', description: 'Max 100.', type: 'integer', default: 25)]
     public function index(Request $request, EmployeeScope $scope): AnonymousResourceCollection
     {
-        $employees = QueryBuilder::for($scope->apply(Employee::with(self::WITH), $request->user()))
+        $employees = $this->query($request, $scope)
+            ->paginate(min((int) request('per_page', 25), 100))
+            ->withQueryString();
+
+        return EmployeeResource::collection($employees)->additional(['meta' => ['scope' => $scope->describe($request->user())]]);
+    }
+
+    private function query(Request $request, EmployeeScope $scope): QueryBuilder
+    {
+        return QueryBuilder::for($scope->apply(Employee::with(self::WITH), $request->user()))
             ->allowedFilters(
                 AllowedFilter::callback('search', fn ($q, $v) => $q->where(fn ($q) => $q
                     ->where('fname', 'like', "%{$v}%")->orWhere('lname', 'like', "%{$v}%")->orWhere('mname', 'like', "%{$v}%")
@@ -61,11 +73,69 @@ class EmployeeController extends Controller
                 AllowedFilter::callback('has_account', fn ($q, $v) => filter_var($v, FILTER_VALIDATE_BOOLEAN) ? $q->whereNotNull('user_id') : $q->whereNull('user_id')),
             )
             ->allowedSorts('employee_no', 'fname', 'employment_date', 'created_at')
-            ->defaultSort('-created_at')
-            ->paginate(min((int) request('per_page', 25), 100))
-            ->withQueryString();
+            ->defaultSort('-created_at');
+    }
 
-        return EmployeeResource::collection($employees)->additional(['meta' => ['scope' => $scope->describe($request->user())]]);
+    /**
+     * Columns available for the employee export (salary only with `hr.contracts.manage` or `payroll.view`).
+     */
+    public function exportColumns(Request $request, EmployeeSheet $sheet): JsonResponse
+    {
+        $columns = $sheet->columnsFor(implode(',', array_keys(EmployeeSheet::EXPORT_COLUMNS)), $request->user());
+
+        return response()->json([
+            'data' => array_map(fn ($c) => ['value' => $c, 'label' => EmployeeSheet::EXPORT_COLUMNS[$c]], $columns),
+            'default' => array_values(array_intersect(EmployeeSheet::DEFAULT_EXPORT, $columns)),
+        ]);
+    }
+
+    /**
+     * Export employees as CSV (opens in Excel). Same filters and scope as the list.
+     */
+    #[QueryParameter('filter[search]', description: 'Name, employee number, email or phone.', type: 'string')]
+    #[QueryParameter('filter[branch_id]', type: 'integer')]
+    #[QueryParameter('filter[department_id]', type: 'integer')]
+    #[QueryParameter('filter[job_position_id]', type: 'integer')]
+    #[QueryParameter('filter[employment_status]', type: 'string')]
+    #[QueryParameter('filter[emp_type]', type: 'string')]
+    #[QueryParameter('filter[has_account]', type: 'boolean')]
+    #[QueryParameter('columns', description: 'Comma-separated keys from export-columns; default set when empty.', type: 'string')]
+    public function export(Request $request, EmployeeScope $scope, EmployeeSheet $sheet): Response
+    {
+        $columns = $sheet->columnsFor($request->query('columns'), $request->user());
+        $employees = $this->query($request, $scope)->with('activeContract')->reorder('employee_no')->get();
+
+        return response($sheet->exportCsv($employees, $columns), 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="employees-'.now()->format('Y-m-d').'.csv"',
+        ]);
+    }
+
+    /**
+     * Download the employee import template (CSV with one example row).
+     */
+    public function importTemplate(EmployeeSheet $sheet): Response
+    {
+        return response($sheet->templateCsv(), 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="employee-import-template.csv"',
+        ]);
+    }
+
+    /**
+     * Import employees from CSV.
+     *
+     * Every row is checked first. With `commit` false only the check runs; with `commit` true employees are created
+     * only when no row has errors (all or nothing). Branch, department, section and position are matched by name.
+     * An empty `employee_no` takes the next number. `create_account` yes sends the invite.
+     *
+     * @response array{rows: list<array{line: int, employee_no: string|null, name: string, errors: list<string>}>, valid: int, invalid: int, created: int, invites_sent: int}
+     */
+    public function import(ImportEmployeesRequest $request, EmployeeSheet $sheet): JsonResponse
+    {
+        $result = $sheet->import($request->file('file'), $request->boolean('commit'));
+
+        return response()->json($result, $request->boolean('commit') && $result['invalid'] ? 422 : 200);
     }
 
     /**

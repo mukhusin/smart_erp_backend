@@ -32,7 +32,7 @@ Status: ✅ done · 🟡 partial · ❌ missing
 
 **Employees & contracts — ✅** registration, profile tabs, numbering (HRMS series kept), contracts, renewals (two paths + workflow),
 interns/residents, departments + heads, positions, banks, supervisors, statutory memberships, leavers.
-Missing: ❌ employee **import (Excel)** and **export (Excel/PDF)**; ❌ **staff patient IDs** (`employee_patient_ids`);
+Done 2026-11-13: ✅ employee **import** (CSV template, check all rows first, all or nothing, names matched to branch/department/position, optional invites) and **export** (CSV with chosen columns, list filters and scope, salary only for contract/payroll users). Not copied: PDF export, contracts in the import (added per profile). Missing: ❌ **staff patient IDs** (`employee_patient_ids`);
 ❌ **per-employee settings** (`employee_settings`: has annual leave, **has attendance**); ❌ near-retirement / retired / left lists;
 ❌ bulk phone-number update; ❌ contract PDF from template; ✅ **change own password / email** (My account; email confirmed by a code to the new address, HR record updated).
 
@@ -133,7 +133,7 @@ working-hours reports, absence requests, attendance-based allowances.
 
 1. Attendance module (section 4) + excuse of duty, admitted staff, absence requests, per-employee attendance setting.
 2. Payroll gaps: ~~assigned allowances, other deductions, salary adjustments~~ (done 2026-11-13); payslip lines for history (with the import).
-3. ~~Change own password/email~~ (done), employee import/export, reports + director dashboard, messaging.
+3. ~~Change own password/email~~ (done), ~~employee import/export~~ (done), reports + director dashboard, messaging.
 4. `erp:import-hrms` migration command (all areas in section 3), dry runs on a copy of production.
 5. Parallel run: 1–2 payroll months in both systems, compare every line; then switch.
 
@@ -312,7 +312,7 @@ and contract types carry the same flags (`has_payroll`, `has_overtime`, `has_all
 | E-12 | Per-employee settings: `hasAttendance`, `hasAnnualLeave` | ❌ | Needed for payroll Mode A/B per employee |
 | E-13 | Registered on attendance device at creation, "send to biometric" | ❌ | Do it through the `AttendanceSource` adapter, only when switched on |
 | E-14 | Patient ID (staff member's record number in the HMS, used for excuse-of-duty) | ❌ | Make it a generic "external IDs" list on the employee (system → ID), not an HMS field |
-| E-15 | Reports: employee export with chosen columns, phone numbers, birthdays, emails, termination report, employed report | 🟡 | ERP reports page has some export. Check each report |
+| E-15 | Reports: employee export with chosen columns, phone numbers, birthdays, emails, termination report, employed report | 🟡 | Export with chosen columns done (2026-11-13); other reports with the reports slice |
 | E-16 | Audit trail / contract history view | ❌ | See #13 |
 
 ### New feature: employee contract renewal request (not in HRMS)

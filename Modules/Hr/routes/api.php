@@ -61,6 +61,10 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::get('number-formats/options', [NumberFormatController::class, 'options'])->name('number-formats.options');
 
         Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
+        Route::get('employees/export', [EmployeeController::class, 'export'])->name('employees.export');
+        Route::get('employees/export-columns', [EmployeeController::class, 'exportColumns'])->name('employees.export-columns');
+        Route::get('employees/import-template', [EmployeeController::class, 'importTemplate'])->middleware('can:hr.employees.create')->name('employees.import-template');
+        Route::post('employees/import', [EmployeeController::class, 'import'])->middleware(['can:hr.employees.create', 'throttle:10,1'])->name('employees.import');
         Route::get('employees/next-number', [EmployeeController::class, 'nextNumber'])->middleware('can:hr.employees.create')->name('employees.next-number');
         Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
         Route::get('employees/{employee}/photo', [EmployeeController::class, 'photo'])->name('employees.photo');
