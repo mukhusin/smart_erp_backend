@@ -118,7 +118,7 @@ class LookupController extends Controller
      * `employees`, `renewals`, `placements`, `departments`, `positions`: breakdowns for each HR page.
      * Counts cover only the employees the user may see (`scope`); department and position totals are organisation wide.
      *
-     * @response array{data: array{total: int, probation: int, without_account: int, invited: int, without_contract: int, contracts_ending: int, licences_expiring: int, placements_active: int, placements_ending: int, employees: array{confirmed: int, probation: int, female: int, male: int, by_type: list<array{key: string, label: string, count: int}>}, renewals: array{pending: int, approved: int, renewed_this_year: int, rejected_this_year: int, ending_90_days: int}, placements: array{active: int, upcoming: int, ending_30_days: int, internship: int, residency: int}, departments: array{total: int, sections: int, staffed: int, top: list<array{id: int, name: string, count: int}>}, positions: array{total: int, filled: int, top: list<array{id: int, name: string, count: int}>}, scope: array{all: bool, label: string}}}
+     * @response array{data: array{total: int, probation: int, without_account: int, invited: int, without_contract: int, contracts_ending: int, licences_expiring: int, placements_active: int, placements_ending: int, employees: array{confirmed: int, probation: int, female: int, male: int, by_type: list<array{key: string, label: string, count: int}>}, renewals: array{pending: int, approved: int, renewed_this_year: int, rejected_this_year: int, ending_90_days: int}, placements: array{active: int, upcoming: int, ending_30_days: int, internship: int, residency: int}, departments: array{total: int, sections: int, staffed: int, top: list<array{id: int, name: string, count: int}>}, positions: array{total: int, filled: int, top: list<array{id: int, name: string, count: int}>}, movement: list<array{month: string, joined: int, left: int}>, scope: array{all: bool, label: string}}}
      */
     public function summary(EmployeeScope $scope): JsonResponse
     {
@@ -176,6 +176,7 @@ class LookupController extends Controller
                 'filled' => $staff->whereNotNull('job_position_id')->unique('job_position_id')->count(),
                 'top' => $top('job_position_id', fn ($e) => $e->jobPosition?->title),
             ],
+            'movement' => app(\Modules\Hr\Support\HrOverview::class)->movementFor(request()->user()),
             'scope' => $scope->describe(request()->user()),
         ]]);
     }

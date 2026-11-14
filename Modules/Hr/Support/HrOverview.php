@@ -98,6 +98,14 @@ class HrOverview
         return $data;
     }
 
+    /** Joined and left per month over the last 12 months, for the employees the user may see. */
+    public function movementFor(User $user): array
+    {
+        $all = $this->scope->apply(Employee::query()->staff(), $user);
+
+        return $this->movement($all, (clone $all)->select('id'), array_diff(array_keys(O::CONTRACT_END_REASONS), O::CONTRACT_KEEPS_EMPLOYEE), CarbonImmutable::today());
+    }
+
     private function ending($ids, CarbonImmutable $until): int
     {
         return EmployeeContract::whereIn('employee_id', $ids)->where('is_active', true)->whereNotNull('end_date')->whereDate('end_date', '<=', $until)

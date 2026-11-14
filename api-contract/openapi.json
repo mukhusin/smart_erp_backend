@@ -13390,6 +13390,28 @@
                                                         "top"
                                                     ]
                                                 },
+                                                "movement": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "month": {
+                                                                "type": "string"
+                                                            },
+                                                            "joined": {
+                                                                "type": "integer"
+                                                            },
+                                                            "left": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "month",
+                                                            "joined",
+                                                            "left"
+                                                        ]
+                                                    }
+                                                },
                                                 "scope": {
                                                     "type": "object",
                                                     "properties": {
@@ -13421,6 +13443,7 @@
                                                 "placements",
                                                 "departments",
                                                 "positions",
+                                                "movement",
                                                 "scope"
                                             ]
                                         }
@@ -33898,13 +33921,36 @@
                                                         },
                                                         "year_gross": {
                                                             "type": "number"
+                                                        },
+                                                        "trend": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "period": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "gross": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "net": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "period",
+                                                                    "gross",
+                                                                    "net"
+                                                                ]
+                                                            }
                                                         }
                                                     },
                                                     "required": [
                                                         "last",
                                                         "year",
                                                         "year_net",
-                                                        "year_gross"
+                                                        "year_gross",
+                                                        "trend"
                                                     ]
                                                 },
                                                 "loans": {
