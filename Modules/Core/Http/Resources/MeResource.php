@@ -45,6 +45,8 @@ class MeResource extends JsonResource
                 /** Theme colors (#rrggbb) or null for the ERP default. */
                 'primary_color' => $company->primary_color,
                 'secondary_color' => $company->secondary_color,
+                /** Where the brand colors are used: sidebar, navbar, tables (plain, tinted, solid) and cards (plain, accent, tinted). */
+                'theme' => $company->themeSettings(),
             ] : null,
             /** The user's home branch. */
             'branch' => $branch ? [

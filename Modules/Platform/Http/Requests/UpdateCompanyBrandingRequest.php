@@ -2,7 +2,9 @@
 
 namespace Modules\Platform\Http\Requests;
 
+use App\Models\Company;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /** multipart/form-data: files plus colors. */
 class UpdateCompanyBrandingRequest extends FormRequest
@@ -37,6 +39,14 @@ class UpdateCompanyBrandingRequest extends FormRequest
             'primary_color' => $hex,
             /** Top bar color. Empty = same as primary. */
             'secondary_color' => $hex,
+            /** Sidebar style: plain, tinted or solid (top bar color). */
+            'theme_sidebar' => ['sometimes', Rule::in(Company::THEME_AREAS['sidebar'])],
+            /** Top bar style: plain, tinted or solid (top bar color). */
+            'theme_navbar' => ['sometimes', Rule::in(Company::THEME_AREAS['navbar'])],
+            /** Table headings: plain, tinted or solid (top bar color). */
+            'theme_tables' => ['sometimes', Rule::in(Company::THEME_AREAS['tables'])],
+            /** Cards: plain, accent (main color stripe on top) or tinted (header). */
+            'theme_cards' => ['sometimes', Rule::in(Company::THEME_AREAS['cards'])],
         ];
     }
 }

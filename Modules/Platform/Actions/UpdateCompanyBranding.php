@@ -29,6 +29,14 @@ class UpdateCompanyBranding
             }
         }
 
+        $theme = $company->themeSettings();
+        foreach (array_keys(Company::THEME_AREAS) as $area) {
+            if (array_key_exists("theme_{$area}", $data)) {
+                $theme[$area] = $data["theme_{$area}"];
+            }
+        }
+        $company->theme = $theme;
+
         $company->save();
 
         return $company;

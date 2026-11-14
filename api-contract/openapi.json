@@ -13158,7 +13158,7 @@
         "/hr/summary": {
             "get": {
                 "operationId": "hr.summary",
-                "description": "`contracts_ending`: active contracts ending within 90 days without a renewal waiting.\n`licences_expiring`: licences of current staff expired or expiring within 90 days.\n`placements_active`: interns and residents in an active period; `placements_ending`: ending within 30 days.\nCounts cover only the employees the user may see (`scope`).",
+                "description": "`contracts_ending`: active contracts ending within 90 days without a renewal waiting.\n`licences_expiring`: licences of current staff expired or expiring within 90 days.\n`placements_active`: interns and residents in an active period; `placements_ending`: ending within 30 days.\n`employees`, `renewals`, `placements`, `departments`, `positions`: breakdowns for each HR page.\nCounts cover only the employees the user may see (`scope`); department and position totals are organisation wide.",
                 "summary": "Counts for the HR dashboard",
                 "tags": [
                     "HR: Lookups",
@@ -13202,6 +13202,186 @@
                                                 "placements_ending": {
                                                     "type": "integer"
                                                 },
+                                                "employees": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "confirmed": {
+                                                            "type": "integer"
+                                                        },
+                                                        "probation": {
+                                                            "type": "integer"
+                                                        },
+                                                        "female": {
+                                                            "type": "integer"
+                                                        },
+                                                        "male": {
+                                                            "type": "integer"
+                                                        },
+                                                        "by_type": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "key": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "count": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "key",
+                                                                    "label",
+                                                                    "count"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "confirmed",
+                                                        "probation",
+                                                        "female",
+                                                        "male",
+                                                        "by_type"
+                                                    ]
+                                                },
+                                                "renewals": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "approved": {
+                                                            "type": "integer"
+                                                        },
+                                                        "renewed_this_year": {
+                                                            "type": "integer"
+                                                        },
+                                                        "rejected_this_year": {
+                                                            "type": "integer"
+                                                        },
+                                                        "ending_90_days": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "pending",
+                                                        "approved",
+                                                        "renewed_this_year",
+                                                        "rejected_this_year",
+                                                        "ending_90_days"
+                                                    ]
+                                                },
+                                                "placements": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "integer"
+                                                        },
+                                                        "upcoming": {
+                                                            "type": "integer"
+                                                        },
+                                                        "ending_30_days": {
+                                                            "type": "integer"
+                                                        },
+                                                        "internship": {
+                                                            "type": "integer"
+                                                        },
+                                                        "residency": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "active",
+                                                        "upcoming",
+                                                        "ending_30_days",
+                                                        "internship",
+                                                        "residency"
+                                                    ]
+                                                },
+                                                "departments": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "total": {
+                                                            "type": "integer"
+                                                        },
+                                                        "sections": {
+                                                            "type": "integer"
+                                                        },
+                                                        "staffed": {
+                                                            "type": "integer"
+                                                        },
+                                                        "top": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "count": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "name",
+                                                                    "count"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "total",
+                                                        "sections",
+                                                        "staffed",
+                                                        "top"
+                                                    ]
+                                                },
+                                                "positions": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "total": {
+                                                            "type": "integer"
+                                                        },
+                                                        "filled": {
+                                                            "type": "integer"
+                                                        },
+                                                        "top": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "count": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "id",
+                                                                    "name",
+                                                                    "count"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "total",
+                                                        "filled",
+                                                        "top"
+                                                    ]
+                                                },
                                                 "scope": {
                                                     "type": "object",
                                                     "properties": {
@@ -13228,6 +13408,11 @@
                                                 "licences_expiring",
                                                 "placements_active",
                                                 "placements_ending",
+                                                "employees",
+                                                "renewals",
+                                                "placements",
+                                                "departments",
+                                                "positions",
                                                 "scope"
                                             ]
                                         }
@@ -13235,6 +13420,202 @@
                                     "required": [
                                         "data"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/stats/{stat}": {
+            "get": {
+                "operationId": "hr.stats.show",
+                "description": "`stat`: employees, probation, confirmed, female, male, type (`value` = employment type), without_account, invited,\nwithout_contract, contracts_ending, licences_expiring, department (`value` = id), position (`value` = id),\nplacements_active, placements_ending, placements_upcoming, placements_internship, placements_residency,\nrenewals_pending, renewals_approved, renewals_renewed, renewals_rejected, departments, sections, departments_staffed,\npositions, positions_filled. Rows may carry `employee_id`, `department_id` or `position_id` for drilling down.",
+                "summary": "The records behind an HR dashboard number",
+                "tags": [
+                    "HR: Lookups",
+                    "HrStats"
+                ],
+                "parameters": [
+                    {
+                        "name": "stat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "value",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "subtitle": {
+                                                    "type": "string"
+                                                },
+                                                "columns": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "rows": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "additionalProperties": {}
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "title",
+                                                "subtitle",
+                                                "columns",
+                                                "rows",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/stats/{stat}/csv": {
+            "get": {
+                "operationId": "hr.stats.csv",
+                "summary": "Download the records behind an HR dashboard number as CSV (opens in Excel)",
+                "tags": [
+                    "HR: Lookups",
+                    "HrStats"
+                ],
+                "parameters": [
+                    {
+                        "name": "stat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "value",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/stats/{stat}/pdf": {
+            "get": {
+                "operationId": "hr.stats.pdf",
+                "summary": "The records behind an HR dashboard number as a PDF with the company header (opens in the browser)",
+                "tags": [
+                    "HR: Lookups",
+                    "HrStats"
+                ],
+                "parameters": [
+                    {
+                        "name": "stat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "value",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -25231,6 +25612,69 @@
                 }
             }
         },
+        "/payroll/sheets/{sheet}/reports/{type}/pdf": {
+            "get": {
+                "operationId": "payroll.sheets.report.pdf",
+                "summary": "A payroll report as a PDF with the company header (opens in the browser)",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "bank_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/payroll/sheets/{sheet}/generate": {
             "post": {
                 "operationId": "payroll.sheets.generate",
@@ -28297,6 +28741,50 @@
                         "description": "",
                         "content": {
                             "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/reports/hr/{report}/pdf": {
+            "get": {
+                "operationId": "reports.hr.pdf",
+                "summary": "A report as a PDF with the company header (opens in the browser). Same filters as showing it",
+                "tags": [
+                    "Reports"
+                ],
+                "parameters": [
+                    {
+                        "name": "report",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
                                 "schema": {
                                     "type": "string"
                                 }
@@ -32607,6 +33095,30 @@
                             "null"
                         ]
                     },
+                    "theme": {
+                        "type": "object",
+                        "description": "Where the brand colors are used.",
+                        "properties": {
+                            "sidebar": {
+                                "type": "string"
+                            },
+                            "navbar": {
+                                "type": "string"
+                            },
+                            "tables": {
+                                "type": "string"
+                            },
+                            "cards": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "sidebar",
+                            "navbar",
+                            "tables",
+                            "cards"
+                        ]
+                    },
                     "fiscal_year_start": {
                         "type": "string"
                     },
@@ -32740,6 +33252,7 @@
                     "login_background_url",
                     "primary_color",
                     "secondary_color",
+                    "theme",
                     "fiscal_year_start",
                     "is_active",
                     "created_at"
@@ -35509,6 +36022,30 @@
                                     "string",
                                     "null"
                                 ]
+                            },
+                            "theme": {
+                                "type": "object",
+                                "description": "Where the brand colors are used: sidebar, navbar, tables (plain, tinted, solid) and cards (plain, accent, tinted).",
+                                "properties": {
+                                    "sidebar": {
+                                        "type": "string"
+                                    },
+                                    "navbar": {
+                                        "type": "string"
+                                    },
+                                    "tables": {
+                                        "type": "string"
+                                    },
+                                    "cards": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "sidebar",
+                                    "navbar",
+                                    "tables",
+                                    "cards"
+                                ]
                             }
                         },
                         "required": [
@@ -35517,7 +36054,8 @@
                             "name",
                             "logo_url",
                             "primary_color",
-                            "secondary_color"
+                            "secondary_color",
+                            "theme"
                         ]
                     },
                     "branch": {
@@ -36444,17 +36982,12 @@
                                 "maxLength": 50
                             },
                             "phone": {
-                                "type": [
-                                    "string",
-                                    "null"
-                                ],
+                                "type": "string",
+                                "description": "Phone, email and address are printed in the header of the company's documents.",
                                 "maxLength": 50
                             },
                             "email": {
-                                "type": [
-                                    "string",
-                                    "null"
-                                ],
+                                "type": "string",
                                 "format": "email",
                                 "maxLength": 255
                             },
@@ -36467,24 +37000,15 @@
                                 "maxLength": 255
                             },
                             "address": {
-                                "type": [
-                                    "string",
-                                    "null"
-                                ],
+                                "type": "string",
                                 "maxLength": 500
                             },
                             "city": {
-                                "type": [
-                                    "string",
-                                    "null"
-                                ],
+                                "type": "string",
                                 "maxLength": 100
                             },
                             "country": {
-                                "type": [
-                                    "string",
-                                    "null"
-                                ],
+                                "type": "string",
                                 "maxLength": 100
                             },
                             "currency": {
@@ -36505,7 +37029,12 @@
                             }
                         },
                         "required": [
-                            "name"
+                            "name",
+                            "phone",
+                            "email",
+                            "address",
+                            "city",
+                            "country"
                         ]
                     },
                     "branches": {
@@ -38114,6 +38643,42 @@
                         ],
                         "description": "Top bar color. Empty = same as primary.",
                         "pattern": "^#[0-9a-fA-F]{6}$"
+                    },
+                    "theme_sidebar": {
+                        "type": "string",
+                        "description": "Sidebar style: plain, tinted or solid (top bar color).",
+                        "enum": [
+                            "plain",
+                            "tinted",
+                            "solid"
+                        ]
+                    },
+                    "theme_navbar": {
+                        "type": "string",
+                        "description": "Top bar style: plain, tinted or solid (top bar color).",
+                        "enum": [
+                            "plain",
+                            "tinted",
+                            "solid"
+                        ]
+                    },
+                    "theme_tables": {
+                        "type": "string",
+                        "description": "Table headings: plain, tinted or solid (top bar color).",
+                        "enum": [
+                            "plain",
+                            "tinted",
+                            "solid"
+                        ]
+                    },
+                    "theme_cards": {
+                        "type": "string",
+                        "description": "Cards: plain, accent (main color stripe on top) or tinted (header).",
+                        "enum": [
+                            "plain",
+                            "accent",
+                            "tinted"
+                        ]
                     }
                 },
                 "title": "UpdateCompanyBrandingRequest"
@@ -38179,17 +38744,12 @@
                         "maxLength": 50
                     },
                     "phone": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
+                        "description": "Phone, email and address are printed in the header of the company's documents, so they cannot be cleared.",
                         "maxLength": 50
                     },
                     "email": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "format": "email",
                         "maxLength": 255
                     },
@@ -38202,24 +38762,15 @@
                         "maxLength": 255
                     },
                     "address": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "maxLength": 500
                     },
                     "city": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "maxLength": 100
                     },
                     "country": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "maxLength": 100
                     },
                     "currency": {

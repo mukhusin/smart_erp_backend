@@ -56,6 +56,22 @@ class CompanyBrandingTest extends TestCase
         ], ['Accept' => 'application/json'])->assertUnprocessable()->assertJsonValidationErrors(['logo', 'primary_color']);
     }
 
+    public function test_platform_admin_chooses_where_brand_colors_are_used(): void
+    {
+        [$company, $admin] = $this->createCompany('Alpha');
+        $url = "/api/v1/platform/companies/{$company->id}/branding";
+        $json = ['Accept' => 'application/json'];
+
+        $this->actingAs($admin)->getJson('/api/v1/me')->assertJsonPath('data.company.theme', ['sidebar' => 'plain', 'navbar' => 'plain', 'tables' => 'plain', 'cards' => 'plain']);
+
+        $this->actingAs($this->createPlatformAdmin())->post($url, ['theme_sidebar' => 'solid', 'theme_tables' => 'tinted', 'theme_cards' => 'accent'], $json)
+            ->assertOk()->assertJsonPath('data.theme', ['sidebar' => 'solid', 'navbar' => 'plain', 'tables' => 'tinted', 'cards' => 'accent']);
+        $this->post($url, ['theme_navbar' => 'solid'], $json)->assertOk()->assertJsonPath('data.theme.sidebar', 'solid')->assertJsonPath('data.theme.navbar', 'solid');
+        $this->post($url, ['theme_cards' => 'solid', 'theme_sidebar' => 'neon'], $json)->assertUnprocessable()->assertJsonValidationErrors(['theme_cards', 'theme_sidebar']);
+
+        $this->actingAs($admin->fresh())->getJson('/api/v1/me')->assertJsonPath('data.company.theme.sidebar', 'solid')->assertJsonPath('data.company.theme.tables', 'tinted');
+    }
+
     public function test_company_users_cannot_change_branding(): void
     {
         [$company, $admin] = $this->createCompany('Alpha');

@@ -14,10 +14,26 @@ class Company extends Model
     protected $fillable = [
         'name', 'slug', 'short_name', 'registration_number', 'tin',
         'phone', 'email', 'website', 'address', 'city', 'country',
-        'logo', 'login_background', 'primary_color', 'secondary_color', 'currency', 'fiscal_year_start', 'is_active',
+        'logo', 'login_background', 'primary_color', 'secondary_color', 'theme', 'currency', 'fiscal_year_start', 'is_active',
     ];
 
-    protected $casts = ['is_active' => 'boolean'];
+    /** Where the brand colors are used, and how: plain (none), tinted (light wash) or solid; cards: plain, accent (top stripe) or tinted (header). */
+    public const THEME_AREAS = [
+        'sidebar' => ['plain', 'tinted', 'solid'],
+        'navbar' => ['plain', 'tinted', 'solid'],
+        'tables' => ['plain', 'tinted', 'solid'],
+        'cards' => ['plain', 'accent', 'tinted'],
+    ];
+
+    protected $casts = ['is_active' => 'boolean', 'theme' => 'array'];
+
+    /** @return array{sidebar: string, navbar: string, tables: string, cards: string} */
+    public function themeSettings(): array
+    {
+        $saved = $this->theme ?? [];
+
+        return collect(self::THEME_AREAS)->map(fn ($options, $area) => in_array($saved[$area] ?? null, $options, true) ? $saved[$area] : 'plain')->all();
+    }
 
     /** Already limited to this company, so the current-company filter is not needed here. */
     public function branches()
