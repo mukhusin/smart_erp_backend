@@ -139,6 +139,7 @@ class PayrollTest extends TestCase
         $this->getJson("/api/v1/payroll/sheets/{$id}/reports/employer")->assertJsonPath('data.totals.7', 226200);
         $this->getJson("/api/v1/payroll/sheets/{$id}/reports/unknown")->assertNotFound();
         $csv = $this->get("/api/v1/payroll/sheets/{$id}/reports/bank/csv")->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->get("/api/v1/payroll/sheets/{$id}/reports/full/pdf")->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertStringContainsString('payroll-november-2026-bank-payment-list.csv', $csv->headers->get('Content-Disposition'));
         $this->assertStringStartsWith("\xEF\xBB\xBF\"Employee no\",Name,Bank", $csv->getContent());
         $this->assertStringContainsString('Total', $csv->getContent());

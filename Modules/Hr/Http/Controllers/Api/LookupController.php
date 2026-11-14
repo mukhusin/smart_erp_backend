@@ -4,6 +4,7 @@ namespace Modules\Hr\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CompanyBranch;
+use App\Models\ContractRenewal;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\EmployeePlacement;
@@ -114,26 +115,67 @@ class LookupController extends Controller
      * `contracts_ending`: active contracts ending within 90 days without a renewal waiting.
      * `licences_expiring`: licences of current staff expired or expiring within 90 days.
      * `placements_active`: interns and residents in an active period; `placements_ending`: ending within 30 days.
-     * Counts cover only the employees the user may see (`scope`).
+     * `employees`, `renewals`, `placements`, `departments`, `positions`: breakdowns for each HR page.
+     * Counts cover only the employees the user may see (`scope`); department and position totals are organisation wide.
      *
-     * @response array{data: array{total: int, probation: int, without_account: int, invited: int, without_contract: int, contracts_ending: int, licences_expiring: int, placements_active: int, placements_ending: int, scope: array{all: bool, label: string}}}
+     * @response array{data: array{total: int, probation: int, without_account: int, invited: int, without_contract: int, contracts_ending: int, licences_expiring: int, placements_active: int, placements_ending: int, employees: array{confirmed: int, probation: int, female: int, male: int, by_type: list<array{key: string, label: string, count: int}>}, renewals: array{pending: int, approved: int, renewed_this_year: int, rejected_this_year: int, ending_90_days: int}, placements: array{active: int, upcoming: int, ending_30_days: int, internship: int, residency: int}, departments: array{total: int, sections: int, staffed: int, top: list<array{id: int, name: string, count: int}>}, positions: array{total: int, filled: int, top: list<array{id: int, name: string, count: int}>}, scope: array{all: bool, label: string}}}
      */
     public function summary(EmployeeScope $scope): JsonResponse
     {
+        $today = CarbonImmutable::today();
         $current = $scope->apply(Employee::where('employment_status', '!=', 'terminated'), request()->user());
         $active = $scope->apply(Employee::query()->active(), request()->user());
         $currentIds = (clone $current)->select('id');
+        $staff = (clone $active)->with(['department:id,name', 'jobPosition:id,title'])->get(['id', 'gender', 'emp_type', 'employment_status', 'department_id', 'job_position_id']);
+        $placements = EmployeePlacement::whereIn('employee_id', $currentIds);
+        $renewals = ContractRenewal::whereIn('employee_id', $scope->apply(Employee::query(), request()->user())->select('id'));
+        $contractsEnding = $scope->apply(Employee::query()->contractEnding(), request()->user())->count();
+        $top = fn ($key, $name) => $staff->whereNotNull($key)->groupBy($key)->map(fn ($g, $id) => ['id' => (int) $id, 'name' => $name($g->first()) ?? '—', 'count' => $g->count()])
+            ->sortByDesc('count')->take(5)->values()->all();
 
         return response()->json(['data' => [
-            'total' => (clone $active)->count(),
-            'probation' => (clone $active)->where('employment_status', 'probation')->count(),
+            'total' => $staff->count(),
+            'probation' => $staff->where('employment_status', 'probation')->count(),
             'without_account' => (clone $active)->whereNull('user_id')->count(),
             'invited' => $scope->apply(Employee::query()->invitePending(), request()->user())->count(),
             'without_contract' => $scope->apply(Employee::query()->withoutContract(), request()->user())->count(),
-            'contracts_ending' => $scope->apply(Employee::query()->contractEnding(), request()->user())->count(),
+            'contracts_ending' => $contractsEnding,
             'licences_expiring' => $scope->apply(Employee::query()->licenceExpiring(), request()->user())->count(),
-            'placements_active' => EmployeePlacement::whereIn('employee_id', $currentIds)->where('status', 'active')->count(),
-            'placements_ending' => EmployeePlacement::whereIn('employee_id', $currentIds)->where('status', 'active')->whereDate('end_date', '<=', CarbonImmutable::today()->addDays(30))->count(),
+            'placements_active' => (clone $placements)->where('status', 'active')->count(),
+            'placements_ending' => (clone $placements)->where('status', 'active')->whereDate('end_date', '<=', $today->addDays(30))->count(),
+            'employees' => [
+                'confirmed' => $staff->where('employment_status', 'confirmed')->count(),
+                'probation' => $staff->where('employment_status', 'probation')->count(),
+                'female' => $staff->where('gender', 'Female')->count(),
+                'male' => $staff->where('gender', 'Male')->count(),
+                'by_type' => collect(EmployeeOptions::EMPLOYMENT_TYPES)->map(fn ($label, $key) => ['key' => $key, 'label' => $label, 'count' => $staff->where('emp_type', $key)->count()])
+                    ->filter(fn ($t) => $t['count'] > 0)->sortByDesc('count')->values()->all(),
+            ],
+            'renewals' => [
+                'pending' => (clone $renewals)->where('status', 'pending')->count(),
+                'approved' => (clone $renewals)->where('status', 'approved')->count(),
+                'renewed_this_year' => (clone $renewals)->where('status', 'completed')->whereDate('updated_at', '>=', $today->startOfYear())->count(),
+                'rejected_this_year' => (clone $renewals)->where('status', 'rejected')->whereDate('updated_at', '>=', $today->startOfYear())->count(),
+                'ending_90_days' => $contractsEnding,
+            ],
+            'placements' => [
+                'active' => (clone $placements)->where('status', 'active')->count(),
+                'upcoming' => (clone $placements)->where('status', 'upcoming')->count(),
+                'ending_30_days' => (clone $placements)->where('status', 'active')->whereDate('end_date', '<=', $today->addDays(30))->count(),
+                'internship' => (clone $placements)->where('status', 'active')->where('type', 'internship')->count(),
+                'residency' => (clone $placements)->where('status', 'active')->where('type', 'residency')->count(),
+            ],
+            'departments' => [
+                'total' => Department::where('is_active', true)->whereNull('parent_id')->count(),
+                'sections' => Department::where('is_active', true)->whereNotNull('parent_id')->count(),
+                'staffed' => $staff->whereNotNull('department_id')->unique('department_id')->count(),
+                'top' => $top('department_id', fn ($e) => $e->department?->name),
+            ],
+            'positions' => [
+                'total' => JobPosition::where('is_active', true)->count(),
+                'filled' => $staff->whereNotNull('job_position_id')->unique('job_position_id')->count(),
+                'top' => $top('job_position_id', fn ($e) => $e->jobPosition?->title),
+            ],
             'scope' => $scope->describe(request()->user()),
         ]]);
     }

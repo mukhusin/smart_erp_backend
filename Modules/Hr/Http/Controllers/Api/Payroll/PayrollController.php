@@ -8,6 +8,7 @@ use App\Models\PayrollDateSetting;
 use App\Models\PayrollSheet;
 use App\Models\PayrollSheetDetail;
 use Dedoc\Scramble\Attributes\QueryParameter;
+use Modules\Core\Support\PdfDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -240,6 +241,16 @@ class PayrollController extends Controller
         $name = Str::slug($sheet->name.' '.$report['title']).'.csv';
 
         return response($reports->csv($report), 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => "attachment; filename=\"{$name}\""]);
+    }
+
+    /** A payroll report as a PDF with the company header (opens in the browser). */
+    #[QueryParameter('bank_id', type: 'integer')]
+    public function reportPdf(Request $request, PayrollSheet $sheet, string $type, PdfDocument $pdf): \Symfony\Component\HttpFoundation\Response
+    {
+        abort_unless(array_key_exists($type, PayrollReports::TYPES), 404);
+        $report = app(PayrollReports::class)->build($sheet, $type, $request->integer('bank_id') ?: null);
+
+        return $pdf->table($request->user(), $sheet->name.' · '.$report['title'], null, $report['columns'], $report['rows'], $report['totals']);
     }
 
     private function slip(PayrollSheetDetail $d): array

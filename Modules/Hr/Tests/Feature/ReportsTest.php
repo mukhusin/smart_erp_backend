@@ -92,6 +92,7 @@ class ReportsTest extends TestCase
         $this->actingAs($this->admin)->getJson('/api/v1/reports/hr/joiners?from=2026-11-10&to=2026-11-01')->assertUnprocessable();
 
         $csv = $this->actingAs($this->admin)->get('/api/v1/reports/hr/joiners/csv')->assertOk()->getContent();
+        $this->actingAs($this->admin)->get('/api/v1/reports/hr/joiners/pdf')->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertStringContainsString('New employees', $csv);
         $this->assertStringContainsString('A2', $csv);
     }
@@ -161,6 +162,7 @@ class ReportsTest extends TestCase
         $this->assertSame(0, $data['staff']['active']);
         $this->assertNull($data['salary']);
         $this->actingAs($viewer)->get('/api/v1/reports/hr/joiners/csv')->assertForbidden();
+        $this->actingAs($viewer)->get('/api/v1/reports/hr/joiners/pdf')->assertForbidden();
 
         $nobody = User::factory()->create(['company_id' => $this->company->id]);
         $this->actingAs($nobody)->getJson('/api/v1/reports/hr')->assertForbidden();

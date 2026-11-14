@@ -16,6 +16,7 @@ use Modules\Hr\Http\Controllers\Api\EmployeeDocumentController;
 use Modules\Hr\Http\Controllers\Api\EmployeeExperienceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeLicenceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeQualificationController;
+use Modules\Hr\Http\Controllers\Api\HrStatsController;
 use Modules\Hr\Http\Controllers\Api\JobPositionController;
 use Modules\Hr\Http\Controllers\Api\Leave\AnnualRosterController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveBalanceController;
@@ -55,6 +56,9 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::get('contract-types/active', [LookupController::class, 'contractTypes'])->name('contract-types.active');
         Route::get('licence-types/active', [LookupController::class, 'licenceTypes'])->name('licence-types.active');
         Route::get('summary', [LookupController::class, 'summary'])->name('summary');
+        Route::get('stats/{stat}', [HrStatsController::class, 'show'])->name('stats.show');
+        Route::get('stats/{stat}/csv', [HrStatsController::class, 'csv'])->name('stats.csv');
+        Route::get('stats/{stat}/pdf', [HrStatsController::class, 'pdf'])->name('stats.pdf');
         Route::get('placements', [PlacementController::class, 'index'])->name('placements.index');
         Route::get('job-positions', [JobPositionController::class, 'index'])->name('job-positions.index');
         Route::get('renewals', [RenewalController::class, 'index'])->name('renewals.index');
@@ -371,6 +375,7 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::get('sheets/{sheet}/payslips/{detail}', [PayrollController::class, 'payslip'])->name('sheets.payslip');
         Route::get('sheets/{sheet}/reports/{type}', [PayrollController::class, 'report'])->name('sheets.report');
         Route::get('sheets/{sheet}/reports/{type}/csv', [PayrollController::class, 'reportCsv'])->name('sheets.report.csv');
+        Route::get('sheets/{sheet}/reports/{type}/pdf', [PayrollController::class, 'reportPdf'])->name('sheets.report.pdf');
     });
     Route::middleware('can:payroll.create')->group(function () {
         Route::post('sheets', [PayrollController::class, 'store'])->name('sheets.store');
@@ -441,4 +446,5 @@ Route::prefix('reports')->middleware(['auth:sanctum', 'module:reports', 'can:rep
     Route::get('hr', [ReportsController::class, 'index'])->name('hr.index');
     Route::get('hr/{report}', [ReportsController::class, 'show'])->whereIn('report', array_keys(HrReports::REPORTS))->name('hr.show');
     Route::get('hr/{report}/csv', [ReportsController::class, 'csv'])->whereIn('report', array_keys(HrReports::REPORTS))->middleware('can:reports.generate')->name('hr.csv');
+    Route::get('hr/{report}/pdf', [ReportsController::class, 'pdf'])->whereIn('report', array_keys(HrReports::REPORTS))->middleware('can:reports.generate')->name('hr.pdf');
 });

@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
+use Modules\Core\Support\PdfDocument;
 use Modules\Hr\Support\HrOverview;
 use Modules\Hr\Support\HrReports;
 
@@ -67,6 +68,16 @@ class ReportsController extends Controller
         $name = Str::slug($result['title']).'-'.now()->format('Y-m-d').'.csv';
 
         return response($reports->csv($result), 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => "attachment; filename=\"{$name}\""]);
+    }
+
+    /**
+     * A report as a PDF with the company header (opens in the browser). Same filters as showing it.
+     */
+    public function pdf(Request $request, string $report, HrReports $reports, PdfDocument $pdf): Response
+    {
+        $result = $reports->run($report, $this->filters($request), $request->user());
+
+        return $pdf->keyed($request->user(), $result['title'], $result['subtitle'], $result['columns'], $result['rows']);
     }
 
     private function filters(Request $request): array

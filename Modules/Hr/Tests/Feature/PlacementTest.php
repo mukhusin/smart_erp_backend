@@ -54,7 +54,8 @@ class PlacementTest extends TestCase
             ->assertCreated()->assertJsonPath('data.status', 'upcoming')->json('data.id');
 
         $this->getJson("/api/v1/hr/employees/{$intern->id}")->assertJsonPath('data.placement.id', $first)->assertJsonPath('data.counts.placements', 2);
-        $this->getJson('/api/v1/hr/summary')->assertJsonPath('data.placements_active', 1)->assertJsonPath('data.without_contract', 1);
+        $this->getJson('/api/v1/hr/summary')->assertJsonPath('data.placements_active', 1)->assertJsonPath('data.without_contract', 1)
+            ->assertJsonPath('data.placements.active', 1)->assertJsonPath('data.placements.upcoming', 1);
 
         $this->travelTo('2027-01-01 01:00:00');
         $this->artisan('contract:status')->assertSuccessful();
