@@ -208,7 +208,7 @@ class EmployeeController extends Controller
     /** The employee with everything the profile shows. */
     public function profile(Employee $employee): Employee
     {
-        return $employee->load([...self::WITH, 'activeContract.natureOfContract', 'waitingContract.natureOfContract', 'currentPlacement', 'bankAccount.bank', 'currentSupervisor.supervisor'])
+        return $employee->load([...self::WITH, 'activeContract.natureOfContract', 'waitingContract.natureOfContract', 'currentPlacement', 'bankAccount.bank', 'currentSupervisor.supervisor', 'patientId'])
             ->loadCount(['contracts', 'placements', 'qualifications', 'licences', 'experiences', 'documents', 'dependants',
                 'dependants as next_of_kin_count' => fn ($q) => $q->where('is_next_of_kin', true), 'team']);
     }

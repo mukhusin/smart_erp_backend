@@ -9,12 +9,12 @@ class HrSetting extends Model
 {
     use BelongsToCompany;
 
-    protected $fillable = ['company_id', 'renumber_on_contract_change', 'leave_year_start_month', 'annual_cycle_from_joining', 'joiners_from'];
+    protected $fillable = ['company_id', 'renumber_on_contract_change', 'leave_year_start_month', 'annual_cycle_from_joining', 'joiners_from', 'hospital_patients'];
 
-    protected $casts = ['renumber_on_contract_change' => 'boolean', 'leave_year_start_month' => 'integer', 'annual_cycle_from_joining' => 'boolean', 'joiners_from' => 'date'];
+    protected $casts = ['renumber_on_contract_change' => 'boolean', 'leave_year_start_month' => 'integer', 'annual_cycle_from_joining' => 'boolean', 'joiners_from' => 'date', 'hospital_patients' => 'boolean'];
 
     public static function current(): self
     {
-        return static::firstOrNew([], ['renumber_on_contract_change' => false, 'leave_year_start_month' => 1, 'annual_cycle_from_joining' => true]);
+        return static::firstOrNew([], ['renumber_on_contract_change' => false, 'leave_year_start_month' => 1, 'annual_cycle_from_joining' => true, 'hospital_patients' => false]);
     }
 }

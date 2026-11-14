@@ -342,11 +342,6 @@ class HrmsImporter
             });
         }
 
-        $patients = $this->src->table('employee_patient_ids')->count();
-        if ($patients) {
-            $this->stats('employee_patient_ids')['skipped'] = $patients;
-            $this->note('employee_patient_ids', 'no ERP table yet (gap E-14), not copied');
-        }
     }
 
     private function stepLeave(): void

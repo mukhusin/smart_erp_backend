@@ -91,7 +91,7 @@ class RosterController extends Controller
     /**
      * A roster with its days, employees, duties and the duty codes to choose from.
      *
-     * @response array{data: array{roster: array{id: int, title: string, department: array{id: int, name: string}|null, section: array{id: int, name: string}|null, from_date: string, to_date: string, days: int, status: string, status_label: string, employees: int, prepared_by: string|null, waiting_for: string|null, decision_comment: string|null, can_manage: bool}, can_edit: bool, locked_before: string|null, days: list<array{date: string, weekday: string, weekend: bool, holiday: string|null}>, employees: list<array{id: int, name: string, employee_no: string|null, position: string|null}>, duties: list<array{employee_id: int, date: string, roster_code_id: int|null, code: string, duty: string, color: string|null, is_working: bool, start_time: string|null, end_time: string|null, hours: float, overtime: bool}>, codes: list<array{id: int, code: string, duty: string, description: string|null, is_working: bool, start_time: string|null, end_time: string|null, crosses_midnight: bool, work_hour: float, break_minutes: int, color: string|null, is_active: bool}>}}
+     * @response array{data: array{roster: array{id: int, title: string, department: array{id: int, name: string}|null, section: array{id: int, name: string}|null, from_date: string, to_date: string, days: int, status: string, status_label: string, employees: int, prepared_by: string|null, waiting_for: string|null, decision_comment: string|null, can_manage: bool}, can_edit: bool, locked_before: string|null, days: list<array{date: string, weekday: string, weekend: bool, holiday: string|null}>, employees: list<array{id: int, name: string, employee_no: string|null, position: string|null}>, duties: list<array{employee_id: int, date: string, roster_code_id: int|null, code: string, duty: string, color: string|null, is_working: bool, start_time: string|null, end_time: string|null, hours: float, overtime: bool}>, codes: list<array{id: int, code: string, duty: string, description: string|null, is_working: bool, start_time: string|null, end_time: string|null, crosses_midnight: bool, work_hour: float, break_minutes: int, color: string|null, is_active: bool}>, absences: list<array{employee_id: int, date: string, kind: string, code: string|null, label: string|null, color: string|null}>}}
      */
     public function show(Request $request, Roster $roster): JsonResponse
     {
@@ -101,6 +101,7 @@ class RosterController extends Controller
         $canManage = $this->access->canManage($request->user(), $roster->department_id, $roster->section_id);
         $duties = $roster->duties()->orderBy('day_date')->get();
         $usedCodes = $duties->pluck('roster_code_id')->filter()->unique();
+        $codeHours = RosterCode::whereIn('id', $usedCodes)->pluck('work_hour', 'id');
 
         return response()->json(['data' => [
             'roster' => $this->row($roster, $request),
@@ -114,10 +115,16 @@ class RosterController extends Controller
             ])->values(),
             'duties' => $duties->map(fn ($d) => [
                 'employee_id' => $d->employee_id, 'date' => $d->day_date->toDateString(), 'roster_code_id' => $d->roster_code_id, 'code' => $d->code, 'duty' => $d->duty,
-                'color' => $d->color, 'is_working' => (bool) $d->can_punch, 'start_time' => $d->start_time, 'end_time' => $d->end_time, 'hours' => (float) $d->work_hour, 'overtime' => (bool) $d->overtime,
+                'color' => $d->color, 'is_working' => (bool) $d->can_punch, 'start_time' => $d->start_time, 'end_time' => $d->end_time,
+                'hours' => (float) $d->work_hour ?: ($d->can_punch ? (float) ($codeHours[$d->roster_code_id] ?? 0) : 0.0), 'overtime' => (bool) $d->overtime,
             ])->values(),
             'codes' => RosterCode::where(fn ($q) => $q->where('is_active', true)->orWhereIn('id', $usedCodes))->orderBy('code')->get()
                 ->map(fn ($c) => RosterCodeController::row($c))->values(),
+            /** Leave and approved sick sheets (excuse of duty) of the roster's employees in its period. */
+            'absences' => \App\Models\EmployeeTimetable::whereIn('employee_id', $this->rosters->employees($roster)->pluck('id'))
+                ->whereIn('source', [\App\Models\EmployeeTimetable::LEAVE, \App\Models\EmployeeTimetable::EXCUSE])
+                ->whereDate('day_date', '>=', $roster->from_date)->whereDate('day_date', '<=', $roster->to_date)->get()
+                ->map(fn ($a) => ['employee_id' => $a->employee_id, 'date' => $a->day_date->toDateString(), 'kind' => $a->source, 'code' => $a->code, 'label' => $a->duty, 'color' => $a->color])->values(),
         ]]);
     }
 

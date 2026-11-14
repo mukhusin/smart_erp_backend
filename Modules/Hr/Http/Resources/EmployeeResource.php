@@ -27,6 +27,8 @@ class EmployeeResource extends JsonResource
             'gender' => $this->gender,
             'email' => $this->email,
             'phone_number' => $this->phone_number,
+            /** Registration number in the hospital's patient system (profile only). */
+            'patient_id' => $this->whenLoaded('patientId', fn () => \App\Models\HrSetting::current()->hospital_patients ? $this->patientId?->patient_id : null),
             'photo_url' => $this->profile_image
                 ? route('hr.employees.photo', $this->id, false) . '?v=' . substr(md5($this->profile_image), 0, 8)
                 : null,

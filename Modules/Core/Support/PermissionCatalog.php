@@ -41,6 +41,7 @@ final class PermissionCatalog
             'hr.employees.delete' => 'Delete employees',
             'hr.contracts.manage' => 'Manage contracts',
             'hr.messages.send' => 'Send SMS, email and notices to staff',
+            'hr.sick-sheets.manage' => 'Enter and view sick sheets (excuse of duty)',
             'hr.residents.manage' => 'Manage interns and residents',
             'hr.departments.manage' => 'Manage departments and sections',
             'hr.positions.manage' => 'Manage job positions',

@@ -10543,6 +10543,7 @@
                                                 {
                                                     "type": "object",
                                                     "required": [
+                                                        "patient_id",
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
@@ -10612,6 +10613,7 @@
                                                 {
                                                     "type": "object",
                                                     "required": [
+                                                        "patient_id",
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
@@ -10748,6 +10750,7 @@
                                                 {
                                                     "type": "object",
                                                     "required": [
+                                                        "patient_id",
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
@@ -10812,6 +10815,7 @@
                                                 {
                                                     "type": "object",
                                                     "required": [
+                                                        "patient_id",
                                                         "contract",
                                                         "waiting_contract",
                                                         "bank_account",
@@ -15187,6 +15191,110 @@
                 }
             }
         },
+        "/hr/settings/general": {
+            "get": {
+                "operationId": "hr.settings.general.show",
+                "summary": "General HR settings. `hospital_patients`: the company runs a hospital whose patient system knows its staff (staff patient\nIDs are kept and excuse of duty can come from the hospital); when off, patient IDs are not shown",
+                "tags": [
+                    "HR: Settings",
+                    "HrGeneralSettings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "hospital_patients": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "hospital_patients"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "hr.settings.general.update",
+                "summary": "Change the general HR settings",
+                "tags": [
+                    "HR: Settings",
+                    "HrGeneralSettings"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "hospital_patients": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "hospital_patients"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "hospital_patients": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "hospital_patients"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/number-formats/options": {
             "get": {
                 "operationId": "hr.number-formats.options",
@@ -15966,6 +16074,1452 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/sick-sheets": {
+            "get": {
+                "operationId": "hr.sick-sheets.index",
+                "summary": "Sick sheets overlapping a month (default this month), of the employees I may see. `status`: pending, active, ended, rejected, cancelled",
+                "tags": [
+                    "HR: Sick sheets",
+                    "SickSheet"
+                ],
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-11"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "start_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "end_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "number_of_days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "hospital_name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "doctor_name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "reason": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "file": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "url": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "name",
+                                                            "url"
+                                                        ]
+                                                    },
+                                                    "can_cancel": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "start_date",
+                                                    "end_date",
+                                                    "number_of_days",
+                                                    "hospital_name",
+                                                    "doctor_name",
+                                                    "reason",
+                                                    "status",
+                                                    "status_label",
+                                                    "source",
+                                                    "waiting_for",
+                                                    "decision_comment",
+                                                    "file",
+                                                    "can_cancel",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/{employee}/sick-sheets": {
+            "post": {
+                "operationId": "hr.employees.sick-sheets.store",
+                "summary": "Enter a sick sheet for an employee (multipart when attaching the sheet: PDF, JPG or PNG up to 5 MB)",
+                "tags": [
+                    "HR: Sick sheets",
+                    "SickSheet"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "employee": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "department"
+                                                    ]
+                                                },
+                                                "start_date": {
+                                                    "type": "string"
+                                                },
+                                                "end_date": {
+                                                    "type": "string"
+                                                },
+                                                "number_of_days": {
+                                                    "type": "integer"
+                                                },
+                                                "hospital_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "doctor_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "file": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "url": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "url"
+                                                    ]
+                                                },
+                                                "can_cancel": {
+                                                    "type": "boolean"
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "employee",
+                                                "start_date",
+                                                "end_date",
+                                                "number_of_days",
+                                                "hospital_name",
+                                                "doctor_name",
+                                                "reason",
+                                                "status",
+                                                "status_label",
+                                                "source",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "file",
+                                                "can_cancel",
+                                                "created_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/sick-sheets/{sheet}/cancel": {
+            "post": {
+                "operationId": "hr.sick-sheets.cancel",
+                "summary": "Cancel an approved sick sheet, or withdraw one I entered that is still waiting",
+                "tags": [
+                    "HR: Sick sheets",
+                    "SickSheet"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "employee": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": "string"
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "department"
+                                                    ]
+                                                },
+                                                "start_date": {
+                                                    "type": "string"
+                                                },
+                                                "end_date": {
+                                                    "type": "string"
+                                                },
+                                                "number_of_days": {
+                                                    "type": "integer"
+                                                },
+                                                "hospital_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "doctor_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "file": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "url": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "url"
+                                                    ]
+                                                },
+                                                "can_cancel": {
+                                                    "type": "boolean"
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "employee",
+                                                "start_date",
+                                                "end_date",
+                                                "number_of_days",
+                                                "hospital_name",
+                                                "doctor_name",
+                                                "reason",
+                                                "status",
+                                                "status_label",
+                                                "source",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "file",
+                                                "can_cancel",
+                                                "created_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/sick-sheets/{sheet}/file": {
+            "get": {
+                "operationId": "hr.sick-sheets.file",
+                "summary": "The attached sick sheet",
+                "tags": [
+                    "HR: Sick sheets",
+                    "SickSheet"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/sick-sheets": {
+            "get": {
+                "operationId": "self.sick-sheets.index",
+                "summary": "My sick sheets (newest first)",
+                "tags": [
+                    "HR: Sick sheets",
+                    "SickSheet"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "start_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "end_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "number_of_days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "hospital_name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "doctor_name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "reason": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "file": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "url": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "name",
+                                                            "url"
+                                                        ]
+                                                    },
+                                                    "can_cancel": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "start_date",
+                                                    "end_date",
+                                                    "number_of_days",
+                                                    "hospital_name",
+                                                    "doctor_name",
+                                                    "reason",
+                                                    "status",
+                                                    "status_label",
+                                                    "source",
+                                                    "waiting_for",
+                                                    "decision_comment",
+                                                    "file",
+                                                    "can_cancel",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "self.sick-sheets.store",
+                "summary": "Send my sick sheet to HR (multipart when attaching the sheet: PDF, JPG or PNG up to 5 MB)",
+                "tags": [
+                    "HR: Sick sheets",
+                    "SickSheet"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "employee": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "department"
+                                                    ]
+                                                },
+                                                "start_date": {
+                                                    "type": "string"
+                                                },
+                                                "end_date": {
+                                                    "type": "string"
+                                                },
+                                                "number_of_days": {
+                                                    "type": "integer"
+                                                },
+                                                "hospital_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "doctor_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "file": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "url": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "url"
+                                                    ]
+                                                },
+                                                "can_cancel": {
+                                                    "type": "boolean"
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "employee",
+                                                "start_date",
+                                                "end_date",
+                                                "number_of_days",
+                                                "hospital_name",
+                                                "doctor_name",
+                                                "reason",
+                                                "status",
+                                                "status_label",
+                                                "source",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "file",
+                                                "can_cancel",
+                                                "created_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/sick-sheets/{sheet}/withdraw": {
+            "post": {
+                "operationId": "self.sick-sheets.withdraw",
+                "summary": "Withdraw my sick sheet while it is waiting for approval",
+                "tags": [
+                    "HR: Sick sheets",
+                    "SickSheet"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "employee": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": "string"
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "department"
+                                                    ]
+                                                },
+                                                "start_date": {
+                                                    "type": "string"
+                                                },
+                                                "end_date": {
+                                                    "type": "string"
+                                                },
+                                                "number_of_days": {
+                                                    "type": "integer"
+                                                },
+                                                "hospital_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "doctor_name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "file": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "url": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "url"
+                                                    ]
+                                                },
+                                                "can_cancel": {
+                                                    "type": "boolean"
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "employee",
+                                                "start_date",
+                                                "end_date",
+                                                "number_of_days",
+                                                "hospital_name",
+                                                "doctor_name",
+                                                "reason",
+                                                "status",
+                                                "status_label",
+                                                "source",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "file",
+                                                "can_cancel",
+                                                "created_at"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "Only a sick sheet that is waiting can be withdrawn."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/sick-sheets/{sheet}/file": {
+            "get": {
+                "operationId": "self.sick-sheets.file",
+                "summary": "The sick sheet I attached",
+                "tags": [
+                    "HR: Sick sheets",
+                    "SickSheet"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/contacts": {
+            "get": {
+                "operationId": "hr.contacts.index",
+                "description": "`filter`: missing_phone, invalid_phone or missing_patient_id.",
+                "summary": "Current staff with their phone number and patient ID",
+                "tags": [
+                    "HR: Staff contacts",
+                    "StaffContact"
+                ],
+                "parameters": [
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee_no": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "department": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "position": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "phone_number": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "phone_valid": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "patient_id": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee_no",
+                                                    "name",
+                                                    "department",
+                                                    "position",
+                                                    "phone_number",
+                                                    "phone_valid",
+                                                    "patient_id"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "missing_phone": {
+                                                    "type": "integer"
+                                                },
+                                                "invalid_phone": {
+                                                    "type": "integer"
+                                                },
+                                                "missing_patient_id": {
+                                                    "type": "integer"
+                                                },
+                                                "patient_ids": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "total",
+                                                "missing_phone",
+                                                "invalid_phone",
+                                                "missing_patient_id",
+                                                "patient_ids"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/employees/{employee}/contacts": {
+            "put": {
+                "operationId": "hr.employees.contacts.update",
+                "summary": "Change an employee's phone number and/or patient ID. Spaces in the phone number are removed. An empty patient ID removes it",
+                "tags": [
+                    "HR: Staff contacts",
+                    "StaffContact"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "phone_number": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "pattern": "^(0[67]\\d{8}|255[67]\\d{8})$"
+                                    },
+                                    "patient_id": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "employee_no": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "department": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "position": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "phone_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "phone_valid": {
+                                                    "type": "boolean"
+                                                },
+                                                "patient_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "employee_no",
+                                                "name",
+                                                "department",
+                                                "position",
+                                                "phone_number",
+                                                "phone_valid",
+                                                "patient_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
@@ -32203,6 +33757,49 @@
                                                             "is_active"
                                                         ]
                                                     }
+                                                },
+                                                "absences": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "employee_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "color": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "employee_id",
+                                                            "date",
+                                                            "kind",
+                                                            "code",
+                                                            "label",
+                                                            "color"
+                                                        ]
+                                                    }
                                                 }
                                             },
                                             "required": [
@@ -32212,7 +33809,8 @@
                                                 "days",
                                                 "employees",
                                                 "duties",
-                                                "codes"
+                                                "codes",
+                                                "absences"
                                             ]
                                         }
                                     },
@@ -37031,6 +38629,13 @@
                             "null"
                         ]
                     },
+                    "patient_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Registration number in the hospital's patient system (profile only)."
+                    },
                     "photo_url": {
                         "type": [
                             "string",
@@ -40580,6 +42185,7 @@
                                 "hr.employees.delete",
                                 "hr.contracts.manage",
                                 "hr.messages.send",
+                                "hr.sick-sheets.manage",
                                 "hr.residents.manage",
                                 "hr.departments.manage",
                                 "hr.positions.manage",
@@ -40818,6 +42424,7 @@
                                 "hr.employees.delete",
                                 "hr.contracts.manage",
                                 "hr.messages.send",
+                                "hr.sick-sheets.manage",
                                 "hr.residents.manage",
                                 "hr.departments.manage",
                                 "hr.positions.manage",

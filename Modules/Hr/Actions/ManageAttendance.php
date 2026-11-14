@@ -109,7 +109,7 @@ class ManageAttendance
             'lost_hour' => 0, 'lost_amount' => 0, 'percent' => 0, 'deduct_leave' => false, 'description' => null,
         ];
 
-        $excuse = ExcuseOfDuty::where('employee_id', $employee->id)->where('status', 'active')->whereDate('start_date', '<=', $date)->whereDate('end_date', '>=', $date)->first();
+        $excuse = ExcuseOfDuty::where('employee_id', $employee->id)->whereIn('status', ExcuseOfDuty::EXCUSED)->whereDate('start_date', '<=', $date)->whereDate('end_date', '>=', $date)->first();
         $official = app(ManageAbsences::class)->on($employee->id, $date);
         $admitted = AdmittedEmployee::where('employee_id', $employee->id)->where('status', '!=', 'cancelled')->whereDate('start_date', '<=', $date)->whereDate('end_date', '>=', $date)->first();
 

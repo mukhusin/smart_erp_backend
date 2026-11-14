@@ -47,6 +47,9 @@ use Modules\Hr\Http\Controllers\Api\SelfContractController;
 use Modules\Hr\Http\Controllers\Api\SelfDutyController;
 use Modules\Hr\Http\Controllers\Api\SelfProfileController;
 use Modules\Hr\Http\Controllers\Api\SelfSummaryController;
+use Modules\Hr\Http\Controllers\Api\HrGeneralSettingsController;
+use Modules\Hr\Http\Controllers\Api\SickSheetController;
+use Modules\Hr\Http\Controllers\Api\StaffContactController;
 use Modules\Hr\Http\Controllers\Api\StaffMessageController;
 use Modules\Hr\Http\Controllers\Api\SupervisorController;
 use Modules\Hr\Support\HrReports;
@@ -60,6 +63,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::get('contract-types/active', [LookupController::class, 'contractTypes'])->name('contract-types.active');
         Route::get('licence-types/active', [LookupController::class, 'licenceTypes'])->name('licence-types.active');
         Route::get('summary', [LookupController::class, 'summary'])->name('summary');
+        Route::get('settings/general', [HrGeneralSettingsController::class, 'show'])->name('settings.general.show');
         Route::get('stats/{stat}', [HrStatsController::class, 'show'])->name('stats.show');
         Route::get('stats/{stat}/csv', [HrStatsController::class, 'csv'])->name('stats.csv');
         Route::get('stats/{stat}/pdf', [HrStatsController::class, 'pdf'])->name('stats.pdf');
@@ -106,6 +110,18 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::get('{message}', [StaffMessageController::class, 'show'])->name('show');
         Route::post('{message}/cancel', [StaffMessageController::class, 'cancel'])->name('cancel');
         Route::put('{message}/popup', [StaffMessageController::class, 'popup'])->name('popup');
+    });
+
+    Route::middleware('can:hr.sick-sheets.manage')->group(function () {
+        Route::get('sick-sheets', [SickSheetController::class, 'index'])->name('sick-sheets.index');
+        Route::post('employees/{employee}/sick-sheets', [SickSheetController::class, 'storeFor'])->name('employees.sick-sheets.store');
+        Route::post('sick-sheets/{sheet}/cancel', [SickSheetController::class, 'cancel'])->name('sick-sheets.cancel');
+        Route::get('sick-sheets/{sheet}/file', [SickSheetController::class, 'file'])->name('sick-sheets.file');
+    });
+
+    Route::middleware('can:hr.employees.edit')->group(function () {
+        Route::get('contacts', [StaffContactController::class, 'index'])->name('contacts.index');
+        Route::put('employees/{employee}/contacts', [StaffContactController::class, 'update'])->name('employees.contacts.update');
     });
 
     Route::middleware('can:hr.employees.create')->group(function () {
@@ -210,6 +226,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::put('number-formats/{numberFormat}', [NumberFormatController::class, 'update'])->name('number-formats.update');
         Route::delete('number-formats/{numberFormat}', [NumberFormatController::class, 'destroy'])->name('number-formats.destroy');
         Route::put('settings/numbering', [NumberFormatController::class, 'settings'])->name('settings.numbering');
+        Route::put('settings/general', [HrGeneralSettingsController::class, 'update'])->name('settings.general.update');
     });
 
     Route::middleware('can:hr.licences.manage')->group(function () {
@@ -230,6 +247,10 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::delete('profile/{section}/{id}', [SelfProfileController::class, 'destroy'])->where('section', 'qualifications|licences|experiences|dependants|documents')->whereNumber('id')->name('profile.destroy');
     Route::get('profile/{section}/{id}/file', [SelfProfileController::class, 'file'])->where('section', 'qualifications|licences|experiences|dependants|documents')->whereNumber('id')->name('profile.file');
     Route::get('duties', [SelfDutyController::class, 'index'])->name('duties');
+    Route::get('sick-sheets', [SickSheetController::class, 'mine'])->name('sick-sheets.index');
+    Route::post('sick-sheets', [SickSheetController::class, 'storeMine'])->middleware('throttle:10,1')->name('sick-sheets.store');
+    Route::post('sick-sheets/{sheet}/withdraw', [SickSheetController::class, 'withdrawMine'])->name('sick-sheets.withdraw');
+    Route::get('sick-sheets/{sheet}/file', [SickSheetController::class, 'myFile'])->name('sick-sheets.file');
     Route::get('allowances', [AllowanceEntryController::class, 'mine'])->middleware('module:allowance')->name('allowances');
     Route::middleware('module:attendance')->group(function () {
         Route::get('attendance', [AttendanceController::class, 'mine'])->name('attendance.index');

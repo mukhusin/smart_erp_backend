@@ -75,6 +75,9 @@ class WorkCalendar
         if ($leave = $entries->firstWhere('source', EmployeeTimetable::LEAVE)) {
             return new PlannedDay($date, PlannedDay::LEAVE, 'leave', $leave->code, $leave->duty, holiday: $holiday?->title, color: $leave->color);
         }
+        if ($excuse = $entries->firstWhere('source', EmployeeTimetable::EXCUSE)) {
+            return new PlannedDay($date, PlannedDay::EXCUSED, 'excuse', $excuse->code, $excuse->duty, holiday: $holiday?->title, color: $excuse->color);
+        }
         if ($duty = $entries->firstWhere('source', EmployeeTimetable::ROSTER)) {
             return $duty->can_punch && $duty->start_time && $duty->end_time
                 ? PlannedDay::working($date, 'roster', $duty->code, $duty->duty, $duty->start_time, $duty->end_time, $duty->break_minutes, $holiday?->title, $duty->color, $duty->overtime)

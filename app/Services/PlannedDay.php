@@ -14,6 +14,9 @@ final class PlannedDay
 
     public const LEAVE = 'leave';
 
+    /** Excused by a sick sheet (excuse of duty): not working, not leave. */
+    public const EXCUSED = 'excused';
+
     public function __construct(
         public readonly CarbonInterface $date,
         public readonly string $kind,

@@ -14,6 +14,9 @@ class EmployeeTimetable extends Model
 
     public const LEAVE = 'leave';
 
+    /** An approved sick sheet (excuse of duty). */
+    public const EXCUSE = 'excuse';
+
     protected $fillable = [
         'company_id', 'employee_id', 'roster_id', 'roster_code_id', 'day_date', 'code', 'duty', 'can_punch', 'pass_day',
         'start_time', 'end_time', 'break_minutes', 'work_hour', 'color', 'source', 'source_id', 'overtime', 'max_overtime_hours', 'updated_by',

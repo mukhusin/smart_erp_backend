@@ -65,7 +65,7 @@ class ManageOvertime
         $calendar = app(WorkCalendar::class);
         $days = $calendar->days($employee, $day->copy()->subDay(), $day->copy()->addDay())->values();
         $today = $days[1];
-        if ($today->kind === PlannedDay::LEAVE) {
+        if (in_array($today->kind, [PlannedDay::LEAVE, PlannedDay::EXCUSED], true)) {
             throw ValidationException::withMessages(['date' => "{$employee->full_name} is on {$today->label} that day."]);
         }
         $shifts = collect($days)->filter->isWorking()->map(fn (PlannedDay $d) => [$d, $d->startsAt(), $d->endsAt()])
