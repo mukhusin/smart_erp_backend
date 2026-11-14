@@ -14,7 +14,7 @@
         "/admin/workflows": {
             "get": {
                 "operationId": "admin.workflows.index",
-                "description": "Every process the company can use. A process with no active workflow applies changes at once.",
+                "description": "Every process the company can use. A process with no active workflow applies changes at once.\n\nOrdered by module (as in the module list), so the screen can group them; `module_name` and `module_icon`\n(Bootstrap icon name) describe the module.",
                 "summary": "List processes and their workflows",
                 "tags": [
                     "Admin: Approval workflows",
@@ -45,6 +45,12 @@
                                                     "module": {
                                                         "type": "string"
                                                     },
+                                                    "module_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "module_icon": {
+                                                        "type": "string"
+                                                    },
                                                     "workflows": {
                                                         "type": "array",
                                                         "items": {
@@ -57,6 +63,8 @@
                                                     "name",
                                                     "description",
                                                     "module",
+                                                    "module_name",
+                                                    "module_icon",
                                                     "workflows"
                                                 ]
                                             }

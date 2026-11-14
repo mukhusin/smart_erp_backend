@@ -62,8 +62,17 @@ class WorkflowTest extends TestCase
 
     public function test_process_list_and_setup_needs_permission(): void
     {
-        $this->actingAs($this->admin)->getJson('/api/v1/admin/workflows')
-            ->assertOk()->assertJsonPath('data.0.process', 'user-access-change')->assertJsonPath('data.0.workflows', []);
+        $list = collect($this->actingAs($this->admin)->getJson('/api/v1/admin/workflows')->assertOk()->json('data'));
+        $access = $list->firstWhere('process', 'user-access-change');
+        $this->assertSame([], $access['workflows']);
+        $this->assertSame('admin', $access['module']);
+        $this->assertNotEmpty($access['module_name']);
+        $this->assertStringStartsNotWith('bi-', $access['module_icon']);
+        $modules = $list->pluck('module')->all();
+        foreach (array_unique($modules) as $m) {
+            $idx = array_keys($modules, $m);
+            $this->assertSame(range($idx[0], end($idx)), $idx, "Processes of {$m} are not next to each other");
+        }
 
         $this->actingAs($this->staff())->getJson('/api/v1/admin/workflows')->assertForbidden();
     }

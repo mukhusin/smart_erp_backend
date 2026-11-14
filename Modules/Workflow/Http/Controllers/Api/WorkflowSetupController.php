@@ -3,6 +3,7 @@
 namespace Modules\Workflow\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ErpModule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Modules\Workflow\Contracts\WorkflowProcess;
@@ -23,19 +24,27 @@ class WorkflowSetupController extends Controller
      *
      * Every process the company can use. A process with no active workflow applies changes at once.
      *
-     * @response array{data: list<array{process: string, name: string, description: string, module: string, workflows: list<WorkflowTemplateResource>}>}
+     * Ordered by module (as in the module list), so the screen can group them; `module_name` and `module_icon`
+     * (Bootstrap icon name) describe the module.
+     *
+     * @response array{data: list<array{process: string, name: string, description: string, module: string, module_name: string, module_icon: string, workflows: list<WorkflowTemplateResource>}>}
      */
     public function index(WorkflowCatalog $catalog): JsonResponse
     {
         $templates = WorkflowTemplate::with(['steps.role', 'steps.user', 'branch'])->get()->groupBy('process');
+        $modules = ErpModule::get(['slug', 'name', 'icon', 'sort_order'])->keyBy('slug');
 
-        return response()->json(['data' => collect($catalog->forCurrentCompany())->map(fn (WorkflowProcess $p) => [
-            'process' => $p->key(),
-            'name' => $p->name(),
-            'description' => $p->description(),
-            'module' => $p->module(),
-            'workflows' => WorkflowTemplateResource::collection(($templates[$p->key()] ?? collect())->sortBy(fn ($t) => $t->company_branch_id ?? 0)->values())->resolve(),
-        ])->values()]);
+        return response()->json(['data' => collect($catalog->forCurrentCompany())
+            ->sortBy(fn (WorkflowProcess $p) => [$modules[$p->module()]?->sort_order ?? PHP_INT_MAX, $p->module()])
+            ->map(fn (WorkflowProcess $p) => [
+                'process' => $p->key(),
+                'name' => $p->name(),
+                'description' => $p->description(),
+                'module' => $p->module(),
+                'module_name' => $modules[$p->module()]?->name ?? ucfirst($p->module()),
+                'module_icon' => preg_replace('/^bi-/', '', (string) ($modules[$p->module()]?->icon ?: 'grid')),
+                'workflows' => WorkflowTemplateResource::collection(($templates[$p->key()] ?? collect())->sortBy(fn ($t) => $t->company_branch_id ?? 0)->values())->resolve(),
+            ])->values()]);
     }
 
     /**
