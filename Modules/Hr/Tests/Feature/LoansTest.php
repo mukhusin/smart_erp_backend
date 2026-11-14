@@ -84,6 +84,9 @@ class LoansTest extends TestCase
         $this->getJson('/api/v1/loans/loans')->assertJsonPath('meta.outstanding', 300000)->assertJsonPath('meta.monthly', 150000);
         $this->getJson('/api/v1/loans/providers')->assertJsonPath('data.0.outstanding', 300000);
         $this->actingAs($this->user)->getJson('/api/v1/self/loans')->assertOk()->assertJsonPath('data.loans.0.loan.provider.name', 'CRDB Bank')->assertJsonPath('data.advance_limit', 500000);
+        $this->assertSame(0, $this->getJson('/api/v1/self/loans')->json('data.loans.0.loan.not_deducted'));
+        $this->inCompany(fn () => \App\Models\EmployeeLoan::whereKey($id)->update(['status' => 'disabled', 'returned' => 250000, 'remain' => 0]));
+        $this->getJson('/api/v1/self/loans')->assertJsonPath('data.loans.0.loan.status_label', 'Repaid')->assertJsonPath('data.loans.0.loan.not_deducted', 150000);
         $this->getJson('/api/v1/loans/loans')->assertForbidden();
     }
 

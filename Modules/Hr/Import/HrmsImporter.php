@@ -695,7 +695,9 @@ class HrmsImporter
             'company_id' => $this->companyId, 'employee_id' => $employee, 'loan_provider_id' => $this->ids->get('loan_providers', $r->loan_provider_id),
             'updated_by' => $this->userOfEmployee($r->updated_by), 'date_of_loan' => $this->date($r->date_of_loan), 'amount' => $r->amount ?? 0,
             'instalment' => $r->instalment ?? 0, 'returned' => $r->returned ?? 0, 'remain' => $r->remain ?? 0, 'end_date' => $this->date($r->end_date),
-            'is_active' => (bool) $r->isActive, 'status' => in_array($r->status, ['enabled', 'disabled', 'paused'], true) ? $r->status : 'disabled', 'deleted_at' => $r->deleted_at,
+            'is_active' => (bool) $r->isActive, 'deleted_at' => $r->deleted_at,
+            // HRMS stops deducting at remain 0 even when repayments are short of the amount: the loan is closed (repaid).
+            'status' => ! in_array($r->status, ['enabled', 'disabled', 'paused'], true) || (float) $r->remain <= 0 ? 'disabled' : $r->status,
         ] : "employee {$r->employee_id} not imported");
 
         $this->sync('loan_histories', 'loan_histories', function ($r) {

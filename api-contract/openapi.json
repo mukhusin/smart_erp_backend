@@ -20261,6 +20261,9 @@
                                                                     },
                                                                     "progress": {
                                                                         "type": "integer"
+                                                                    },
+                                                                    "not_deducted": {
+                                                                        "type": "number"
                                                                     }
                                                                 },
                                                                 "required": [
@@ -20278,7 +20281,8 @@
                                                                     "description",
                                                                     "waiting_for",
                                                                     "decision_comment",
-                                                                    "progress"
+                                                                    "progress",
+                                                                    "not_deducted"
                                                                 ]
                                                             },
                                                             "repayments": {
@@ -21066,6 +21070,9 @@
                                                     },
                                                     "progress": {
                                                         "type": "integer"
+                                                    },
+                                                    "not_deducted": {
+                                                        "type": "number"
                                                     }
                                                 },
                                                 "required": [
@@ -21083,7 +21090,8 @@
                                                     "description",
                                                     "waiting_for",
                                                     "decision_comment",
-                                                    "progress"
+                                                    "progress",
+                                                    "not_deducted"
                                                 ]
                                             }
                                         },
@@ -21256,6 +21264,9 @@
                                                         },
                                                         "progress": {
                                                             "type": "integer"
+                                                        },
+                                                        "not_deducted": {
+                                                            "type": "number"
                                                         }
                                                     },
                                                     "required": [
@@ -21273,7 +21284,8 @@
                                                         "description",
                                                         "waiting_for",
                                                         "decision_comment",
-                                                        "progress"
+                                                        "progress",
+                                                        "not_deducted"
                                                     ]
                                                 },
                                                 "repayments": {
@@ -21499,6 +21511,9 @@
                                                 },
                                                 "progress": {
                                                     "type": "integer"
+                                                },
+                                                "not_deducted": {
+                                                    "type": "number"
                                                 }
                                             },
                                             "required": [
@@ -21516,7 +21531,8 @@
                                                 "description",
                                                 "waiting_for",
                                                 "decision_comment",
-                                                "progress"
+                                                "progress",
+                                                "not_deducted"
                                             ]
                                         }
                                     },
@@ -22019,6 +22035,9 @@
                                                 },
                                                 "progress": {
                                                     "type": "integer"
+                                                },
+                                                "not_deducted": {
+                                                    "type": "number"
                                                 }
                                             },
                                             "required": [
@@ -22036,7 +22055,8 @@
                                                 "description",
                                                 "waiting_for",
                                                 "decision_comment",
-                                                "progress"
+                                                "progress",
+                                                "not_deducted"
                                             ]
                                         }
                                     },
@@ -22210,6 +22230,9 @@
                                                 },
                                                 "progress": {
                                                     "type": "integer"
+                                                },
+                                                "not_deducted": {
+                                                    "type": "number"
                                                 }
                                             },
                                             "required": [
@@ -22227,7 +22250,8 @@
                                                 "description",
                                                 "waiting_for",
                                                 "decision_comment",
-                                                "progress"
+                                                "progress",
+                                                "not_deducted"
                                             ]
                                         }
                                     },

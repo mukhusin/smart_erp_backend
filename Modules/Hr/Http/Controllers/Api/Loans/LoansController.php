@@ -71,7 +71,7 @@ class LoansController extends Controller
     /**
      * Employee loans of the employees the user can see.
      *
-     * @response array{data: list<array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int}>, meta: array{outstanding: float, monthly: float}}
+     * @response array{data: list<array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int, not_deducted: float}>, meta: array{outstanding: float, monthly: float}}
      */
     #[QueryParameter('status', type: 'string', description: 'open (default), pending, enabled, paused, disabled, all')]
     #[QueryParameter('loan_provider_id', type: 'integer')]
@@ -98,7 +98,7 @@ class LoansController extends Controller
     /**
      * A loan with its repayments and the instalments still to come.
      *
-     * @response array{data: array{loan: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int}, repayments: list<array{payroll: string|null, date: string|null, instalment: float, outstanding: float, status: string}>, schedule: list<array{month: string, instalment: float, remaining: float}>}}
+     * @response array{data: array{loan: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int, not_deducted: float}, repayments: list<array{payroll: string|null, date: string|null, instalment: float, outstanding: float, status: string}>, schedule: list<array{month: string, instalment: float, remaining: float}>}}
      */
     public function show(Request $request, EmployeeLoan $loan): JsonResponse
     {
@@ -110,7 +110,7 @@ class LoansController extends Controller
     /**
      * Record a loan for an employee (goes through the "Employee loan" workflow when set up).
      *
-     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int}}
+     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int, not_deducted: float}}
      */
     public function store(LoanRequest $request, Employee $employee): JsonResponse
     {
@@ -122,7 +122,7 @@ class LoansController extends Controller
     /**
      * Change a loan (what remains = amount − repaid).
      *
-     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int}}
+     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int, not_deducted: float}}
      */
     public function update(LoanRequest $request, EmployeeLoan $loan): JsonResponse
     {
@@ -134,7 +134,7 @@ class LoansController extends Controller
     /**
      * Pause (true) or resume (false) the repayments.
      *
-     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int}}
+     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int, not_deducted: float}}
      */
     public function pause(Request $request, EmployeeLoan $loan): JsonResponse
     {
@@ -199,7 +199,7 @@ class LoansController extends Controller
     /**
      * My loans and salary advances.
      *
-     * @response array{data: array{loans: list<array{loan: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int}, repayments: list<array{payroll: string|null, date: string|null, instalment: float, outstanding: float, status: string}>, schedule: list<array{month: string, instalment: float, remaining: float}>}>, advances: list<array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, amount: float, reason: string|null, date: string, status: string, status_label: string, source: string, waiting_for: string|null, decision_comment: string|null, payroll: string|null, can_cancel: bool}>, advance_limit: float}}
+     * @response array{data: array{loans: list<array{loan: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int, not_deducted: float}, repayments: list<array{payroll: string|null, date: string|null, instalment: float, outstanding: float, status: string}>, schedule: list<array{month: string, instalment: float, remaining: float}>}>, advances: list<array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, amount: float, reason: string|null, date: string, status: string, status_label: string, source: string, waiting_for: string|null, decision_comment: string|null, payroll: string|null, can_cancel: bool}>, advance_limit: float}}
      */
     public function mine(Request $request): JsonResponse
     {
@@ -263,6 +263,8 @@ class LoansController extends Controller
             'status_label' => EmployeeLoan::STATUS_LABELS[$l->status] ?? $l->status, 'description' => $l->description,
             'waiting_for' => $l->status === 'pending' ? $l->workflow?->steps?->firstWhere('status', 'pending')?->name : null, 'decision_comment' => $l->decision_comment,
             'progress' => $l->amount > 0 ? (int) round($l->returned / $l->amount * 100) : 0,
+            /** Closed loans only: the part of the amount never deducted through payroll (settled outside it). */
+            'not_deducted' => $l->status === 'disabled' && $l->amount - $l->returned >= 0.5 ? round($l->amount - $l->returned, 2) : 0.0,
         ];
     }
 
