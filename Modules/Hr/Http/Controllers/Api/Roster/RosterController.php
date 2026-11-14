@@ -2,6 +2,7 @@
 
 namespace Modules\Hr\Http\Controllers\Api\Roster;
 
+use Modules\Core\Support\PdfDocument;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Roster;
@@ -118,6 +119,77 @@ class RosterController extends Controller
             'codes' => RosterCode::where(fn ($q) => $q->where('is_active', true)->orWhereIn('id', $usedCodes))->orderBy('code')->get()
                 ->map(fn ($c) => RosterCodeController::row($c))->values(),
         ]]);
+    }
+
+    /** Download a duty roster as CSV (opens in Excel): one row per employee, one column per day, worked hours at the end. */
+    public function csv(Request $request, Roster $roster): Response
+    {
+        $g = $this->grid($request, $roster);
+        $out = fopen('php://temp', 'r+');
+        fwrite($out, "\xEF\xBB\xBF");
+        fputcsv($out, [$g['title']]);
+        fputcsv($out, [$g['subtitle']]);
+        fputcsv($out, []);
+        fputcsv($out, array_merge(['Employee no', 'Name', 'Position'], array_map(fn ($d) => $d['date'].' '.$d['weekday'], $g['days']), ['Hours']));
+        foreach ($g['rows'] as $r) {
+            fputcsv($out, array_merge([$r['employee_no'], $r['name'], $r['position']], array_map(fn ($c) => $c['code'] ?? '', $r['cells']), [$r['hours']]));
+        }
+        fputcsv($out, []);
+        fputcsv($out, ['Code', 'Duty', 'Time']);
+        foreach ($g['codes'] as $c) {
+            fputcsv($out, [$c['code'], $c['duty'], $c['time']]);
+        }
+        rewind($out);
+        $csv = stream_get_contents($out);
+        fclose($out);
+
+        return response($csv, 200, ['Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.\Illuminate\Support\Str::slug($g['title']).'.csv"']);
+    }
+
+    /** A duty roster as a PDF grid with the company header and a legend of codes (opens in the browser). */
+    public function pdf(Request $request, Roster $roster, PdfDocument $pdf): Response
+    {
+        $g = $this->grid($request, $roster);
+
+        return $pdf->view($request->user(), 'pdf.roster', $g['title'], $g, 'landscape');
+    }
+
+    private function grid(Request $request, Roster $roster): array
+    {
+        abort_unless($roster->type === 'duty' && $this->access->canView($request->user(), $roster), 404);
+        $roster->load(['department', 'section']);
+        $calendar = app(WorkCalendar::class);
+        $days = collect(CarbonPeriod::create($roster->from_date, $roster->to_date))->map(fn ($d) => [
+            'date' => $d->toDateString(), 'day' => $d->format('j'), 'weekday' => $d->format('D'), 'weekend' => $d->isWeekend(), 'holiday' => $calendar->holidayOn($d)?->title,
+        ])->values()->all();
+        $all = $roster->duties()->get();
+        $codeHours = RosterCode::whereIn('id', $all->pluck('roster_code_id')->filter()->unique())->pluck('work_hour', 'id');
+        $short = fn (?string $code) => $code === null ? null : (trim(preg_replace('/\s+/', ' ', preg_replace('/\s*\(.*\)\s*/', '', $code))) ?: $code);
+        $hours = fn ($d) => (float) $d->work_hour ?: ($d->can_punch ? (float) ($codeHours[$d->roster_code_id] ?? 0) : 0.0);
+        $duties = $all->groupBy('employee_id')->map(fn ($g) => $g->keyBy(fn ($d) => $d->day_date->toDateString()));
+        $rows = $this->rosters->employees($roster)->map(function ($e) use ($days, $duties, $short, $hours) {
+            $mine = $duties[$e->id] ?? collect();
+
+            return [
+                'employee_no' => $e->employee_no, 'name' => $e->full_name, 'position' => $e->jobPosition?->title,
+                'cells' => array_map(fn ($d) => ($x = $mine[$d['date']] ?? null) ? ['code' => $x->code, 'short' => $short($x->code), 'color' => $x->color, 'working' => (bool) $x->can_punch]
+                    : ['code' => null, 'short' => null, 'color' => null, 'working' => false], $days),
+                'hours' => round($mine->sum($hours), 1),
+            ];
+        })->values()->all();
+        $used = $roster->duties()->select('roster_code_id')->distinct()->pluck('roster_code_id')->filter();
+        $codes = RosterCode::whereIn('id', $used)->orderBy('code')->get()->map(fn ($c) => [
+            'code' => $c->code, 'short' => $short($c->code), 'duty' => $c->duty, 'color' => $c->color,
+            'time' => $c->start_time && $c->end_time ? substr($c->start_time, 0, 5).'–'.substr($c->end_time, 0, 5) : ($c->is_working ? '' : 'Off'),
+        ])->values()->all();
+        $place = collect([$roster->department?->name, $roster->section?->name])->filter()->implode(' · ');
+
+        return [
+            'title' => $roster->title ?: 'Duty roster',
+            'subtitle' => trim($place.' · '.$roster->from_date->format('d M Y').' – '.$roster->to_date->format('d M Y').' · '.(Roster::STATUS_LABELS[$roster->status] ?? $roster->status), ' ·'),
+            'days' => $days, 'rows' => $rows, 'codes' => $codes,
+        ];
     }
 
     /**

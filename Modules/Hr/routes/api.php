@@ -264,6 +264,8 @@ Route::prefix('roster')->middleware(['auth:sanctum', 'module:roster'])->name('ro
     Route::get('rosters', [RosterController::class, 'index'])->name('rosters.index');
     Route::get('rosters/options', [RosterController::class, 'options'])->name('rosters.options');
     Route::get('rosters/{roster}', [RosterController::class, 'show'])->name('rosters.show');
+    Route::get('rosters/{roster}/csv', [RosterController::class, 'csv'])->name('rosters.csv');
+    Route::get('rosters/{roster}/pdf', [RosterController::class, 'pdf'])->name('rosters.pdf');
     Route::post('rosters', [RosterController::class, 'store'])->name('rosters.store');
     Route::put('rosters/{roster}', [RosterController::class, 'update'])->name('rosters.update');
     Route::delete('rosters/{roster}', [RosterController::class, 'destroy'])->name('rosters.destroy');

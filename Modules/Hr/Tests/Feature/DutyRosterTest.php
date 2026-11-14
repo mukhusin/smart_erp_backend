@@ -111,6 +111,12 @@ class DutyRosterTest extends TestCase
         $this->assertSame(['off', 'O'], [$this->day('asha', '2026-12-02')->kind, $this->day('asha', '2026-12-02')->code]);
         $this->assertSame('schedule', $this->day('neema', '2026-12-05')->source, 'cleared day falls back to working hours');
 
+        $csv = $this->get("/api/v1/roster/rosters/{$id}/csv")->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8')->getContent();
+        $asha = collect(explode("\n", $csv))->first(fn ($l) => str_contains($l, 'Asha X'));
+        $this->assertStringContainsString(',N,O,', $asha);
+        $this->assertStringContainsString('2026-12-01 Tue', $csv);
+        $this->assertStringStartsWith('%PDF', $this->get("/api/v1/roster/rosters/{$id}/pdf")->assertOk()->assertHeader('Content-Type', 'application/pdf')->getContent());
+
         $this->getJson('/api/v1/roster/rosters?month=2026-12')->assertJsonCount(1, 'data')->assertJsonPath('data.0.can_manage', true);
         $this->getJson('/api/v1/roster/rosters?month=2027-01')->assertJsonCount(0, 'data');
         $this->postJson('/api/v1/roster/rosters', ['department_id' => $this->ward->id, 'from_date' => '2026-12-20', 'to_date' => '2027-01-10'])
@@ -202,6 +208,7 @@ class DutyRosterTest extends TestCase
         $lab = $this->actingAs($this->admin)->postJson('/api/v1/roster/rosters', ['department_id' => $this->lab->id, 'from_date' => '2026-12-01', 'to_date' => '2026-12-31'])->json('data.id');
         $this->actingAs($user)->getJson('/api/v1/roster/rosters')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $mine);
         $this->getJson("/api/v1/roster/rosters/{$lab}")->assertNotFound();
+        $this->get("/api/v1/roster/rosters/{$lab}/pdf")->assertNotFound();
         $this->duties($lab, [['labtech', '2026-12-01', 'M']], $user)->assertForbidden();
     }
 }

@@ -30639,6 +30639,101 @@
                 }
             }
         },
+        "/roster/rosters/{roster}/csv": {
+            "get": {
+                "operationId": "roster.rosters.csv",
+                "summary": "Download a duty roster as CSV (opens in Excel): one row per employee, one column per day, worked hours at the end",
+                "tags": [
+                    "Roster: Duty rosters",
+                    "Roster"
+                ],
+                "parameters": [
+                    {
+                        "name": "roster",
+                        "in": "path",
+                        "required": true,
+                        "description": "The roster ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/roster/rosters/{roster}/pdf": {
+            "get": {
+                "operationId": "roster.rosters.pdf",
+                "summary": "A duty roster as a PDF grid with the company header and a legend of codes (opens in the browser)",
+                "tags": [
+                    "Roster: Duty rosters",
+                    "Roster"
+                ],
+                "parameters": [
+                    {
+                        "name": "roster",
+                        "in": "path",
+                        "required": true,
+                        "description": "The roster ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/roster/rosters/{roster}/duties": {
             "put": {
                 "operationId": "roster.rosters.duties",
