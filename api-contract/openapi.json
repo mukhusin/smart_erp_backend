@@ -25412,6 +25412,404 @@
                 }
             }
         },
+        "/payroll/sheets/{sheet}/compare": {
+            "get": {
+                "operationId": "payroll.sheets.compare",
+                "description": "`status` per employee: changed, new (not in the other payroll), left (only in the other payroll) or same.\nItems are matched on code and label (counts in brackets ignored).",
+                "summary": "Compare a payroll with another one (default: the month before), employee by employee and item by item",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "with",
+                        "in": "query",
+                        "description": "Payroll sheet id to compare with; default the month before.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "period": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "status_label": {
+                                                            "type": "string"
+                                                        },
+                                                        "employees": {
+                                                            "type": "integer"
+                                                        },
+                                                        "gross": {
+                                                            "type": "number"
+                                                        },
+                                                        "deductions": {
+                                                            "type": "number"
+                                                        },
+                                                        "net": {
+                                                            "type": "number"
+                                                        },
+                                                        "employer": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "period",
+                                                        "status",
+                                                        "status_label",
+                                                        "employees",
+                                                        "gross",
+                                                        "deductions",
+                                                        "net",
+                                                        "employer"
+                                                    ]
+                                                },
+                                                "previous": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "period": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "status_label": {
+                                                            "type": "string"
+                                                        },
+                                                        "employees": {
+                                                            "type": "integer"
+                                                        },
+                                                        "gross": {
+                                                            "type": "number"
+                                                        },
+                                                        "deductions": {
+                                                            "type": "number"
+                                                        },
+                                                        "net": {
+                                                            "type": "number"
+                                                        },
+                                                        "employer": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "period",
+                                                        "status",
+                                                        "status_label",
+                                                        "employees",
+                                                        "gross",
+                                                        "deductions",
+                                                        "net",
+                                                        "employer"
+                                                    ]
+                                                },
+                                                "counts": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "new": {
+                                                            "type": "integer"
+                                                        },
+                                                        "left": {
+                                                            "type": "integer"
+                                                        },
+                                                        "changed": {
+                                                            "type": "integer"
+                                                        },
+                                                        "same": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "new",
+                                                        "left",
+                                                        "changed",
+                                                        "same"
+                                                    ]
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "group": {
+                                                                "type": "string"
+                                                            },
+                                                            "group_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "previous": {
+                                                                "type": "number"
+                                                            },
+                                                            "current": {
+                                                                "type": "number"
+                                                            },
+                                                            "difference": {
+                                                                "type": "number"
+                                                            },
+                                                            "previous_employees": {
+                                                                "type": "integer"
+                                                            },
+                                                            "current_employees": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "group",
+                                                            "group_label",
+                                                            "label",
+                                                            "previous",
+                                                            "current",
+                                                            "difference",
+                                                            "previous_employees",
+                                                            "current_employees"
+                                                        ]
+                                                    }
+                                                },
+                                                "employees": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "employee_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "previous_gross": {
+                                                                "type": "number"
+                                                            },
+                                                            "current_gross": {
+                                                                "type": "number"
+                                                            },
+                                                            "previous_net": {
+                                                                "type": "number"
+                                                            },
+                                                            "current_net": {
+                                                                "type": "number"
+                                                            },
+                                                            "net_difference": {
+                                                                "type": "number"
+                                                            },
+                                                            "reason": {
+                                                                "type": "string"
+                                                            },
+                                                            "changes": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "group": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "label": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "previous": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "current": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "difference": {
+                                                                            "type": "number"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "group",
+                                                                        "label",
+                                                                        "previous",
+                                                                        "current",
+                                                                        "difference"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "employee_id",
+                                                            "employee_no",
+                                                            "name",
+                                                            "department",
+                                                            "status",
+                                                            "previous_gross",
+                                                            "current_gross",
+                                                            "previous_net",
+                                                            "current_net",
+                                                            "net_difference",
+                                                            "reason",
+                                                            "changes"
+                                                        ]
+                                                    }
+                                                },
+                                                "others": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "period": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "period"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "current",
+                                                "previous",
+                                                "counts",
+                                                "items",
+                                                "employees",
+                                                "others"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets/{sheet}/compare/pdf": {
+            "get": {
+                "operationId": "payroll.sheets.compare.pdf",
+                "summary": "The comparison as a PDF with the company header: totals and every employee whose pay differs (opens in the browser)",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "with",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/payroll/sheets/{sheet}/reports/{type}": {
             "get": {
                 "operationId": "payroll.sheets.report",

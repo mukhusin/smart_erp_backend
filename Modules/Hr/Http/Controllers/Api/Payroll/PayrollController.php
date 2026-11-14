@@ -9,6 +9,7 @@ use App\Models\PayrollSheet;
 use App\Models\PayrollSheetDetail;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Modules\Core\Support\PdfDocument;
+use Modules\Hr\Support\PayrollComparison;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -241,6 +242,51 @@ class PayrollController extends Controller
         $name = Str::slug($sheet->name.' '.$report['title']).'.csv';
 
         return response($reports->csv($report), 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => "attachment; filename=\"{$name}\""]);
+    }
+
+    /**
+     * Compare a payroll with another one (default: the month before), employee by employee and item by item.
+     *
+     * `status` per employee: changed, new (not in the other payroll), left (only in the other payroll) or same.
+     * Items are matched on code and label (counts in brackets ignored).
+     *
+     * @response array{data: array{current: array{id: int, name: string, period: string, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float}, previous: array{id: int, name: string, period: string, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float}|null, counts: array{new: int, left: int, changed: int, same: int}, items: list<array{group: string, group_label: string, label: string, previous: float, current: float, difference: float, previous_employees: int, current_employees: int}>, employees: list<array{employee_id: int, employee_no: string|null, name: string, department: string|null, status: string, previous_gross: float, current_gross: float, previous_net: float, current_net: float, net_difference: float, reason: string, changes: list<array{group: string, label: string, previous: float, current: float, difference: float}>}>, others: list<array{id: int, name: string, period: string}>}}
+     */
+    #[QueryParameter('with', description: 'Payroll sheet id to compare with; default the month before.', type: 'integer')]
+    public function compare(Request $request, PayrollSheet $sheet, PayrollComparison $comparison): JsonResponse
+    {
+        return response()->json(['data' => $comparison->compare($sheet, $this->compareWith($request, $sheet, $comparison)) + [
+            'others' => PayrollSheet::whereKeyNot($sheet->id)->orderByRaw('year + 0 desc, month + 0 desc')->get(['id', 'name', 'year', 'month'])
+                ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'period' => sprintf('%04d-%02d', (int) $s->year, (int) $s->month)])->values(),
+        ]]);
+    }
+
+    /** The comparison as a PDF with the company header: totals and every employee whose pay differs (opens in the browser). */
+    #[QueryParameter('with', type: 'integer')]
+    public function comparePdf(Request $request, PayrollSheet $sheet, PayrollComparison $comparison, PdfDocument $pdf): \Symfony\Component\HttpFoundation\Response
+    {
+        $other = $this->compareWith($request, $sheet, $comparison);
+        $result = $comparison->compare($sheet, $other);
+        $rows = collect($result['employees'])->where('status', '!=', 'same')->map(fn ($e) => [
+            $e['employee_no'], $e['name'], $e['department'], ucfirst($e['status']), $e['previous_net'], $e['current_net'], $e['net_difference'], $e['reason'],
+        ])->values()->all();
+        $c = $result['current'];
+        $p = $result['previous'];
+        $subtitle = $p
+            ? sprintf('Compared with %s · net %s → %s (%s%s) · %d changed, %d new, %d left, %d same', $p['name'], number_format($p['net']), number_format($c['net']),
+                $c['net'] >= $p['net'] ? '+' : '−', number_format(abs($c['net'] - $p['net'])), ...array_values($result['counts']))
+            : 'No earlier payroll to compare with';
+
+        return $pdf->table($request->user(), $sheet->name.' · comparison', $subtitle,
+            ['Employee no', 'Name', 'Department', 'Status', 'Previous net', 'Current net', 'Difference', 'Main reasons'], $rows,
+            [null, 'Total', null, null, round(collect($rows)->sum(4), 2), round(collect($rows)->sum(5), 2), round(collect($rows)->sum(6), 2), null]);
+    }
+
+    private function compareWith(Request $request, PayrollSheet $sheet, PayrollComparison $comparison): ?PayrollSheet
+    {
+        $with = $request->validate(['with' => ['nullable', 'integer']])['with'] ?? null;
+
+        return $with ? PayrollSheet::whereKeyNot($sheet->id)->findOrFail($with) : $comparison->previous($sheet);
     }
 
     /** A payroll report as a PDF with the company header (opens in the browser). */
