@@ -30,6 +30,7 @@ use Modules\Hr\Http\Controllers\Api\Loans\LoansController;
 use Modules\Hr\Http\Controllers\Api\LookupController;
 use Modules\Hr\Http\Controllers\Api\NumberFormatController;
 use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeController;
+use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeSuggestionController;
 use Modules\Hr\Http\Controllers\Api\Payroll\PayItemsController;
 use Modules\Hr\Http\Controllers\Api\Payroll\PayrollController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
@@ -371,6 +372,10 @@ Route::prefix('overtime')->middleware(['auth:sanctum', 'module:overtime'])->name
     Route::get('claims/{overtime}', [OvertimeController::class, 'review'])->name('claims.review');
     Route::put('claims/{overtime}/times', [OvertimeController::class, 'times'])->name('claims.times');
     Route::post('employees/{employee}/claims', [OvertimeController::class, 'storeFor'])->middleware('can:overtime.manage')->name('claims.store-for');
+    Route::middleware(['module:attendance', 'can:overtime.manage'])->group(function () {
+        Route::get('suggestions', [OvertimeSuggestionController::class, 'index'])->name('suggestions.index');
+        Route::post('suggestions', [OvertimeSuggestionController::class, 'store'])->name('suggestions.store');
+    });
 });
 
 Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('payroll.')->group(function () {

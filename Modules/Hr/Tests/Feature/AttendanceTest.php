@@ -44,11 +44,11 @@ class AttendanceTest extends TestCase
     {
         parent::setUp();
         $this->travelTo('2026-11-12 09:00:00');
-        [$this->company, $this->admin] = $this->createCompany('Alpha', ['modules' => [['slug' => 'hr'], ['slug' => 'roster'], ['slug' => 'leave'], ['slug' => 'attendance'], ['slug' => 'payroll'], ['slug' => 'self-service']]]);
+        [$this->company, $this->admin] = $this->createCompany('Alpha', ['modules' => [['slug' => 'hr'], ['slug' => 'roster'], ['slug' => 'leave'], ['slug' => 'attendance'], ['slug' => 'payroll'], ['slug' => 'self-service'], ['slug' => 'overtime']]]);
         setPermissionsTeamId($this->company->id);
         $this->inCompany(function () {
             $ward = Department::create(['name' => 'Ward']);
-            $stc = NatureOfContract::create(['contract_name' => 'Specific time', 'code' => 'STC', 'employment_type' => 'full_time', 'has_payroll' => true, 'has_annual_leave' => true]);
+            $stc = NatureOfContract::create(['contract_name' => 'Specific time', 'code' => 'STC', 'employment_type' => 'full_time', 'has_payroll' => true, 'has_annual_leave' => true, 'has_overtime' => true]);
             $this->user = tap(User::factory()->create(['company_id' => $this->company->id]))->assignRole('employee');
             $make = function (string $no, ?int $userId = null) use ($ward, $stc) {
                 $e = Employee::create(['employee_no' => $no, 'fname' => $no, 'lname' => 'X', 'gender' => 'Female', 'department_id' => $ward->id, 'user_id' => $userId,
@@ -116,6 +116,16 @@ class AttendanceTest extends TestCase
         $this->assertSame(['Present', '2026-11-05 19:50:00', '2026-11-06 08:05:00', 5, 0.0], [$night->status, $night->punch_in_time, $night->punch_out_time, (int) $night->overtime_minutes, (float) $night->lost_hour]);
         $this->assertSame([null, 'O · Off'], [$this->day('2026-11-06')->punch_in_time, $this->day('2026-11-06')->status], 'the morning punch belongs to the night shift');
         $this->assertSame(['Day off', 180], [$this->day('2026-11-08')->status, (int) $this->day('2026-11-08')->overtime_minutes]);
+
+        $this->postJson('/api/v1/overtime/rates', ['department_id' => $this->nurse->department_id, 'unit' => 'hour', 'amount' => 3000])->assertCreated();
+        $suggested = $this->getJson('/api/v1/overtime/suggestions?month=2026-11')->assertOk()->assertJsonPath('meta.attendance', true)->json('data');
+        $this->assertSame([['2026-11-08', '2026-11-08 09:00', '2026-11-08 12:00', 180, true]],
+            array_map(fn ($r) => [$r['date'], $r['start'], $r['end'], $r['overtime_minutes'], $r['day_off']], $suggested), 'the 5 minutes after the night shift are below the minimum');
+        $this->postJson('/api/v1/overtime/suggestions', ['items' => [['employee_id' => $this->nurse->id, 'date' => '2026-11-08'], ['employee_id' => $this->nurse->id, 'date' => '2026-11-09']]])
+            ->assertOk()->assertJsonPath('data.created', 1)->assertJsonPath('data.failed.0.message', 'No unclaimed overtime on this day.');
+        $claim = $this->inCompany(fn () => \App\Models\Overtime::where('employee_id', $this->nurse->id)->sole());
+        $this->assertSame(['attendance', 180, 9000.0], [$claim->source, (int) $claim->overtime_minutes, (float) $claim->amount]);
+        $this->getJson('/api/v1/overtime/suggestions?month=2026-11')->assertJsonCount(0, 'data');
         $late = $this->day('2026-11-09');
         $this->assertSame(['Late', 15, 0.25, 937.5], [$late->status, (int) $late->punch_in_late_minutes, (float) $late->lost_hour, (float) $late->lost_amount], '25 min late less 10 grace; 30,000 a day / 8 h');
         $this->assertSame(['Not checked out', 8.0, 30000.0], [$this->day('2026-11-10')->status, (float) $this->day('2026-11-10')->lost_hour, (float) $this->day('2026-11-10')->lost_amount]);
