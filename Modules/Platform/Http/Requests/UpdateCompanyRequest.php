@@ -21,12 +21,13 @@ class UpdateCompanyRequest extends FormRequest
             'short_name' => ['sometimes', 'nullable', 'string', 'max:50'],
             'registration_number' => ['sometimes', 'nullable', 'string', 'max:100', Rule::unique('companies', 'registration_number')->ignore($id)],
             'tin' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'email' => ['sometimes', 'nullable', 'email', 'max:255'],
+            /** Phone, email and address are printed in the header of the company's documents, so they cannot be cleared. */
+            'phone' => ['sometimes', 'required', 'string', 'max:50'],
+            'email' => ['sometimes', 'required', 'email', 'max:255'],
             'website' => ['sometimes', 'nullable', 'url', 'max:255'],
-            'address' => ['sometimes', 'nullable', 'string', 'max:500'],
-            'city' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'country' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'address' => ['sometimes', 'required', 'string', 'max:500'],
+            'city' => ['sometimes', 'required', 'string', 'max:100'],
+            'country' => ['sometimes', 'required', 'string', 'max:100'],
             'currency' => ['sometimes', 'nullable', 'string', 'size:3'],
             'fiscal_year_start' => ['sometimes', 'nullable', 'string', 'max:10'],
             /** false = suspended: the company's users can no longer log in. */

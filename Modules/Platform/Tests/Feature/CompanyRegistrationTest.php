@@ -17,7 +17,8 @@ class CompanyRegistrationTest extends TestCase
     private function payload(array $overrides = []): array
     {
         return array_replace_recursive([
-            'company' => ['name' => 'Kairuki Hospital', 'short_name' => 'KH', 'tin' => '100-200-300', 'currency' => 'TZS'],
+            'company' => ['name' => 'Kairuki Hospital', 'short_name' => 'KH', 'tin' => '100-200-300', 'currency' => 'TZS', 'phone' => '+255765919184',
+                'email' => 'info@kairukihospital.org', 'address' => 'Mikocheni, Regent Street, P.O. Box 4567', 'city' => 'Dar es Salaam', 'country' => 'Tanzania'],
             'branches' => [
                 ['name' => 'Mikocheni', 'code' => 'MK', 'is_headquarters' => true],
                 ['name' => 'Bunju', 'code' => 'BJ'],
@@ -57,6 +58,8 @@ class CompanyRegistrationTest extends TestCase
             ->assertJsonPath('meta.invite_sent', true);
 
         $company = Company::firstWhere('name', 'Kairuki Hospital');
+        $this->assertSame(['+255765919184', 'info@kairukihospital.org', 'Mikocheni, Regent Street, P.O. Box 4567', 'Dar es Salaam', 'Tanzania'],
+            [$company->phone, $company->email, $company->address, $company->city, $company->country]);
         $user = User::firstWhere('email', 'hr@kairuki.test');
         $this->assertSame($company->id, $user->company_id);
         $this->assertSame('Hamisi Umbaliche', $user->display_name);
@@ -111,6 +114,9 @@ class CompanyRegistrationTest extends TestCase
             'admin' => ['email' => $existing->email],
             'modules' => [['slug' => 'no-such-module']],
         ]))->assertUnprocessable()->assertJsonValidationErrors(['company.name', 'branches', 'admin.email', 'modules.0.slug']);
+
+        $this->postJson('/api/v1/platform/companies', $this->payload(['company' => ['name' => 'Beta', 'phone' => '', 'email' => '', 'address' => '', 'city' => '', 'country' => '']]))
+            ->assertUnprocessable()->assertJsonValidationErrors(['company.phone', 'company.email', 'company.address', 'company.city', 'company.country']);
     }
 
     public function test_company_users_and_guests_cannot_use_platform_endpoints(): void
@@ -149,6 +155,22 @@ class CompanyRegistrationTest extends TestCase
         $this->withHeader('Referer', 'http://localhost:4200')
             ->postJson('/api/v1/auth/login', ['username' => 'hr_alpha', 'password' => 'password'])
             ->assertUnprocessable();
+    }
+
+    public function test_platform_admin_edits_company_details(): void
+    {
+        [$company, $admin] = $this->createCompany('Alpha');
+        $url = "/api/v1/platform/companies/{$company->id}";
+        $details = ['name' => 'Alpha Hospital', 'phone' => '+255765919184', 'email' => 'info@alpha.org', 'address' => 'P.O. Box 4567',
+            'city' => 'Dar es Salaam', 'country' => 'Tanzania', 'tin' => '100-200-300', 'website' => 'https://alpha.org'];
+
+        $this->actingAs($admin)->patchJson($url, $details)->assertForbidden();
+
+        $this->actingAs($this->createPlatformAdmin())->patchJson($url, $details)
+            ->assertOk()->assertJsonPath('data.name', 'Alpha Hospital')->assertJsonPath('data.phone', '+255765919184')->assertJsonPath('data.city', 'Dar es Salaam');
+        $this->patchJson($url, ['phone' => '', 'email' => '', 'address' => ''])
+            ->assertUnprocessable()->assertJsonValidationErrors(['phone', 'email', 'address']);
+        $this->assertSame('info@alpha.org', $company->fresh()->email);
     }
 
     public function test_modules_can_be_replaced(): void

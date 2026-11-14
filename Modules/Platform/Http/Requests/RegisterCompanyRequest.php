@@ -22,12 +22,13 @@ class RegisterCompanyRequest extends FormRequest
             'company.slug' => ['nullable', 'string', 'max:60', 'alpha_dash', 'unique:companies,slug'],
             'company.registration_number' => ['nullable', 'string', 'max:100', 'unique:companies,registration_number'],
             'company.tin' => ['nullable', 'string', 'max:50'],
-            'company.phone' => ['nullable', 'string', 'max:50'],
-            'company.email' => ['nullable', 'email', 'max:255'],
+            /** Phone, email and address are printed in the header of the company's documents. */
+            'company.phone' => ['required', 'string', 'max:50'],
+            'company.email' => ['required', 'email', 'max:255'],
             'company.website' => ['nullable', 'url', 'max:255'],
-            'company.address' => ['nullable', 'string', 'max:500'],
-            'company.city' => ['nullable', 'string', 'max:100'],
-            'company.country' => ['nullable', 'string', 'max:100'],
+            'company.address' => ['required', 'string', 'max:500'],
+            'company.city' => ['required', 'string', 'max:100'],
+            'company.country' => ['required', 'string', 'max:100'],
             'company.currency' => ['nullable', 'string', 'size:3'],
             /** Month and day the fiscal year starts, e.g. "07-01". */
             'company.fiscal_year_start' => ['nullable', 'string', 'max:10'],
