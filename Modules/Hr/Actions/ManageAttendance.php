@@ -110,6 +110,7 @@ class ManageAttendance
         ];
 
         $excuse = ExcuseOfDuty::where('employee_id', $employee->id)->where('status', 'active')->whereDate('start_date', '<=', $date)->whereDate('end_date', '>=', $date)->first();
+        $official = app(ManageAbsences::class)->on($employee->id, $date);
         $admitted = AdmittedEmployee::where('employee_id', $employee->id)->where('status', '!=', 'cancelled')->whereDate('start_date', '<=', $date)->whereDate('end_date', '>=', $date)->first();
 
         if ($day->kind === PlannedDay::LEAVE) {
@@ -119,6 +120,9 @@ class ManageAttendance
             $v = $this->status($v, 'Admitted', 'Admitted'.($admitted->hospital_name ? " ({$admitted->hospital_name})" : ''));
         } elseif ($excuse) {
             $v = $this->status($v, 'Excuse of duty', 'Excuse of duty'.($excuse->hospital_name ? " ({$excuse->hospital_name})" : ''));
+        } elseif ($official) {
+            $v = $this->status($v, 'Excused absence', 'Official absence'.($official->address ? " ({$official->address})" : ''));
+            $v['description'] = $official->description;
         } elseif (! $day->isWorking()) {
             $label = $day->kind === PlannedDay::HOLIDAY ? ($day->holiday ?? 'Public holiday') : ($day->code && $day->source === 'roster' ? "{$day->code} · {$day->label}" : 'Day off');
             $v = $this->status($v, $label, $label);

@@ -11,6 +11,7 @@ use Modules\Hr\Workflow\ContractRenewalProcess;
 use Modules\Hr\Workflow\DutyRosterProcess;
 use Modules\Hr\Workflow\LeaveRequestProcess;
 use Modules\Hr\Workflow\LoanProcess;
+use Modules\Hr\Workflow\AbsenceRequestProcess;
 use Modules\Hr\Workflow\OtherDeductionProcess;
 use Modules\Hr\Workflow\OvertimeClaimProcess;
 use Modules\Hr\Workflow\PayrollSheetProcess;
@@ -41,6 +42,7 @@ final class WorkflowCatalog
         OtherDeductionProcess::class,
         SalaryAdjustmentProcess::class,
         ProfileItemProcess::class,
+        AbsenceRequestProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

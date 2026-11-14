@@ -33,7 +33,7 @@ final class DefaultRoles
         'director' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'reports.view', 'reports.generate', 'self-service.use'],
         'director-general' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'payroll.approve', 'reports.view', 'reports.generate', 'self-service.use'],
         'hod' => [
-            'hr.employees.view-department', 'leave.department.view', 'leave.approve-hod', 'leave.annual-roster.manage', 'roster.department.view', 'roster.manage',
+            'hr.employees.view-department', 'leave.department.view', 'leave.approve-hod', 'leave.annual-roster.manage', 'leave.absence.manage', 'roster.department.view', 'roster.manage',
             'attendance.working-hours.department', 'allowance.department.view', 'allowance.daily.manage', 'overtime.view', 'reports.view', 'self-service.use',
         ],
         'section-head' => [

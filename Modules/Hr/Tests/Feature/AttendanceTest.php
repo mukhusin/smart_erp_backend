@@ -224,4 +224,31 @@ class AttendanceTest extends TestCase
         $this->assertSame(['Present', 'Main'], [$this->day('2026-11-11')->status, $this->day('2026-11-11')->in_area_alias]);
         $this->getJson('/api/v1/attendance/settings')->assertJsonCount(4, 'data.days')->assertJsonPath('data.last_error', null);
     }
+
+    public function test_official_absence_is_excused_in_attendance_and_goes_through_approval(): void
+    {
+        $leaveType = $this->inCompany(fn () => \App\Models\LeaveType::value('id'));
+        $this->inCompany(fn () => \App\Models\EmpLeave::create(['employee_id' => $this->nurse->id, 'leave_type_id' => $leaveType, 'start_date' => '2026-11-20', 'end_date' => '2026-11-22',
+            'requested_start_date' => '2026-11-20', 'requested_end_date' => '2026-11-22', 'days' => 3, 'days_requested' => 3, 'leave_year' => 2026, 'status' => 'approved']));
+        $record = fn (array $d) => $this->actingAs($this->admin)->postJson('/api/v1/leave/absences', $d + ['address' => 'Dodoma', 'description' => 'Workshop', 'has_per_diem' => true]);
+
+        $rows = $record(['employee_ids' => [$this->nurse->id, $this->clerk->id], 'from_date' => '2026-11-09', 'to_date' => '2026-11-10'])
+            ->assertCreated()->assertJsonCount(2, 'data')->assertJsonPath('data.0.status', 'ended')->assertJsonPath('data.0.number_of_days', 2)->json('data');
+        $this->assertSame('Excused absence', $this->day('2026-11-10', $this->clerk)->status);
+
+        $record(['employee_ids' => [$this->clerk->id], 'from_date' => '2026-11-10', 'to_date' => '2026-11-11'])->assertUnprocessable()->assertJsonValidationErrors(['employee_ids' => 'already has an official absence']);
+        $record(['employee_ids' => [$this->nurse->id], 'from_date' => '2026-11-21', 'to_date' => '2026-11-23'])->assertUnprocessable()->assertJsonValidationErrors(['employee_ids' => 'on leave']);
+        $record(['employee_ids' => [$this->nurse->id], 'from_date' => '2026-11-12', 'to_date' => '2026-11-11'])->assertUnprocessable()->assertJsonValidationErrors(['to_date']);
+
+        $this->inCompany(fn () => WorkflowTemplate::create(['process' => 'absence-request', 'is_active' => true])->steps()->create(['step_order' => 1, 'name' => 'HR Manager', 'approver_type' => 'user', 'user_id' => $this->admin->id]));
+        $pending = $record(['employee_ids' => [$this->clerk->id], 'from_date' => '2026-11-12', 'to_date' => '2026-11-12', 'from_time' => '08:00', 'to_time' => '17:00'])
+            ->assertCreated()->assertJsonPath('data.0.status', 'pending')->assertJsonPath('data.0.waiting_for', 'HR Manager')->assertJsonPath('data.0.can_cancel', true)->json('data.0.id');
+        $this->postJson("/api/v1/leave/absences/{$pending}/cancel")->assertOk()->assertJsonPath('data.status', 'cancelled');
+        $this->postJson("/api/v1/leave/absences/{$rows[0]['id']}/cancel")->assertUnprocessable();
+
+        $this->getJson('/api/v1/leave/absences?month=2026-11')->assertOk()->assertJsonCount(3, 'data');
+        $this->getJson('/api/v1/leave/absences?month=2026-11&status=ended')->assertJsonCount(2, 'data');
+        $this->getJson('/api/v1/leave/absences?month=2026-10')->assertJsonCount(0, 'data');
+        $this->actingAs($this->user)->postJson('/api/v1/leave/absences', ['employee_ids' => [$this->clerk->id], 'from_date' => '2026-11-13', 'to_date' => '2026-11-13', 'address' => 'x', 'description' => 'y'])->assertForbidden();
+    }
 }

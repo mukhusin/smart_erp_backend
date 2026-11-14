@@ -18,6 +18,7 @@ use Modules\Hr\Http\Controllers\Api\EmployeeLicenceController;
 use Modules\Hr\Http\Controllers\Api\EmployeeQualificationController;
 use Modules\Hr\Http\Controllers\Api\HrStatsController;
 use Modules\Hr\Http\Controllers\Api\JobPositionController;
+use Modules\Hr\Http\Controllers\Api\Leave\AbsenceController;
 use Modules\Hr\Http\Controllers\Api\Leave\AnnualRosterController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveBalanceController;
 use Modules\Hr\Http\Controllers\Api\Leave\LeaveRequestController;
@@ -305,6 +306,11 @@ Route::prefix('leave')->middleware(['auth:sanctum', 'module:leave'])->name('leav
         Route::delete('types/{leaveType}', [LeaveTypeController::class, 'destroy'])->name('types.destroy');
         Route::get('settings', [LeaveSettingsController::class, 'show'])->name('settings.show');
         Route::put('settings', [LeaveSettingsController::class, 'update'])->name('settings.update');
+    });
+    Route::get('absences', [AbsenceController::class, 'index'])->name('absences.index');
+    Route::middleware('can:leave.absence.manage')->group(function () {
+        Route::post('absences', [AbsenceController::class, 'store'])->name('absences.store');
+        Route::post('absences/{absence}/cancel', [AbsenceController::class, 'cancel'])->name('absences.cancel');
     });
     Route::get('annual-rosters', [AnnualRosterController::class, 'index'])->name('annual-rosters.index');
     Route::post('annual-rosters', [AnnualRosterController::class, 'store'])->name('annual-rosters.store');

@@ -17871,6 +17871,589 @@
                 }
             }
         },
+        "/leave/absences": {
+            "get": {
+                "operationId": "leave.absences.index",
+                "description": "`status`: pending, approved (not ended), ended, rejected, cancelled; empty = all.",
+                "summary": "Official absences overlapping a month (default this month), of the employees I may see",
+                "tags": [
+                    "Leave: Official absences",
+                    "Absence"
+                ],
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "2026-11"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "from_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "to_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "from_time": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "to_time": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "number_of_days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "address": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "has_per_diem": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "requested_by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "can_cancel": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "from_date",
+                                                    "to_date",
+                                                    "from_time",
+                                                    "to_time",
+                                                    "number_of_days",
+                                                    "address",
+                                                    "description",
+                                                    "has_per_diem",
+                                                    "status",
+                                                    "status_label",
+                                                    "waiting_for",
+                                                    "decision_comment",
+                                                    "requested_by",
+                                                    "can_cancel"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "leave.absences.store",
+                "summary": "Record an official absence for one or more employees (one record each, each through the approval workflow)",
+                "tags": [
+                    "Leave: Official absences",
+                    "Absence"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "employee_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 100,
+                                        "uniqueItems": true
+                                    },
+                                    "from_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "to_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "from_time": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "to_time": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "has_per_diem": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "employee_ids",
+                                    "from_date",
+                                    "to_date",
+                                    "address",
+                                    "description"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "employee_no",
+                                                            "department"
+                                                        ]
+                                                    },
+                                                    "from_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "to_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "from_time": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "to_time": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "number_of_days": {
+                                                        "type": "integer"
+                                                    },
+                                                    "address": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "has_per_diem": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "requested_by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "can_cancel": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee",
+                                                    "from_date",
+                                                    "to_date",
+                                                    "from_time",
+                                                    "to_time",
+                                                    "number_of_days",
+                                                    "address",
+                                                    "description",
+                                                    "has_per_diem",
+                                                    "status",
+                                                    "status_label",
+                                                    "waiting_for",
+                                                    "decision_comment",
+                                                    "requested_by",
+                                                    "can_cancel"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/leave/absences/{absence}/cancel": {
+            "post": {
+                "operationId": "leave.absences.cancel",
+                "summary": "Withdraw a pending absence I recorded, or cancel an approved absence that has not ended (its days count again)",
+                "tags": [
+                    "Leave: Official absences",
+                    "Absence"
+                ],
+                "parameters": [
+                    {
+                        "name": "absence",
+                        "in": "path",
+                        "required": true,
+                        "description": "The absence ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "employee": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "employee_no",
+                                                        "department"
+                                                    ]
+                                                },
+                                                "from_date": {
+                                                    "type": "string"
+                                                },
+                                                "to_date": {
+                                                    "type": "string"
+                                                },
+                                                "from_time": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to_time": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "number_of_days": {
+                                                    "type": "integer"
+                                                },
+                                                "address": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "description": {
+                                                    "type": "string"
+                                                },
+                                                "has_per_diem": {
+                                                    "type": "boolean"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "requested_by": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "can_cancel": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "employee",
+                                                "from_date",
+                                                "to_date",
+                                                "from_time",
+                                                "to_time",
+                                                "number_of_days",
+                                                "address",
+                                                "description",
+                                                "has_per_diem",
+                                                "status",
+                                                "status_label",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "requested_by",
+                                                "can_cancel"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/leave/requests": {
             "get": {
                 "operationId": "leave.requests.index",
