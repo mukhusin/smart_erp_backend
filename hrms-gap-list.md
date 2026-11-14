@@ -177,10 +177,10 @@ working-hours reports, absence requests, attendance-based allowances.
 
 ### 7. Next (agreed order, 2026-11-14)
 
-1. Payroll comparison with last month (differences per employee and item, new and missing entries) — for the parallel run.
-2. Roster export (Excel/PDF with the shared PDF layout).
-3. Absence requests (official absence/travel, per diem); then overtime suggestions from punches.
-4. **Charts on the dashboards** (HR, self-service, reports overview, admin, payroll): trends and breakdowns in the brand colors.
+1. ~~Payroll comparison with last month~~ (done) (differences per employee and item, new and missing entries) — for the parallel run.
+2. ~~Roster export (Excel/PDF with the shared PDF layout).~~ (done)
+3. ~~Absence requests; overtime suggestions from punches.~~ (done; plus notice pop-ups)
+4. ~~**Charts on the dashboards**~~ (done: HR, reports overview, payroll, admin, self-service pay trend) (HR, self-service, reports overview, admin, payroll): trends and breakdowns in the brand colors.
 5. Remaining screens: payroll comments/change log, SACCOS members, reliefs, statutory member lists, staff patient IDs,
    bulk phone update, contract PDF from template, leave family details, audit log viewer, attendance working-hours reports.
 6. Migration dry run on a production copy; decide the HRMS pending attendance claims; parallel payroll; switch.
