@@ -30,7 +30,7 @@ class SelfLeaveController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $rows = EmpLeave::with(['leaveType', 'files', 'workflow.steps'])->where('employee_id', $this->me($request)->id)->latest('start_date')->latest('id')->limit(100)->get();
+        $rows = EmpLeave::with(['leaveType', 'files', 'workflow.steps'])->where('employee_id', $this->me($request)->id)->latest('start_date')->latest('id')->get();
 
         return response()->json(['data' => LeaveRequestResource::collection($rows)->resolve($request)]);
     }
