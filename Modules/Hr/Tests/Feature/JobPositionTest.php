@@ -59,6 +59,9 @@ class JobPositionTest extends TestCase
         $hqNurse = $this->postJson('/api/v1/hr/job-positions', ['title' => 'Registered Nurse', 'department_id' => $hqNursing])->assertCreated()
             ->assertJsonPath('data.department.branch', 'Head Office')->json('data.id');
         $this->postJson('/api/v1/hr/job-positions', ['title' => 'registered nurse', 'department_id' => $hqNursing])->assertUnprocessable()->assertJsonValidationErrors('title');
+        $pasted = '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Normal</w:View></w:WordDocument></xml><![endif]--><p class="MsoNormal">1. <b>Duty</b> station</p><script>alert(1)</script>';
+        $this->postJson('/api/v1/hr/job-positions', ['title' => 'Ward Nurse', 'department_id' => $hqNursing, 'description' => $pasted])->assertCreated()
+            ->assertJsonPath('data.description', '<p>1. <b>Duty</b> station</p>')->assertJsonPath('data.description_text', '1. Duty station');
         $aruNurse = $this->postJson('/api/v1/hr/job-positions', ['title' => 'Registered Nurse', 'department_id' => $aruNursing])->assertCreated()->json('data.id');
 
         $this->getJson('/api/v1/hr/job-positions?filter[branch_id]='.$this->arusha)->assertOk()->assertJsonFragment(['id' => $aruNurse])->assertJsonMissing(['id' => $hqNurse]);

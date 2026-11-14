@@ -21,7 +21,8 @@ class JobPositionRequest extends FormRequest
             'title' => ['required', 'string', 'max:150'],
             /** The department (any branch's) this position belongs to. */
             'department_id' => ['required', 'integer', Rule::exists('departments', 'id')->where('company_id', app(CompanyContext::class)->id())->whereNull('parent_id')->whereNull('deleted_at')],
-            'description' => ['nullable', 'string', 'max:2000'],
+            /** Rich text (HTML); unsafe or pasted Office markup is removed. */
+            'description' => ['nullable', 'string', 'max:20000'],
             'is_active' => ['boolean'],
         ];
     }
@@ -45,5 +46,15 @@ class JobPositionRequest extends FormRequest
     public function messages(): array
     {
         return ['department_id.required' => 'Choose the department.', 'department_id.exists' => 'Choose a department (not a section).'];
+    }
+
+    public function validated($key = null, $default = null): mixed
+    {
+        $data = parent::validated();
+        if (array_key_exists('description', $data)) {
+            $data['description'] = \Modules\Core\Support\RichText::clean($data['description']);
+        }
+
+        return $key === null ? $data : data_get($data, $key, $default);
     }
 }

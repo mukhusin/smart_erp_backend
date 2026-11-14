@@ -37184,7 +37184,8 @@
                             "string",
                             "null"
                         ],
-                        "maxLength": 2000
+                        "description": "Rich text (HTML); unsafe or pasted Office markup is removed.",
+                        "maxLength": 20000
                     },
                     "is_active": {
                         "type": "boolean"
@@ -37209,7 +37210,12 @@
                         "type": [
                             "string",
                             "null"
-                        ]
+                        ],
+                        "description": "Clean rich text (HTML)."
+                    },
+                    "description_text": {
+                        "type": "string",
+                        "description": "Plain text of the description, for lists."
                     },
                     "is_active": {
                         "type": "boolean"
@@ -37248,6 +37254,7 @@
                     "id",
                     "title",
                     "description",
+                    "description_text",
                     "is_active",
                     "department",
                     "staff_count"

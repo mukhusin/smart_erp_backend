@@ -18,7 +18,10 @@ class JobPositionResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->description,
+            /** Clean rich text (HTML). */
+            'description' => \Modules\Core\Support\RichText::clean($this->description),
+            /** Plain text of the description, for lists. */
+            'description_text' => \Modules\Core\Support\RichText::text(\Modules\Core\Support\RichText::clean($this->description)),
             'is_active' => $this->is_active,
             /** @var array{id: int, name: string, branch: string|null}|null */
             'department' => $department ? ['id' => $department->id, 'name' => $department->name, 'branch' => $department->branch?->name] : null,

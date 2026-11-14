@@ -19,6 +19,7 @@ final class RichText
         if ($html === null || trim($html) === '') {
             return null;
         }
+        $html = preg_replace(['/<!--.*?-->/s', '/<(xml|style|script|o:p)\b[^>]*>.*?<\/\1>/is'], '', $html);
         $clean = trim((string) Purifier::clean($html, self::CONFIG));
 
         return self::text($clean) === '' ? null : $clean;
