@@ -39,6 +39,10 @@ class StaffMessageRequest extends FormRequest
             'emp_type' => ['nullable', O::keys(O::EMPLOYMENT_TYPES)],
             /** Empty = send now. */
             'scheduled_at' => ['nullable', 'date', 'after:now'],
+            /** In-app notices only: also show as a pop-up to the recipients between popup_from and popup_until (one pop-up at a time). */
+            'popup' => ['sometimes', 'boolean'],
+            'popup_from' => ['nullable', 'required_if:popup,true,1', 'date'],
+            'popup_until' => ['nullable', 'required_if:popup,true,1', 'date', 'after:popup_from', 'after:now'],
         ];
     }
 

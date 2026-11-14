@@ -82,6 +82,29 @@ class StaffMessageTest extends TestCase
         $this->assertSame('Meeting', $this->ashaUser->notifications()->first()->data['title']);
     }
 
+    public function test_notice_pop_up_shows_to_recipients_one_at_a_time_and_can_be_switched_off(): void
+    {
+        $notice = $this->sms(['type' => 'Notice', 'subject' => 'Staff meeting', 'message' => 'Dear {first_name}, meeting at 2pm.']);
+        $this->actingAs($this->admin)->postJson('/api/v1/hr/messages', $this->sms(['type' => 'Email', 'subject' => 'X', 'popup' => true, 'popup_from' => '2026-11-13 08:00', 'popup_until' => '2026-11-14 18:00']))
+            ->assertUnprocessable()->assertJsonValidationErrors('popup');
+        $id = $this->postJson('/api/v1/hr/messages', $notice + ['popup' => true, 'popup_from' => '2026-11-13 08:00', 'popup_until' => '2026-11-14 18:00'])
+            ->assertCreated()->assertJsonPath('data.popup.active', true)->assertJsonPath('data.popup.live', true)->json('data.id');
+        $this->postJson('/api/v1/hr/messages', $notice + ['popup' => true, 'popup_from' => '2026-11-14 12:00', 'popup_until' => '2026-11-15 12:00'])
+            ->assertUnprocessable()->assertJsonValidationErrors(['popup_from' => 'Only one pop-up']);
+
+        $this->actingAs($this->ashaUser)->getJson('/api/v1/me/popup')->assertOk()
+            ->assertJsonPath('data.id', $id)->assertJsonPath('data.title', 'Staff meeting')->assertJsonPath('data.message', 'Dear Asha, meeting at 2pm.');
+
+        $this->actingAs($this->admin)->putJson("/api/v1/hr/messages/{$id}/popup", ['active' => false])->assertOk()->assertJsonPath('data.popup.active', false);
+        $this->actingAs($this->ashaUser)->getJson('/api/v1/me/popup')->assertOk()->assertJsonPath('data', null);
+        $this->actingAs($this->admin)->putJson("/api/v1/hr/messages/{$id}/popup", ['active' => true, 'until' => '2026-11-13 08:30'])->assertUnprocessable()->assertJsonValidationErrors('popup_until');
+        $this->putJson("/api/v1/hr/messages/{$id}/popup", ['active' => true, 'from' => '2026-11-13 10:00', 'until' => '2026-11-13 12:00'])->assertOk()->assertJsonPath('data.popup.live', false);
+        $this->travelTo('2026-11-13 10:30:00');
+        $this->actingAs($this->ashaUser->fresh())->getJson('/api/v1/me/popup')->assertJsonPath('data.id', $id);
+        $this->travelTo('2026-11-13 12:01:00');
+        $this->getJson('/api/v1/me/popup')->assertJsonPath('data', null);
+    }
+
     public function test_schedules_cancels_and_sends_due(): void
     {
         Mail::fake();

@@ -60,6 +60,34 @@ class StaffMessageController extends Controller
     }
 
     /**
+     * Switch a notice's pop-up on or off, or change when it shows (one pop-up at a time).
+     */
+    public function popup(Request $request, Messaging $message, SendStaffMessages $messages): JsonResponse
+    {
+        abort_unless($message->campaign === 'staff_message', 404);
+        $d = $request->validate(['active' => ['required', 'boolean'], 'from' => ['nullable', 'date'], 'until' => ['nullable', 'date']]);
+
+        return response()->json(['data' => $this->row($this->counted($messages->setPopup($message, $d['active'], $d['from'] ?? null, $d['until'] ?? null)))]);
+    }
+
+    /**
+     * The pop-up notice showing now to me, if any. The screen shows it until I hide it for my session.
+     *
+     * @response array{data: array{id: int, title: string, message: string, until: string, from: string|null}|null}
+     */
+    public function current(Request $request, SendStaffMessages $messages): JsonResponse
+    {
+        $employee = \App\Models\Employee::where('user_id', $request->user()->id)->first();
+        $m = $messages->currentPopup($employee?->id);
+        $text = $m ? ($m->recipients()->where('employee_id', $employee->id)->value('individual_message') ?? $m->message) : null;
+
+        return response()->json(['data' => $m ? [
+            'id' => $m->id, 'title' => $m->subject, 'message' => $text, 'until' => $m->popup_until->toIso8601String(),
+            'from' => $m->creator?->display_name,
+        ] : null]);
+    }
+
+    /**
      * A message with every recipient and their delivery status.
      */
     public function show(Messaging $message): JsonResponse
@@ -123,6 +151,11 @@ class StaffMessageController extends Controller
             'skipped' => (int) $m->skipped_count,
             'created_by' => $m->creator?->username,
             'created_at' => $m->created_at?->toIso8601String(),
+            /** In-app notices shown as a pop-up; `live` = showing now. */
+            'popup' => $m->type === Messaging::TYPE_NOTICE ? [
+                'active' => (bool) $m->popup_active, 'from' => $m->popup_from?->toIso8601String(), 'until' => $m->popup_until?->toIso8601String(),
+                'live' => $m->popup_active && $m->popup_from?->lte(now()) && $m->popup_until?->gt(now()),
+            ] : null,
         ];
     }
 }

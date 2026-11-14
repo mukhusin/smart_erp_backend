@@ -67,9 +67,16 @@ class SendStaffMessages
         }
 
         $scheduled = ! empty($data['scheduled_at']) ? now()->parse($data['scheduled_at']) : now();
+        $popup = ! empty($data['popup']);
+        if ($popup) {
+            if ($data['type'] !== Messaging::TYPE_NOTICE) {
+                throw ValidationException::withMessages(['popup' => 'Only in-app notices can show as a pop-up.']);
+            }
+            $this->ensureNoOtherPopup(now()->parse($data['popup_from']), now()->parse($data['popup_until']));
+        }
         $max = (int) config('sms.max_length', 120);
 
-        $messaging = DB::transaction(function () use ($data, $user, $employees, $reachable, $scheduled, $max) {
+        $messaging = DB::transaction(function () use ($data, $user, $employees, $reachable, $scheduled, $max, $popup) {
             $messaging = Messaging::create([
                 'type' => $data['type'],
                 'campaign' => 'staff_message',
@@ -84,6 +91,9 @@ class SendStaffMessages
                 'skipped_count' => $employees->count() - $reachable->count(),
                 'created_by' => $user->id,
                 'status' => Messaging::STATUS_PENDING,
+                'popup_active' => $popup,
+                'popup_from' => $popup ? $data['popup_from'] : null,
+                'popup_until' => $popup ? $data['popup_until'] : null,
             ]);
 
             foreach ($reachable as $employee) {
@@ -105,6 +115,49 @@ class SendStaffMessages
         }
 
         return $messaging->refresh();
+    }
+
+    /** Switch a notice's pop-up on or off, or change when it shows. Only one pop-up may show at a time. */
+    public function setPopup(Messaging $messaging, bool $active, ?string $from, ?string $until): Messaging
+    {
+        if ($messaging->type !== Messaging::TYPE_NOTICE || $messaging->status === Messaging::STATUS_CANCELLED) {
+            throw ValidationException::withMessages(['popup' => 'Only in-app notices that were not cancelled can show as a pop-up.']);
+        }
+        $from = $from ? now()->parse($from) : $messaging->popup_from;
+        $until = $until ? now()->parse($until) : $messaging->popup_until;
+        if ($active) {
+            if (! $from || ! $until || $until->lte($from)) {
+                throw ValidationException::withMessages(['popup_until' => 'Choose when the pop-up starts and an end after it.']);
+            }
+            if ($until->isPast()) {
+                throw ValidationException::withMessages(['popup_until' => 'The end is already past.']);
+            }
+            $this->ensureNoOtherPopup($from, $until, $messaging->id);
+        }
+        $messaging->update(['popup_active' => $active, 'popup_from' => $from, 'popup_until' => $until]);
+
+        return $messaging->refresh();
+    }
+
+    /** The pop-up showing now to an employee (they must be a recipient of the notice). */
+    public function currentPopup(?int $employeeId): ?Messaging
+    {
+        if (! $employeeId) {
+            return null;
+        }
+
+        return Messaging::with('creator')->where('campaign', 'staff_message')->where('type', Messaging::TYPE_NOTICE)->where('popup_active', true)
+            ->where('status', '!=', Messaging::STATUS_CANCELLED)->where('popup_from', '<=', now())->where('popup_until', '>', now())
+            ->whereHas('recipients', fn ($q) => $q->where('employee_id', $employeeId))->latest('popup_from')->first();
+    }
+
+    private function ensureNoOtherPopup(\DateTimeInterface $from, \DateTimeInterface $until, ?int $except = null): void
+    {
+        $other = Messaging::where('campaign', 'staff_message')->where('popup_active', true)->where('status', '!=', Messaging::STATUS_CANCELLED)
+            ->when($except, fn ($q) => $q->whereKeyNot($except))->where('popup_from', '<', $until)->where('popup_until', '>', $from)->first();
+        if ($other) {
+            throw ValidationException::withMessages(['popup_from' => "Only one pop-up can show at a time: \"{$other->subject}\" shows ".$other->popup_from->format('d M H:i').' – '.$other->popup_until->format('d M H:i').'. Switch it off or choose other dates.']);
+        }
     }
 
     public function cancel(Messaging $messaging): Messaging

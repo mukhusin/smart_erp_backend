@@ -104,6 +104,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::post('/', [StaffMessageController::class, 'store'])->middleware('throttle:20,1')->name('store');
         Route::get('{message}', [StaffMessageController::class, 'show'])->name('show');
         Route::post('{message}/cancel', [StaffMessageController::class, 'cancel'])->name('cancel');
+        Route::put('{message}/popup', [StaffMessageController::class, 'popup'])->name('popup');
     });
 
     Route::middleware('can:hr.employees.create')->group(function () {

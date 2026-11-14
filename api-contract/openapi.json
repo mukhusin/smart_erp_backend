@@ -13634,6 +13634,69 @@
                 }
             }
         },
+        "/me/popup": {
+            "get": {
+                "operationId": "me.popup",
+                "summary": "The pop-up notice showing now to me, if any. The screen shows it until I hide it for my session",
+                "tags": [
+                    "HR: Messages",
+                    "StaffMessage"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": [
+                                                "object",
+                                                "null"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "until": {
+                                                    "type": "string"
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "title",
+                                                "message",
+                                                "until",
+                                                "from"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/messages": {
             "get": {
                 "operationId": "hr.messages.index",
@@ -13738,6 +13801,39 @@
                                                             "string",
                                                             "null"
                                                         ]
+                                                    },
+                                                    "popup": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "description": "In-app notices shown as a pop-up; `live` = showing now.",
+                                                        "properties": {
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "from": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "until": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "live": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "active",
+                                                            "from",
+                                                            "until",
+                                                            "live"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -13754,7 +13850,8 @@
                                                     "failed",
                                                     "skipped",
                                                     "created_by",
-                                                    "created_at"
+                                                    "created_at",
+                                                    "popup"
                                                 ]
                                             }
                                         },
@@ -13905,6 +14002,39 @@
                                                         "string",
                                                         "null"
                                                     ]
+                                                },
+                                                "popup": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "In-app notices shown as a pop-up; `live` = showing now.",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "from": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "until": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "live": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "active",
+                                                        "from",
+                                                        "until",
+                                                        "live"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -13921,7 +14051,8 @@
                                                 "failed",
                                                 "skipped",
                                                 "created_by",
-                                                "created_at"
+                                                "created_at",
+                                                "popup"
                                             ]
                                         }
                                     },
@@ -14162,6 +14293,39 @@
                                                         "string",
                                                         "null"
                                                     ]
+                                                },
+                                                "popup": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "In-app notices shown as a pop-up; `live` = showing now.",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "from": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "until": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "live": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "active",
+                                                        "from",
+                                                        "until",
+                                                        "live"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -14178,7 +14342,8 @@
                                                 "failed",
                                                 "skipped",
                                                 "created_by",
-                                                "created_at"
+                                                "created_at",
+                                                "popup"
                                             ]
                                         }
                                     },
@@ -14191,6 +14356,209 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/messages/{message}/popup": {
+            "put": {
+                "operationId": "hr.messages.popup",
+                "summary": "Switch a notice's pop-up on or off, or change when it shows (one pop-up at a time)",
+                "tags": [
+                    "HR: Messages",
+                    "StaffMessage"
+                ],
+                "parameters": [
+                    {
+                        "name": "message",
+                        "in": "path",
+                        "required": true,
+                        "description": "The message ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "active": {
+                                        "type": "boolean"
+                                    },
+                                    "from": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time"
+                                    },
+                                    "until": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "active"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                },
+                                                "subject": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "audience": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "Chosen employees",
+                                                                "Branch",
+                                                                "All staff"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "scheduled_at": {
+                                                    "type": "string"
+                                                },
+                                                "sent_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "recipients": {
+                                                    "type": "integer"
+                                                },
+                                                "sent": {
+                                                    "type": "integer"
+                                                },
+                                                "failed": {
+                                                    "type": "integer"
+                                                },
+                                                "skipped": {
+                                                    "type": "integer"
+                                                },
+                                                "created_by": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "popup": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "description": "In-app notices shown as a pop-up; `live` = showing now.",
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "from": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "until": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "live": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "active",
+                                                        "from",
+                                                        "until",
+                                                        "live"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "type",
+                                                "subject",
+                                                "message",
+                                                "audience",
+                                                "status",
+                                                "scheduled_at",
+                                                "sent_at",
+                                                "recipients",
+                                                "sent",
+                                                "failed",
+                                                "skipped",
+                                                "created_by",
+                                                "created_at",
+                                                "popup"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
@@ -40018,6 +40386,23 @@
                             "indirect",
                             null
                         ]
+                    },
+                    "popup": {
+                        "type": "boolean"
+                    },
+                    "popup_from": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "popup_until": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -40107,6 +40492,24 @@
                         ],
                         "format": "date-time",
                         "description": "Empty = send now."
+                    },
+                    "popup": {
+                        "type": "boolean",
+                        "description": "In-app notices only: also show as a pop-up to the recipients between popup_from and popup_until (one pop-up at a time)."
+                    },
+                    "popup_from": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "popup_until": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [

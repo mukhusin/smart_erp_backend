@@ -16,10 +16,11 @@ class Messaging extends Model
     protected $fillable = [
         'uuid', 'company_id', 'type', 'campaign', 'campaign_key', 'from_address', 'subject', 'message',
         'extra', 'response', 'scheduled_at', 'recipient_type', 'filters', 'skipped_count', 'sent_at',
-        'department_id', 'section_id', 'created_by', 'status',
+        'department_id', 'section_id', 'created_by', 'status', 'popup_active', 'popup_from', 'popup_until',
     ];
 
-    protected $casts = ['scheduled_at' => 'datetime', 'sent_at' => 'datetime', 'filters' => 'array', 'skipped_count' => 'integer'];
+    protected $casts = ['scheduled_at' => 'datetime', 'sent_at' => 'datetime', 'filters' => 'array', 'skipped_count' => 'integer',
+        'popup_active' => 'boolean', 'popup_from' => 'datetime', 'popup_until' => 'datetime'];
 
     const TYPE_SMS   = 'SMS';
     const TYPE_EMAIL = 'Email';

@@ -19,6 +19,7 @@ Route::prefix('auth')->group(function () {
 
 Route::get('me', MeController::class)->middleware('auth:sanctum')->name('me');
 Route::middleware('auth:sanctum')->prefix('me')->name('me.')->group(function () {
+    Route::get('popup', [\Modules\Hr\Http\Controllers\Api\StaffMessageController::class, 'current'])->name('popup');
     Route::put('password', [AccountController::class, 'password'])->middleware('throttle:6,1')->name('password');
     Route::post('email', [AccountController::class, 'email'])->middleware('throttle:3,1')->name('email');
     Route::post('email/confirm', [AccountController::class, 'confirmEmail'])->middleware('throttle:10,1')->name('email.confirm');
