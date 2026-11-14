@@ -47,6 +47,8 @@ class UpdateCompanyBrandingRequest extends FormRequest
             'theme_tables' => ['sometimes', Rule::in(Company::THEME_AREAS['tables'])],
             /** Cards: plain, accent (main color stripe on top) or tinted (header). */
             'theme_cards' => ['sometimes', Rule::in(Company::THEME_AREAS['cards'])],
+            /** Home page module tiles: brand (company colors) or module (each module's own color). */
+            'theme_tiles' => ['sometimes', Rule::in(Company::THEME_AREAS['tiles'])],
         ];
     }
 }

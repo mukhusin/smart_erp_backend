@@ -62,12 +62,14 @@ class CompanyBrandingTest extends TestCase
         $url = "/api/v1/platform/companies/{$company->id}/branding";
         $json = ['Accept' => 'application/json'];
 
-        $this->actingAs($admin)->getJson('/api/v1/me')->assertJsonPath('data.company.theme', ['sidebar' => 'plain', 'navbar' => 'plain', 'tables' => 'plain', 'cards' => 'plain']);
+        $this->actingAs($admin)->getJson('/api/v1/me')->assertJsonPath('data.company.theme', ['sidebar' => 'plain', 'navbar' => 'plain', 'tables' => 'plain', 'cards' => 'plain', 'tiles' => 'brand']);
 
         $this->actingAs($this->createPlatformAdmin())->post($url, ['theme_sidebar' => 'solid', 'theme_tables' => 'tinted', 'theme_cards' => 'accent'], $json)
-            ->assertOk()->assertJsonPath('data.theme', ['sidebar' => 'solid', 'navbar' => 'plain', 'tables' => 'tinted', 'cards' => 'accent']);
+            ->assertOk()->assertJsonPath('data.theme', ['sidebar' => 'solid', 'navbar' => 'plain', 'tables' => 'tinted', 'cards' => 'accent', 'tiles' => 'brand']);
         $this->post($url, ['theme_navbar' => 'solid'], $json)->assertOk()->assertJsonPath('data.theme.sidebar', 'solid')->assertJsonPath('data.theme.navbar', 'solid');
-        $this->post($url, ['theme_cards' => 'solid', 'theme_sidebar' => 'neon'], $json)->assertUnprocessable()->assertJsonValidationErrors(['theme_cards', 'theme_sidebar']);
+        $this->post($url, ['theme_tiles' => 'module'], $json)->assertOk()->assertJsonPath('data.theme.tiles', 'module');
+        $this->post($url, ['theme_cards' => 'solid', 'theme_sidebar' => 'neon', 'theme_tiles' => 'plain'], $json)
+            ->assertUnprocessable()->assertJsonValidationErrors(['theme_cards', 'theme_sidebar', 'theme_tiles']);
 
         $this->actingAs($admin->fresh())->getJson('/api/v1/me')->assertJsonPath('data.company.theme.sidebar', 'solid')->assertJsonPath('data.company.theme.tables', 'tinted');
     }

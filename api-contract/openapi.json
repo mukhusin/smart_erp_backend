@@ -33118,13 +33118,17 @@
                             },
                             "cards": {
                                 "type": "string"
+                            },
+                            "tiles": {
+                                "type": "string"
                             }
                         },
                         "required": [
                             "sidebar",
                             "navbar",
                             "tables",
-                            "cards"
+                            "cards",
+                            "tiles"
                         ]
                     },
                     "fiscal_year_start": {
@@ -36033,7 +36037,7 @@
                             },
                             "theme": {
                                 "type": "object",
-                                "description": "Where the brand colors are used: sidebar, navbar, tables (plain, tinted, solid) and cards (plain, accent, tinted).",
+                                "description": "Where the brand colors are used: sidebar, navbar, tables (plain, tinted, solid) and cards (plain, accent, tinted), tiles (brand, module).",
                                 "properties": {
                                     "sidebar": {
                                         "type": "string"
@@ -36046,13 +36050,17 @@
                                     },
                                     "cards": {
                                         "type": "string"
+                                    },
+                                    "tiles": {
+                                        "type": "string"
                                     }
                                 },
                                 "required": [
                                     "sidebar",
                                     "navbar",
                                     "tables",
-                                    "cards"
+                                    "cards",
+                                    "tiles"
                                 ]
                             }
                         },
@@ -38686,6 +38694,14 @@
                             "plain",
                             "accent",
                             "tinted"
+                        ]
+                    },
+                    "theme_tiles": {
+                        "type": "string",
+                        "description": "Home page module tiles: brand (company colors) or module (each module's own color).",
+                        "enum": [
+                            "brand",
+                            "module"
                         ]
                     }
                 },

@@ -17,22 +17,26 @@ class Company extends Model
         'logo', 'login_background', 'primary_color', 'secondary_color', 'theme', 'currency', 'fiscal_year_start', 'is_active',
     ];
 
-    /** Where the brand colors are used, and how: plain (none), tinted (light wash) or solid; cards: plain, accent (top stripe) or tinted (header). */
+    /**
+     * Where the brand colors are used, and how: plain (none), tinted (light wash) or solid; cards: plain, accent (top stripe)
+     * or tinted (header); home page module tiles: brand colors or each module's own color. The first option is the default.
+     */
     public const THEME_AREAS = [
         'sidebar' => ['plain', 'tinted', 'solid'],
         'navbar' => ['plain', 'tinted', 'solid'],
         'tables' => ['plain', 'tinted', 'solid'],
         'cards' => ['plain', 'accent', 'tinted'],
+        'tiles' => ['brand', 'module'],
     ];
 
     protected $casts = ['is_active' => 'boolean', 'theme' => 'array'];
 
-    /** @return array{sidebar: string, navbar: string, tables: string, cards: string} */
+    /** @return array{sidebar: string, navbar: string, tables: string, cards: string, tiles: string} */
     public function themeSettings(): array
     {
         $saved = $this->theme ?? [];
 
-        return collect(self::THEME_AREAS)->map(fn ($options, $area) => in_array($saved[$area] ?? null, $options, true) ? $saved[$area] : 'plain')->all();
+        return collect(self::THEME_AREAS)->map(fn ($options, $area) => in_array($saved[$area] ?? null, $options, true) ? $saved[$area] : $options[0])->all();
     }
 
     /** Already limited to this company, so the current-company filter is not needed here. */
