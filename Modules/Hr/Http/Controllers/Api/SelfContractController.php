@@ -32,7 +32,7 @@ class SelfContractController extends Controller
     /**
      * My contract: the active and waiting contract, my renewal requests, and whether I can request renewal now.
      *
-     * @response array{data: array{contract: ContractResource|null, waiting_contract: ContractResource|null, can_request: bool, blocker: string|null, renewals: list<RenewalResource>, contract_types: list<array{id: int, name: string}>, agreement: string, letter_templates: array<string, array{language: string, name: string, subject: string, salutation: string|null, closing: string, signature: list<string>}>}}
+     * @response array{data: array{contract: ContractResource|null, waiting_contract: ContractResource|null, previous: list<ContractResource>, can_request: bool, blocker: string|null, renewals: list<RenewalResource>, contract_types: list<array{id: int, name: string}>, agreement: string, letter_templates: array<string, array{language: string, name: string, subject: string, salutation: string|null, closing: string, signature: list<string>}>}}
      */
     public function show(Request $request): JsonResponse
     {
@@ -45,6 +45,8 @@ class SelfContractController extends Controller
         return response()->json(['data' => [
             'contract' => $active ? (new ContractResource($active))->resolve($request) : null,
             'waiting_contract' => $waiting ? (new ContractResource($waiting))->resolve($request) : null,
+            'previous' => ContractResource::collection($employee->contracts()->with('natureOfContract')
+                ->whereNotIn('id', array_filter([$active?->id, $waiting?->id]))->orderByDesc('start_date')->orderByDesc('id')->get())->resolve($request),
             'can_request' => $blocker === null,
             'blocker' => $blocker,
             'renewals' => RenewalResource::collection($employee->renewals()->with(['natureOfContract', 'files', 'workflow.steps', 'contract'])->get())->resolve($request),

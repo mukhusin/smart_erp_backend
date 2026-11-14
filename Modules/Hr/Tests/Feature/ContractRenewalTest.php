@@ -70,6 +70,12 @@ class ContractRenewalTest extends TestCase
         $this->assertEquals(1000000, $waiting->basic_salary);
 
         $this->hrStart()->assertUnprocessable()->assertJsonValidationErrors(['renewal' => 'already in place']);
+
+        $this->actingAs($this->user)->getJson('/api/v1/self/contract')->assertJsonCount(0, 'data.previous');
+        EmployeeContract::create(['employee_id' => $this->employee->id, 'nature_of_contract_id' => $this->type, 'contract_no' => 'ST5', 'basic_salary' => 800000, 'period' => 12,
+            'start_date' => '2025-01-01', 'end_date' => '2025-12-31', 'status' => 'ended', 'is_active' => false]);
+        $this->getJson('/api/v1/self/contract')->assertJsonCount(1, 'data.previous')->assertJsonPath('data.previous.0.end_date', '2025-12-31')
+            ->assertJsonPath('data.waiting_contract.start_date', '2027-01-01');
     }
 
     public function test_renewal_opens_only_in_the_last_90_days(): void

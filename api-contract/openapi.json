@@ -33151,6 +33151,12 @@
                                                         }
                                                     ]
                                                 },
+                                                "previous": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ContractResource"
+                                                    }
+                                                },
                                                 "can_request": {
                                                     "type": "boolean"
                                                 },
@@ -33231,6 +33237,7 @@
                                             "required": [
                                                 "contract",
                                                 "waiting_contract",
+                                                "previous",
                                                 "can_request",
                                                 "blocker",
                                                 "renewals",
