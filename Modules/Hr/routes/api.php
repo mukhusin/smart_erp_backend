@@ -32,6 +32,7 @@ use Modules\Hr\Http\Controllers\Api\NumberFormatController;
 use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeController;
 use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeSuggestionController;
 use Modules\Hr\Http\Controllers\Api\Payroll\PayItemsController;
+use Modules\Hr\Http\Controllers\Api\Payroll\MembershipController;
 use Modules\Hr\Http\Controllers\Api\Payroll\PayrollController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
@@ -403,6 +404,11 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::post('sheets/{sheet}/submit', [PayrollController::class, 'submit'])->name('sheets.submit');
         Route::post('sheets/{sheet}/withdraw', [PayrollController::class, 'withdraw'])->name('sheets.withdraw');
         Route::delete('sheets/{sheet}', [PayrollController::class, 'destroy'])->name('sheets.destroy');
+    });
+    Route::middleware('can:payroll.statutory.manage')->group(function () {
+        Route::get('memberships', [MembershipController::class, 'index'])->name('memberships.index');
+        Route::put('memberships/{kind}/{employee}', [MembershipController::class, 'update'])->whereIn('kind', ['saccos', 'relief'])->name('memberships.update');
+        Route::delete('memberships/{kind}/{employee}', [MembershipController::class, 'destroy'])->whereIn('kind', ['saccos', 'relief'])->name('memberships.destroy');
     });
     Route::middleware('can:payroll.deductions.manage')->group(function () {
         Route::get('deductions', [PayItemsController::class, 'deductions'])->name('deductions.index');
