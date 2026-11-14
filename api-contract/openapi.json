@@ -31793,6 +31793,499 @@
                 }
             }
         },
+        "/self/summary": {
+            "get": {
+                "operationId": "self.summary",
+                "description": "A section is null when its module is off for the company (attendance also when attendance is switched off or not\ntracked for me). Amounts are mine only.",
+                "summary": "My dashboard: who I am, my contract, my next days, and my leave, attendance, pay, loans, overtime and allowances",
+                "tags": [
+                    "Self service: Dashboard",
+                    "SelfSummary"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "employee": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "position": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "photo_url": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "employed": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "years_of_service": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "employee_no",
+                                                        "position",
+                                                        "department",
+                                                        "photo_url",
+                                                        "employed",
+                                                        "years_of_service"
+                                                    ]
+                                                },
+                                                "contract": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "start": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "end": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "days_left": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "progress": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "renewal_opens": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "renewal_open": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "renewal_pending": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "next_contract_starts": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "type",
+                                                        "start",
+                                                        "end",
+                                                        "days_left",
+                                                        "progress",
+                                                        "renewal_opens",
+                                                        "renewal_open",
+                                                        "renewal_pending",
+                                                        "next_contract_starts"
+                                                    ]
+                                                },
+                                                "days": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "start": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "end": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "holiday": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "color": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "date",
+                                                            "kind",
+                                                            "label",
+                                                            "code",
+                                                            "start",
+                                                            "end",
+                                                            "holiday",
+                                                            "color"
+                                                        ]
+                                                    }
+                                                },
+                                                "pending_requests": {
+                                                    "type": "integer"
+                                                },
+                                                "leave": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "annual": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "properties": {
+                                                                "name": {
+                                                                    "type": "string"
+                                                                },
+                                                                "entitled": {
+                                                                    "type": "number"
+                                                                },
+                                                                "taken": {
+                                                                    "type": "number"
+                                                                },
+                                                                "pending": {
+                                                                    "type": "number"
+                                                                },
+                                                                "available": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "name",
+                                                                "entitled",
+                                                                "taken",
+                                                                "pending",
+                                                                "available"
+                                                            ]
+                                                        },
+                                                        "other_available": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "available": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "name",
+                                                                    "available"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "on_leave": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "type": "string"
+                                                                },
+                                                                "until": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "type",
+                                                                "until"
+                                                            ]
+                                                        },
+                                                        "next": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "type": "string"
+                                                                },
+                                                                "start": {
+                                                                    "type": "string"
+                                                                },
+                                                                "end": {
+                                                                    "type": "string"
+                                                                },
+                                                                "days": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "type",
+                                                                "start",
+                                                                "end",
+                                                                "days"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "annual",
+                                                        "other_available",
+                                                        "pending",
+                                                        "on_leave",
+                                                        "next"
+                                                    ]
+                                                },
+                                                "attendance": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "month": {
+                                                            "type": "string"
+                                                        },
+                                                        "present": {
+                                                            "type": "integer"
+                                                        },
+                                                        "late": {
+                                                            "type": "integer"
+                                                        },
+                                                        "absent": {
+                                                            "type": "integer"
+                                                        },
+                                                        "lost_hours": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "month",
+                                                        "present",
+                                                        "late",
+                                                        "absent",
+                                                        "lost_hours"
+                                                    ]
+                                                },
+                                                "payroll": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "last": {
+                                                            "type": [
+                                                                "object",
+                                                                "null"
+                                                            ],
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "period": {
+                                                                    "type": "string"
+                                                                },
+                                                                "gross": {
+                                                                    "type": "number"
+                                                                },
+                                                                "net": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "period",
+                                                                "gross",
+                                                                "net"
+                                                            ]
+                                                        },
+                                                        "year": {
+                                                            "type": "integer"
+                                                        },
+                                                        "year_net": {
+                                                            "type": "number"
+                                                        },
+                                                        "year_gross": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "last",
+                                                        "year",
+                                                        "year_net",
+                                                        "year_gross"
+                                                    ]
+                                                },
+                                                "loans": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "active": {
+                                                            "type": "integer"
+                                                        },
+                                                        "remaining": {
+                                                            "type": "number"
+                                                        },
+                                                        "monthly": {
+                                                            "type": "number"
+                                                        },
+                                                        "advances_pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "advance_to_deduct": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "active",
+                                                        "remaining",
+                                                        "monthly",
+                                                        "advances_pending",
+                                                        "advance_to_deduct"
+                                                    ]
+                                                },
+                                                "overtime": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "month_hours": {
+                                                            "type": "number"
+                                                        },
+                                                        "month_amount": {
+                                                            "type": "number"
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "month_hours",
+                                                        "month_amount",
+                                                        "pending"
+                                                    ]
+                                                },
+                                                "allowances": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "month_amount": {
+                                                            "type": "number"
+                                                        },
+                                                        "pending": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "month_amount",
+                                                        "pending"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "employee",
+                                                "contract",
+                                                "days",
+                                                "pending_requests",
+                                                "leave",
+                                                "attendance",
+                                                "payroll",
+                                                "loans",
+                                                "overtime",
+                                                "allowances"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/self/duties": {
             "get": {
                 "operationId": "self.duties",

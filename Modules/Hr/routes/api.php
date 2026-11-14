@@ -43,6 +43,7 @@ use Modules\Hr\Http\Controllers\Api\Roster\WorkScheduleController;
 use Modules\Hr\Http\Controllers\Api\SelfContractController;
 use Modules\Hr\Http\Controllers\Api\SelfDutyController;
 use Modules\Hr\Http\Controllers\Api\SelfProfileController;
+use Modules\Hr\Http\Controllers\Api\SelfSummaryController;
 use Modules\Hr\Http\Controllers\Api\StaffMessageController;
 use Modules\Hr\Http\Controllers\Api\SupervisorController;
 use Modules\Hr\Support\HrReports;
@@ -216,6 +217,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 });
 
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
+    Route::get('summary', [SelfSummaryController::class, 'show'])->name('summary');
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
     Route::get('profile', [SelfProfileController::class, 'show'])->name('profile');
     Route::get('profile/photo', [SelfProfileController::class, 'photo'])->name('profile.photo');

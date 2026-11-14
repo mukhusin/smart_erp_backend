@@ -158,8 +158,33 @@ working-hours reports, absence requests, attendance-based allowances.
 1. Attendance module (section 4) + excuse of duty, admitted staff, absence requests, per-employee attendance setting.
 2. Payroll gaps: ~~assigned allowances, other deductions, salary adjustments~~ (done 2026-11-13); payslip lines for history (with the import).
 3. ~~Self-service profile~~ (done 2026-11-13: employee sees details; edits phone and address; adds qualifications, licences, experience, dependants, documents → HR approves through the workflow), ~~Change own password/email~~ (done), ~~employee import/export~~ (done), ~~reports + director dashboard~~ (done), ~~messaging~~ (done).
-4. `erp:import-hrms` migration command (all areas in section 3), dry runs on a copy of production.
+4. ~~`erp:import-hrms` migration command~~ (done 2026-11-13, all checks match locally); dry runs on a copy of production.
 5. Parallel run: 1–2 payroll months in both systems, compare every line; then switch.
+
+### 6. Done 2026-11-14
+
+- HR dashboard: every number opens its records (`/hr/stats/{stat}`) with search, sorting, paging, CSV and PDF; breakdown
+  cards per HR page (employees, renewals, interns, departments, positions); department/position staff links filter the employee list.
+- PDF documents with a shared company header (logo, address, contacts, TIN) and footer (title, printed by, page X of Y)
+  for HR stats, HR reports and payroll reports, opened in the browser.
+- Company details (phone, email, address, city, country) required at registration and editable by the platform admin;
+  logo and colors at registration.
+- Branding: where the colors are used (sidebar, top bar, table headings: plain/tinted/solid; cards: plain/stripe/tinted;
+  home tiles: brand/module colors); home page in brand colors; glass login with light/dark modes and default Smart ERP slides.
+- Admin dashboard counts per permission; approval workflows grouped by module; "My profile" in the user menu.
+- Self-service dashboard (`/self/summary`): profile, contract and renewal, next 7 days, leave balance, attendance this
+  month, pay, loans, overtime, allowances, requests waiting; amounts hidden until the employee shows them.
+
+### 7. Next (agreed order, 2026-11-14)
+
+1. Payroll comparison with last month (differences per employee and item, new and missing entries) — for the parallel run.
+2. Roster export (Excel/PDF with the shared PDF layout).
+3. Absence requests (official absence/travel, per diem); then overtime suggestions from punches.
+4. **Charts on the dashboards** (HR, self-service, reports overview, admin, payroll): trends and breakdowns in the brand colors.
+5. Remaining screens: payroll comments/change log, SACCOS members, reliefs, statutory member lists, staff patient IDs,
+   bulk phone update, contract PDF from template, leave family details, audit log viewer, attendance working-hours reports.
+6. Migration dry run on a production copy; decide the HRMS pending attendance claims; parallel payroll; switch.
+7. Discuss the appraisal design; later modules: learning & development, accounting, bills, procurement, assets, fleet, inventory.
 
 
 Scope of this pass: features HRMS gained **after smart-erp's last commit (2026-04-28)**,
