@@ -119,7 +119,16 @@ class PayrollTest extends TestCase
 
         $workflow = PayrollSheet::find($id)->workflow;
         $this->actingAs($approver)->getJson("/api/v1/workflow/requests/{$workflow->id}")->assertJsonPath('data.lines.2', 'Gross pay: 2,230,000.00 · Deductions: 597,750.00 · Net pay: 1,632,250.00');
-        $this->postJson("/api/v1/workflow/requests/{$workflow->id}/approve")->assertOk();
+        $this->travel(5)->minutes();
+        $this->postJson("/api/v1/workflow/requests/{$workflow->id}/approve", ['comment' => 'Ipo sawa'])->assertOk();
+        $this->travel(5)->minutes();
+        $this->actingAs($this->admin)->postJson("/api/v1/payroll/sheets/{$id}/comments", ['comment' => 'Bank file sent'])->assertCreated()->assertJsonPath('data.kind', 'comment');
+        $history = collect($this->getJson("/api/v1/payroll/sheets/{$id}/history")->assertOk()->json('data'));
+        $this->assertSame(['Comment', 'Director: approved', 'Submitted for approval'], $history->take(3)->pluck('title')->all());
+        $this->assertSame('Ipo sawa', $history->firstWhere('title', 'Director: approved')['comment']);
+        $this->assertContains('Payroll created', $history->pluck('title')->all());
+        $this->actingAs($this->user)->getJson("/api/v1/payroll/sheets/{$id}/history")->assertForbidden();
+        $this->actingAs($approver);
 
         $this->assertSame('approved', PayrollSheet::find($id)->status);
         $loan = EmployeeLoan::first();
