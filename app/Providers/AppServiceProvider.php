@@ -26,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        \App\Models\Employee::updated(function (\App\Models\Employee $employee) {
+            if ($employee->department_id && $employee->wasChanged(['department_id', 'section_id'])) {
+                app(\Modules\Hr\Actions\ManageAnnualRoster::class)->follow($employee);
+            }
+        });
         // Each module keeps its own migrations in Modules/<Module>/Database/Migrations.
         $this->loadMigrationsFrom(glob(base_path('Modules/*/Database/Migrations')));
 

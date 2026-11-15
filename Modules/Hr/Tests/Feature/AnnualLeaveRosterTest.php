@@ -115,6 +115,28 @@ class AnnualLeaveRosterTest extends TestCase
         $ask()->assertUnprocessable()->assertJsonValidationErrors(['annual_plan_id']);
     }
 
+    public function test_plans_move_with_the_employee_to_another_department(): void
+    {
+        $id = $this->actingAs($this->admin)->postJson('/api/v1/leave/annual-rosters', ['department_id' => $this->nursing->id])->assertCreated()->json('data.id');
+        $future = $this->plan($id, 'asha', '2026-12-01', 5)->assertCreated()->json('data.id');
+        $past = $this->inCompany(fn () => AnnualLeaveRoster::create(['roster_id' => $id, 'employee_id' => $this->staff['asha']->id, 'department_id' => (string) $this->nursing->id,
+            'start_date' => '2026-03-02', 'end_date' => '2026-03-06', 'days' => 5, 'leave_year' => '2026', 'status' => 'taken'])->id);
+        $this->postJson("/api/v1/leave/annual-rosters/{$id}/publish")->assertOk();
+
+        $this->inCompany(fn () => $this->staff['asha']->update(['department_id' => $this->lab->id, 'section_id' => null]));
+
+        $plan = AnnualLeaveRoster::with('roster')->find($future);
+        $this->assertSame([(string) $this->lab->id, 'Laboratory · Annual leave 2026', 'published', '2026'],
+            [(string) $plan->department_id, $plan->roster->title, $plan->roster->status, (string) $plan->roster->roster_year]);
+        $this->assertSame($id, AnnualLeaveRoster::find($past)->roster_id, 'past leave stays on the old roster');
+        $this->actingAs($this->users['asha'])->getJson('/api/v1/self/leave/plans')->assertJsonPath('data.0.id', $future);
+
+        $labRoster = $plan->roster_id;
+        $this->inCompany(fn () => $this->staff['asha']->update(['department_id' => $this->nursing->id]));
+        $this->inCompany(fn () => $this->staff['asha']->update(['department_id' => $this->lab->id]));
+        $this->assertSame($labRoster, AnnualLeaveRoster::find($future)->roster_id, 'the existing roster is reused');
+    }
+
     public function test_head_of_department_plans_only_their_department(): void
     {
         $this->actingAs($this->users['matron'])->getJson('/api/v1/leave/annual-rosters')->assertOk()->assertJsonCount(2, 'meta.departments');

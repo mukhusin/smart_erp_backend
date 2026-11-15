@@ -13,7 +13,7 @@ items decided against are ➖. The older sections below keep the original analys
 | 4 | ~~Contract PDF from the contract-type template~~ | E-4 | ✅ 2026-11-15: rich-text template per contract type with {placeholders} (default text when empty); PDF with signatures, job description + consent and personal information annexes; HR prints from the profile, employees from My contract |
 | 5 | ~~Payroll change log (who changed a sheet or payslip, when)~~ | §7.5 | ✅ 2026-11-15: payroll history shows each re-work with who and the totals change; pay inputs are in the audit log |
 | 6 | ~~Bulk phone number update~~ | §7.5 | ✅ 2026-11-15: HR → Staff contacts (inline, as HRMS) plus Download CSV / Update from CSV (check, then save; phone format and patient ID clashes checked) |
-| 7 | Annual leave plans move with the employee on department change | #17, L-8 | |
+| 7 | ~~Annual leave plans move with the employee on department change~~ | #17, L-8 | ✅ 2026-11-15: plans not yet over move to the new department's (or section's) annual leave roster of the same year, made with the old roster's status if missing; past leave stays |
 | 8 | Idle auto-logout; no cached pages after logout | #20, #21 | |
 | 9 | Permanent contract: period up to retirement age | #8, E-7 | |
 | 10 | Maximum overtime hours per duty enforced | OT-6 | Value is imported, not checked |

@@ -122,6 +122,47 @@ class ManageAnnualRoster
         return $plan->refresh();
     }
 
+    /**
+     * After a department or section change, the employee's leave plans that are not over move to the new department's
+     * (or section's) annual leave roster of the same year, made if missing with the old roster's status.
+     */
+    public function follow(Employee $employee): int
+    {
+        $moved = 0;
+        $plans = AnnualLeaveRoster::with('roster')->where('employee_id', $employee->id)->whereDate('end_date', '>=', now()->toDateString())->get();
+        foreach ($plans as $plan) {
+            $old = $plan->roster;
+            if (! $old || $old->type !== self::TYPE) {
+                continue;
+            }
+            $target = $this->rosterFor($employee, $old);
+            if ($target->id !== $old->id || (string) $plan->department_id !== (string) $employee->department_id) {
+                $plan->update(['roster_id' => $target->id, 'department_id' => (string) $employee->department_id]);
+                $moved++;
+            }
+        }
+
+        return $moved;
+    }
+
+    private function rosterFor(Employee $employee, Roster $like): Roster
+    {
+        $find = fn (?int $section) => Roster::where('type', self::TYPE)->where('department_id', $employee->department_id)->where('roster_year', $like->roster_year)
+            ->when($section, fn ($q) => $q->where('section_id', $section), fn ($q) => $q->whereNull('section_id'))->first();
+        $found = ($employee->section_id ? $find((int) $employee->section_id) : null) ?? $find(null);
+        if ($found) {
+            return $found;
+        }
+        $department = Department::find($employee->department_id);
+
+        return Roster::create([
+            'company_id' => $employee->company_id, 'department_id' => $employee->department_id, 'section_id' => null, 'type' => self::TYPE, 'status' => $like->status, 'is_active' => $like->is_active,
+            'title' => ($department?->name ?? 'Department').' · Annual leave '.preg_replace('/^.*Annual leave /', '', (string) $like->title),
+            'from_date' => $like->from_date, 'to_date' => $like->to_date, 'roster_year' => $like->roster_year,
+            'published_at' => $like->published_at, 'prepared_by' => $like->prepared_by, 'created_by' => $like->created_by,
+        ]);
+    }
+
     public function remove(AnnualLeaveRoster $plan): void
     {
         if ($plan->status !== AnnualLeaveRoster::PLANNED) {
