@@ -96,6 +96,107 @@ class StaffContactController extends Controller
         ]]);
     }
 
+    /**
+     * Download the contacts CSV: current staff with their phone number (and patient ID when used), to correct in Excel and upload.
+     */
+    public function template(Request $request): \Illuminate\Http\Response
+    {
+        $patients = (bool) \App\Models\HrSetting::current()->hospital_patients;
+        $out = fopen('php://temp', 'r+');
+        fwrite($out, "\xEF\xBB\xBF");
+        fputcsv($out, array_values(array_filter(['employee_no', 'name', 'phone_number', $patients ? 'patient_id' : null])));
+        foreach ($this->scope->apply(Employee::query()->onDuty(), $request->user())->with('patientId')->orderBy('employee_no')->get() as $e) {
+            fputcsv($out, array_merge([$e->employee_no, $e->full_name, $e->phone_number ?? ''], $patients ? [$e->patientId?->patient_id ?? ''] : []));
+        }
+        rewind($out);
+        $csv = stream_get_contents($out);
+        fclose($out);
+
+        return response($csv, 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => 'attachment; filename="staff-contacts.csv"']);
+    }
+
+    /**
+     * Check a contacts CSV (employee_no, phone_number, optional patient_id) and, with `commit`, save the changes.
+     * Nothing is saved while any row has an error. Empty cells leave the value as it is.
+     *
+     * @response array{rows: list<array{line: int, employee_no: string|null, name: string|null, changes: list<string>, errors: list<string>}>, changed: int, unchanged: int, invalid: int, saved: int}
+     */
+    public function import(Request $request): JsonResponse
+    {
+        $d = $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'], 'commit' => ['boolean']]);
+        $handle = fopen($request->file('file')->getRealPath(), 'r');
+        $header = array_map(fn ($h) => strtolower(trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) $h))), fgetcsv($handle) ?: []);
+        if (! in_array('employee_no', $header, true) || ! array_intersect(['phone_number', 'patient_id'], $header)) {
+            throw ValidationException::withMessages(['file' => 'The first row must have employee_no and phone_number (and optionally patient_id), as in the downloaded file.']);
+        }
+        $staff = $this->scope->apply(Employee::query()->onDuty(), $request->user())->with('patientId')->get()->keyBy(fn ($e) => strtoupper(trim((string) $e->employee_no)));
+        $patients = (bool) \App\Models\HrSetting::current()->hospital_patients;
+        $rows = $updates = $seen = [];
+        $pidsInFile = [];
+        $line = 1;
+        while (($cells = fgetcsv($handle)) !== false) {
+            $line++;
+            $v = array_combine($header, array_pad(array_slice($cells, 0, count($header)), count($header), ''));
+            if (! array_filter($v, fn ($c) => trim((string) $c) !== '')) {
+                continue;
+            }
+            $no = strtoupper(trim((string) $v['employee_no']));
+            $e = $staff->get($no);
+            $row = ['line' => $line, 'employee_no' => $v['employee_no'] ?: null, 'name' => $e?->full_name, 'changes' => [], 'errors' => []];
+            if (! $e) {
+                $row['errors'][] = "No current employee with number \"{$v['employee_no']}\" that you can edit.";
+            } elseif (isset($seen[$e->id])) {
+                $row['errors'][] = "Already on line {$seen[$e->id]}.";
+            } else {
+                $seen[$e->id] = $line;
+                $update = [];
+                $phone = preg_replace('/[\s\-+]/', '', (string) ($v['phone_number'] ?? ''));
+                if ($phone !== '' && $phone !== (string) $e->phone_number) {
+                    preg_match(self::PHONE, $phone) ? $update['phone_number'] = $phone : $row['errors'][] = "Phone \"{$v['phone_number']}\": use 07, 06, 2557 or 2556 followed by 8 digits.";
+                    isset($update['phone_number']) && $row['changes'][] = 'Phone '.($e->phone_number ?: '—').' → '.$phone;
+                }
+                $pid = trim((string) ($v['patient_id'] ?? ''));
+                if ($patients && $pid !== '' && $pid !== (string) $e->patientId?->patient_id) {
+                    $owner = EmployeePatientId::with('employee')->where('patient_id', $pid)->where('employee_id', '!=', $e->id)->first();
+                    if ($owner) {
+                        $row['errors'][] = "Patient ID {$pid} belongs to {$owner->employee?->full_name}.";
+                    } elseif (isset($pidsInFile[$pid])) {
+                        $row['errors'][] = "Patient ID {$pid} is also on line {$pidsInFile[$pid]}.";
+                    } else {
+                        $pidsInFile[$pid] = $line;
+                        $update['patient_id'] = $pid;
+                        $row['changes'][] = 'Patient ID '.($e->patientId?->patient_id ?: '—').' → '.$pid;
+                    }
+                }
+                if ($update && ! $row['errors']) {
+                    $updates[$e->id] = [$e, $update];
+                }
+            }
+            $rows[] = $row;
+        }
+        fclose($handle);
+        $invalid = collect($rows)->filter(fn ($r) => $r['errors'])->count();
+        $result = ['rows' => $rows, 'changed' => count($updates), 'unchanged' => count($rows) - count($updates) - $invalid, 'invalid' => $invalid, 'saved' => 0];
+        if (! empty($d['commit'])) {
+            if ($invalid || ! $updates) {
+                return response()->json($result, 422);
+            }
+            \Illuminate\Support\Facades\DB::transaction(function () use ($updates) {
+                foreach ($updates as [$e, $u]) {
+                    if (isset($u['phone_number'])) {
+                        $e->update(['phone_number' => $u['phone_number']]);
+                    }
+                    if (isset($u['patient_id'])) {
+                        EmployeePatientId::updateOrCreate(['employee_id' => $e->id], ['patient_id' => $u['patient_id']]);
+                    }
+                }
+            });
+            $result['saved'] = count($updates);
+        }
+
+        return response()->json($result);
+    }
+
     public static function valid(?string $phone): bool
     {
         return $phone !== null && preg_match(self::PHONE, preg_replace('/[\s\-+]/', '', $phone)) === 1;

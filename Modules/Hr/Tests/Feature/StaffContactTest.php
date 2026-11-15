@@ -43,4 +43,35 @@ class StaffContactTest extends TestCase
 
         $this->actingAs($staff)->getJson('/api/v1/hr/contacts')->assertForbidden();
     }
+
+    public function test_contacts_are_updated_in_bulk_from_a_csv(): void
+    {
+        [$company, $admin] = $this->createCompany('Alpha', ['modules' => [['slug' => 'hr']]]);
+        setPermissionsTeamId($company->id);
+        app(CompanyContext::class)->run($company, function () {
+            $ward = Department::create(['name' => 'Ward']);
+            foreach ([['W1', '0712345678'], ['W2', null], ['W3', '0713000000']] as [$no, $phone]) {
+                Employee::create(['employee_no' => $no, 'fname' => $no, 'lname' => 'X', 'gender' => 'Female', 'department_id' => $ward->id,
+                    'emp_type' => 'full_time', 'employment_status' => 'confirmed', 'phone_number' => $phone]);
+            }
+        });
+        $this->giveActiveContracts($company);
+        $this->actingAs($admin);
+        $this->putJson('/api/v1/hr/settings/general', ['hospital_patients' => true])->assertOk();
+
+        $csv = $this->get('/api/v1/hr/contacts/template')->assertOk()->getContent();
+        $this->assertStringContainsString('employee_no,name,phone_number,patient_id', $csv);
+        $this->assertStringContainsString("W1,\"W1 X\",0712345678,\nW2,\"W2 X\",,\n", $csv);
+
+        $file = fn (string $body) => \Illuminate\Http\UploadedFile::fake()->createWithContent('contacts.csv', "employee_no,name,phone_number,patient_id\n".$body);
+        $bad = $this->postJson('/api/v1/hr/contacts/import', ['file' => $file("W1,,0712345678,\nW2,,0812,P1\nW9,,0712000000,\nW3,,0755 111 222,\n")])->assertOk();
+        $this->assertSame([1, 1, 2], [$bad->json('changed'), $bad->json('unchanged'), $bad->json('invalid')]);
+        $this->postJson('/api/v1/hr/contacts/import', ['file' => $file("W2,,0812,\n"), 'commit' => true])->assertUnprocessable();
+
+        $ok = $this->postJson('/api/v1/hr/contacts/import', ['file' => $file("W2,,255 754 000 111,P7\nW3,,0755 111 222,\n"), 'commit' => true])->assertOk();
+        $this->assertSame(2, $ok->json('saved'));
+        $this->assertSame(['Phone — → 255754000111', 'Patient ID — → P7'], $ok->json('rows.0.changes'));
+        $rows = collect($this->getJson('/api/v1/hr/contacts')->json('data'))->keyBy('employee_no');
+        $this->assertSame(['255754000111', 'P7', '0755111222'], [$rows['W2']['phone_number'], $rows['W2']['patient_id'], $rows['W3']['phone_number']]);
+    }
 }

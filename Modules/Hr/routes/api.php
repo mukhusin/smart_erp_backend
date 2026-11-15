@@ -123,6 +123,8 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 
     Route::middleware('can:hr.employees.edit')->group(function () {
         Route::get('contacts', [StaffContactController::class, 'index'])->name('contacts.index');
+        Route::get('contacts/template', [StaffContactController::class, 'template'])->name('contacts.template');
+        Route::post('contacts/import', [StaffContactController::class, 'import'])->middleware('throttle:20,1')->name('contacts.import');
         Route::put('employees/{employee}/contacts', [StaffContactController::class, 'update'])->name('employees.contacts.update');
     });
 

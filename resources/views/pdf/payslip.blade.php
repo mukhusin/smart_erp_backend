@@ -25,11 +25,11 @@
     .net td { border: 1px solid #555; background: #c8c8c8; padding: 3px 5px; }
     .note { color: #d00000; font-weight: bold; text-align: center; margin: 26px 20px 0; font-size: 10px; }
     .small { font-size: 8.5px; text-align: center; }
-    .watermark { position: fixed; top: 290px; left: 120px; transform: rotate(-50deg); font-size: 26px; color: rgba(210, 40, 40, 0.16); text-align: center; line-height: 1.3; letter-spacing: 1px; }
+    .watermark { position: fixed; top: 330px; left: 150px; transform: rotate(-45deg); font-size: 40px; color: rgba(210, 40, 40, 0.16); text-align: center; line-height: 1.3; letter-spacing: 1px; }
 </style>
 </head>
 <body>
-<div class="watermark">{{ strtoupper($company?->short_name ?: $company?->name ?? '') }}<br>CONFIDENTIAL</div>
+<div class="watermark">CONFIDENTIAL</div>
 
 <table class="head">
     <tr>

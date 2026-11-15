@@ -18751,6 +18751,163 @@
                 }
             }
         },
+        "/hr/contacts/template": {
+            "get": {
+                "operationId": "hr.contacts.template",
+                "summary": "Download the contacts CSV: current staff with their phone number (and patient ID when used), to correct in Excel and upload",
+                "tags": [
+                    "HR: Staff contacts",
+                    "StaffContact"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string",
+                                    "const": "attachment; filename=\"staff-contacts.csv\""
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/contacts/import": {
+            "post": {
+                "operationId": "hr.contacts.import",
+                "summary": "Check a contacts CSV (employee_no, phone_number, optional patient_id) and, with `commit`, save the changes.\nNothing is saved while any row has an error. Empty cells leave the value as it is",
+                "tags": [
+                    "HR: Staff contacts",
+                    "StaffContact"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "contentMediaType": "application/octet-stream",
+                                        "description": "Maximum file size: 2048 kilobytes."
+                                    },
+                                    "commit": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "rows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "line": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee_no": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "changes": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "errors": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "line",
+                                                    "employee_no",
+                                                    "name",
+                                                    "changes",
+                                                    "errors"
+                                                ]
+                                            }
+                                        },
+                                        "changed": {
+                                            "type": "integer"
+                                        },
+                                        "unchanged": {
+                                            "type": "integer"
+                                        },
+                                        "invalid": {
+                                            "type": "integer"
+                                        },
+                                        "saved": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "rows",
+                                        "changed",
+                                        "unchanged",
+                                        "invalid",
+                                        "saved"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/employees/{employee}/contacts": {
             "put": {
                 "operationId": "hr.employees.contacts.update",
