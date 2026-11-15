@@ -139,7 +139,9 @@ class ManageRosters
                     continue;
                 }
                 $duty = $existing ?? new EmployeeTimetable(['employee_id' => $item['employee_id'], 'day_date' => $item['date'], 'source' => EmployeeTimetable::ROSTER, 'roster_id' => $roster->id]);
-                $duty->fillFromCode($codes[$item['roster_code_id']])->fill(['overtime' => (bool) ($item['overtime'] ?? false), 'updated_by' => $by->id])->save();
+                $overtime = array_key_exists('overtime', $item) ? (bool) $item['overtime'] : (bool) $duty->overtime;
+                $max = array_key_exists('max_overtime_hours', $item) ? $item['max_overtime_hours'] : $duty->max_overtime_hours;
+                $duty->fillFromCode($codes[$item['roster_code_id']])->fill(['overtime' => $overtime, 'max_overtime_hours' => $overtime ? $max : null, 'updated_by' => $by->id])->save();
             }
             app(WorkCalendar::class)->forget();
 
@@ -212,7 +214,7 @@ class ManageRosters
                 $from->rosterCode && $from->rosterCode->is_active
                     ? $duty->fillFromCode($from->rosterCode)
                     : $duty->fill($from->only(['roster_code_id', 'code', 'duty', 'can_punch', 'pass_day', 'start_time', 'end_time', 'break_minutes', 'work_hour', 'color']));
-                $duty->fill(['overtime' => $from->overtime, 'updated_by' => $by->id])->save();
+                $duty->fill(['overtime' => $from->overtime, 'max_overtime_hours' => $from->max_overtime_hours, 'updated_by' => $by->id])->save();
             }
         }
     }

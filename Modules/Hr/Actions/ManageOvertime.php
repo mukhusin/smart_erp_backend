@@ -121,6 +121,17 @@ class ManageOvertime
         if ($overlap) {
             throw ValidationException::withMessages(['start_time' => 'Overlaps another overtime claim ('.$overlap->from_datetime->format('d M H:i').' – '.$overlap->to_datetime->format('H:i').').']);
         }
+        $duty = \App\Models\EmployeeTimetable::where('employee_id', $employee->id)->whereDate('day_date', $date)->where('overtime', true)->whereNotNull('max_overtime_hours')->first();
+        if ($duty) {
+            $claimed = (int) Overtime::where('employee_id', $employee->id)->whereIn('status', ['pending', 'approved'])->whereDate('date_of_task_done', $date)
+                ->when($except, fn ($q) => $q->whereKeyNot($except->id))->sum('overtime_minutes');
+            $allowed = (int) round((float) $duty->max_overtime_hours * 60);
+            if ($claimed + $c['overtime_minutes'] > $allowed) {
+                $left = max(0, $allowed - $claimed);
+                throw ValidationException::withMessages(['end_time' => 'The duty roster allows at most '.self::duration($allowed).' of overtime on this day'
+                    .($claimed ? ' ('.self::duration($claimed).' already claimed, '.(self::duration($left) ?: 'none').' left)' : '').'; this claim is '.self::duration($c['overtime_minutes']).'.']);
+            }
+        }
 
         return $c;
     }

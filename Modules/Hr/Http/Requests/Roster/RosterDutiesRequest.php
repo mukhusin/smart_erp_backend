@@ -19,8 +19,10 @@ class RosterDutiesRequest extends FormRequest
             'duties.*.employee_id' => ['required', 'integer'],
             'duties.*.date' => ['required', 'date_format:Y-m-d'],
             'duties.*.roster_code_id' => ['nullable', 'integer'],
-            /** Overtime is planned on this day. */
+            /** Overtime is planned on this day. Left out: kept as it is. */
             'duties.*.overtime' => ['boolean'],
+            /** Most overtime hours that may be claimed for this duty (with overtime on). */
+            'duties.*.max_overtime_hours' => ['nullable', 'numeric', 'min:0.5', 'max:24'],
         ];
     }
 }

@@ -36343,6 +36343,12 @@
                                                             },
                                                             "overtime": {
                                                                 "type": "boolean"
+                                                            },
+                                                            "max_overtime_hours": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
@@ -36356,7 +36362,8 @@
                                                             "start_time",
                                                             "end_time",
                                                             "hours",
-                                                            "overtime"
+                                                            "overtime",
+                                                            "max_overtime_hours"
                                                         ]
                                                     }
                                                 },
@@ -44849,7 +44856,16 @@
                                 },
                                 "overtime": {
                                     "type": "boolean",
-                                    "description": "Overtime is planned on this day."
+                                    "description": "Overtime is planned on this day. Left out: kept as it is."
+                                },
+                                "max_overtime_hours": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "description": "Most overtime hours that may be claimed for this duty (with overtime on).",
+                                    "minimum": 0.5,
+                                    "maximum": 24
                                 }
                             },
                             "required": [

@@ -113,6 +113,26 @@ class OvertimeTest extends TestCase
         $this->actingAs($this->user)->getJson('/api/v1/self/overtime?month=2026-11')->assertJsonPath('meta.minutes', 840)->assertJsonPath('meta.can_claim', true);
     }
 
+    public function test_overtime_is_capped_by_the_roster_duty(): void
+    {
+        $code = $this->inCompany(fn () => RosterCode::create(['code' => 'M', 'duty' => 'Morning', 'can_punch' => true, 'start_time' => '08:00', 'end_time' => '16:00', 'work_hour' => 8]));
+        $this->inCompany(function () use ($code) {
+            $roster = Roster::create(['department_id' => $this->ward->id, 'type' => 'duty', 'title' => 'Ward', 'from_date' => '2026-11-10', 'to_date' => '2026-11-11', 'status' => 'published']);
+            (new EmployeeTimetable(['employee_id' => $this->nurse->id, 'day_date' => '2026-11-10', 'source' => 'roster', 'roster_id' => $roster->id]))->fillFromCode($code)
+                ->fill(['overtime' => true, 'max_overtime_hours' => 3])->save();
+        });
+        $this->claim('2026-11-10', '16:00', '18:00')->assertCreated();
+        $this->claim('2026-11-10', '18:00', '20:00')->assertUnprocessable()
+            ->assertJsonValidationErrors(['end_time' => 'at most 3 h of overtime on this day (2 h already claimed, 1 h left)']);
+        $this->claim('2026-11-10', '18:00', '19:00')->assertCreated();
+
+        $id = $this->actingAs($this->admin)->postJson('/api/v1/roster/rosters', ['department_id' => $this->ward->id, 'from_date' => '2026-11-20', 'to_date' => '2026-11-21'])->json('data.id');
+        $this->putJson("/api/v1/roster/rosters/{$id}/duties", ['duties' => [['employee_id' => $this->nurse->id, 'date' => '2026-11-20', 'roster_code_id' => $code->id, 'overtime' => true, 'max_overtime_hours' => 4]]])->assertOk();
+        $this->putJson("/api/v1/roster/rosters/{$id}/duties", ['duties' => [['employee_id' => $this->nurse->id, 'date' => '2026-11-20', 'roster_code_id' => $code->id]]])->assertOk();
+        $duty = collect($this->getJson("/api/v1/roster/rosters/{$id}")->json('data.duties'))->firstWhere('date', '2026-11-20');
+        $this->assertSame([true, 4.0], [$duty['overtime'], (float) $duty['max_overtime_hours']], 'saving the code keeps the overtime');
+    }
+
     public function test_approver_changes_the_times_and_approves(): void
     {
         $this->inCompany(fn () => WorkflowTemplate::create(['process' => 'overtime-claim', 'is_active' => true])->steps()->create(['step_order' => 1, 'name' => 'HR', 'approver_type' => 'user', 'user_id' => $this->hr->id]));
