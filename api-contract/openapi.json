@@ -13742,11 +13742,37 @@
                         }
                     },
                     {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Subject or message text.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "`subject`, `type`, `created_at`, `sent_at`; prefix `-` for descending.",
+                        "schema": {
+                            "type": "string",
+                            "default": "-created_at"
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "schema": {
                             "type": "integer",
                             "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Max 100.",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
                         }
                     }
                 ],

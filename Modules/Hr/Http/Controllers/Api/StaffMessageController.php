@@ -21,17 +21,24 @@ class StaffMessageController extends Controller
      * Staff messages sent or scheduled (newest first), with delivery counts.
      */
     #[QueryParameter('type', description: 'SMS, Email or Notice', type: 'string')]
+    #[QueryParameter('search', description: 'Subject or message text.', type: 'string')]
+    #[QueryParameter('sort', description: '`subject`, `type`, `created_at`, `sent_at`; prefix `-` for descending.', type: 'string', default: '-created_at')]
     #[QueryParameter('page', type: 'integer', default: 1)]
+    #[QueryParameter('per_page', description: 'Max 100.', type: 'integer', default: 10)]
     public function index(Request $request): JsonResponse
     {
+        $sort = (string) $request->query('sort', '-created_at');
+        $column = ltrim($sort, '-');
         $page = Messaging::with('creator:id,username')->where('campaign', 'staff_message')
             ->when($request->query('type'), fn ($q, $t) => $q->where('type', $t))
+            ->when(trim((string) $request->query('search')), fn ($q, $v) => $q->where(fn ($q) => $q->where('subject', 'like', "%{$v}%")->orWhere('message', 'like', "%{$v}%")))
             ->withCount([
                 'recipients',
                 'recipients as sent_count' => fn ($q) => $q->where('status', MessageRecipient::STATUS_SENT),
                 'recipients as failed_count' => fn ($q) => $q->where('status', MessageRecipient::STATUS_FAILED),
             ])
-            ->latest('id')->paginate(25);
+            ->orderBy(in_array($column, ['subject', 'type', 'created_at', 'sent_at'], true) ? $column : 'created_at', str_starts_with($sort, '-') ? 'desc' : 'asc')
+            ->orderByDesc('id')->paginate(min(max((int) $request->query('per_page', 10), 1), 100));
 
         return response()->json([
             'data' => collect($page->items())->map(fn (Messaging $m) => $this->row($m))->all(),
