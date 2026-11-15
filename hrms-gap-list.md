@@ -21,7 +21,7 @@ items decided against are ➖. The older sections below keep the original analys
 | 13 | Payroll menu naming: "Statutory deductions" (PAYE, NSSF, NHIF, HESLB; WCF and SDL shown as employer contributions) instead of HRMS "Government deductions"; "Other deductions" keeps TUGHE, NIC, SACCOS, leave deduction, other; reliefs move next to pay items | §7.5 | To do with the payroll screens review |
 | 14 | Payroll dashboard: charts of payroll cost by month (gross, net, employer cost), statutory amounts per month (PAYE, NSSF, NHIF, HESLB, WCF, SDL), allowances/overtime/loans share, highest-cost month, employees paid, change from last month, by department | — | Requested 2026-11-15 |
 | 15 | Payroll reports in Reports → HR reports (new "Payroll" group): payroll summary by month, by department, statutory remittance lists (PAYE, NSSF, NHIF, HESLB, WCF, SDL) over a period, bank list, pay items per employee; view, CSV, PDF | — | Requested 2026-11-15; per-sheet reports already exist on each payroll |
-| 12 | Migration: dry run on a production copy; decide the 110 HRMS pending attendance claims; parallel payroll; switch | §3 | |
+| 12 | Migration: dry run on a production copy; decide the 110 HRMS pending attendance claims; parallel payroll; switch | §3 | 🟡 2026-11-15: full rehearsal on an empty database with the local HRMS copy: 10 min 43 s, all 15 checks OK; re-run 2 min 49 s, no duplicates. Runbook in deployment.md. Waiting for a fresh production dump and the decision on pending claims / salary adjustments |
 
 Approval chains (checked 2026-11-15): the 7 HRMS workflows (leave, overtime HOS → HOD → HR, salary adjustment
 HR Manager → DDG → Director, payroll sheet 6 steps to Chief Accountant, assigned allowance, attendance claim, contract renewal)

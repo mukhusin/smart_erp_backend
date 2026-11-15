@@ -2,6 +2,30 @@
 
 Steps to run on the server when a release needs more than pulling the code. Newest release first.
 
+## Switch-over from HRMS (runbook, rehearsed 2026-11-15)
+
+Rehearsed on a new empty database with the local HRMS copy (data to Aug 2026: 776 employees, 9,203 payslips, 276,766 daily
+allowances, 559,574 attendance days): full import **10 min 43 s**, peak memory ~400 MB, all 15 checks OK. A second run (the
+switch-day catch-up) took **2 min 49 s**, inserted nothing and still matched. Use `php -d memory_limit=2G`.
+
+Before (days ahead)
+1. Restore a fresh dump of production HRMS into a separate database (never the live one) and point the `hrms` connection at it.
+2. Register the company (platform admin) with its branches and modules; dry run, every check must say OK:
+   `php -d memory_limit=2G artisan erp:import-hrms <slug> --dry-run`
+3. Run it for real, with files: `... erp:import-hrms <slug> --files=/path/to/hrms/storage/app/public`.
+4. Set up in the ERP what the import cannot know: roles' users check, approval chains (imported), theatre allowance source,
+   contract templates, retirement age, SMS settings, BioTime write access, "View audit log" roles.
+5. Run payroll in both systems for 1–2 months and compare every payslip (Payroll → sheet → Compare).
+
+Switch day
+1. Stop data entry in HRMS (announce a time). Decide pending items in HRMS first: attendance claims and salary adjustments
+   still pending are not carried over as open requests (see the import notes).
+2. New dump → re-run the import (catch-up, ~3 min) → all checks OK.
+3. Point users to the ERP; HRMS stays read-only for reference.
+
+Import notes that are expected (not errors): duties with impossible dates (year 2925) in HRMS rosters, loan repayments
+pointing to a payroll that no longer exists, annual leave plans never requested (kept as plans).
+
 ## Audit log, activity allowances, salary files (2026-11-15)
 
 1. Run the migrations (`audit_logs`, `allowance_activity_counts`, two columns on `allowance_categories`):
