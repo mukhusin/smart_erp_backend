@@ -943,12 +943,14 @@ class HrmsImporter
                 'approved_by' => $this->ids->get('employees', $r->approved_by), 'requested_by' => $this->userOfEmployee($r->employee_id),
                 'claim_date' => $this->date($r->claim_date ?: $r->created_at), 'approved_at' => $r->approved_at, 'set_lost_hr_zero' => (bool) $r->setLostHrZero,
                 'hr_accepted' => $r->hr_accepted, 'lost_hour' => $r->lost_hour, 'lost_amount' => $r->lost_amount, 'percent' => $r->percent, 'remark' => $r->remark,
-                'description' => $r->description ?: ($r->remark ?: 'Claim from HRMS'), 'comment' => $r->comment,
-                'claim_status' => ['pending' => 'pending', 'approved' => 'approved', 'rejected' => 'rejected'][strtolower((string) $r->claim_status)] ?? 'pending',
+                'description' => $r->description ?: ($r->remark ?: 'Claim from HRMS'),
+                'comment' => ($status = ['approved' => 'approved', 'rejected' => 'rejected'][strtolower((string) $r->claim_status)] ?? 'cancelled') === 'cancelled'
+                    ? 'Still pending in HRMS at the switch-over; not carried over.' : $r->comment,
+                'claim_status' => $status,
             ];
         });
         if ($pending = $this->src->table('attendance_claims')->where('claim_status', 'Pending')->count()) {
-            $this->note('attendance_claims', "{$pending} claims pending in HRMS: decide them in HRMS before the switch-over (they have no ERP approval request)");
+            $this->note('attendance_claims', "{$pending} claims still pending in HRMS imported as cancelled; decide them in HRMS before the switch-over");
         }
 
         $today = now()->toDateString();

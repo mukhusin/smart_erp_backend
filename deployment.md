@@ -18,8 +18,8 @@ Before (days ahead)
 5. Run payroll in both systems for 1–2 months and compare every payslip (Payroll → sheet → Compare).
 
 Switch day
-1. Stop data entry in HRMS (announce a time). Decide pending items in HRMS first: attendance claims and salary adjustments
-   still pending are not carried over as open requests (see the import notes).
+1. Stop data entry in HRMS (announce a time). HR decides pending items in HRMS first: attendance claims and salary
+   adjustments still pending are imported as cancelled (agreed 2026-11-15).
 2. New dump → re-run the import (catch-up, ~3 min) → all checks OK.
 3. Point users to the ERP; HRMS stays read-only for reference.
 
