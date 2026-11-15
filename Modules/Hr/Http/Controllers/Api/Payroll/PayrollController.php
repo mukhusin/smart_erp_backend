@@ -9,6 +9,7 @@ use App\Models\PayrollComment;
 use App\Models\PayrollDateSetting;
 use App\Models\PayrollSheet;
 use App\Models\PayrollSheetDetail;
+use App\Models\UploadedPayrollRow;
 use App\Models\User;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\Core\Support\PdfDocument;
+use Modules\Hr\Support\Payslip;
 use Modules\Hr\Actions\ManagePayroll;
 use Modules\Hr\Support\PayrollCalculator;
 use Modules\Hr\Support\PayrollComparison;
@@ -177,19 +179,65 @@ class PayrollController extends Controller
     }
 
     /**
+     * Print a payslip (salary slip PDF with year-to-date totals).
+     */
+    public function payslipPdf(Request $request, PayrollSheet $sheet, PayrollSheetDetail $detail, Payslip $payslip, PdfDocument $pdf): Response
+    {
+        abort_unless($detail->payroll_sheet_id === $sheet->id, 404);
+
+        return $this->printSlip($request, $detail, $payslip, $pdf);
+    }
+
+    /**
+     * Print my payslip (approved payrolls only).
+     */
+    public function myPayslipPdf(Request $request, PayrollSheetDetail $detail, Payslip $payslip, PdfDocument $pdf): Response
+    {
+        abort_unless($detail->employee_id === $this->me($request)->id && $detail->payrollSheet?->status === 'approved', 404);
+
+        return $this->printSlip($request, $detail, $payslip, $pdf);
+    }
+
+    private function printSlip(Request $request, PayrollSheetDetail $detail, Payslip $payslip, PdfDocument $pdf): Response
+    {
+        return $this->printData($request, $payslip->forDetail($detail), $pdf);
+    }
+
+    public function printData(Request $request, array $data, PdfDocument $pdf): Response
+    {
+        return $pdf->view($request->user(), 'pdf.payslip', 'Salary slip '.$data['month'].' '.($data['employee']['employee_no'] ?? ''), $data + ['e' => $data['employee']]);
+    }
+
+    /**
      * My payslips (approved payrolls).
      *
-     * @response array{data: list<array{id: int, sheet: string, year: int, month: int, gross: float, deductions: float, net: float}>}
+     * @response array{data: list<array{source: string, id: int, year: int, month: int, sheet: string, gross: float, deductions: float, net: float}>}
      */
-    public function myPayslips(Request $request): JsonResponse
+    public function myPayslips(Request $request, Payslip $payslip): JsonResponse
     {
-        $employee = $this->me($request);
-        $rows = PayrollSheetDetail::with('payrollSheet')->where('employee_id', $employee->id)
-            ->whereHas('payrollSheet', fn ($q) => $q->where('status', 'approved'))->get()
-            ->sortByDesc(fn ($d) => sprintf('%04d%02d', $d->payrollSheet->year, $d->payrollSheet->month))->values();
+        return response()->json(['data' => $payslip->months($this->me($request)->id)]);
+    }
 
-        return response()->json(['data' => $rows->map(fn ($d) => ['id' => $d->id, 'sheet' => $d->payrollSheet->name, 'year' => (int) $d->payrollSheet->year,
-            'month' => (int) $d->payrollSheet->month, 'gross' => $d->gross_salary, 'deductions' => $d->total_deduction, 'net' => $d->net_salary])]);
+    /**
+     * One of my payslips from an uploaded salary file.
+     *
+     * @response array{data: array{sheet: string, period: string, status: string, source: string, employee: array{name: string|null, employee_no: string|null, position: string|null, department: string|null, bank: string|null, account: string|null}, earnings: list<array{label: string, amount: float}>, deductions: list<array{label: string, amount: float}>, employer: list<array{label: string, amount: float}>, gross: float, taxable: float|null, total_deductions: float, net: float}}
+     */
+    public function myUploadedPayslip(Request $request, UploadedPayrollRow $row, Payslip $payslip): JsonResponse
+    {
+        abort_unless($row->employee_id === $this->me($request)->id, 404);
+
+        return response()->json(['data' => $payslip->screen($payslip->forRow($row))]);
+    }
+
+    /**
+     * Print my payslip from an uploaded salary file.
+     */
+    public function myUploadedPayslipPdf(Request $request, UploadedPayrollRow $row, Payslip $payslip, PdfDocument $pdf): Response
+    {
+        abort_unless($row->employee_id === $this->me($request)->id, 404);
+
+        return $this->printData($request, $payslip->forRow($row), $pdf);
     }
 
     /**

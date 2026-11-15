@@ -25,20 +25,20 @@ class AllowanceSetupController extends Controller
     /**
      * Allowance categories and the units to choose from.
      *
-     * @response array{data: list<array{id: int, name: string, code: string, unit: string, unit_label: string, generation: string, deduct_leave: bool, other_absence: bool, taxable: bool, description: string|null, is_active: bool, rates_count: int}>, meta: array{units: array<string, string>}}
+     * @response array{data: list<array{id: int, name: string, code: string, unit: string, unit_label: string, generation: string, activity_source: string|null, activity_config: array{url: string|null, params: array<string, string>, has_token: bool, count_path: string|null, list_path: string|null, count_field: string|null, id_field: string|null, ids: list<string>}|null, deduct_leave: bool, other_absence: bool, taxable: bool, description: string|null, is_active: bool, rates_count: int}>, meta: array{units: array<string, string>, sources: array<string, string>}}
      */
     public function categories(): JsonResponse
     {
         return response()->json([
             'data' => AllowanceCategory::withCount('departmentAllowances as rates_count')->orderByDesc('is_active')->orderBy('category')->get()->map(fn ($c) => self::category($c)),
-            'meta' => ['units' => AllowanceCategory::UNITS],
+            'meta' => ['units' => AllowanceCategory::UNITS, 'sources' => AllowanceCategory::SOURCES],
         ]);
     }
 
     /**
      * Add an allowance category.
      *
-     * @response array{data: array{id: int, name: string, code: string, unit: string, unit_label: string, generation: string, deduct_leave: bool, other_absence: bool, taxable: bool, description: string|null, is_active: bool, rates_count: int}}
+     * @response array{data: array{id: int, name: string, code: string, unit: string, unit_label: string, generation: string, activity_source: string|null, activity_config: array{url: string|null, params: array<string, string>, has_token: bool, count_path: string|null, list_path: string|null, count_field: string|null, id_field: string|null, ids: list<string>}|null, deduct_leave: bool, other_absence: bool, taxable: bool, description: string|null, is_active: bool, rates_count: int}}
      */
     public function storeCategory(Request $request): JsonResponse
     {
@@ -48,7 +48,7 @@ class AllowanceSetupController extends Controller
     /**
      * Update an allowance category.
      *
-     * @response array{data: array{id: int, name: string, code: string, unit: string, unit_label: string, generation: string, deduct_leave: bool, other_absence: bool, taxable: bool, description: string|null, is_active: bool, rates_count: int}}
+     * @response array{data: array{id: int, name: string, code: string, unit: string, unit_label: string, generation: string, activity_source: string|null, activity_config: array{url: string|null, params: array<string, string>, has_token: bool, count_path: string|null, list_path: string|null, count_field: string|null, id_field: string|null, ids: list<string>}|null, deduct_leave: bool, other_absence: bool, taxable: bool, description: string|null, is_active: bool, rates_count: int}}
      */
     public function updateCategory(Request $request, AllowanceCategory $category): JsonResponse
     {
@@ -127,8 +127,19 @@ class AllowanceSetupController extends Controller
     {
         return [
             'id' => $c->id, 'name' => $c->category, 'code' => $c->code, 'unit' => $c->duration, 'unit_label' => AllowanceCategory::UNITS[$c->duration] ?? $c->duration,
-            'generation' => $c->duration === 'case' ? 'claim' : $c->generation, 'deduct_leave' => (bool) $c->deduct_leave, 'other_absence' => (bool) $c->other_absence,
+            'generation' => $c->duration === 'case' && $c->generation !== 'activity' ? 'claim' : $c->generation,
+            'activity_source' => $c->activity() ? ($c->activity_source ?? 'manual') : null,
+            'activity_config' => $c->activity() && $c->activity_source === 'rest' ? self::sourceConfig($c->activity_config ?? []) : null,
+            'deduct_leave' => (bool) $c->deduct_leave, 'other_absence' => (bool) $c->other_absence,
             'taxable' => (bool) $c->taxable, 'description' => $c->description, 'is_active' => (bool) $c->is_active, 'rates_count' => (int) ($c->rates_count ?? 0),
+        ];
+    }
+
+    private static function sourceConfig(array $c): array
+    {
+        return [
+            'url' => $c['url'] ?? null, 'params' => (object) ($c['params'] ?? []), 'has_token' => ! empty($c['token']), 'count_path' => $c['count_path'] ?? null,
+            'list_path' => $c['list_path'] ?? null, 'count_field' => $c['count_field'] ?? null, 'id_field' => $c['id_field'] ?? null, 'ids' => array_map('strval', $c['ids'] ?? []),
         ];
     }
 
@@ -151,8 +162,26 @@ class AllowanceSetupController extends Controller
             'code' => ['required', 'string', 'max:20', Rule::unique('allowance_categories', 'code')->where('company_id', $company)->ignore($category?->id)],
             /** month, day (working day), night (night shift), holiday (public holiday worked) or case (counted items). */
             'unit' => ['required', Rule::in(array_keys(AllowanceCategory::UNITS))],
-            /** auto: worked out from the roster and working hours; claim: entered with a count and approved; assigned (monthly only): a fixed amount set per employee. Per-case allowances are always claimed. */
-            'generation' => ['required', 'in:auto,claim,assigned'],
+            /** auto: worked out from the roster and working hours; claim: entered with a count and approved; assigned (monthly only): a fixed amount set per employee; activity (per case only): a daily count times the rate for everyone the rate covers. */
+            'generation' => ['required', 'in:auto,claim,assigned,activity'],
+            /** Activity allowances: manual (count entered by hand) or rest (fetched from another system). */
+            'activity_source' => ['nullable', 'in:manual,rest'],
+            'activity_config' => ['nullable', 'array'],
+            /** Address of the other system; parameter values may use {date} (YYYY-MM-DD). */
+            'activity_config.url' => ['required_if:activity_source,rest', 'nullable', 'url', 'max:500'],
+            'activity_config.params' => ['nullable', 'array'],
+            'activity_config.params.*' => ['nullable', 'string', 'max:200'],
+            /** Bearer token; leave empty to keep the saved one. */
+            'activity_config.token' => ['nullable', 'string', 'max:500'],
+            'activity_config.clear_token' => ['boolean'],
+            /** Where the number is in the answer, e.g. data.count. Or use list_path + count_field. */
+            'activity_config.count_path' => ['nullable', 'string', 'max:200'],
+            'activity_config.list_path' => ['nullable', 'string', 'max:200'],
+            'activity_config.count_field' => ['nullable', 'string', 'max:100'],
+            'activity_config.id_field' => ['nullable', 'string', 'max:100'],
+            /** Only items with these ids are counted (empty: all). */
+            'activity_config.ids' => ['nullable', 'array', 'max:5000'],
+            'activity_config.ids.*' => ['string', 'max:50'],
             /** Not paid on absent days (when attendance is used). */
             'other_absence' => ['boolean'],
             'taxable' => ['boolean'],
@@ -162,9 +191,26 @@ class AllowanceSetupController extends Controller
         if ($d['generation'] === 'assigned' && $d['unit'] !== 'month') {
             throw \Illuminate\Validation\ValidationException::withMessages(['generation' => 'Only monthly allowances can be assigned to employees.']);
         }
+        $activity = $d['unit'] === 'case' && $d['generation'] === 'activity';
+        $source = $activity ? ($d['activity_source'] ?? 'manual') : null;
+        $config = null;
+        if ($source === 'rest') {
+            $in = $d['activity_config'] ?? [];
+            if (empty($in['count_path']) && (empty($in['list_path']) || empty($in['count_field']))) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['activity_config.count_path' => 'Say where the number is: a path to it, or a list and the field to add up.']);
+            }
+            $saved = $category?->activity_config ?? [];
+            $token = ! empty($in['clear_token']) ? null : (($in['token'] ?? '') !== '' ? $in['token'] : ($saved['token'] ?? null));
+            $config = array_filter([
+                'url' => $in['url'], 'params' => array_map(fn ($v) => (string) $v, $in['params'] ?? []), 'token' => $token,
+                'count_path' => $in['count_path'] ?? null, 'list_path' => $in['list_path'] ?? null, 'count_field' => $in['count_field'] ?? null,
+                'id_field' => $in['id_field'] ?? null, 'ids' => array_values(array_unique(array_map('trim', $in['ids'] ?? []))),
+            ], fn ($v) => $v !== null && $v !== '' && $v !== []);
+        }
 
         return [
-            'category' => trim($d['name']), 'code' => strtoupper(trim($d['code'])), 'duration' => $d['unit'], 'generation' => $d['unit'] === 'case' ? 'claim' : $d['generation'],
+            'category' => trim($d['name']), 'code' => strtoupper(trim($d['code'])), 'duration' => $d['unit'], 'generation' => $d['unit'] === 'case' ? ($activity ? 'activity' : 'claim') : $d['generation'],
+            'activity_source' => $source, 'activity_config' => $config,
             'claimed' => $d['unit'] !== 'case' && $d['generation'] === 'auto', 'deduct_leave' => true, 'other_absence' => (bool) ($d['other_absence'] ?? false),
             'taxable' => (bool) ($d['taxable'] ?? true), 'description' => $d['description'] ?? null, 'is_active' => $d['is_active'] ?? $category?->is_active ?? true,
         ];

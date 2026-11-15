@@ -2652,6 +2652,493 @@
                 }
             }
         },
+        "/allowance/categories/{category}/test-source": {
+            "post": {
+                "operationId": "allowance.categories.test-source",
+                "summary": "Try the saved source for a day without saving anything",
+                "tags": [
+                    "Allowance: Activity counts",
+                    "ActivityCount"
+                ],
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "description": "The category ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "date": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "count": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "error": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "raw": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "count",
+                                                "error",
+                                                "raw"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/activity-counts": {
+            "get": {
+                "operationId": "allowance.activity-counts.index",
+                "summary": "The counts of a category for a period, one row per day (days without a count included)",
+                "tags": [
+                    "Allowance: Activity counts",
+                    "ActivityCount"
+                ],
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "count": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "error": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "entered_by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "updated_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "date",
+                                                    "id",
+                                                    "count",
+                                                    "status",
+                                                    "source",
+                                                    "error",
+                                                    "entered_by",
+                                                    "updated_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "source": {
+                                                                "type": "string"
+                                                            },
+                                                            "source_label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "source",
+                                                            "source_label"
+                                                        ]
+                                                    }
+                                                },
+                                                "category_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "categories",
+                                                "category_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "allowance.activity-counts.store",
+                "summary": "Enter or correct the count of a day by hand (kept even when the source is fetched). Allowances of the day are worked out again",
+                "tags": [
+                    "Allowance: Activity counts",
+                    "ActivityCount"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "category_id": {
+                                        "type": "integer"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "count": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 100000
+                                    }
+                                },
+                                "required": [
+                                    "category_id",
+                                    "date",
+                                    "count"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "count": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "date",
+                                                "count"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/activity-counts/{count}": {
+            "delete": {
+                "operationId": "allowance.activity-counts.destroy",
+                "summary": "Remove a day's count. A day without a count keeps the allowances already worked out; fetch again to replace it",
+                "tags": [
+                    "Allowance: Activity counts",
+                    "ActivityCount"
+                ],
+                "parameters": [
+                    {
+                        "name": "count",
+                        "in": "path",
+                        "required": true,
+                        "description": "The count ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "deleted": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "deleted"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/allowance/activity-counts/fetch": {
+            "post": {
+                "operationId": "allowance.activity-counts.fetch",
+                "summary": "Fetch the counts from the source for a period (at most 31 days) and work out the allowances again",
+                "tags": [
+                    "Allowance: Activity counts",
+                    "ActivityCount"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "category_id": {
+                                        "type": "integer"
+                                    },
+                                    "from": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "to": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    }
+                                },
+                                "required": [
+                                    "category_id",
+                                    "from",
+                                    "to"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "fetched": {
+                                                    "type": "integer"
+                                                },
+                                                "failed": {
+                                                    "type": "integer"
+                                                },
+                                                "kept": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "fetched",
+                                                "failed",
+                                                "kept"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/self/allowances": {
             "get": {
                 "operationId": "self.allowances",
@@ -3360,6 +3847,75 @@
                                                     "generation": {
                                                         "type": "string"
                                                     },
+                                                    "activity_source": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "activity_config": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "params": {
+                                                                "type": "object",
+                                                                "additionalProperties": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "has_token": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "count_path": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "list_path": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "count_field": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "id_field": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "ids": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "params",
+                                                            "has_token",
+                                                            "count_path",
+                                                            "list_path",
+                                                            "count_field",
+                                                            "id_field",
+                                                            "ids"
+                                                        ]
+                                                    },
                                                     "deduct_leave": {
                                                         "type": "boolean"
                                                     },
@@ -3389,6 +3945,8 @@
                                                     "unit",
                                                     "unit_label",
                                                     "generation",
+                                                    "activity_source",
+                                                    "activity_config",
                                                     "deduct_leave",
                                                     "other_absence",
                                                     "taxable",
@@ -3406,10 +3964,17 @@
                                                     "additionalProperties": {
                                                         "type": "string"
                                                     }
+                                                },
+                                                "sources": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    }
                                                 }
                                             },
                                             "required": [
-                                                "units"
+                                                "units",
+                                                "sources"
                                             ]
                                         }
                                     },
@@ -3465,6 +4030,75 @@
                                                 "generation": {
                                                     "type": "string"
                                                 },
+                                                "activity_source": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "activity_config": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "url": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "params": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "has_token": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "count_path": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "list_path": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "count_field": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "id_field": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "ids": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "url",
+                                                        "params",
+                                                        "has_token",
+                                                        "count_path",
+                                                        "list_path",
+                                                        "count_field",
+                                                        "id_field",
+                                                        "ids"
+                                                    ]
+                                                },
                                                 "deduct_leave": {
                                                     "type": "boolean"
                                                 },
@@ -3494,6 +4128,8 @@
                                                 "unit",
                                                 "unit_label",
                                                 "generation",
+                                                "activity_source",
+                                                "activity_config",
                                                 "deduct_leave",
                                                 "other_absence",
                                                 "taxable",
@@ -3567,6 +4203,75 @@
                                                 "generation": {
                                                     "type": "string"
                                                 },
+                                                "activity_source": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "activity_config": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "url": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "params": {
+                                                            "type": "object",
+                                                            "additionalProperties": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "has_token": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "count_path": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "list_path": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "count_field": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "id_field": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "ids": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "url",
+                                                        "params",
+                                                        "has_token",
+                                                        "count_path",
+                                                        "list_path",
+                                                        "count_field",
+                                                        "id_field",
+                                                        "ids"
+                                                    ]
+                                                },
                                                 "deduct_leave": {
                                                     "type": "boolean"
                                                 },
@@ -3596,6 +4301,8 @@
                                                 "unit",
                                                 "unit_label",
                                                 "generation",
+                                                "activity_source",
+                                                "activity_config",
                                                 "deduct_leave",
                                                 "other_absence",
                                                 "taxable",
@@ -27453,17 +28160,20 @@
                                             "items": {
                                                 "type": "object",
                                                 "properties": {
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
                                                     "id": {
                                                         "type": "integer"
-                                                    },
-                                                    "sheet": {
-                                                        "type": "string"
                                                     },
                                                     "year": {
                                                         "type": "integer"
                                                     },
                                                     "month": {
                                                         "type": "integer"
+                                                    },
+                                                    "sheet": {
+                                                        "type": "string"
                                                     },
                                                     "gross": {
                                                         "type": "number"
@@ -27476,10 +28186,11 @@
                                                     }
                                                 },
                                                 "required": [
+                                                    "source",
                                                     "id",
-                                                    "sheet",
                                                     "year",
                                                     "month",
+                                                    "sheet",
                                                     "gross",
                                                     "deductions",
                                                     "net"
@@ -27672,6 +28383,297 @@
                                     "required": [
                                         "data"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/payslips/{detail}/pdf": {
+            "get": {
+                "operationId": "self.payslips.pdf",
+                "summary": "Print my payslip (approved payrolls only)",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "detail",
+                        "in": "path",
+                        "required": true,
+                        "description": "The detail ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/uploaded-payslips/{row}": {
+            "get": {
+                "operationId": "self.uploaded-payslips.show",
+                "summary": "One of my payslips from an uploaded salary file",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "row",
+                        "in": "path",
+                        "required": true,
+                        "description": "The row ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sheet": {
+                                                    "type": "string"
+                                                },
+                                                "period": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "employee": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "position": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "bank": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "account": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "employee_no",
+                                                        "position",
+                                                        "department",
+                                                        "bank",
+                                                        "account"
+                                                    ]
+                                                },
+                                                "earnings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "deductions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "employer": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "gross": {
+                                                    "type": "number"
+                                                },
+                                                "taxable": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "total_deductions": {
+                                                    "type": "number"
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "sheet",
+                                                "period",
+                                                "status",
+                                                "source",
+                                                "employee",
+                                                "earnings",
+                                                "deductions",
+                                                "employer",
+                                                "gross",
+                                                "taxable",
+                                                "total_deductions",
+                                                "net"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/uploaded-payslips/{row}/pdf": {
+            "get": {
+                "operationId": "self.uploaded-payslips.pdf",
+                "summary": "Print my payslip from an uploaded salary file",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "row",
+                        "in": "path",
+                        "required": true,
+                        "description": "The row ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -28953,6 +29955,63 @@
                                     "required": [
                                         "data"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets/{sheet}/payslips/{detail}/pdf": {
+            "get": {
+                "operationId": "payroll.sheets.payslip.pdf",
+                "summary": "Print a payslip (salary slip PDF with year-to-date totals)",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "detail",
+                        "in": "path",
+                        "required": true,
+                        "description": "The detail ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -31980,6 +33039,568 @@
                         "in": "path",
                         "required": true,
                         "description": "The adjustment ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/salary-files": {
+            "get": {
+                "operationId": "payroll.salary-files.index",
+                "summary": "Uploaded salary files, newest month first",
+                "tags": [
+                    "Payroll: Salary files",
+                    "SalaryFile"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 20
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "year": {
+                                                        "type": "integer"
+                                                    },
+                                                    "month": {
+                                                        "type": "integer"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "file_name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "rows": {
+                                                        "type": "integer"
+                                                    },
+                                                    "net_total": {
+                                                        "type": "number"
+                                                    },
+                                                    "uploaded_by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "year",
+                                                    "month",
+                                                    "label",
+                                                    "file_name",
+                                                    "rows",
+                                                    "net_total",
+                                                    "uploaded_by",
+                                                    "created_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "last_page",
+                                                "per_page",
+                                                "total",
+                                                "from",
+                                                "to"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "payroll.salary-files.store",
+                "summary": "Upload a month's salary file (CSV with the template columns). Every row must match an employee by number.\nA month that already has a file is replaced only with `replace`",
+                "tags": [
+                    "Payroll: Salary files",
+                    "SalaryFile"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "contentMediaType": "application/octet-stream",
+                                        "description": "Maximum file size: 5120 kilobytes."
+                                    },
+                                    "year": {
+                                        "type": "integer",
+                                        "minimum": 2000,
+                                        "maximum": 2100
+                                    },
+                                    "month": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 12
+                                    },
+                                    "replace": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "file",
+                                    "year",
+                                    "month"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "label": {
+                                                    "type": "string"
+                                                },
+                                                "rows": {
+                                                    "type": "integer"
+                                                },
+                                                "net_total": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "label",
+                                                "rows",
+                                                "net_total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/salary-files/template": {
+            "get": {
+                "operationId": "payroll.salary-files.template",
+                "summary": "Download the CSV template: the salary file columns, with a row per active employee (number, name, TIN, NSSF number, position, basic salary)",
+                "tags": [
+                    "Payroll: Salary files",
+                    "SalaryFile"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string",
+                                    "const": "attachment; filename=\"salary-file-template.csv\""
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/salary-files/{upload}/rows": {
+            "get": {
+                "operationId": "payroll.salary-files.rows",
+                "summary": "The rows of a salary file",
+                "tags": [
+                    "Payroll: Salary files",
+                    "SalaryFile"
+                ],
+                "parameters": [
+                    {
+                        "name": "upload",
+                        "in": "path",
+                        "required": true,
+                        "description": "The upload ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "employee_no",
+                                "-employee_no",
+                                "net",
+                                "-net",
+                                "gross",
+                                "-gross",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "employee_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "employee_no": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "name": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "position": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "gross": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "net": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "employee_id",
+                                                    "employee_no",
+                                                    "name",
+                                                    "position",
+                                                    "gross",
+                                                    "net"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "label": {
+                                                    "type": "string"
+                                                },
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "label",
+                                                "current_page",
+                                                "last_page",
+                                                "per_page",
+                                                "total",
+                                                "from",
+                                                "to"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/salary-files/{upload}/rows/{row}/pdf": {
+            "get": {
+                "operationId": "payroll.salary-files.pdf",
+                "summary": "Print one employee's payslip from the salary file",
+                "tags": [
+                    "Payroll: Salary files",
+                    "SalaryFile"
+                ],
+                "parameters": [
+                    {
+                        "name": "upload",
+                        "in": "path",
+                        "required": true,
+                        "description": "The upload ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "row",
+                        "in": "path",
+                        "required": true,
+                        "description": "The row ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/salary-files/{upload}": {
+            "delete": {
+                "operationId": "payroll.salary-files.destroy",
+                "summary": "Delete a salary file (its payslips disappear for employees)",
+                "tags": [
+                    "Payroll: Salary files",
+                    "SalaryFile"
+                ],
+                "parameters": [
+                    {
+                        "name": "upload",
+                        "in": "path",
+                        "required": true,
+                        "description": "The upload ID",
                         "schema": {
                             "type": "integer"
                         }

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceEntryController;
+use Modules\Hr\Http\Controllers\Api\Allowance\ActivityCountController;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceSetupController;
 use Modules\Hr\Http\Controllers\Api\Attendance\AttendanceController;
 use Modules\Hr\Http\Controllers\Api\BankController;
@@ -34,6 +35,7 @@ use Modules\Hr\Http\Controllers\Api\Overtime\OvertimeSuggestionController;
 use Modules\Hr\Http\Controllers\Api\Payroll\PayItemsController;
 use Modules\Hr\Http\Controllers\Api\Payroll\MembershipController;
 use Modules\Hr\Http\Controllers\Api\Payroll\PayrollController;
+use Modules\Hr\Http\Controllers\Api\Payroll\SalaryFileController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
 use Modules\Hr\Http\Controllers\Api\RenewalLetterController;
@@ -264,6 +266,9 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
     Route::middleware('module:payroll')->group(function () {
         Route::get('payslips', [PayrollController::class, 'myPayslips'])->name('payslips.index');
         Route::get('payslips/{detail}', [PayrollController::class, 'myPayslip'])->name('payslips.show');
+        Route::get('payslips/{detail}/pdf', [PayrollController::class, 'myPayslipPdf'])->name('payslips.pdf');
+        Route::get('uploaded-payslips/{row}', [PayrollController::class, 'myUploadedPayslip'])->name('uploaded-payslips.show');
+        Route::get('uploaded-payslips/{row}/pdf', [PayrollController::class, 'myUploadedPayslipPdf'])->name('uploaded-payslips.pdf');
     });
     Route::middleware('module:overtime')->group(function () {
         Route::get('overtime', [OvertimeController::class, 'mine'])->name('overtime.index');
@@ -370,6 +375,7 @@ Route::prefix('allowance')->middleware(['auth:sanctum', 'module:allowance'])->na
         Route::post('categories', [AllowanceSetupController::class, 'storeCategory'])->name('categories.store');
         Route::put('categories/{category}', [AllowanceSetupController::class, 'updateCategory'])->name('categories.update');
         Route::delete('categories/{category}', [AllowanceSetupController::class, 'destroyCategory'])->name('categories.destroy');
+        Route::post('categories/{category}/test-source', [ActivityCountController::class, 'test'])->middleware('throttle:10,1')->name('categories.test-source');
     });
     Route::middleware('can:allowance.department-ranges.manage')->group(function () {
         Route::get('rates', [AllowanceSetupController::class, 'rates'])->name('rates.index');
@@ -381,6 +387,10 @@ Route::prefix('allowance')->middleware(['auth:sanctum', 'module:allowance'])->na
     Route::middleware('can:allowance.daily.manage')->group(function () {
         Route::post('generate', [AllowanceEntryController::class, 'generate'])->name('generate');
         Route::post('employees/{employee}/claims', [AllowanceEntryController::class, 'claim'])->name('claims.store');
+        Route::get('activity-counts', [ActivityCountController::class, 'index'])->name('activity-counts.index');
+        Route::post('activity-counts', [ActivityCountController::class, 'store'])->name('activity-counts.store');
+        Route::delete('activity-counts/{count}', [ActivityCountController::class, 'destroy'])->name('activity-counts.destroy');
+        Route::post('activity-counts/fetch', [ActivityCountController::class, 'fetch'])->middleware('throttle:10,1')->name('activity-counts.fetch');
     });
 });
 
@@ -411,6 +421,11 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::get('sheets', [PayrollController::class, 'index'])->name('sheets.index');
         Route::get('sheets/{sheet}', [PayrollController::class, 'show'])->name('sheets.show');
         Route::get('sheets/{sheet}/payslips/{detail}', [PayrollController::class, 'payslip'])->name('sheets.payslip');
+        Route::get('sheets/{sheet}/payslips/{detail}/pdf', [PayrollController::class, 'payslipPdf'])->name('sheets.payslip.pdf');
+        Route::get('salary-files', [SalaryFileController::class, 'index'])->name('salary-files.index');
+        Route::get('salary-files/template', [SalaryFileController::class, 'template'])->name('salary-files.template');
+        Route::get('salary-files/{upload}/rows', [SalaryFileController::class, 'rows'])->name('salary-files.rows');
+        Route::get('salary-files/{upload}/rows/{row}/pdf', [SalaryFileController::class, 'pdf'])->name('salary-files.pdf');
         Route::get('sheets/{sheet}/compare', [PayrollController::class, 'compare'])->name('sheets.compare');
         Route::get('sheets/{sheet}/history', [PayrollController::class, 'history'])->name('sheets.history');
         Route::post('sheets/{sheet}/comments', [PayrollController::class, 'comment'])->middleware('throttle:30,1')->name('sheets.comments.store');
@@ -421,6 +436,8 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
     });
     Route::middleware('can:payroll.create')->group(function () {
         Route::post('sheets', [PayrollController::class, 'store'])->name('sheets.store');
+        Route::post('salary-files', [SalaryFileController::class, 'store'])->middleware('throttle:10,1')->name('salary-files.store');
+        Route::delete('salary-files/{upload}', [SalaryFileController::class, 'destroy'])->name('salary-files.destroy');
         Route::post('sheets/{sheet}/generate', [PayrollController::class, 'regenerate'])->name('sheets.generate');
         Route::post('sheets/{sheet}/submit', [PayrollController::class, 'submit'])->name('sheets.submit');
         Route::post('sheets/{sheet}/withdraw', [PayrollController::class, 'withdraw'])->name('sheets.withdraw');

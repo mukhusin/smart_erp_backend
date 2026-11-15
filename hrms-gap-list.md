@@ -9,7 +9,7 @@ items decided against are ➖. The older sections below keep the original analys
 |---|---|---|---|
 | 1 | ~~Audit log (who changed what: old/new values, user, IP) + viewer~~ | #13, E-16 | ✅ 2026-11-15: employee, contract, pay, payroll, settings, user and workflow records; Administration → Audit log, employee History tab (`admin.audit.view`) |
 | 2 | ~~Attendance working-hours reports (company / department / section)~~ | A-7 | ✅ 2026-11-15: Reports → Working hours, totals by company / department / section / employee (planned, worked, overtime, lost hours, % worked); limited by the three working-hours permissions |
-| 3 | Theatre / activity allowance from AfyaBox case counts | P-6, AL-5 | Claimed by hand today |
+| 3 | ~~Theatre / activity allowance from AfyaBox case counts~~ | P-6, AL-5 | ✅ 2026-11-15: per-case category "one count a day"; count entered by hand or fetched by a configurable REST source (AfyaBox = saved settings, no AfyaBox code); a failed fetch is flagged, never zero; Allowance → Activity counts; `allowance:generate` fetches the last 3 days first |
 | 4 | Contract PDF from the contract-type template | E-4 | Renewal letter exists; contract print does not |
 | 5 | ~~Payroll change log (who changed a sheet or payslip, when)~~ | §7.5 | ✅ 2026-11-15: payroll history shows each re-work with who and the totals change; pay inputs are in the audit log |
 | 6 | Bulk phone number update | §7.5 | |
@@ -26,7 +26,12 @@ are copied by `erp:import-hrms` step `workflows`; new approver type "section hea
 workflow requests "in progress" are stale (HRMS kept the legacy approval flags as the real status); nothing to move.
 
 Decided not to build: basic salary by days present (lost-time deduction covers it), `payroll_date_remark` (#5), the
-leave status name `ended` (#15), payroll sheet upload/re-import (P-13).
+leave status name `ended` (#15).
+
+Added 2026-11-15: salary file upload (P-13, the HRMS way: CSV per month, template download, employees matched by number) next to
+payroll-made payslips; both print as the HRMS-style salary slip with year-to-date totals. "My payslips" shows the uploaded file for a
+month when there is one (it is what was paid). Import fix: HRMS `claimed` means generated, so night = auto, monthly = assigned
+(paid through emp_allowances), AfyaBox case allowances = activity; the generator skips days already paid by imported rows.
 
 ## Replacement readiness audit (2026-11-13)
 

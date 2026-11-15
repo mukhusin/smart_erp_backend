@@ -2,7 +2,9 @@
 
 namespace Modules\Hr\Actions;
 
+use App\Models\AllowanceActivityCount;
 use App\Models\AllowanceCategory;
+use App\Models\AttendanceTransa;
 use App\Models\DailyAllowance;
 use App\Models\DepartmentAllowance;
 use App\Models\Employee;
@@ -77,8 +79,17 @@ class ManageAllowances
         if ($to->lt($from)) {
             return ['added' => 0, 'removed' => 0];
         }
-        $categories = AllowanceCategory::where('is_active', true)->get()->filter->auto()->keyBy('id');
-        $rates = DepartmentAllowance::whereIn('category_id', $categories->keys())->where('is_active', true)->get();
+        $all = AllowanceCategory::where('is_active', true)->get();
+        $categories = $all->filter->auto()->keyBy('id');
+        $activities = $all->filter->activity()->keyBy('id');
+        $rates = DepartmentAllowance::whereIn('category_id', $categories->keys()->merge($activities->keys()))->where('is_active', true)->get();
+        $counts = AllowanceActivityCount::whereIn('allowance_category_id', $activities->keys())
+            ->whereDate('date', '>=', $from)->whereDate('date', '<=', $to)->get()
+            ->keyBy(fn ($c) => $c->allowance_category_id.'|'.$c->date->toDateString());
+        $absent = $activities->contains('other_absence', true)
+            ? AttendanceTransa::whereDate('transaction_date', '>=', $from)->whereDate('transaction_date', '<=', $to)->where('status', 'Absent')
+                ->get(['employee_id', 'transaction_date'])->map(fn ($t) => $t->employee_id.'|'.$t->transaction_date->toDateString())->flip()
+            : collect();
         $departments = $rates->pluck('department_id')->unique();
         $calendar = app(WorkCalendar::class);
         $added = $removed = 0;
@@ -87,6 +98,7 @@ class ManageAllowances
             ->when($employeeIds, fn ($q) => $q->whereIn('id', $employeeIds))->get();
         foreach ($employees as $employee) {
             $due = [];
+            $keep = [];
             if ($this->eligible($employee)) {
                 $days = $calendar->days($employee, $from, $to);
                 foreach ($categories as $category) {
@@ -96,25 +108,47 @@ class ManageAllowances
                     }
                     foreach ($days as $day) {
                         if ($this->qualifies($category, $day)) {
-                            $due[$category->id.'|'.$day->date->toDateString()] = [$category, $rate, $day];
+                            $due[$category->id.'|'.$day->date->toDateString()] = [$category, $rate, $day, 1, $this->reason($category, $day)];
+                        }
+                    }
+                }
+                foreach ($activities as $category) {
+                    $rate = $this->rateFor($employee, $category, $rates);
+                    if (! $rate) {
+                        continue;
+                    }
+                    foreach ($days as $day) {
+                        $key = $category->id.'|'.$day->date->toDateString();
+                        $count = $counts->get($key);
+                        if (! $count?->usable()) {
+                            $keep[$key] = true;
+
+                            continue;
+                        }
+                        $away = ($category->deduct_leave && $day->kind === PlannedDay::LEAVE) || ($category->other_absence && $absent->has($employee->id.'|'.$day->date->toDateString()));
+                        if ($count->count > 0 && ! $away) {
+                            $due[$key] = [$category, $rate, $day, $count->count, 'Activities on the day: '.rtrim(rtrim(number_format($count->count, 2, '.', ''), '0'), '.')];
                         }
                     }
                 }
             }
-            DB::transaction(function () use ($employee, $from, $to, $due, &$added, &$removed) {
+            DB::transaction(function () use ($employee, $from, $to, $due, $keep, &$added, &$removed) {
                 $existing = DailyAllowance::where('employee_id', $employee->id)->where('source', 'auto')
                     ->whereDate('start_date', '>=', $from)->whereDate('start_date', '<=', $to)->get()
                     ->keyBy(fn ($e) => $e->allowance_category_id.'|'.$e->start_date->toDateString());
-                foreach ($due as $key => [$category, $rate, $day]) {
+                $imported = DailyAllowance::where('employee_id', $employee->id)->where('source', 'generated')
+                    ->whereDate('start_date', '>=', $from)->whereDate('start_date', '<=', $to)->get(['allowance_category_id', 'start_date'])
+                    ->map(fn ($e) => $e->allowance_category_id.'|'.$e->start_date->toDateString())->flip();
+                foreach ($due as $key => [$category, $rate, $day, $items, $reason]) {
                     $row = $existing->get($key);
-                    if ($row?->payroll_sheet_detail_id) {
+                    if ($row?->payroll_sheet_detail_id || $imported->has($key)) {
                         continue;
                     }
                     $values = [
                         'department_allowance_id' => $rate->id, 'category' => $category->category, 'duration' => $category->duration,
-                        'items' => 1, 'amount_per_item' => $rate->amount, 'amount' => $rate->amount, 'end_date' => $day->date->toDateString(),
+                        'items' => $items, 'amount_per_item' => $rate->amount, 'amount' => round($items * $rate->amount, 2), 'end_date' => $day->date->toDateString(),
                         'status' => 'approved', 'is_active' => true, 'is_hod_approved' => true, 'is_hr_approved' => true,
-                        'description' => $this->reason($category, $day),
+                        'description' => $reason,
                     ];
                     if ($row) {
                         $row->update($values);
@@ -124,7 +158,7 @@ class ManageAllowances
                     }
                 }
                 foreach ($existing as $key => $row) {
-                    if (! isset($due[$key]) && ! $row->payroll_sheet_detail_id) {
+                    if (! isset($due[$key]) && ! isset($keep[$key]) && ! $row->payroll_sheet_detail_id) {
                         $row->forceDelete();
                         $removed++;
                     }
@@ -155,6 +189,9 @@ class ManageAllowances
         $category = AllowanceCategory::where('is_active', true)->findOrFail($data['allowance_category_id']);
         if ($category->auto()) {
             throw ValidationException::withMessages(['allowance_category_id' => "{$category->category} is worked out automatically from the roster and working hours."]);
+        }
+        if ($category->activity()) {
+            throw ValidationException::withMessages(['allowance_category_id' => "{$category->category} is worked out from the daily activity count."]);
         }
         if ($category->generation === 'assigned') {
             throw ValidationException::withMessages(['allowance_category_id' => "{$category->category} is assigned to employees as a monthly amount."]);

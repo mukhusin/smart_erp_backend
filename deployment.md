@@ -2,6 +2,30 @@
 
 Steps to run on the server when a release needs more than pulling the code. Newest release first.
 
+## Audit log, activity allowances, salary files (2026-11-15)
+
+1. Run the migrations (`audit_logs`, `allowance_activity_counts`, two columns on `allowance_categories`):
+
+   ```bash
+   php artisan migrate
+   ```
+
+2. Re-run the import `pay` step so allowance categories get the right type (night = automatic, monthly = assigned,
+   theatre = daily count):
+
+   ```bash
+   php artisan erp:import-hrms kairuki --only=pay
+   ```
+
+3. Allowance → Categories → Theatre Allowance: "The daily count is" → Fetched from another system, and enter the AfyaBox
+   surgery report address, the query parameters (`l=0`, `Start_Date={date}`, `End_Date={date}`, `Report_Type=tests_done`,
+   `Sponsor_ID=`), list `returnData.list_of_items`, field to add up `Total`, item id field `Item_ID` and the surgery item ids
+   from HRMS. Use the plug button to test it. `allowance:generate` (23:30) fetches the last 3 days first.
+
+4. Add `LOG_STACK=daily` and `LOG_DAILY_DAYS=7` to `.env` if not done yet.
+
+5. Give "View audit log" to the roles that should see Administration → Audit log and the employee History tab.
+
 ## Self-service profile (2026-11-13)
 
 1. Run the migration. It adds `status`, `submitted_by` and `decision_comment` to the qualification, licence, experience,

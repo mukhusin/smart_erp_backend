@@ -503,12 +503,20 @@ class HrmsImporter
             'is_active' => (bool) $r->isActive, 'deleted_at' => $r->deleted_at,
         ], match: fn ($r) => $this->findBy('loan_providers', ['name' => $r->name]));
 
-        $this->sync('allowance_categories', 'allowance_categories', fn ($r) => [
-            'company_id' => $this->companyId, 'category' => trim($r->category), 'code' => $r->code,
-            'duration' => in_array($r->duration, ['month', 'day', 'night', 'holiday', 'case'], true) ? $r->duration : 'month',
-            'generation' => $r->claimed ? 'claim' : 'auto', 'claimed' => (bool) $r->claimed, 'deduct_leave' => (bool) $r->deduct_leave,
-            'other_absence' => (bool) $r->other_absence, 'is_active' => (bool) $r->isActive,
-        ], match: fn ($r) => $this->findBy('allowance_categories', ['category' => trim($r->category)]), keepOnUpdate: ['taxable', 'description']);
+        $this->sync('allowance_categories', 'allowance_categories', function ($r) {
+            $unit = in_array($r->duration, ['month', 'day', 'night', 'holiday', 'case'], true) ? $r->duration : 'month';
+            $generation = match (true) {
+                $unit === 'month' => 'assigned',
+                $unit === 'case' => ($r->from_afyabox ?? false) ? 'activity' : 'claim',
+                default => $r->claimed ? 'auto' : 'claim',
+            };
+
+            return [
+                'company_id' => $this->companyId, 'category' => trim($r->category), 'code' => $r->code, 'duration' => $unit,
+                'generation' => $generation, 'activity_source' => $generation === 'activity' ? 'manual' : null, 'claimed' => $generation === 'auto',
+                'deduct_leave' => (bool) $r->deduct_leave, 'other_absence' => (bool) $r->other_absence, 'is_active' => (bool) $r->isActive,
+            ];
+        }, match: fn ($r) => $this->findBy('allowance_categories', ['category' => trim($r->category)]), keepOnUpdate: ['taxable', 'description', 'activity_source']);
 
         $this->sync('department_allowances', 'department_allowances', fn ($r) => ($category = $this->ids->get('allowance_categories', $r->category_id)) ? [
             'company_id' => $this->companyId, 'department_id' => $this->ids->get('departments', $r->department_id), 'section_id' => $this->ids->get('departments', $r->section_id),
