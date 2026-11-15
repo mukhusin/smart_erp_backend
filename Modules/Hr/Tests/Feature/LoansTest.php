@@ -82,6 +82,10 @@ class LoansTest extends TestCase
             ->assertOk()->assertJsonPath('data.remain', 300000);
         $this->deleteJson("/api/v1/loans/loans/{$id}")->assertUnprocessable();
         $this->getJson('/api/v1/loans/loans')->assertJsonPath('meta.outstanding', 300000)->assertJsonPath('meta.monthly', 150000);
+        $this->getJson('/api/v1/loans/loans?per_page=1&sort=-remain')->assertJsonPath('meta.per_page', 1)->assertJsonPath('meta.current_page', 1)->assertJsonCount(1, 'data');
+        $this->getJson('/api/v1/loans/loans?search=nobody-matches')->assertJsonPath('meta.total', 0)->assertJsonPath('meta.outstanding', 0);
+        $this->getJson("/api/v1/loans/loans/{$id}/repayments")->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.status', 'applied');
+        $this->getJson("/api/v1/loans/loans/{$id}/repayments?search=1999")->assertJsonPath('meta.total', 0);
         $this->getJson('/api/v1/loans/providers')->assertJsonPath('data.0.outstanding', 300000);
         $this->actingAs($this->user)->getJson('/api/v1/self/loans')->assertOk()->assertJsonPath('data.loans.0.loan.provider.name', 'CRDB Bank')->assertJsonPath('data.advance_limit', 500000);
         $this->assertSame(0, $this->getJson('/api/v1/self/loans')->json('data.loans.0.loan.not_deducted'));

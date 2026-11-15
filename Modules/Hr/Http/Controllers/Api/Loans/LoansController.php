@@ -69,29 +69,82 @@ class LoansController extends Controller
     }
 
     /**
-     * Employee loans of the employees the user can see.
+     * Employee loans of the employees the user can see, a page at a time. `meta.outstanding` and `meta.monthly` cover
+     * every loan matching the filters, not only this page.
      *
-     * @response array{data: list<array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int, not_deducted: float}>, meta: array{outstanding: float, monthly: float}}
+     * @response array{data: list<array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}|null, provider: array{id: int, name: string}|null, amount: float, instalment: float, returned: float, remain: float, date_of_loan: string, end_date: string|null, status: string, status_label: string, description: string|null, waiting_for: string|null, decision_comment: string|null, progress: int, not_deducted: float}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null, outstanding: float, monthly: float}}
      */
     #[QueryParameter('status', type: 'string', description: 'open (default), pending, enabled, paused, disabled, all')]
     #[QueryParameter('loan_provider_id', type: 'integer')]
     #[QueryParameter('employee_id', type: 'integer')]
+    #[QueryParameter('search', type: 'string', description: 'Employee name or number, or provider.')]
+    #[QueryParameter('sort', type: 'string', description: '`employee`, `provider`, `amount`, `instalment`, `remain`, `date_of_loan`; prefix `-` for descending.', default: '-date_of_loan')]
+    #[QueryParameter('page', type: 'integer', default: 1)]
+    #[QueryParameter('per_page', type: 'integer', description: 'Max 100.', default: 10)]
     public function index(Request $request): JsonResponse
     {
-        $f = $request->validate(['status' => ['nullable', 'in:open,pending,enabled,paused,disabled,rejected,cancelled,all'], 'loan_provider_id' => ['nullable', 'integer'], 'employee_id' => ['nullable', 'integer']]);
+        $f = $request->validate([
+            'status' => ['nullable', 'in:open,pending,enabled,paused,disabled,rejected,cancelled,all'], 'loan_provider_id' => ['nullable', 'integer'],
+            'employee_id' => ['nullable', 'integer'], 'search' => ['nullable', 'string', 'max:100'], 'sort' => ['nullable', 'string', 'max:30'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
         $status = $f['status'] ?? 'open';
-        $rows = EmployeeLoan::with(['employee.department', 'loanProvider', 'workflow.steps'])
+        $query = EmployeeLoan::query()
             ->whereHas('employee', fn ($q) => app(EmployeeScope::class)->apply($q, $request->user()))
             ->when($status === 'open', fn ($q) => $q->whereIn('status', ['pending', 'enabled', 'paused']))
             ->when(! in_array($status, ['open', 'all'], true), fn ($q) => $q->where('status', $status))
             ->when($f['loan_provider_id'] ?? null, fn ($q, $p) => $q->where('loan_provider_id', $p))
             ->when($f['employee_id'] ?? null, fn ($q, $e) => $q->where('employee_id', $e))
-            ->latest('date_of_loan')->latest('id')->limit(500)->get();
-        $repaying = $rows->where('status', 'enabled');
+            ->when(trim((string) ($f['search'] ?? '')), fn ($q, $v) => $q->where(fn ($q) => $q
+                ->whereHas('employee', fn ($e) => $e->where('fname', 'like', "%{$v}%")->orWhere('mname', 'like', "%{$v}%")->orWhere('lname', 'like', "%{$v}%")->orWhere('employee_no', 'like', "%{$v}%"))
+                ->orWhereHas('loanProvider', fn ($p) => $p->where('name', 'like', "%{$v}%"))));
+
+        $all = (clone $query)->get(['status', 'remain', 'instalment']);
+
+        $sort = (string) ($f['sort'] ?? '-date_of_loan');
+        $direction = str_starts_with($sort, '-') ? 'desc' : 'asc';
+        match (ltrim($sort, '-')) {
+            'employee' => $query->orderBy(Employee::select('fname')->whereColumn('employees.id', 'employee_loans.employee_id'), $direction),
+            'provider' => $query->orderBy(LoanProvider::select('name')->whereColumn('loan_providers.id', 'employee_loans.loan_provider_id'), $direction),
+            'amount', 'instalment', 'remain' => $query->orderBy(ltrim($sort, '-'), $direction),
+            default => $query->orderBy('date_of_loan', $direction),
+        };
+        $page = $query->with(['employee.department', 'loanProvider', 'workflow.steps'])->orderByDesc('id')->paginate((int) ($f['per_page'] ?? 10));
 
         return response()->json([
-            'data' => $rows->map(fn ($l) => $this->loan($l, true))->values(),
-            'meta' => ['outstanding' => round((float) $rows->whereIn('status', ['enabled', 'paused'])->sum('remain'), 2), 'monthly' => round((float) $repaying->sum(fn ($l) => min($l->instalment, $l->remain)), 2)],
+            'data' => collect($page->items())->map(fn ($l) => $this->loan($l, true))->values(),
+            'meta' => ['current_page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'per_page' => $page->perPage(), 'total' => $page->total(),
+                'from' => $page->firstItem(), 'to' => $page->lastItem(),
+                'outstanding' => round((float) $all->whereIn('status', ['enabled', 'paused'])->sum('remain'), 2),
+                'monthly' => round((float) $all->where('status', 'enabled')->sum(fn ($l) => min($l->instalment, $l->remain)), 2)],
+        ]);
+    }
+
+    /**
+     * Repayments of a loan, a page at a time (newest first).
+     *
+     * @response array{data: list<array{id: int, payroll: string|null, date: string|null, instalment: float, outstanding: float, status: string}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
+     */
+    #[QueryParameter('search', type: 'string', description: 'Payroll name or date.')]
+    #[QueryParameter('sort', type: 'string', description: '`date`, `instalment`, `outstanding`; prefix `-` for descending.', default: '-date')]
+    #[QueryParameter('page', type: 'integer', default: 1)]
+    #[QueryParameter('per_page', type: 'integer', description: 'Max 100.', default: 10)]
+    public function repayments(Request $request, EmployeeLoan $loan): JsonResponse
+    {
+        $this->inScope($request, $loan->employee);
+        $f = $request->validate(['search' => ['nullable', 'string', 'max:100'], 'sort' => ['nullable', 'string', 'max:30'], 'per_page' => ['nullable', 'integer', 'min:1', 'max:100']]);
+        $sort = (string) ($f['sort'] ?? '-date');
+        $column = ['date' => 'repayment_date', 'instalment' => 'instalment', 'outstanding' => 'outstanding_loan'][ltrim($sort, '-')] ?? 'repayment_date';
+        $page = $loan->histories()->with('payrollSheet')
+            ->when(trim((string) ($f['search'] ?? '')), fn ($q, $v) => $q->where(fn ($q) => $q->where('repayment_date', 'like', "%{$v}%")
+                ->orWhereHas('payrollSheet', fn ($p) => $p->where('name', 'like', "%{$v}%"))))
+            ->orderBy($column, str_starts_with($sort, '-') ? 'desc' : 'asc')->orderByDesc('id')
+            ->paginate((int) ($f['per_page'] ?? 10));
+
+        return response()->json([
+            'data' => collect($page->items())->map(fn ($h) => ['id' => $h->id, 'payroll' => $h->payrollSheet?->name, 'date' => $h->repayment_date ? Carbon::parse($h->repayment_date)->toDateString() : null,
+                'instalment' => (float) $h->instalment, 'outstanding' => (float) $h->outstanding_loan, 'status' => $h->status])->values(),
+            'meta' => ['current_page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'per_page' => $page->perPage(), 'total' => $page->total(), 'from' => $page->firstItem(), 'to' => $page->lastItem()],
         ]);
     }
 

@@ -449,6 +449,7 @@ Route::prefix('loans')->middleware(['auth:sanctum', 'module:loans'])->name('loan
         Route::get('providers', [LoansController::class, 'providers'])->name('providers.index');
         Route::get('loans', [LoansController::class, 'index'])->name('loans.index');
         Route::get('loans/{loan}', [LoansController::class, 'show'])->name('loans.show');
+        Route::get('loans/{loan}/repayments', [LoansController::class, 'repayments'])->name('loans.repayments');
         Route::get('advances', [LoansController::class, 'advances'])->name('advances.index');
     });
     Route::middleware('can:loans.manage')->group(function () {
