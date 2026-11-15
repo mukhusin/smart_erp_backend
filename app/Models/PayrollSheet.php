@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Workflow\Models\WorkflowInstance;
@@ -9,7 +10,7 @@ use Modules\Workflow\Models\WorkflowInstance;
 /** A month's payroll: draft (worked out and changed), waiting for approval, approved (locked) or returned. */
 class PayrollSheet extends Model
 {
-    use BelongsToCompany;
+    use Auditable, BelongsToCompany;
 
     public const STATUS_LABELS = ['draft' => 'Draft', 'pending' => 'Waiting for approval', 'approved' => 'Approved', 'rejected' => 'Returned'];
 

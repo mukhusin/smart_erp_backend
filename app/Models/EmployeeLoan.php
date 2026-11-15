@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +11,7 @@ use Modules\Workflow\Models\WorkflowInstance;
 /** A loan repaid from salary: an instalment each payroll until nothing remains (HRMS employee loans). */
 class EmployeeLoan extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes;
 
     public const STATUS_LABELS = [
         'pending' => 'Waiting for approval', 'enabled' => 'Repaying', 'paused' => 'Paused', 'disabled' => 'Repaid', 'rejected' => 'Not approved', 'cancelled' => 'Cancelled',

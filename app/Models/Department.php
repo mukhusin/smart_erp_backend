@@ -1,12 +1,13 @@
 <?php
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes;
     protected $fillable = ['company_id','company_branch_id','parent_id','work_schedule_id','name','short_name','description','is_active'];
     protected $casts = ['is_active' => 'boolean'];
     public function branch() { return $this->belongsTo(CompanyBranch::class, 'company_branch_id'); }

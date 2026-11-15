@@ -108,6 +108,7 @@ class PayrollTest extends TestCase
         $this->assertSame(['Basic salary', 'Night allowance (5)', 'Overtime (5 h)'], array_column($slip['earnings'], 'label'));
         $this->assertSame(['PAYE', 'NSSF', 'NHIF', 'HESLB loan', 'Loan: CRDB'], array_column($slip['deductions'], 'label'));
         $this->assertSame([107000, 30000, 5350, 37450], array_column($slip['employer'], 'amount'));
+        $this->travel(1)->minutes();
         $this->postJson("/api/v1/payroll/sheets/{$id}/generate")->assertOk()->assertJsonPath('data.net', 1632250);
         $this->assertSame(1, $this->inCompany(fn () => DailyAllowance::whereNotNull('payroll_sheet_detail_id')->count()), 'only the allowance in the period');
 
@@ -127,6 +128,9 @@ class PayrollTest extends TestCase
         $this->assertSame(['Comment', 'Director: approved', 'Submitted for approval'], $history->take(3)->pluck('title')->all());
         $this->assertSame('Ipo sawa', $history->firstWhere('title', 'Director: approved')['comment']);
         $this->assertContains('Payroll created', $history->pluck('title')->all());
+        $again = $history->firstWhere('title', 'Worked out again');
+        $this->assertSame([$this->admin->display_name, 'No change in totals'], [$again['by'], $again['comment']]);
+        $this->assertSame($this->admin->display_name, $history->firstWhere('title', 'Worked out')['by']);
         $this->actingAs($this->user)->getJson("/api/v1/payroll/sheets/{$id}/history")->assertForbidden();
         $this->actingAs($approver);
 

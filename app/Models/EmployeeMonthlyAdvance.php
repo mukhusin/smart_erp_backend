@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +11,7 @@ use Modules\Workflow\Models\WorkflowInstance;
 /** A salary advance, deducted in full on the next payroll once approved. */
 class EmployeeMonthlyAdvance extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes;
 
     public const STATUS_LABELS = ['pending' => 'Waiting for approval', 'approved' => 'To be deducted', 'deducted' => 'Deducted', 'rejected' => 'Not approved', 'cancelled' => 'Cancelled'];
 

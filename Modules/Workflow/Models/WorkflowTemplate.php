@@ -4,13 +4,14 @@ namespace Modules\Workflow\Models;
 
 use App\Models\CompanyBranch;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkflowTemplate extends Model
 {
-    use BelongsToCompany;
+    use Auditable, BelongsToCompany;
 
     protected $fillable = ['company_id', 'process', 'company_branch_id', 'is_active', 'updated_by'];
 

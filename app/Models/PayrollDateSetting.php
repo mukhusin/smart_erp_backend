@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -12,7 +13,7 @@ use Illuminate\Support\Carbon;
  */
 class PayrollDateSetting extends Model
 {
-    use BelongsToCompany;
+    use Auditable, BelongsToCompany;
 
     /** Tanzania PAYE (monthly): up to each amount, the rate on the part above the previous band. */
     public const TAX_BANDS = [

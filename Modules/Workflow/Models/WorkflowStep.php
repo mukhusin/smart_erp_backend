@@ -3,12 +3,14 @@
 namespace Modules\Workflow\Models;
 
 use App\Models\User;
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Permission\Models\Role;
 
 class WorkflowStep extends Model
 {
+    use Auditable;
     public const APPROVER_ROLE = 'role';
     public const APPROVER_USER = 'user';
     public const APPROVER_DEPARTMENT_HEAD = 'department_head';

@@ -3,21 +3,25 @@
 namespace Modules\Hr\Http\Controllers\Api\Payroll;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Employee;
+use App\Models\PayrollComment;
 use App\Models\PayrollDateSetting;
 use App\Models\PayrollSheet;
 use App\Models\PayrollSheetDetail;
+use App\Models\User;
 use Dedoc\Scramble\Attributes\QueryParameter;
-use Modules\Core\Support\PdfDocument;
-use Modules\Hr\Support\PayrollComparison;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Modules\Core\Support\PdfDocument;
 use Modules\Hr\Actions\ManagePayroll;
 use Modules\Hr\Support\PayrollCalculator;
+use Modules\Hr\Support\PayrollComparison;
 use Modules\Hr\Support\PayrollReports;
+use Modules\Workflow\Models\WorkflowInstance;
 
 /**
  * Payroll: settings, monthly payroll sheets and payslips.
@@ -297,13 +301,19 @@ class PayrollController extends Controller
      */
     public function history(PayrollSheet $sheet): JsonResponse
     {
-        $name = fn ($userId) => $userId ? \App\Models\User::find($userId)?->display_name : null;
+        $name = fn ($userId) => $userId ? User::find($userId)?->display_name : null;
+        $runs = AuditLog::with('user')->where('auditable_type', 'payroll-sheet')->where('auditable_id', $sheet->id)
+            ->where('action', 'updated')->orderBy('id')->get()->filter(fn ($log) => array_key_exists('generated_at', $log->new_values ?? []))->values();
         $items = collect([
             ['at' => $sheet->created_at, 'kind' => 'event', 'title' => 'Payroll created', 'by' => $sheet->creator?->display_name, 'comment' => null, 'icon' => 'plus-circle'],
-            $sheet->generated_at ? ['at' => $sheet->generated_at, 'kind' => 'event', 'title' => 'Worked out', 'by' => null, 'comment' => null, 'icon' => 'arrow-repeat'] : null,
+            $runs->isEmpty() && $sheet->generated_at ? ['at' => $sheet->generated_at, 'kind' => 'event', 'title' => 'Worked out', 'by' => null, 'comment' => null, 'icon' => 'arrow-repeat'] : null,
         ])->filter();
+        foreach ($runs as $n => $log) {
+            $items->push(['at' => $log->created_at, 'kind' => 'event', 'title' => $n ? 'Worked out again' : 'Worked out', 'by' => $log->user?->display_name,
+                'comment' => $n ? $this->totalsChange($log->old_values ?? [], $log->new_values ?? []) : null, 'icon' => 'arrow-repeat']);
+        }
 
-        $instances = \Modules\Workflow\Models\WorkflowInstance::with('steps')->where('subject_type', $sheet->getMorphClass())->where('subject_id', $sheet->id)->orderBy('id')->get();
+        $instances = WorkflowInstance::with('steps')->where('subject_type', $sheet->getMorphClass())->where('subject_id', $sheet->id)->orderBy('id')->get();
         foreach ($instances as $round => $instance) {
             $items->push(['at' => $instance->created_at, 'kind' => 'event', 'title' => $round ? 'Submitted again for approval' : 'Submitted for approval', 'by' => $name($instance->initiated_by), 'comment' => null, 'icon' => 'send']);
             foreach ($instance->steps->whereNotNull('acted_at') as $step) {
@@ -318,13 +328,26 @@ class PayrollController extends Controller
         if ($sheet->status === 'approved' && $instances->isEmpty() && $sheet->approved_at) {
             $items->push(['at' => $sheet->approved_at, 'kind' => 'event', 'title' => 'Approved', 'by' => $name($sheet->approved_by), 'comment' => $sheet->decision_comment, 'icon' => 'check-circle']);
         }
-        foreach (\App\Models\PayrollComment::with('employee')->where('payroll_sheet_id', $sheet->id)->get() as $c) {
+        foreach (PayrollComment::with('employee')->where('payroll_sheet_id', $sheet->id)->get() as $c) {
             $items->push(['at' => $c->created_at, 'kind' => 'comment', 'title' => $c->remarks ? ucfirst($c->remarks) : 'Comment', 'by' => $c->employee?->full_name, 'comment' => $c->comment, 'icon' => 'chat-left-text']);
         }
 
         return response()->json(['data' => $items->values()->map(fn ($i, $n) => $i + ['n' => $n])
             ->sortByDesc(fn ($i) => sprintf('%012d%06d', $i['at']?->getTimestamp() ?? 0, $i['n']))->values()->map(fn ($i) => array_diff_key($i, ['n' => 0]))
             ->map(fn ($i) => ['at' => $i['at']?->toIso8601String()] + $i)->all()]);
+    }
+
+    private function totalsChange(array $old, array $new): ?string
+    {
+        $parts = [];
+        foreach (['employees_count' => 'Employees', 'gross_total' => 'Gross', 'net_total' => 'Net pay'] as $field => $label) {
+            if (array_key_exists($field, $new) && (float) ($old[$field] ?? 0) !== (float) $new[$field]) {
+                $decimals = $field === 'employees_count' ? 0 : 2;
+                $parts[] = $label.' '.number_format((float) ($old[$field] ?? 0), $decimals).' → '.number_format((float) $new[$field], $decimals);
+            }
+        }
+
+        return $parts ? implode('; ', $parts) : 'No change in totals';
     }
 
     /**
@@ -336,7 +359,7 @@ class PayrollController extends Controller
     {
         $d = $request->validate(['comment' => ['required', 'string', 'max:2000']]);
         $employee = Employee::where('user_id', $request->user()->id)->first();
-        $c = \App\Models\PayrollComment::create(['payroll_sheet_id' => $sheet->id, 'employee_id' => $employee?->id, 'comment' => trim($d['comment']), 'remarks' => 'comment']);
+        $c = PayrollComment::create(['payroll_sheet_id' => $sheet->id, 'employee_id' => $employee?->id, 'comment' => trim($d['comment']), 'remarks' => 'comment']);
 
         return response()->json(['data' => ['at' => $c->created_at->toIso8601String(), 'kind' => 'comment', 'title' => 'Comment',
             'by' => $employee?->full_name ?? $request->user()->display_name, 'comment' => $c->comment, 'icon' => 'chat-left-text']], 201);

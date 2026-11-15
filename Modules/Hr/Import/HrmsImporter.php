@@ -2,6 +2,7 @@
 
 namespace Modules\Hr\Import;
 
+use App\Models\AuditLog;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\LeaveType;
@@ -89,11 +90,13 @@ class HrmsImporter
         setPermissionsTeamId($this->companyId);
         $this->employeeUsers = $this->src->table('employees')->pluck('user_id', 'id')->all();
 
-        foreach (self::STEPS as $step) {
-            if (in_array($step, $steps, true)) {
-                $this->{'step'.ucfirst($step)}();
+        AuditLog::withoutLogging(function () use ($steps) {
+            foreach (self::STEPS as $step) {
+                if (in_array($step, $steps, true)) {
+                    $this->{'step'.ucfirst($step)}();
+                }
             }
-        }
+        });
 
         return $this->report;
     }

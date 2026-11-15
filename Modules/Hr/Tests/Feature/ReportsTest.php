@@ -127,6 +127,35 @@ class ReportsTest extends TestCase
         $this->assertNotContains('attendance-summary', $keys);
     }
 
+    public function test_working_hours_by_department_section_and_scope(): void
+    {
+        app(CompanyContext::class)->run($this->company, function () {
+            $juma = Employee::where('employee_no', 'A2')->first();
+            AttendanceTransa::where('employee_id', $juma->id)->update(['worktime_hour' => 8, 'worked_hour' => 4]);
+            AttendanceTransa::create(['employee_id' => $juma->id, 'transaction_date' => '2026-11-09', 'status' => 'Present', 'worktime_hour' => 8, 'worked_hour' => 9, 'overtime_minutes' => 60]);
+            $asha = Employee::where('employee_no', 'A1')->first();
+            $asha->update(['has_attendance' => true]);
+            AttendanceTransa::create(['employee_id' => $asha->id, 'transaction_date' => '2026-11-09', 'status' => 'Present', 'worktime_hour' => 8, 'worked_hour' => 8]);
+        });
+
+        $rows = collect($this->actingAs($this->admin)->getJson('/api/v1/reports/hr/attendance-hours?from=2026-11-01&to=2026-11-12')->assertOk()->json('data.rows'))->keyBy('group');
+        $this->assertSame(['staff' => 1, 'present' => 2, 'absent' => 1, 'planned_hours' => 24, 'worked_hours' => 17, 'overtime_hours' => 1, 'worked_percent' => 70.8],
+            array_intersect_key($rows['Pharmacy'], array_flip(['staff', 'present', 'absent', 'planned_hours', 'worked_hours', 'overtime_hours', 'worked_percent'])));
+        $this->assertEquals(32, $rows['Total']['planned_hours']);
+        $this->actingAs($this->admin)->getJson('/api/v1/reports/hr/attendance-hours?from=2026-11-01&to=2026-11-12&group=company')->assertOk()
+            ->assertJsonPath('data.total', 1)->assertJsonPath('data.rows.0.worked_hours', 25);
+        $this->actingAs($this->admin)->getJson('/api/v1/reports/hr/attendance-hours?from=2026-11-01&to=2026-11-12&group=employee')->assertOk()
+            ->assertJsonPath('data.rows.0.name', 'Asha X');
+
+        $hod = User::factory()->create(['company_id' => $this->company->id]);
+        $hod->assignRole('hod');
+        app(CompanyContext::class)->run($this->company, fn () => Employee::create(['employee_no' => 'H1', 'fname' => 'Hamisi', 'lname' => 'Y', 'gender' => 'Male',
+            'emp_type' => 'full_time', 'employment_status' => 'confirmed', 'department_id' => $this->other, 'user_id' => $hod->id]));
+        $data = $this->actingAs($hod)->getJson('/api/v1/reports/hr/attendance-hours?from=2026-11-01&to=2026-11-12')->assertOk()->json('data');
+        $this->assertSame(['Pharmacy'], array_column($data['rows'], 'group'));
+        $this->assertStringContainsString('limited to your department', $data['subtitle']);
+    }
+
     public function test_hod_sees_own_department_without_money(): void
     {
         $hod = User::factory()->create(['company_id' => $this->company->id]);

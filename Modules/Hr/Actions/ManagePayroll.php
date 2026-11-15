@@ -69,8 +69,7 @@ class ManagePayroll
                 $paid[] = $detail->id;
             }
             $sheet->details()->whereNotIn('id', $paid)->get()->each(fn ($d) => $this->unlink($d) || $d->delete());
-            $this->totals($sheet);
-            $sheet->update(['generated_at' => now(), 'decision_comment' => $sheet->status === 'rejected' ? $sheet->decision_comment : null]);
+            $sheet->update($this->totals($sheet) + ['generated_at' => now(), 'decision_comment' => $sheet->status === 'rejected' ? $sheet->decision_comment : null]);
         });
 
         return $sheet->refresh();
@@ -107,14 +106,15 @@ class ManagePayroll
         return false;
     }
 
-    private function totals(PayrollSheet $sheet): void
+    private function totals(PayrollSheet $sheet): array
     {
         $d = $sheet->details();
         $employer = (float) $d->sum('nssf_employer') + (float) $d->sum('nhif_employer') + (float) $d->sum('wcf') + (float) $d->sum('sdl');
-        $sheet->update([
+
+        return [
             'employees_count' => $d->count(), 'gross_total' => round((float) $d->sum('gross_salary'), 2), 'deduction_total' => round((float) $d->sum('total_deduction'), 2),
             'net_total' => round((float) $d->sum('net_salary'), 2), 'employer_total' => round($employer, 2), 'payroll_cost' => round((float) $d->sum('gross_salary') + $employer, 2),
-        ]);
+        ];
     }
 
     public function submit(PayrollSheet $sheet, User $by): PayrollSheet

@@ -7,11 +7,11 @@ items decided against are ➖. The older sections below keep the original analys
 
 | # | Still open | Gap ids | Notes |
 |---|---|---|---|
-| 1 | Audit log (who changed what: old/new values, user, IP) + viewer | #13, E-16 | Contract events exist; no general audit log |
-| 2 | Attendance working-hours reports (company / department / section) | A-7 | Permissions exist, no screen |
+| 1 | ~~Audit log (who changed what: old/new values, user, IP) + viewer~~ | #13, E-16 | ✅ 2026-11-15: employee, contract, pay, payroll, settings, user and workflow records; Administration → Audit log, employee History tab (`admin.audit.view`) |
+| 2 | ~~Attendance working-hours reports (company / department / section)~~ | A-7 | ✅ 2026-11-15: Reports → Working hours, totals by company / department / section / employee (planned, worked, overtime, lost hours, % worked); limited by the three working-hours permissions |
 | 3 | Theatre / activity allowance from AfyaBox case counts | P-6, AL-5 | Claimed by hand today |
 | 4 | Contract PDF from the contract-type template | E-4 | Renewal letter exists; contract print does not |
-| 5 | Payroll change log (who changed a sheet or payslip, when) | §7.5 | Comments exist |
+| 5 | ~~Payroll change log (who changed a sheet or payslip, when)~~ | §7.5 | ✅ 2026-11-15: payroll history shows each re-work with who and the totals change; pay inputs are in the audit log |
 | 6 | Bulk phone number update | §7.5 | |
 | 7 | Annual leave plans move with the employee on department change | #17, L-8 | |
 | 8 | Idle auto-logout; no cached pages after logout | #20, #21 | |

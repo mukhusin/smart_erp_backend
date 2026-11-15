@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 /** Who supervises an employee (HRMS emp_supervisors): one active at a time, history kept. */
 class EmpSupervisor extends Model
 {
+    use Auditable;
     protected $fillable = ['employee_id', 'supervisor_id', 'from_date', 'to_date', 'status', 'reason', 'assigned_by'];
 
     protected $casts = ['from_date' => 'date', 'to_date' => 'date'];

@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class EmployeeQualification extends Model
 {
+    use Auditable;
     protected $fillable = [
         'employee_id', 'education_level', 'institution', 'program', 'date_of_start', 'date_of_end', 'end_year',
         'certificate', 'certificate_name',

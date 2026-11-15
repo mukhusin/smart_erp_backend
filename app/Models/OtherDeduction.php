@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Modules\Workflow\Models\WorkflowInstance;
 /** A fixed amount taken from salary every month from a start month, for a number of months or until stopped. */
 class OtherDeduction extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes;
 
     protected $fillable = ['company_id', 'employee_id', 'name', 'description', 'amount', 'start_month', 'months', 'stopped_at', 'status', 'decision_comment', 'requested_by'];
 

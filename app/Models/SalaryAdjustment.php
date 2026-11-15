@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class SalaryAdjustment extends Model
 {
-    use BelongsToCompany;
+    use Auditable, BelongsToCompany;
 
     protected $fillable = [
         'company_id', 'employee_id', 'contract_id', 'adjustment_type',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +11,7 @@ use Modules\Workflow\Models\WorkflowInstance;
 /** An allowance assigned to one employee: a fixed amount every month between two dates (HRMS emp_allowances). */
 class EmpAllowance extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id', 'employee_id', 'department_allowance_id', 'allowance_category_id',

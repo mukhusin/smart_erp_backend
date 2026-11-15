@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 /** An allowance rate: a category's amount for a department or section, and optionally one job position. */
 class DepartmentAllowance extends Model
 {
-    use BelongsToCompany;
+    use Auditable, BelongsToCompany;
 
     protected $fillable = [
         'company_id', 'department_id', 'section_id', 'category_id', 'job_position_id',

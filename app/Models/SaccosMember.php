@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class SaccosMember extends Model
 {
+    use Auditable;
     protected $fillable = ['employee_id', 'amount', 'total_contribution', 'from_date', 'is_active'];
     protected $casts    = ['is_active' => 'boolean', 'from_date' => 'date'];
 

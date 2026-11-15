@@ -54,6 +54,7 @@ class ReportsController extends Controller
     #[QueryParameter('leave_type_id', type: 'integer')]
     #[QueryParameter('branch_id', type: 'integer')]
     #[QueryParameter('department_id', type: 'integer')]
+    #[QueryParameter('group', description: 'Working hours: `company`, `department`, `section` or `employee`.', type: 'string')]
     public function show(Request $request, string $report, HrReports $reports): JsonResponse
     {
         return response()->json(['data' => $reports->run($report, $this->filters($request), $request->user())]);
@@ -95,6 +96,7 @@ class ReportsController extends Controller
             'reason' => ['nullable', 'string', 'max:50'],
             'type' => ['nullable', 'string', 'max:50'],
             'emp_type' => ['nullable', 'string', 'max:50'],
+            'group' => ['nullable', 'in:company,department,section,employee'],
             'licence_id' => ['nullable', 'integer'],
             'branch_id' => ['nullable', 'integer'],
             'department_id' => ['nullable', 'integer'],

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class HrSetting extends Model
 {
-    use BelongsToCompany;
+    use Auditable, BelongsToCompany;
 
     protected $fillable = ['company_id', 'renumber_on_contract_change', 'leave_year_start_month', 'annual_cycle_from_joining', 'joiners_from', 'hospital_patients'];
 

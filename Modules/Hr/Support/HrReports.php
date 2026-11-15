@@ -7,6 +7,7 @@ use App\Models\AttendanceSetting;
 use App\Models\AttendanceTransa;
 use App\Models\CompanyBranch;
 use App\Models\Department;
+use App\Models\HeadOfDepartment;
 use App\Models\EmpLeave;
 use App\Models\Employee;
 use App\Models\EmployeeContract;
@@ -42,6 +43,7 @@ class HrReports
         'overtime-summary' => ['title' => 'Overtime per employee', 'group' => 'Overtime', 'module' => 'overtime'],
         'attendance-daily' => ['title' => 'Attendance by day', 'group' => 'Attendance', 'module' => 'attendance'],
         'attendance-summary' => ['title' => 'Attendance per employee', 'group' => 'Attendance', 'module' => 'attendance'],
+        'attendance-hours' => ['title' => 'Working hours', 'group' => 'Attendance', 'module' => 'attendance'],
         'attendance-claims' => ['title' => 'Lost-hours claims', 'group' => 'Attendance', 'module' => 'attendance'],
     ];
 
@@ -119,6 +121,13 @@ class HrReports
                 ['key' => 'from', 'label' => 'From', 'type' => 'date', 'default' => $today->toDateString()],
                 ['key' => 'to', 'label' => 'To', 'type' => 'date', 'default' => $today->toDateString()],
                 ['key' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => array_map(fn ($st) => ['value' => $st, 'label' => $st], self::ATTENDANCE_STATUSES)],
+                ['key' => 'emp_type', 'label' => 'Employee type', 'type' => 'select', 'options' => $options(O::EMPLOYMENT_TYPES)],
+            ],
+            'attendance-hours' => [
+                ['key' => 'from', 'label' => 'From', 'type' => 'date', 'default' => $monthStart],
+                ['key' => 'to', 'label' => 'To', 'type' => 'date', 'default' => $today->toDateString()],
+                ['key' => 'group', 'label' => 'Totals by', 'type' => 'select', 'default' => 'department',
+                    'options' => [['value' => 'company', 'label' => 'Whole company'], ['value' => 'department', 'label' => 'Department'], ['value' => 'section', 'label' => 'Section'], ['value' => 'employee', 'label' => 'Employee']]],
                 ['key' => 'emp_type', 'label' => 'Employee type', 'type' => 'select', 'options' => $options(O::EMPLOYMENT_TYPES)],
             ],
             'attendance-summary' => [
@@ -220,6 +229,8 @@ class HrReports
             'check_out' => 'Out', 'late_minutes' => 'Late (min)', 'lost_hours' => 'Lost hours', 'lost_amount' => 'Lost amount',
             'recorded' => 'Days recorded', 'present' => 'Present', 'late' => 'Late', 'absent' => 'Absent', 'not_checked_out' => 'Not checked out',
             'on_leave' => 'On leave', 'other' => 'Other', 'reason' => 'Reason', 'accepted' => 'Hours accepted',
+            'group' => 'Group', 'staff' => 'Staff', 'planned_hours' => 'Planned hours', 'worked_hours' => 'Worked hours',
+            'overtime_hours' => 'Overtime hours', 'worked_percent' => 'Worked % of planned',
         ];
 
         return array_map(fn ($k) => ['key' => $k, 'label' => $labels[$k] ?? ucfirst(str_replace('_', ' ', $k))], $keys);
@@ -502,7 +513,7 @@ class HrReports
         $rows = AttendanceTransa::with(['employee.department', 'employee.section', 'employee.jobPosition'])
             ->whereIn('employee_id', $ids)
             ->when($v['status'], fn ($q, $st) => $q->where('status', $st))
-            ->whereDate('transaction_date', '>=', $v['from'])->whereDate('transaction_date', '<=', $v['to'])
+            ->where('transaction_date', '>=', $v['from'])->where('transaction_date', '<', CarbonImmutable::parse($v['to'])->addDay()->toDateString())
             ->orderBy('transaction_date')->get()
             ->sortBy(fn ($t) => $t->transaction_date->toDateString().' '.$t->employee?->fname)
             ->map(fn ($t) => $this->person($t->employee) + [
@@ -524,7 +535,7 @@ class HrReports
         $money = $this->money($user);
         $employees = $this->employees($v, $user, 'duty')->where('has_attendance', true)->orderBy('fname')->get()->keyBy('id');
         $days = AttendanceTransa::whereIn('employee_id', $employees->keys())
-            ->whereDate('transaction_date', '>=', $v['from'])->whereDate('transaction_date', '<=', $v['to'])
+            ->where('transaction_date', '>=', $v['from'])->where('transaction_date', '<', CarbonImmutable::parse($v['to'])->addDay()->toDateString())
             ->get(['employee_id', 'status', 'punch_in_late_minutes', 'lost_hour', 'lost_amount'])->groupBy('employee_id');
         $known = ['Present', 'Late', 'Absent', 'Not checked out', 'On leave'];
 
@@ -550,6 +561,97 @@ class HrReports
         return [$this->period($v).' (other = days off, holidays, admitted, excused, waiting)', $money ? [...$columns, 'lost_amount'] : $columns, $rows->all()];
     }
 
+    private function reportAttendanceHours(array $v, User $user): array
+    {
+        $query = $this->employees($v, $user, 'duty')->where('has_attendance', true);
+        $rules = $this->hoursRules($user);
+        if ($rules !== false) {
+            $query = Employee::query()->with(['department', 'section', 'jobPosition', 'branch'])->onDuty()->where('has_attendance', true)
+                ->when($v['branch_id'] ?? null, fn ($q, $b) => $q->where('company_branch_id', (int) $b))
+                ->when($v['department_id'] ?? null, fn ($q, $d) => $q->where(fn ($q) => $q->where('department_id', (int) $d)->orWhere('section_id', (int) $d)))
+                ->when($v['emp_type'] ?? null, fn ($q, $t) => $q->where('emp_type', $t))
+                ->when($rules !== null, fn ($q) => $q->where(function ($q) use ($rules) {
+                    $q->whereRaw('1 = 0');
+                    if ($rules['departments']) {
+                        $q->orWhereIn('department_id', $rules['departments'])->orWhereIn('section_id', $rules['departments']);
+                    }
+                    if ($rules['sections']) {
+                        $q->orWhereIn('section_id', $rules['sections']);
+                    }
+                }));
+        }
+        $employees = $query->orderBy('fname')->get()->keyBy('id');
+        $days = AttendanceTransa::whereIn('employee_id', $employees->keys())
+            ->where('transaction_date', '>=', $v['from'])->where('transaction_date', '<', CarbonImmutable::parse($v['to'])->addDay()->toDateString())
+            ->groupBy('employee_id')
+            ->selectRaw("employee_id, sum(case when status in ('Present', 'Late', 'Not checked out') then 1 else 0 end) as present, sum(case when status = 'Absent' then 1 else 0 end) as absent")
+            ->selectRaw('sum(worktime_hour) as planned, sum(worked_hour) as worked, sum(overtime_minutes) as overtime, sum(lost_hour) as lost')
+            ->get()->keyBy('employee_id');
+
+        $group = $v['group'] ?? 'department';
+        $key = fn (Employee $e) => match ($group) {
+            'company' => 'Whole company',
+            'section' => $e->section ? trim(($e->department?->name ?? '').' / '.$e->section->name) : ($e->department?->name ?? 'No department').' (no section)',
+            'employee' => (string) $e->id,
+            default => $e->department?->name ?? 'No department',
+        };
+        $sum = function ($people) use ($days) {
+            $d = $people->map(fn ($e) => $days->get($e->id))->filter();
+            $planned = round((float) $d->sum('planned'), 2);
+            $worked = round((float) $d->sum('worked'), 2);
+
+            return [
+                'staff' => $people->count(),
+                'present' => (int) $d->sum('present'),
+                'absent' => (int) $d->sum('absent'),
+                'planned_hours' => $planned,
+                'worked_hours' => $worked,
+                'overtime_hours' => round((float) $d->sum('overtime') / 60, 2),
+                'lost_hours' => round((float) $d->sum('lost'), 2),
+                'worked_percent' => $planned > 0 ? round($worked / $planned * 100, 1) : null,
+            ];
+        };
+
+        $groups = $employees->groupBy($key);
+        if ($group === 'employee') {
+            $rows = $groups->map(fn ($people) => $this->person($people->first()) + $sum($people))->values();
+            $columns = ['employee_no', 'name', 'department'];
+        } else {
+            $rows = $groups->sortKeys()->map(fn ($people, $name) => ['group' => $name] + $sum($people))->values();
+            $columns = ['group'];
+        }
+        if ($group !== 'company' && $rows->count() > 1) {
+            $rows->push(['group' => 'Total', 'name' => 'Total'] + $sum($employees->values()));
+        }
+        $scope = is_array($rules) ? ' · limited to your '.implode(' and ', array_filter([$rules['departments'] ? 'department' : null, $rules['sections'] ? 'section' : null])) : '';
+
+        return [$this->period($v).$scope, [...$columns, 'staff', 'present', 'absent', 'planned_hours', 'worked_hours', 'overtime_hours', 'lost_hours', 'worked_percent'], $rows->all()];
+    }
+
+    /** @return array{departments: list<int>, sections: list<int>}|null|false null = whole company, false = no working-hours permission (employee scope applies) */
+    private function hoursRules(User $user): array|null|false
+    {
+        if ($this->access->can($user, 'attendance.working-hours.company')) {
+            return null;
+        }
+        $department = $this->access->can($user, 'attendance.working-hours.department');
+        $section = $this->access->can($user, 'attendance.working-hours.section');
+        if (! $department && ! $section) {
+            return false;
+        }
+        $me = $user->employee;
+        $rules = ['departments' => [], 'sections' => []];
+        if ($department && $me) {
+            $rules['departments'] = HeadOfDepartment::where('employee_id', $me->id)->where('is_active', true)->pluck('department_id')
+                ->push($me->department_id)->filter()->map(fn ($id) => (int) $id)->unique()->values()->all();
+        }
+        if ($section && $me?->section_id) {
+            $rules['sections'] = [(int) $me->section_id];
+        }
+
+        return $rules;
+    }
+
     private function reportAttendanceClaims(array $v, User $user): array
     {
         $money = $this->money($user);
@@ -558,7 +660,7 @@ class HrReports
         $rows = AttendanceClaim::with(['employee.department', 'employee.section', 'employee.jobPosition', 'transaction', 'reason'])
             ->whereIn('employee_id', $ids)
             ->when($v['status'], fn ($q, $st) => $q->where('claim_status', $st))
-            ->whereHas('transaction', fn ($q) => $q->whereDate('transaction_date', '>=', $v['from'])->whereDate('transaction_date', '<=', $v['to']))
+            ->whereHas('transaction', fn ($q) => $q->where('transaction_date', '>=', $v['from'])->where('transaction_date', '<', CarbonImmutable::parse($v['to'])->addDay()->toDateString()))
             ->get()
             ->sortBy(fn ($c) => $c->transaction?->transaction_date?->toDateString())
             ->map(fn ($c) => $this->person($c->employee) + [

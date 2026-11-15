@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 
 class HeadOfDepartment extends Model
 {
+    use Auditable;
     public const DEPARTMENT = 'hod';
 
     public const SECTION = 'hos';

@@ -1,12 +1,13 @@
 <?php
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SalaryScale extends Model {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes;
     protected $fillable = ['company_id','job_position_id','name','minimum','maximum','description'];
     protected $casts = ['minimum' => 'decimal:2', 'maximum' => 'decimal:2'];
     public function jobPosition() { return $this->belongsTo(JobPosition::class); }

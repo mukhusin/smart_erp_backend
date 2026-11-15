@@ -4,6 +4,7 @@ namespace Modules\Workflow\Models;
 
 use App\Models\Concerns\BelongsToCompany;
 use App\Models\User;
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class WorkflowInstance extends Model
 {
-    use BelongsToCompany;
+    use Auditable, BelongsToCompany;
 
     public const PENDING = 'pending';
     public const APPROVED = 'approved';

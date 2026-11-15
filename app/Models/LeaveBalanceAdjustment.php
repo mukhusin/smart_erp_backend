@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 /** HR's correction to a leave balance (e.g. the opening balance brought from HRMS). */
 class LeaveBalanceAdjustment extends Model
 {
-    use BelongsToCompany;
+    use Auditable, BelongsToCompany;
 
     protected $fillable = ['company_id', 'employee_id', 'leave_type_id', 'leave_year', 'days', 'reason', 'created_by'];
 

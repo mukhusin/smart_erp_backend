@@ -1,12 +1,13 @@
 <?php
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model {
-    use BelongsToCompany, SoftDeletes;
+    use Auditable, BelongsToCompany, SoftDeletes;
 
     protected $fillable = [
         'company_id','company_branch_id','department_id','section_id','job_position_id','user_id',
@@ -27,6 +28,11 @@ class Employee extends Model {
         'has_annual_leave' => 'boolean',
         'has_attendance'   => 'boolean',
     ];
+
+    public function auditEmployeeId(): ?int
+    {
+        return $this->getKey();
+    }
 
     public function getFullNameAttribute(): string {
         return trim("{$this->fname} " . ($this->mname ? "{$this->mname} " : '') . $this->lname);

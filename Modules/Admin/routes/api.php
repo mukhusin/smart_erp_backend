@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Admin\Http\Controllers\Api\AuditLogController;
 use Modules\Admin\Http\Controllers\Api\BranchController;
 use Modules\Admin\Http\Controllers\Api\HandoverController;
 use Modules\Admin\Http\Controllers\Api\LoginSlideController;
@@ -36,6 +37,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'module:admin'])->name('admi
         Route::get('roles/{role}', [RoleController::class, 'show'])->name('roles.show');
         Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update');
         Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    });
+
+    Route::middleware('can:admin.audit.view')->group(function () {
+        Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::get('audit-logs/options', [AuditLogController::class, 'options'])->name('audit-logs.options');
     });
 
     Route::middleware('can:admin.handovers.manage')->group(function () {
