@@ -29593,6 +29593,255 @@
                 }
             }
         },
+        "/payroll/dashboard": {
+            "get": {
+                "operationId": "payroll.dashboard",
+                "summary": "Payroll dashboard: the last approved payrolls (up to 12) with cost, statutory amounts, what makes up the latest payroll\nand its cost by department",
+                "tags": [
+                    "Payroll"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "months": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "staff": {
+                                                                "type": "integer"
+                                                            },
+                                                            "gross": {
+                                                                "type": "number"
+                                                            },
+                                                            "net": {
+                                                                "type": "number"
+                                                            },
+                                                            "deductions": {
+                                                                "type": "number"
+                                                            },
+                                                            "employer": {
+                                                                "type": "number"
+                                                            },
+                                                            "cost": {
+                                                                "type": "number"
+                                                            },
+                                                            "paye": {
+                                                                "type": "number"
+                                                            },
+                                                            "nssf": {
+                                                                "type": "number"
+                                                            },
+                                                            "nhif": {
+                                                                "type": "number"
+                                                            },
+                                                            "heslb": {
+                                                                "type": "number"
+                                                            },
+                                                            "wcf": {
+                                                                "type": "number"
+                                                            },
+                                                            "sdl": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "label",
+                                                            "staff",
+                                                            "gross",
+                                                            "net",
+                                                            "deductions",
+                                                            "employer",
+                                                            "cost",
+                                                            "paye",
+                                                            "nssf",
+                                                            "nhif",
+                                                            "heslb",
+                                                            "wcf",
+                                                            "sdl"
+                                                        ]
+                                                    }
+                                                },
+                                                "latest": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "additionalProperties": {}
+                                                },
+                                                "previous": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "additionalProperties": {}
+                                                },
+                                                "highest": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "additionalProperties": {}
+                                                },
+                                                "year": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "year": {
+                                                            "type": "integer"
+                                                        },
+                                                        "cost": {
+                                                            "type": "number"
+                                                        },
+                                                        "gross": {
+                                                            "type": "number"
+                                                        },
+                                                        "net": {
+                                                            "type": "number"
+                                                        },
+                                                        "statutory": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "year",
+                                                        "cost",
+                                                        "gross",
+                                                        "net",
+                                                        "statutory"
+                                                    ]
+                                                },
+                                                "earnings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "value": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "value"
+                                                        ]
+                                                    }
+                                                },
+                                                "deductions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "value": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "value"
+                                                        ]
+                                                    }
+                                                },
+                                                "employer": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "value": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "value"
+                                                        ]
+                                                    }
+                                                },
+                                                "departments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "staff": {
+                                                                "type": "integer"
+                                                            },
+                                                            "gross": {
+                                                                "type": "number"
+                                                            },
+                                                            "cost": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "staff",
+                                                            "gross",
+                                                            "cost"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "months",
+                                                "latest",
+                                                "previous",
+                                                "highest",
+                                                "year",
+                                                "earnings",
+                                                "deductions",
+                                                "employer",
+                                                "departments"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/payroll/sheets": {
             "get": {
                 "operationId": "payroll.sheets.index",

@@ -7,6 +7,11 @@ use App\Models\AttendanceSetting;
 use App\Models\AttendanceTransa;
 use App\Models\CompanyBranch;
 use App\Models\Department;
+use App\Models\Heslb;
+use App\Models\Nhif;
+use App\Models\Nssf;
+use App\Models\PayrollSheetDetail;
+use App\Models\PayrollSheet;
 use App\Models\HeadOfDepartment;
 use App\Models\EmpLeave;
 use App\Models\Employee;
@@ -41,11 +46,17 @@ class HrReports
         'leave-balances' => ['title' => 'Leave balances', 'group' => 'Leave', 'module' => 'leave'],
         'overtime' => ['title' => 'Overtime claims', 'group' => 'Overtime', 'module' => 'overtime'],
         'overtime-summary' => ['title' => 'Overtime per employee', 'group' => 'Overtime', 'module' => 'overtime'],
+        'payroll-months' => ['title' => 'Payroll by month', 'group' => 'Payroll', 'module' => 'payroll', 'permission' => 'payroll.view'],
+        'payroll-departments' => ['title' => 'Payroll by department', 'group' => 'Payroll', 'module' => 'payroll', 'permission' => 'payroll.view'],
+        'payroll-statutory' => ['title' => 'Statutory remittance list', 'group' => 'Payroll', 'module' => 'payroll', 'permission' => 'payroll.view'],
+        'payroll-bank' => ['title' => 'Bank list (net pay)', 'group' => 'Payroll', 'module' => 'payroll', 'permission' => 'payroll.view'],
         'attendance-daily' => ['title' => 'Attendance by day', 'group' => 'Attendance', 'module' => 'attendance'],
         'attendance-summary' => ['title' => 'Attendance per employee', 'group' => 'Attendance', 'module' => 'attendance'],
         'attendance-hours' => ['title' => 'Working hours', 'group' => 'Attendance', 'module' => 'attendance'],
         'attendance-claims' => ['title' => 'Lost-hours claims', 'group' => 'Attendance', 'module' => 'attendance'],
     ];
+
+    private const SCHEMES = ['paye' => 'PAYE', 'nssf' => 'NSSF', 'nhif' => 'NHIF', 'heslb' => 'HESLB', 'wcf' => 'WCF', 'sdl' => 'SDL'];
 
     private const ATTENDANCE_STATUSES = ['Present', 'Late', 'Absent', 'Not checked out', 'On leave', 'Admitted', 'Excuse of duty', 'Waiting'];
 
@@ -67,6 +78,9 @@ class HrReports
     public function available(string $key, User $user): bool
     {
         $module = self::REPORTS[$key]['module'] ?? null;
+        if (isset(self::REPORTS[$key]['permission']) && ! $this->access->can($user, self::REPORTS[$key]['permission'])) {
+            return false;
+        }
         if (! $module) {
             return true;
         }
@@ -123,6 +137,11 @@ class HrReports
                 ['key' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => array_map(fn ($st) => ['value' => $st, 'label' => $st], self::ATTENDANCE_STATUSES)],
                 ['key' => 'emp_type', 'label' => 'Employee type', 'type' => 'select', 'options' => $options(O::EMPLOYMENT_TYPES)],
             ],
+            'payroll-months' => [['key' => 'year', 'label' => 'Year', 'type' => 'select', 'default' => (string) $today->year, 'options' => $this->payrollYears()]],
+            'payroll-departments' => [$this->sheetFilter()],
+            'payroll-statutory' => [$this->sheetFilter(), ['key' => 'scheme', 'label' => 'Scheme', 'type' => 'select', 'default' => 'paye',
+                'options' => array_map(fn ($k, $l) => ['value' => $k, 'label' => $l], array_keys(self::SCHEMES), self::SCHEMES)]],
+            'payroll-bank' => [$this->sheetFilter()],
             'attendance-hours' => [
                 ['key' => 'from', 'label' => 'From', 'type' => 'date', 'default' => $monthStart],
                 ['key' => 'to', 'label' => 'To', 'type' => 'date', 'default' => $today->toDateString()],
@@ -229,6 +248,9 @@ class HrReports
             'check_out' => 'Out', 'late_minutes' => 'Late (min)', 'lost_hours' => 'Lost hours', 'lost_amount' => 'Lost amount',
             'recorded' => 'Days recorded', 'present' => 'Present', 'late' => 'Late', 'absent' => 'Absent', 'not_checked_out' => 'Not checked out',
             'on_leave' => 'On leave', 'other' => 'Other', 'reason' => 'Reason', 'accepted' => 'Hours accepted',
+            'month' => 'Payroll', 'gross' => 'Gross', 'paye' => 'PAYE', 'nssf' => 'NSSF', 'nhif' => 'NHIF', 'heslb' => 'HESLB', 'wcf' => 'WCF', 'sdl' => 'SDL',
+            'deductions' => 'Deductions', 'net' => 'Net pay', 'cost' => 'Employer cost', 'basic' => 'Basic', 'member_no' => 'Member / TIN no.',
+            'employee_amount' => 'Employee', 'employer_amount' => 'Employer', 'bank' => 'Bank', 'bank_branch' => 'Branch', 'account' => 'Account',
             'group' => 'Group', 'staff' => 'Staff', 'planned_hours' => 'Planned hours', 'worked_hours' => 'Worked hours',
             'overtime_hours' => 'Overtime hours', 'worked_percent' => 'Worked % of planned',
         ];
@@ -482,6 +504,108 @@ class HrReports
         $columns = array_values(array_filter(['employee_no', 'name', 'department', 'date', 'task', 'hours', $money ? 'amount' : null, 'status', 'waiting_for']));
 
         return [$this->period($v), $columns, $rows->all()];
+    }
+
+    /** @return list<array{value: string, label: string}> */
+    private function payrollYears(): array
+    {
+        return PayrollSheet::query()->distinct()->orderByDesc('year')->pluck('year')->map(fn ($y) => ['value' => (string) $y, 'label' => (string) $y])->values()->all();
+    }
+
+    private function sheetFilter(): array
+    {
+        $sheets = PayrollSheet::query()->get(['id', 'name', 'year', 'month', 'status'])->sortByDesc(fn ($s) => sprintf('%04d%02d', $s->year, $s->month))->values();
+
+        $default = $sheets->firstWhere('status', 'approved') ?? $sheets->first();
+
+        return ['key' => 'sheet_id', 'label' => 'Payroll', 'type' => 'select', 'default' => $default ? (string) $default->id : null,
+            'options' => $sheets->map(fn ($s) => ['value' => (string) $s->id, 'label' => $s->name.($s->status === 'approved' ? '' : ' ('.(PayrollSheet::STATUS_LABELS[$s->status] ?? $s->status).')')])->all()];
+    }
+
+    /** Payslips of a payroll the user may see (their employee scope). */
+    private function slips(array $v, User $user): array
+    {
+        $sheet = PayrollSheet::find((int) ($v['sheet_id'] ?? 0));
+        abort_unless($sheet, 422, 'Choose a payroll.');
+        $ids = $this->employees($v, $user, false)->select('employees.id');
+        $slips = PayrollSheetDetail::with(['employee.department', 'employee.section', 'employee.jobPosition'])->where('payroll_sheet_id', $sheet->id)
+            ->whereIn('employee_id', $ids)->orderBy('full_name')->get();
+
+        return [$sheet, $slips, $sheet->name.($sheet->status === 'approved' ? '' : ' · '.(PayrollSheet::STATUS_LABELS[$sheet->status] ?? $sheet->status))];
+    }
+
+    private function reportPayrollMonths(array $v, User $user): array
+    {
+        $year = (string) ($v['year'] ?? CarbonImmutable::today()->year);
+        $ids = $this->employees($v, $user, false)->select('employees.id');
+        $sheets = PayrollSheet::where('year', $year)->get()->sortBy(fn ($s) => (int) $s->month)->values();
+        $rows = $sheets->map(function ($s) use ($ids) {
+            $d = PayrollSheetDetail::where('payroll_sheet_id', $s->id)->whereIn('employee_id', $ids);
+            $sum = fn (string $c) => round((float) (clone $d)->sum($c), 2);
+            $employer = $sum('nssf_employer') + $sum('nhif_employer') + $sum('wcf') + $sum('sdl');
+
+            return ['month' => $s->name, 'status' => PayrollSheet::STATUS_LABELS[$s->status] ?? $s->status, 'staff' => (clone $d)->count(), 'gross' => $sum('gross_salary'),
+                'paye' => $sum('paye'), 'nssf' => round($sum('nssf') + $sum('nssf_employer'), 2), 'nhif' => round($sum('nhif') + $sum('nhif_employer'), 2), 'heslb' => $sum('heslb'),
+                'wcf' => $sum('wcf'), 'sdl' => $sum('sdl'), 'deductions' => $sum('total_deduction'), 'net' => $sum('net_salary'), 'cost' => round($sum('gross_salary') + $employer, 2)];
+        });
+        if ($rows->count() > 1) {
+            $total = ['month' => 'Total', 'status' => '', 'staff' => null];
+            foreach (['gross', 'paye', 'nssf', 'nhif', 'heslb', 'wcf', 'sdl', 'deductions', 'net', 'cost'] as $k) {
+                $total[$k] = round($rows->sum($k), 2);
+            }
+            $rows->push($total);
+        }
+
+        return ["Payrolls of {$year} · NSSF and NHIF are employee + employer", ['month', 'status', 'staff', 'gross', 'paye', 'nssf', 'nhif', 'heslb', 'wcf', 'sdl', 'deductions', 'net', 'cost'], $rows->all()];
+    }
+
+    private function reportPayrollDepartments(array $v, User $user): array
+    {
+        [, $slips, $subtitle] = $this->slips($v, $user);
+        $sum = fn ($g, $c) => round((float) $g->sum($c), 2);
+        $rows = $slips->groupBy(fn ($d) => $d->employee?->department?->name ?? 'No department')->sortKeys()->map(fn ($g, $name) => [
+            'department' => $name, 'staff' => $g->count(), 'basic' => $sum($g, 'basic_salary'), 'gross' => $sum($g, 'gross_salary'), 'deductions' => $sum($g, 'total_deduction'),
+            'net' => $sum($g, 'net_salary'), 'cost' => round($sum($g, 'gross_salary') + $sum($g, 'nssf_employer') + $sum($g, 'nhif_employer') + $sum($g, 'wcf') + $sum($g, 'sdl'), 2),
+        ])->values();
+        if ($rows->count() > 1) {
+            $rows->push(['department' => 'Total', 'staff' => $rows->sum('staff')] + collect(['basic', 'gross', 'deductions', 'net', 'cost'])->mapWithKeys(fn ($k) => [$k => round($rows->sum($k), 2)])->all());
+        }
+
+        return [$subtitle, ['department', 'staff', 'basic', 'gross', 'deductions', 'net', 'cost'], $rows->all()];
+    }
+
+    private function reportPayrollStatutory(array $v, User $user): array
+    {
+        [, $slips, $subtitle] = $this->slips($v, $user);
+        $scheme = array_key_exists($v['scheme'] ?? '', self::SCHEMES) ? $v['scheme'] : 'paye';
+        $model = ['nssf' => Nssf::class, 'nhif' => Nhif::class, 'heslb' => Heslb::class][$scheme] ?? null;
+        $numbers = $model ? $model::whereIn('employee_id', $slips->pluck('employee_id'))->pluck('contribution_no', 'employee_id') : collect();
+        [$employee, $employer] = match ($scheme) {
+            'nssf' => ['nssf', 'nssf_employer'], 'nhif' => ['nhif', 'nhif_employer'], 'paye' => ['paye', null], 'heslb' => ['heslb', null], 'wcf' => [null, 'wcf'], 'sdl' => [null, 'sdl'],
+        };
+        $rows = $slips->map(fn ($d) => ['employee_no' => $d->employee?->employee_no] + [
+            'name' => $d->full_name ?: $d->employee?->full_name, 'member_no' => $scheme === 'paye' ? $d->employee?->tin : ($numbers[$d->employee_id] ?? null),
+            'gross' => (float) $d->gross_salary, 'employee_amount' => $employee ? round((float) $d->{$employee}, 2) : 0.0, 'employer_amount' => $employer ? round((float) $d->{$employer}, 2) : 0.0,
+        ])->map(fn ($r) => $r + ['total' => round($r['employee_amount'] + $r['employer_amount'], 2)])->filter(fn ($r) => $r['total'] > 0)->values();
+        if ($rows->count() > 1) {
+            $rows->push(['employee_no' => '', 'name' => 'Total', 'member_no' => '', 'gross' => round($rows->sum('gross'), 2), 'employee_amount' => round($rows->sum('employee_amount'), 2),
+                'employer_amount' => round($rows->sum('employer_amount'), 2), 'total' => round($rows->sum('total'), 2)]);
+        }
+
+        return [self::SCHEMES[$scheme].' · '.$subtitle, ['employee_no', 'name', 'member_no', 'gross', 'employee_amount', 'employer_amount', 'total'], $rows->all()];
+    }
+
+    private function reportPayrollBank(array $v, User $user): array
+    {
+        [, $slips, $subtitle] = $this->slips($v, $user);
+        $rows = $slips->map(fn ($d) => ['employee_no' => $d->employee?->employee_no, 'name' => $d->full_name ?: $d->employee?->full_name, 'bank' => $d->bank_name,
+            'bank_branch' => $d->bank_branch, 'account' => $d->bank_account, 'net' => round((float) $d->net_salary, 2)])->sortBy(fn ($r) => ($r['bank'] ?? 'zzz').$r['name'])->values();
+        $missing = $rows->filter(fn ($r) => blank($r['account']))->count();
+        if ($rows->count() > 1) {
+            $rows->push(['employee_no' => '', 'name' => 'Total', 'bank' => '', 'bank_branch' => '', 'account' => '', 'net' => round($rows->sum('net'), 2)]);
+        }
+
+        return [$subtitle.($missing ? " · {$missing} without a bank account (paid in cash)" : ''), ['employee_no', 'name', 'bank', 'bank_branch', 'account', 'net'], $rows->all()];
     }
 
     private function reportOvertimeSummary(array $v, User $user): array

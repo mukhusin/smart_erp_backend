@@ -423,6 +423,7 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::get('settings/paye', [PayrollController::class, 'payeCheck'])->name('settings.paye');
     });
     Route::middleware('can:payroll.view')->group(function () {
+        Route::get('dashboard', [PayrollController::class, 'dashboard'])->name('dashboard');
         Route::get('sheets', [PayrollController::class, 'index'])->name('sheets.index');
         Route::get('sheets/{sheet}', [PayrollController::class, 'show'])->name('sheets.show');
         Route::get('sheets/{sheet}/payslips/{detail}', [PayrollController::class, 'payslip'])->name('sheets.payslip');

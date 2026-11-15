@@ -179,6 +179,71 @@ class PayrollController extends Controller
     }
 
     /**
+     * Payroll dashboard: the last approved payrolls (up to 12) with cost, statutory amounts, what makes up the latest payroll
+     * and its cost by department.
+     *
+     * @response array{data: array{months: list<array{id: int, name: string, label: string, staff: int, gross: float, net: float, deductions: float, employer: float, cost: float, paye: float, nssf: float, nhif: float, heslb: float, wcf: float, sdl: float}>, latest: array<string, mixed>|null, previous: array<string, mixed>|null, highest: array<string, mixed>|null, year: array{year: int, cost: float, gross: float, net: float, statutory: float}|null, earnings: list<array{label: string, value: float}>, deductions: list<array{label: string, value: float}>, employer: list<array{label: string, value: float}>, departments: list<array{label: string, staff: int, gross: float, cost: float}>}}
+     */
+    public function dashboard(): JsonResponse
+    {
+        $sheets = PayrollSheet::where('status', 'approved')->get()->sortByDesc(fn ($s) => sprintf('%04d%02d', $s->year, $s->month))->take(12)->reverse()->values();
+        $sums = PayrollSheetDetail::whereIn('payroll_sheet_id', $sheets->pluck('id'))->groupBy('payroll_sheet_id')
+            ->selectRaw('payroll_sheet_id, count(*) as staff, sum(gross_salary) as gross, sum(net_salary) as net, sum(total_deduction) as deductions, sum(paye) as paye')
+            ->selectRaw('sum(nssf) as nssf, sum(nssf_employer) as nssf_er, sum(nhif) as nhif, sum(nhif_employer) as nhif_er, sum(heslb) as heslb, sum(wcf) as wcf, sum(sdl) as sdl')
+            ->get()->keyBy('payroll_sheet_id');
+        $months = $sheets->map(function ($s) use ($sums) {
+            $t = $sums->get($s->id);
+            $v = fn (string $k) => round((float) ($t?->{$k} ?? 0), 2);
+            $employer = round($v('nssf_er') + $v('nhif_er') + $v('wcf') + $v('sdl'), 2);
+
+            return ['id' => $s->id, 'name' => $s->name, 'label' => \Illuminate\Support\Carbon::create((int) $s->year, (int) $s->month, 1)->format('M y'), 'staff' => (int) ($t?->staff ?? 0),
+                'gross' => $v('gross'), 'net' => $v('net'), 'deductions' => $v('deductions'), 'employer' => $employer, 'cost' => round($v('gross') + $employer, 2),
+                'paye' => $v('paye'), 'nssf' => round($v('nssf') + $v('nssf_er'), 2), 'nhif' => round($v('nhif') + $v('nhif_er'), 2), 'heslb' => $v('heslb'), 'wcf' => $v('wcf'), 'sdl' => $v('sdl')];
+        })->values();
+        $latest = $months->last();
+        $previous = $months->count() > 1 ? $months[$months->count() - 2] : null;
+        $year = null;
+        $earnings = $deductions = $employer = $departments = [];
+        if ($latest) {
+            $sheet = $sheets->last();
+            $sameYear = $months->filter(fn ($m) => $sheets->firstWhere('id', $m['id'])?->year === $sheet->year);
+            $year = ['year' => (int) $sheet->year, 'cost' => round($sameYear->sum('cost'), 2), 'gross' => round($sameYear->sum('gross'), 2), 'net' => round($sameYear->sum('net'), 2),
+                'statutory' => round($sameYear->sum(fn ($m) => $m['paye'] + $m['nssf'] + $m['nhif'] + $m['heslb'] + $m['wcf'] + $m['sdl']), 2)];
+            $d = PayrollSheetDetail::where('payroll_sheet_id', $sheet->id);
+            $sum = fn (string $c) => round((float) (clone $d)->sum($c), 2);
+            $basic = $sum('basic_salary');
+            $allowances = $sum('total_allowance');
+            $overtime = $sum('total_overtime');
+            $earnings = array_values(array_filter([
+                ['label' => 'Basic salary', 'value' => $basic], ['label' => 'Allowances', 'value' => $allowances], ['label' => 'Overtime', 'value' => $overtime],
+                ['label' => 'Other earnings', 'value' => round(max(0, $latest['gross'] - $basic - $allowances - $overtime), 2)],
+            ], fn ($i) => $i['value'] > 0));
+            $loans = $sum('total_loan');
+            $saccos = $sum('saccos_serving');
+            $known = $sum('paye') + $sum('nssf') + $sum('nhif') + $sum('heslb') + $loans + $saccos;
+            $deductions = array_values(array_filter([
+                ['label' => 'PAYE', 'value' => $sum('paye')], ['label' => 'NSSF', 'value' => $sum('nssf')], ['label' => 'NHIF', 'value' => $sum('nhif')],
+                ['label' => 'HESLB', 'value' => $sum('heslb')], ['label' => 'Loans', 'value' => $loans], ['label' => 'SACCOS', 'value' => $saccos],
+                ['label' => 'Other', 'value' => round(max(0, $latest['deductions'] - $known), 2)],
+            ], fn ($i) => $i['value'] > 0));
+            $employer = array_values(array_filter([
+                ['label' => 'NSSF (employer)', 'value' => $sum('nssf_employer')], ['label' => 'NHIF (employer)', 'value' => $sum('nhif_employer')],
+                ['label' => 'WCF', 'value' => $sum('wcf')], ['label' => 'SDL', 'value' => $sum('sdl')],
+            ], fn ($i) => $i['value'] > 0));
+            $departments = (clone $d)->join('employees', 'employees.id', '=', 'payroll_sheet_details.employee_id')
+                ->leftJoin('departments', 'departments.id', '=', 'employees.department_id')
+                ->groupBy('departments.name')->selectRaw('coalesce(departments.name, ?) as label, count(*) as staff, sum(gross_salary) as gross', ['No department'])
+                ->selectRaw('sum(gross_salary + coalesce(nssf_employer, 0) + coalesce(nhif_employer, 0) + coalesce(wcf, 0) + coalesce(sdl, 0)) as cost')
+                ->orderByDesc('cost')->get()->map(fn ($r) => ['label' => $r->label, 'staff' => (int) $r->staff, 'gross' => round((float) $r->gross, 2), 'cost' => round((float) $r->cost, 2)])->all();
+        }
+
+        return response()->json(['data' => [
+            'months' => $months->all(), 'latest' => $latest, 'previous' => $previous, 'highest' => $months->sortByDesc('cost')->first(), 'year' => $year,
+            'earnings' => $earnings, 'deductions' => $deductions, 'employer' => $employer, 'departments' => $departments,
+        ]]);
+    }
+
+    /**
      * Print a payslip (salary slip PDF with year-to-date totals).
      */
     public function payslipPdf(Request $request, PayrollSheet $sheet, PayrollSheetDetail $detail, Payslip $payslip, PdfDocument $pdf): Response
