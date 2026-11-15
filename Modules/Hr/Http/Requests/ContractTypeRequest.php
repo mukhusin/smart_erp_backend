@@ -33,6 +33,8 @@ class ContractTypeRequest extends FormRequest
             'employment_type' => ['required', O::keys(O::EMPLOYMENT_TYPES)],
             /** Number format for employees on this contract type (null = the default format). */
             'employee_number_format_id' => ['nullable', 'integer', Rule::exists('employee_number_formats', 'id')->where('company_id', app(CompanyContext::class)->id())],
+            /** Runs to retirement age: the end date comes from the date of birth and the employee retires at the end. */
+            'is_permanent' => ['boolean'],
             'has_annual_leave' => ['boolean'],
             'has_payroll' => ['boolean'],
             'has_overtime' => ['boolean'],

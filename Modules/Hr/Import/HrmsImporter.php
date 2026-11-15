@@ -118,6 +118,7 @@ class HrmsImporter
         $this->sync('nature_of_contracts', 'nature_of_contracts', fn ($r) => [
             'company_id' => $this->companyId, 'contract_name' => $r->contract_name, 'code' => $r->code,
             'employment_type' => O::empTypeOf($r->employeement_type) ?? $r->employeement_type,
+            'is_permanent' => (int) $r->id === 1 || str_contains(strtolower((string) $r->contract_name), 'perman'),
             'has_payroll' => (bool) $r->hasPayroll, 'has_annual_leave' => (bool) $r->hasAnnualLeave, 'has_allowance' => (bool) $r->hasAllowance,
             'has_overtime' => (bool) $r->hasOvertime, 'has_emergency_fund' => (bool) $r->hasEmergencyFund, 'is_active' => (bool) $r->isActive,
             'contract_description' => $r->contract_description, 'template_content' => $r->template_content, 'deleted_at' => $r->deleted_at,

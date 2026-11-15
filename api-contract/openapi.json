@@ -14339,6 +14339,9 @@
                                                             "null"
                                                         ]
                                                     },
+                                                    "is_permanent": {
+                                                        "type": "boolean"
+                                                    },
                                                     "has_annual_leave": {
                                                         "type": "boolean"
                                                     }
@@ -14348,6 +14351,7 @@
                                                     "name",
                                                     "code",
                                                     "employment_type",
+                                                    "is_permanent",
                                                     "has_annual_leave"
                                                 ]
                                             }
@@ -16499,10 +16503,14 @@
                                             "properties": {
                                                 "hospital_patients": {
                                                     "type": "boolean"
+                                                },
+                                                "retirement_age": {
+                                                    "type": "integer"
                                                 }
                                             },
                                             "required": [
-                                                "hospital_patients"
+                                                "hospital_patients",
+                                                "retirement_age"
                                             ]
                                         }
                                     },
@@ -16534,6 +16542,11 @@
                                 "properties": {
                                     "hospital_patients": {
                                         "type": "boolean"
+                                    },
+                                    "retirement_age": {
+                                        "type": "integer",
+                                        "minimum": 40,
+                                        "maximum": 80
                                     }
                                 },
                                 "required": [
@@ -16556,10 +16569,14 @@
                                             "properties": {
                                                 "hospital_patients": {
                                                     "type": "boolean"
+                                                },
+                                                "retirement_age": {
+                                                    "type": "integer"
                                                 }
                                             },
                                             "required": [
-                                                "hospital_patients"
+                                                "hospital_patients",
+                                                "retirement_age"
                                             ]
                                         }
                                     },
@@ -40513,8 +40530,11 @@
                         "format": "date-time"
                     },
                     "period": {
-                        "type": "integer",
-                        "description": "Months. The end date is start + period - 1 day.",
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Months. The end date is start + period - 1 day. Not needed for a permanent contract type (it runs to retirement age).",
                         "minimum": 1,
                         "maximum": 120
                     },
@@ -40541,8 +40561,7 @@
                 "required": [
                     "nature_of_contract_id",
                     "basic_salary",
-                    "start_date",
-                    "period"
+                    "start_date"
                 ],
                 "title": "ContractRequest"
             },
@@ -40755,6 +40774,10 @@
                         ],
                         "description": "Number format for employees on this contract type (null = the default format)."
                     },
+                    "is_permanent": {
+                        "type": "boolean",
+                        "description": "Runs to retirement age: the end date comes from the date of birth and the employee retires at the end."
+                    },
                     "has_annual_leave": {
                         "type": "boolean"
                     },
@@ -40836,6 +40859,9 @@
                             "next_number"
                         ]
                     },
+                    "is_permanent": {
+                        "type": "boolean"
+                    },
                     "has_annual_leave": {
                         "type": "boolean"
                     },
@@ -40874,6 +40900,7 @@
                     "employment_type",
                     "employment_type_label",
                     "number_format",
+                    "is_permanent",
                     "has_annual_leave",
                     "has_payroll",
                     "has_overtime",

@@ -20,8 +20,8 @@ class ContractRequest extends FormRequest
                 ->where('company_id', app(CompanyContext::class)->id())->where('is_active', true)->whereNull('deleted_at')],
             'basic_salary' => ['required', 'numeric', 'min:0', 'max:9999999999'],
             'start_date' => ['required', 'date'],
-            /** Months. The end date is start + period - 1 day. */
-            'period' => ['required', 'integer', 'min:1', 'max:120'],
+            /** Months. The end date is start + period - 1 day. Not needed for a permanent contract type (it runs to retirement age). */
+            'period' => [\Illuminate\Validation\Rule::requiredIf(fn () => ! \App\Models\NatureOfContract::find($this->input('nature_of_contract_id'))?->is_permanent), 'nullable', 'integer', 'min:1', 'max:120'],
             /** Whether the employee gets annual leave. */
             'has_annual_leave' => ['sometimes', 'boolean'],
             /** When the change takes effect (adjustments only). Defaults to today. */

@@ -90,12 +90,12 @@ class LookupController extends Controller
     /**
      * Active contract types.
      *
-     * @response array{data: list<array{id: int, name: string, code: string|null, employment_type: string|null, has_annual_leave: bool}>}
+     * @response array{data: list<array{id: int, name: string, code: string|null, employment_type: string|null, is_permanent: bool, has_annual_leave: bool}>}
      */
     public function contractTypes(): JsonResponse
     {
         return response()->json(['data' => NatureOfContract::where('is_active', true)->orderBy('contract_name')->get()
-            ->map(fn ($t) => ['id' => $t->id, 'name' => $t->contract_name, 'code' => $t->code, 'employment_type' => $t->employment_type, 'has_annual_leave' => (bool) $t->has_annual_leave])]);
+            ->map(fn ($t) => ['id' => $t->id, 'name' => $t->contract_name, 'code' => $t->code, 'employment_type' => $t->employment_type, 'is_permanent' => (bool) $t->is_permanent, 'has_annual_leave' => (bool) $t->has_annual_leave])]);
     }
 
     /**

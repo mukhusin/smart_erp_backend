@@ -89,6 +89,27 @@ class EmployeeProfileTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors(['start_date' => 'last 90 days']);
     }
 
+    public function test_permanent_contract_runs_to_retirement_age_and_retires(): void
+    {
+        $permanent = app(CompanyContext::class)->run($this->company, fn () => NatureOfContract::create(['contract_name' => 'Permanent', 'code' => 'PC', 'employment_type' => 'full_time', 'is_permanent' => true])->id);
+        $this->actingAs($this->admin)->postJson("{$this->base}/contracts", $this->contract(['nature_of_contract_id' => $permanent, 'period' => null]))
+            ->assertUnprocessable()->assertJsonValidationErrors(['nature_of_contract_id' => 'date of birth']);
+
+        $this->employee->update(['date_of_birth' => '1967-03-20']);
+        $this->putJson('/api/v1/hr/settings/general', ['hospital_patients' => false, 'retirement_age' => 60])->assertOk()->assertJsonPath('data.retirement_age', 60);
+        $this->postJson("{$this->base}/contracts", $this->contract(['nature_of_contract_id' => $permanent, 'period' => null, 'start_date' => '2027-04-01']))
+            ->assertUnprocessable()->assertJsonValidationErrors(['start_date' => 'retirement age of 60']);
+        $id = $this->postJson("{$this->base}/contracts", $this->contract(['nature_of_contract_id' => $permanent, 'period' => null, 'start_date' => '2026-01-01']))
+            ->assertCreated()->assertJsonPath('data.end_date', '2027-03-19')->assertJsonPath('data.period', 15)->json('data.id');
+        $this->getJson('/api/v1/hr/contract-types/active')->assertJsonFragment(['name' => 'Permanent', 'is_permanent' => true]);
+
+        $this->travelTo('2027-03-20 01:00:00');
+        $this->artisan('contract:status')->assertSuccessful();
+        $this->employee->refresh();
+        $this->assertSame(['retired', 'retired', 'terminated', '2027-03-20'],
+            [EmployeeContract::find($id)->status, $this->employee->contract_status, $this->employee->employment_status, $this->employee->termination_date->toDateString()]);
+    }
+
     public function test_ending_a_contract_by_resignation_terminates_the_employee(): void
     {
         $id = $this->actingAs($this->admin)->postJson("{$this->base}/contracts", $this->contract(['start_date' => '2026-02-01']))->json('data.id');

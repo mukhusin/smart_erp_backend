@@ -29,6 +29,7 @@ class ContractTypeResource extends JsonResource
                 'name' => $this->numberFormat->name,
                 'next_number' => app(EmployeeNumbers::class)->nextIn($this->numberFormat->loadMissing('segments')),
             ] : null,
+            'is_permanent' => (bool) $this->is_permanent,
             'has_annual_leave' => $this->has_annual_leave,
             'has_payroll' => $this->has_payroll,
             'has_overtime' => $this->has_overtime,

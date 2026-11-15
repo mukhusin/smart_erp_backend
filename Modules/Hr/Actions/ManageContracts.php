@@ -34,6 +34,31 @@ class ManageContracts
         return CarbonImmutable::parse($start)->startOfDay()->addMonthsNoOverflow($months)->subDay();
     }
 
+    /**
+     * Period and end date: from the start date and period, or for a permanent contract type up to the day before the
+     * employee reaches retirement age (HR settings), with the period worked out in months.
+     *
+     * @return array{0: int, 1: CarbonImmutable}
+     */
+    public function term(Employee $employee, array $data): array
+    {
+        $type = \App\Models\NatureOfContract::withTrashed()->find($data['nature_of_contract_id']);
+        if (! $type?->is_permanent) {
+            return [(int) $data['period'], self::endDate($data['start_date'], (int) $data['period'])];
+        }
+        if (! $employee->date_of_birth) {
+            throw ValidationException::withMessages(['nature_of_contract_id' => 'A permanent contract runs to retirement age: add the date of birth first.']);
+        }
+        $age = (int) (\App\Models\HrSetting::current()->retirement_age ?: 60);
+        $start = CarbonImmutable::parse($data['start_date'])->startOfDay();
+        $end = CarbonImmutable::parse($employee->date_of_birth)->startOfDay()->addYearsNoOverflow($age)->subDay();
+        if ($end->lt($start)) {
+            throw ValidationException::withMessages(['start_date' => "{$employee->full_name} reaches the retirement age of {$age} before this start date."]);
+        }
+
+        return [max(1, (int) ceil($start->floatDiffInMonths($end->addDay()))), $end];
+    }
+
     /** @param array{nature_of_contract_id: int, basic_salary: numeric, start_date: string, period: int, has_annual_leave?: bool, comment?: string|null} $data */
     public function give(Employee $employee, array $data, ?User $by): EmployeeContract
     {
@@ -47,7 +72,7 @@ class ManageContracts
             }
 
             $start = CarbonImmutable::parse($data['start_date'])->startOfDay();
-            $end = self::endDate($data['start_date'], (int) $data['period']);
+            [$data['period'], $end] = $this->term($employee, $data);
             if ($active = $employee->activeContract()->first()) {
                 $this->assertRenewal($active, $start);
             }
@@ -90,12 +115,13 @@ class ManageContracts
                 $this->assertRenewal($active, CarbonImmutable::parse($data['start_date']), checkWindow: false);
             }
 
+            [$period, $end] = $this->term($employee, $data);
             $contract->update([
                 'nature_of_contract_id' => $data['nature_of_contract_id'],
                 'basic_salary' => $data['basic_salary'],
-                'period' => $data['period'],
+                'period' => $period,
                 'start_date' => $data['start_date'],
-                'end_date' => self::endDate($data['start_date'], (int) $data['period']),
+                'end_date' => $end,
                 'date_of_change' => $data['date_of_change'] ?? CarbonImmutable::today(),
                 'comment' => $data['comment'] ?? $contract->comment,
                 'updated_by' => $by?->id,
@@ -222,10 +248,15 @@ class ManageContracts
     {
         $today = CarbonImmutable::today();
 
-        foreach ($employee->contracts()->where('is_active', true)->whereDate('end_date', '<', $today)->get() as $expired) {
-            $this->close($expired, 'ended', $today->toDateString(), null, null, 'auto_ended');
+        foreach ($employee->contracts()->with('natureOfContract')->where('is_active', true)->whereDate('end_date', '<', $today)->get() as $expired) {
+            $retires = (bool) $expired->natureOfContract?->is_permanent && ! $employee->contracts()->where('status', 'waiting')->exists();
+            $this->close($expired, $retires ? 'retired' : 'ended', $today->toDateString(), $retires ? 'Reached retirement age.' : null, null, 'auto_ended');
             if ((int) $employee->contract_id === $expired->id) {
-                $employee->contract_status = 'ended';
+                $employee->contract_status = $retires ? 'retired' : 'ended';
+            }
+            if ($retires && $employee->employment_status !== 'terminated') {
+                $employee->employment_status = 'terminated';
+                $employee->termination_date = $expired->end_date->addDay()->toDateString();
             }
         }
 

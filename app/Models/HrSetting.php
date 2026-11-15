@@ -10,9 +10,9 @@ class HrSetting extends Model
 {
     use Auditable, BelongsToCompany;
 
-    protected $fillable = ['company_id', 'renumber_on_contract_change', 'leave_year_start_month', 'annual_cycle_from_joining', 'joiners_from', 'hospital_patients'];
+    protected $fillable = ['company_id', 'renumber_on_contract_change', 'leave_year_start_month', 'annual_cycle_from_joining', 'joiners_from', 'hospital_patients', 'retirement_age'];
 
-    protected $casts = ['renumber_on_contract_change' => 'boolean', 'leave_year_start_month' => 'integer', 'annual_cycle_from_joining' => 'boolean', 'joiners_from' => 'date', 'hospital_patients' => 'boolean'];
+    protected $casts = ['renumber_on_contract_change' => 'boolean', 'leave_year_start_month' => 'integer', 'annual_cycle_from_joining' => 'boolean', 'joiners_from' => 'date', 'hospital_patients' => 'boolean', 'retirement_age' => 'integer'];
 
     public static function current(): self
     {

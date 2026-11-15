@@ -15,9 +15,10 @@ items decided against are ➖. The older sections below keep the original analys
 | 6 | ~~Bulk phone number update~~ | §7.5 | ✅ 2026-11-15: HR → Staff contacts (inline, as HRMS) plus Download CSV / Update from CSV (check, then save; phone format and patient ID clashes checked) |
 | 7 | ~~Annual leave plans move with the employee on department change~~ | #17, L-8 | ✅ 2026-11-15: plans not yet over move to the new department's (or section's) annual leave roster of the same year, made with the old roster's status if missing; past leave stays |
 | 8 | ~~Idle auto-logout; no cached pages after logout~~ | #20, #21 | ✅ 2026-11-15: `SESSION_IDLE_MINUTES` (20); the server ends idle sessions and background polling does not count; the app warns a minute before and logs out (activity shared across tabs); API answers `no-store`; back after logout reloads |
-| 9 | Permanent contract: period up to retirement age | #8, E-7 | |
+| 9 | ~~Permanent contract: period up to retirement age~~ | #8, E-7 | ✅ 2026-11-15: contract type flag "permanent"; end = day before the retirement birthday (HR settings, default 60), period in months; at the end the contract becomes Retired and the employee leaves |
 | 10 | Maximum overtime hours per duty enforced | OT-6 | Value is imported, not checked |
 | 11 | Push new staff to the BioTime device ("send to biometric") | E-13 | Optional |
+| 13 | Payroll menu naming: "Statutory deductions" (PAYE, NSSF, NHIF, HESLB; WCF and SDL shown as employer contributions) instead of HRMS "Government deductions"; "Other deductions" keeps TUGHE, NIC, SACCOS, leave deduction, other; reliefs move next to pay items | §7.5 | To do with the payroll screens review |
 | 12 | Migration: dry run on a production copy; decide the 110 HRMS pending attendance claims; parallel payroll; switch | §3 | |
 
 Approval chains (checked 2026-11-15): the 7 HRMS workflows (leave, overtime HOS → HOD → HR, salary adjustment
