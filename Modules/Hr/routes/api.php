@@ -508,6 +508,8 @@ Route::prefix('attendance')->middleware(['auth:sanctum', 'module:attendance'])->
         Route::put('settings', [AttendanceController::class, 'updateSettings'])->name('settings.update');
         Route::post('settings/test', [AttendanceController::class, 'testConnection'])->name('settings.test');
         Route::post('sync', [AttendanceController::class, 'syncNow'])->name('sync');
+        Route::post('employees/push', [AttendanceController::class, 'pushAll'])->middleware('throttle:5,1')->name('employees.push-all');
+        Route::post('employees/{employee}/push', [AttendanceController::class, 'push'])->middleware('throttle:30,1')->name('employees.push');
     });
 });
 

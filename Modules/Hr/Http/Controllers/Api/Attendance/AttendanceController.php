@@ -100,6 +100,43 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Register one employee on the fingerprint devices now (BioTime only). Gives a free attendance code if none.
+     *
+     * @response array{data: array{result: string, device_code: string}}
+     */
+    public function push(Employee $employee, \Modules\Hr\Actions\ManageDevicePersonnel $device): JsonResponse
+    {
+        if (! $device->enabled()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['attendance' => 'Attendance is not set to use the BioTime fingerprint devices.']);
+        }
+        if (! $employee->has_attendance) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['employee' => "{$employee->full_name} is not on attendance. Turn attendance on first."]);
+        }
+        try {
+            $result = $device->push($employee);
+        } catch (\Throwable $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['attendance' => 'Could not reach the BioTime server: '.\Illuminate\Support\Str::limit($e->getMessage(), 150)]);
+        }
+
+        return response()->json(['data' => ['result' => (string) $result, 'device_code' => ManageAttendance::codeOf($employee->refresh())]]);
+    }
+
+    /**
+     * Register every current employee with attendance on the fingerprint devices (runs in the background; also nightly).
+     *
+     * @response array{data: array{queued: bool}}
+     */
+    public function pushAll(\Modules\Hr\Actions\ManageDevicePersonnel $device): JsonResponse
+    {
+        if (! $device->enabled()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['attendance' => 'Attendance is not set to use the BioTime fingerprint devices.']);
+        }
+        \Modules\Hr\Jobs\PushStaffToDeviceJob::dispatch(app(\App\Services\CompanyContext::class)->id());
+
+        return response()->json(['data' => ['queued' => true]]);
+    }
+
+    /**
      * Turn attendance tracking on or off and set device codes for employees.
      *
      * @response array{data: array{updated: int, relinked: int}}

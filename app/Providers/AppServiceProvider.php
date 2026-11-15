@@ -24,13 +24,28 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(\Modules\Hr\Support\LeaveBalances::class);
     }
 
+    private static function pushToDevice(\App\Models\Employee $employee): void
+    {
+        if (\App\Models\AuditLog::paused() || ! $employee->company_id) {
+            return;
+        }
+        $uses = app(\App\Services\CompanyContext::class)->run($employee->company_id, fn () => \App\Models\AttendanceSetting::current()->enabled());
+        if ($uses) {
+            \Modules\Hr\Jobs\PushStaffToDeviceJob::dispatch($employee->company_id, $employee->id)->afterCommit();
+        }
+    }
+
     public function boot(): void
     {
         \App\Models\Employee::updated(function (\App\Models\Employee $employee) {
             if ($employee->department_id && $employee->wasChanged(['department_id', 'section_id'])) {
                 app(\Modules\Hr\Actions\ManageAnnualRoster::class)->follow($employee);
             }
+            if ($employee->has_attendance && $employee->wasChanged(['has_attendance', 'department_id', 'section_id', 'job_position_id', 'fname', 'mname', 'lname', 'gender', 'employment_status'])) {
+                self::pushToDevice($employee);
+            }
         });
+        \App\Models\Employee::created(fn (\App\Models\Employee $employee) => $employee->has_attendance ? self::pushToDevice($employee) : null);
         // Each module keeps its own migrations in Modules/<Module>/Database/Migrations.
         $this->loadMigrationsFrom(glob(base_path('Modules/*/Database/Migrations')));
 

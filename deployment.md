@@ -33,7 +33,12 @@ Steps to run on the server when a release needs more than pulling the code. Newe
    </Files>
    ```
 
-5. Give "View audit log" to the roles that should see Administration → Audit log and the employee History tab.
+5. Sending staff to the fingerprint devices writes to the BioTime database (`personnel_employee`, `personnel_department`,
+   `personnel_position`, `personnel_employee_area`), so the BioTime user in Attendance → Settings needs INSERT/UPDATE on those
+   tables (reading punches alone needed SELECT). It runs on the `attendance` queue (the worker already listens to it) and
+   nightly at 01:30 (`attendance:push-staff`). Companies whose attendance is not BioTime are never touched.
+
+6. Give "View audit log" to the roles that should see Administration → Audit log and the employee History tab.
 
 ## Self-service profile (2026-11-13)
 

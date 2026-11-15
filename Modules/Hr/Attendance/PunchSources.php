@@ -14,4 +14,12 @@ class PunchSources
 
         return $s->source === 'biotime' && ! empty($s->connection['host']) ? new BiotimeSource($s->connection, app(CompanyContext::class)->id()) : null;
     }
+
+    /** Where employees are registered on the fingerprint devices (BioTime), or null when the company does not use them. */
+    public function personnelForCurrentCompany(): ?BiotimePersonnel
+    {
+        $source = $this->forCurrentCompany();
+
+        return $source instanceof BiotimeSource ? new BiotimePersonnel($source->connectionName()) : null;
+    }
 }

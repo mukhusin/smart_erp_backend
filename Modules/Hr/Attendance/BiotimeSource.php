@@ -23,6 +23,11 @@ class BiotimeSource implements PunchSource
         DB::purge($this->name);
     }
 
+    public function connectionName(): string
+    {
+        return $this->name;
+    }
+
     public function reachable(): bool
     {
         try {

@@ -21,6 +21,8 @@ Schedule::command('hr:contract-reminders')->dailyAt('08:30')
 Schedule::command('leave:status')->everyFourHours()
     ->appendOutputTo(storage_path('logs/leave-status.log'));
 
+Schedule::command('attendance:push-staff')->dailyAt('01:30');
+
 Schedule::command('attendance:sync')->everyThirtyMinutes()->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/attendance-sync.log'));
 
