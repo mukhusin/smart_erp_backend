@@ -73,6 +73,24 @@ class AuthTest extends TestCase
             ->assertJsonPath('code', 'session_replaced');
     }
 
+    public function test_idle_session_ends_and_background_polling_does_not_keep_it_alive(): void
+    {
+        config(['session.idle_minutes' => 20]);
+        $this->postJson('/api/v1/auth/login', ['username' => 'hr_testco', 'password' => 'password'])->assertOk()
+            ->assertJsonPath('data.idle_minutes', 20)->assertHeader('Cache-Control', 'max-age=0, no-store, private');
+        $this->mock(SingleDeviceSessionManager::class, fn ($m) => $m->shouldReceive('validateSession')->andReturn(true)->shouldReceive('clearSessionRegistration'));
+
+        $before = time() - 15 * 60;
+        $this->actingAs($this->user)->withSession(['last_activity' => $before])->withHeader('X-Background', '1')->getJson('/api/v1/me/notifications')->assertOk();
+        $this->assertSame($before, $this->app['session.store']->get('last_activity'), 'polling is not activity');
+
+        $this->actingAs($this->user)->withSession(['last_activity' => $before])->withoutHeader('X-Background')->getJson('/api/v1/me')->assertOk();
+        $this->assertGreaterThan($before, $this->app['session.store']->get('last_activity'));
+
+        $this->actingAs($this->user)->withSession(['last_activity' => time() - 21 * 60])->getJson('/api/v1/me/notifications')
+            ->assertUnauthorized()->assertJsonPath('code', 'session_expired');
+    }
+
     public function test_me_lists_company_admin_permissions(): void
     {
         $this->actingAs($this->user)->getJson('/api/v1/me')

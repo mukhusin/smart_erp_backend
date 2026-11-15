@@ -43446,6 +43446,10 @@
                                 "ends_at"
                             ]
                         }
+                    },
+                    "idle_minutes": {
+                        "type": "integer",
+                        "description": "Minutes without activity before the app logs out (the server ends the session too)."
                     }
                 },
                 "required": [
@@ -43457,7 +43461,8 @@
                     "module_tiles",
                     "roles",
                     "permissions",
-                    "acting_roles"
+                    "acting_roles",
+                    "idle_minutes"
                 ],
                 "title": "MeResource"
             },

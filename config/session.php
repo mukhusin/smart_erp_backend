@@ -34,6 +34,9 @@ return [
 
     'lifetime' => (int) env('SESSION_LIFETIME', 120),
 
+    /** Minutes without user activity before a logged-in user is logged out (background polling does not count). */
+    'idle_minutes' => (int) env('SESSION_IDLE_MINUTES', 20),
+
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*

@@ -22,7 +22,16 @@ Steps to run on the server when a release needs more than pulling the code. Newe
    `Sponsor_ID=`), list `returnData.list_of_items`, field to add up `Total`, item id field `Item_ID` and the surgery item ids
    from HRMS. Use the plug button to test it. `allowance:generate` (23:30) fetches the last 3 days first.
 
-4. Add `LOG_STACK=daily` and `LOG_DAILY_DAYS=7` to `.env` if not done yet.
+4. Add `LOG_STACK=daily`, `LOG_DAILY_DAYS=7` and `SESSION_IDLE_MINUTES=20` (idle logout, as HRMS) to `.env` if not done yet.
+
+   So the browser never keeps the app page after logout, serve the Angular `index.html` without caching (Apache, in the
+   frontend site config):
+
+   ```apache
+   <Files "index.html">
+       Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+   </Files>
+   ```
 
 5. Give "View audit log" to the roles that should see Administration → Audit log and the employee History tab.
 

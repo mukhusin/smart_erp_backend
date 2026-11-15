@@ -18,7 +18,7 @@ class EnsureSessionTimeout
             return $next($request);
         }
 
-        $timeout = config('session.lifetime') * 60;
+        $timeout = max(1, (int) config('session.idle_minutes', 20)) * 60;
 
         if (Auth::guard('web')->check()) {
             $user             = Auth::guard('web')->user();
@@ -58,9 +58,17 @@ class EnsureSessionTimeout
                 Session::put('login_checked_at', time());
             }
 
-            Session::put('last_activity', time());
+            if (! $request->headers->has('X-Background')) {
+                Session::put('last_activity', time());
+            }
         }
 
-        return $next($request);
+        $response = $next($request);
+        if ($request->is('api/*')) {
+            $response->headers->set('Cache-Control', 'no-store, private, max-age=0');
+            $response->headers->set('Pragma', 'no-cache');
+        }
+
+        return $response;
     }
 }
