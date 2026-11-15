@@ -19,6 +19,8 @@ items decided against are ➖. The older sections below keep the original analys
 | 10 | Maximum overtime hours per duty enforced | OT-6 | Value is imported, not checked |
 | 11 | Push new staff to the BioTime device ("send to biometric") | E-13 | Optional |
 | 13 | Payroll menu naming: "Statutory deductions" (PAYE, NSSF, NHIF, HESLB; WCF and SDL shown as employer contributions) instead of HRMS "Government deductions"; "Other deductions" keeps TUGHE, NIC, SACCOS, leave deduction, other; reliefs move next to pay items | §7.5 | To do with the payroll screens review |
+| 14 | Payroll dashboard: charts of payroll cost by month (gross, net, employer cost), statutory amounts per month (PAYE, NSSF, NHIF, HESLB, WCF, SDL), allowances/overtime/loans share, highest-cost month, employees paid, change from last month, by department | — | Requested 2026-11-15 |
+| 15 | Payroll reports in Reports → HR reports (new "Payroll" group): payroll summary by month, by department, statutory remittance lists (PAYE, NSSF, NHIF, HESLB, WCF, SDL) over a period, bank list, pay items per employee; view, CSV, PDF | — | Requested 2026-11-15; per-sheet reports already exist on each payroll |
 | 12 | Migration: dry run on a production copy; decide the 110 HRMS pending attendance claims; parallel payroll; switch | §3 | |
 
 Approval chains (checked 2026-11-15): the 7 HRMS workflows (leave, overtime HOS → HOD → HR, salary adjustment
