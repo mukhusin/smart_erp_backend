@@ -3,9 +3,9 @@
 namespace Modules\Workflow\Services;
 
 use App\Models\Employee;
-use App\Services\ReportingLine;
 use App\Models\HeadOfDepartment;
 use App\Models\User;
+use App\Services\ReportingLine;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -176,11 +176,27 @@ class WorkflowEngine
             WorkflowStep::APPROVER_DEPARTMENT_HEAD => $instance->department_id !== null
                 && HeadOfDepartment::where('department_id', $instance->department_id)->where('is_active', true)
                     ->whereHas('employee', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $user->id))->exists(),
+            WorkflowStep::APPROVER_SECTION_HEAD => $this->isSectionHead($user, $instance),
             WorkflowStep::APPROVER_SUPERVISOR => $instance->employee_id !== null
                 && ($boss = app(ReportingLine::class)->supervisorIdOf($instance->employee_id)) !== null
                 && Employee::withoutGlobalScopes()->whereKey($boss)->where('user_id', $user->id)->exists(),
             default => false,
         };
+    }
+
+    /** Head of the employee's section; the department head when the section has none (or the employee has no section). */
+    private function isSectionHead(User $user, WorkflowInstance $instance): bool
+    {
+        $employee = $instance->employee_id ? Employee::withoutGlobalScopes()->find($instance->employee_id) : null;
+        $head = fn (?int $department, string $level) => $department
+            ? HeadOfDepartment::where('department_id', $department)->where('level', $level)->where('is_active', true)->with(['employee' => fn ($q) => $q->withoutGlobalScopes()])->get()
+            : collect();
+        $heads = $head($employee?->section_id, HeadOfDepartment::SECTION);
+        if ($heads->isEmpty()) {
+            $heads = $head($employee?->department_id ?? $instance->department_id, HeadOfDepartment::DEPARTMENT);
+        }
+
+        return $heads->contains(fn ($h) => $h->employee?->user_id === $user->id);
     }
 
     private function copy(WorkflowStep $step): array

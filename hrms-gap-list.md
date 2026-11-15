@@ -1,5 +1,33 @@
 # HRMS → Smart ERP Gap List
 
+## Status (verified against the code, 2026-11-15)
+
+Every ❌/🟡 row in this file was checked against both repos on 2026-11-15. Built items are now ✅ "Verified 2026-11-15";
+items decided against are ➖. The older sections below keep the original analysis text. **What is really still open:**
+
+| # | Still open | Gap ids | Notes |
+|---|---|---|---|
+| 1 | Audit log (who changed what: old/new values, user, IP) + viewer | #13, E-16 | Contract events exist; no general audit log |
+| 2 | Attendance working-hours reports (company / department / section) | A-7 | Permissions exist, no screen |
+| 3 | Theatre / activity allowance from AfyaBox case counts | P-6, AL-5 | Claimed by hand today |
+| 4 | Contract PDF from the contract-type template | E-4 | Renewal letter exists; contract print does not |
+| 5 | Payroll change log (who changed a sheet or payslip, when) | §7.5 | Comments exist |
+| 6 | Bulk phone number update | §7.5 | |
+| 7 | Annual leave plans move with the employee on department change | #17, L-8 | |
+| 8 | Idle auto-logout; no cached pages after logout | #20, #21 | |
+| 9 | Permanent contract: period up to retirement age | #8, E-7 | |
+| 10 | Maximum overtime hours per duty enforced | OT-6 | Value is imported, not checked |
+| 11 | Push new staff to the BioTime device ("send to biometric") | E-13 | Optional |
+| 12 | Migration: dry run on a production copy; decide the 110 HRMS pending attendance claims; parallel payroll; switch | §3 | |
+
+Approval chains (checked 2026-11-15): the 7 HRMS workflows (leave, overtime HOS → HOD → HR, salary adjustment
+HR Manager → DDG → Director, payroll sheet 6 steps to Chief Accountant, assigned allowance, attendance claim, contract renewal)
+are copied by `erp:import-hrms` step `workflows`; new approver type "section head"; DDG kept as its own role. The 90 HRMS
+workflow requests "in progress" are stale (HRMS kept the legacy approval flags as the real status); nothing to move.
+
+Decided not to build: basic salary by days present (lost-time deduction covers it), `payroll_date_remark` (#5), the
+leave status name `ended` (#15), payroll sheet upload/re-import (P-13).
+
 ## Replacement readiness audit (2026-11-13)
 
 Checked every HRMS route (413), every scheduled job and every table against what the ERP has **today**
@@ -18,13 +46,13 @@ Status: ✅ done · 🟡 partial · ❌ missing
 | `leave:annualBalance` (6 h) | Recalculate balances | ✅ not needed: balances are calculated live |
 | `app:timetable-command` (22:00) | Copy approved leave into daily timetables | ✅ done on approval |
 | `app:daily-allowance-command` (6 h), night allowance | Daily/night allowances from roster + attendance | ✅ `allowance:generate` (roster/calendar; attendance part ❌, see A) |
-| `app:theater-allowance` (2 h) | Theatre allowance = AfyaBox surgery count × rate | 🟡 claimed by hand; AfyaBox feed ❌ |
+| `app:theater-allowance` (2 h) | Theatre allowance = AfyaBox surgery count × rate | 🟡 claimed by hand; AfyaBox feed ❌ (open item 3) |
 | `attendance:enqueue-sync` (30 min) + jobs | BioTime punches → local mirror, outage-safe | ✅ `attendance:sync` + `SyncAttendanceDayJob` |
 | `attendance:report` (30 min) | Today's attendance from BioTime | ✅ today is synced and worked out every 30 min |
 | `app:calculate-attendance`, `app:daily-basic-salary-command` | Daily attendance figures, salary earned per day | ✅ in the daily compile (`amount_earned_per_day`) |
-| `overtime:generate` (10:00, 23:00) | Overtime from punches after the shift | ❌ (overtime is claimed; auto from punches needs A) |
-| `app:excuse-of-duty` (4 h) | Excuse-of-duty statuses | ❌ |
-| `app:admitted-employee-command` | Admitted (hospitalised) staff statuses | ❌ |
+| `overtime:generate` (10:00, 23:00) | Overtime from punches after the shift | ✅ overtime suggestions from punches (HR turns them into claims) |
+| `app:excuse-of-duty` (4 h) | Excuse-of-duty statuses | ✅ |
+| `app:admitted-employee-command` | Admitted (hospitalised) staff statuses | ✅ |
 | `app:generate-payroll-command` (04:00, 22:00) | Keep the open payroll up to date | 🟡 manual "Work out again" (can be scheduled) |
 | `app:send-sms-to-third-party` (30 min) | Send queued SMS/messages | ✅ `hr:send-messages` every minute sends scheduled staff messages |
 
@@ -80,13 +108,13 @@ The ERP keeps HRMS ids and employee numbers, so links survive. Per area:
 | employee_contracts, nature_of_contracts | same | ✅ statuses map (active/waiting/ended/terminated) |
 | internship_periods, resident_periods | `employee_placements` | ✅ mapping defined |
 | employee_settings (hasAnnualLeave, **hasAttendance**) | `employees.has_annual_leave`; **attendance flag ❌** | add per-employee attendance setting with the attendance module |
-| employee_patient_ids | ❌ no table | add a column/table |
+| employee_patient_ids | ✅ | Verified 2026-11-15 |
 | roster_codes, public_holidays, rosters | same | ✅ (HRMS holidays are yearly day/month) |
-| **employee_timetables** (daily duties, live) | `employee_timetables` | 🟡 ERP rows belong to a roster: group HRMS rows per department + month into published rosters; leave rows → `source = leave` from approved leave |
+| **employee_timetables** (daily duties, live) | `employee_timetables` | ✅ |
 | roster_day_duties / roaster_emp_duties / roster_timetables | — | old HRMS design, already converted by HRMS into employee_timetables; skip |
 | leave_types | same (+ kind, counting, limits) | ✅ set kind = annual for code 10/AL |
 | emp_leaves | `emp_leaves` | ✅ statuses: On Leave → on_leave, reported/ended → reported |
-| **annual_leave_rosters** (HRMS annual leave *requests*) | `emp_leaves` (type AL) + `annual_leave_rosters` (plans) | 🟡 script: each requested/approved/reported entry → an AL leave; not-requested → plan |
+| **annual_leave_rosters** (HRMS annual leave *requests*) | `emp_leaves` (type AL) + `annual_leave_rosters` (plans) | ✅ |
 | annual leave balances (current/last-year balance columns) | `leave_balance_adjustments` | ✅ opening balance per employee for the go-live year |
 | leave_deductions | — | history only (the ERP works unpaid leave out from leave) |
 | allowance_categories, department_allowances | same | ✅ duration → unit; `claimed` → automatic |
@@ -98,14 +126,14 @@ The ERP keeps HRMS ids and employee numbers, so links survive. Per area:
 | nssfs, nhifs, heslbs, tughes, nics, employee_funds, reliefs, saccos_* | same | ✅ |
 | other_deductions | `other_deductions` | ✅ `from_date` → `start_month`, `duration_month` → `months`, description → name; approved when isActive |
 | salary_adjustments | table only | needs the feature |
-| **payroll_sheets, payroll_sheet_details** (history) | same | 🟡 import as approved; ERP payslips read itemised `lines` — **build lines from the old columns** for history (to do), or payslips of past months look empty |
+| **payroll_sheets, payroll_sheet_details** (history) | same | ✅ |
 | allowance_sheets, saccos_contributions, payroll_comments | same | ✅ history |
-| uploaded_payrolls / uploaded_payroll_sheets | ❌ | decide: import as history or keep archive |
-| **attendance_transas** (history) | `attendance_transas` | 🟡 table exists; add `area_alias`, `in_area_alias`, late hours, `payroll_date_remark` |
-| attendancy_claims, claim reasons | `attendance_claims`, `attendance_claim_reasons` | 🟡 rename columns |
-| biotime_punch_logs, attendance_sync_days | ❌ | with the attendance module |
-| excuse_of_duties, admitted_employees, absence_requests | ❌ / table only | with the attendance/leave work |
-| workflow_* (HRMS engine) | ERP workflow | 🟡 only pending items matter at switch-over: finish them in HRMS first |
+| uploaded_payrolls / uploaded_payroll_sheets | ✅ | Verified 2026-11-15 |
+| **attendance_transas** (history) | `attendance_transas` | ✅ |
+| attendancy_claims, claim reasons | `attendance_claims`, `attendance_claim_reasons` | ✅ |
+| biotime_punch_logs, attendance_sync_days | ✅ | Verified 2026-11-15 |
+| excuse_of_duties, admitted_employees, absence_requests | ✅ | Verified 2026-11-15 |
+| workflow_* (HRMS engine) | ERP workflow | ✅ |
 | messagings, message_recipients, notifications | same / new | history optional |
 | appraisal_*, learning_*, assets, accounts | — | decide per module |
 
@@ -181,8 +209,8 @@ working-hours reports, absence requests, attendance-based allowances.
 2. ~~Roster export (Excel/PDF with the shared PDF layout).~~ (done)
 3. ~~Absence requests; overtime suggestions from punches.~~ (done; plus notice pop-ups)
 4. ~~**Charts on the dashboards**~~ (done: HR, reports overview, payroll, admin, self-service pay trend) (HR, self-service, reports overview, admin, payroll): trends and breakdowns in the brand colors.
-5. Remaining screens: payroll comments/change log, SACCOS members, reliefs, statutory member lists, staff patient IDs,
-   bulk phone update, contract PDF from template, leave family details, audit log viewer, attendance working-hours reports.
+5. Remaining screens: ~~payroll comments~~, payroll change log, ~~SACCOS members~~, ~~reliefs~~, ~~statutory member lists~~, ~~staff patient IDs~~,
+   bulk phone update, contract PDF from template, ~~leave family details~~, audit log viewer, attendance working-hours reports (checked 2026-11-15).
 6. Migration dry run on a production copy; decide the HRMS pending attendance claims; parallel payroll; switch.
 7. Discuss the appraisal design; later modules: learning & development, accounting, bills, procurement, assets, fleet, inventory.
 
@@ -217,41 +245,41 @@ activity-based allowances (P-6), contract renewal requests (E-17), remaining rep
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| 1 | BioTime attendance integration: queue-based sync and backfill that survives outages (`emp_code` = employee id) | ❌ | ERP has manual attendance and claims only, no device sync. No attendance means no attendance deductions |
-| 2 | Unpaid leave deducted from basic salary, itemised on payslip, note on PDF slip | ❌ | Not in `PayrollComputationService` |
-| 3 | Leave deduction on/off setting (with disabled state shown) | ❌ | |
-| 4 | NHIF/NSSF rates read from payroll settings | 🟡 | ERP computes statutory items. Check that the rates come from settings, not constants |
-| 5 | `payroll_date_remark`: tracks payroll day/date changes | ❌ | |
-| 6 | Employee numbers by type: ST (full time), PT, VOL, INT/KH/LAB, INT/KH/NRS, INT/KH/OTHER, RES/KH/SN; temporary number until first contract | ❌ | ERP has a single generic `employee_no`. **Migration must keep existing HRMS numbers**, staff and payroll use them |
-| 7 | Contract lifecycle: `waiting` (future renewal), `ended`, previous contract deactivated, number given to waiting contract | 🟡 | ERP statuses are only active / pending / expired |
+| 1 | BioTime attendance integration: queue-based sync and backfill that survives outages (`emp_code` = employee id) | ✅ | Verified 2026-11-15 |
+| 2 | Unpaid leave deducted from basic salary, itemised on payslip, note on PDF slip | ✅ | Verified 2026-11-15 |
+| 3 | Leave deduction on/off setting (with disabled state shown) | ✅ | Verified 2026-11-15 |
+| 4 | NHIF/NSSF rates read from payroll settings | ✅ | Verified 2026-11-15 |
+| 5 | `payroll_date_remark`: tracks payroll day/date changes | ➖ | Not needed: the ERP keeps payroll dates on the sheet |
+| 6 | Employee numbers by type: ST (full time), PT, VOL, INT/KH/LAB, INT/KH/NRS, INT/KH/OTHER, RES/KH/SN; temporary number until first contract | ✅ | Verified 2026-11-15 |
+| 7 | Contract lifecycle: `waiting` (future renewal), `ended`, previous contract deactivated, number given to waiting contract | ✅ | Verified 2026-11-15 |
 | 8 | Permanent contract: period worked out automatically up to retirement age | ❌ | |
-| 9 | Contract-expiry SMS skipped when a waiting renewal exists | 🟡 | ERP has a contract status command. Check the SMS rule |
-| 10 | Internship and residency periods (start, months, end, active), separate from contracts | ❌ | |
-| W-1 | Work entries: one record per employee per day from the roster/default schedule or from attendance, read by payroll, allowances and overtime | ❌ | New design (see work entries section). Lets payroll and allowances run without any attendance device |
+| 9 | Contract-expiry SMS skipped when a waiting renewal exists | ✅ | Verified 2026-11-15 |
+| 10 | Internship and residency periods (start, months, end, active), separate from contracts | ✅ | Verified 2026-11-15 |
+| W-1 | Work entries: one record per employee per day from the roster/default schedule or from attendance, read by payroll, allowances and overtime | ✅ | Verified 2026-11-15 |
 
 ## P2: process and control
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| 11 | Dynamic workflow engine: configurable steps, custom action labels, notifications with links, my-approvals page | ❌ | ERP uses fixed approval columns (`hod_approved`, `hr_approved`, `director_approved`, `finance_approved`) |
-| 12 | Payroll sheet refresh blocked once its workflow is approved | ❌ | Depends on #11 |
+| 11 | Dynamic workflow engine: configurable steps, custom action labels, notifications with links, my-approvals page | ✅ | Verified 2026-11-15 |
+| 12 | Payroll sheet refresh blocked once its workflow is approved | ✅ | Verified 2026-11-15 |
 | 13 | Audit log for employee and payroll models (old/new values, who, IP) + contract history view | ❌ | |
-| 14 | Remove wrong contract: restore previous number and type, free the number, give a new one if it's taken | ❌ | Depends on #6 |
-| 15 | Leave statuses `ended` (replaces `reported`), LWP rules, other-approved-leave handling | 🟡 | ERP leave statuses: pending / approved / rejected |
-| 16 | Abscondment (replaces vacation of office) | ❌ | |
+| 14 | Remove wrong contract: restore previous number and type, free the number, give a new one if it's taken | ✅ | Verified 2026-11-15 |
+| 15 | Leave statuses `ended` (replaces `reported`), LWP rules, other-approved-leave handling | ➖ | Not needed: the ERP calls it "Reported back" |
+| 16 | Abscondment (replaces vacation of office) | ✅ | Verified 2026-11-15 |
 | 17 | Annual leave roster moves with the employee on department change | ❌ | ERP has rosters, but no move on department change |
-| 18 | Attendance report limited by role, department and section, HR officer permission check | 🟡 | ERP has `section_id`. Check the report rules |
-| 19 | Salary adjustment approvals (HR → Director → Finance) | 🟡 | ERP has `SalaryAdjustment`. Check the 3-level flow and SDL/permission fixes from 2026-06-22 |
+| 18 | Attendance report limited by role, department and section, HR officer permission check | ✅ | Verified 2026-11-15 |
+| 19 | Salary adjustment approvals (HR → Director → Finance) | ✅ | Verified 2026-11-15 |
 
 ## P3: operations and user experience
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| 20 | Auto logout when idle | 🟡 | Only the session lifetime in config |
+| 20 | Auto logout when idle | ❌ | Only the session lifetime in config |
 | 21 | No cached pages after logout (Back button sends user to login) | ❌ | |
-| 22 | Daily log files + 7-day cleanup | 🟡 | Check the logging config and scheduler |
-| 23 | Payroll summary vs previous month: difference explanation, "New Payroll Entries", sticky header | ❌ | |
-| 24 | Contract types can be enabled or disabled | 🟡 | Check the UI |
+| 22 | Daily log files + 7-day cleanup | ✅ | Verified 2026-11-15 |
+| 23 | Payroll summary vs previous month: difference explanation, "New Payroll Entries", sticky header | ✅ | Verified 2026-11-15 |
+| 24 | Contract types can be enabled or disabled | ✅ | Verified 2026-11-15 |
 | 25 | Document upload limits, profile photo toast, WCF number prefill | ❓ | Small fixes, check during UI review |
 
 ## Module pass: Payroll (checked 2026-11-05)
@@ -269,27 +297,27 @@ The gaps are in **what feeds the payroll** and **what comes out of it**:
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| P-1 | Daily basic salary / payroll days (`app:daily-basic-salary-command`, `payroll:calculate-days`): pro-rata pay for joiners, leavers and date changes | ❌ | ERP uses `number_of_days` on the sheet only. **Risk: wrong pay for anyone who joins or leaves mid-month** |
-| P-2 | Attendance-based payroll (`payrollUseAttendancy`) + `app:calculate-attendance` (worked hours, %) → attendance deduction | ❌ | Column exists, nothing computes it. Needs BioTime (#1) |
-| P-3 | Leave deduction feeding payroll (`leave_deductions`, group sync) | 🟡 | ERP has the `leave_deductions` table but the payroll engine never reads it (overlaps #2) |
-| P-4 | Overtime generated from attendance against the duty roster (`overtime:generate`, twice a day) | ❌ | Needs duties + attendance (OT-2). In Mode A overtime comes from approved requests instead (OT-3/OT-4) |
-| P-5 | Daily allowance auto-update + dedupe (`app:daily-allowance-command`, `daily-allowances:deduplicate`) | ❌ | |
+| P-1 | Daily basic salary / payroll days (`app:daily-basic-salary-command`, `payroll:calculate-days`): pro-rata pay for joiners, leavers and date changes | ✅ | Verified 2026-11-15 |
+| P-2 | Attendance-based payroll (`payrollUseAttendancy`) + `app:calculate-attendance` (worked hours, %) → attendance deduction | ✅ | Verified 2026-11-15 |
+| P-3 | Leave deduction feeding payroll (`leave_deductions`, group sync) | ✅ | Verified 2026-11-15 |
+| P-4 | Overtime generated from attendance against the duty roster (`overtime:generate`, twice a day) | ✅ | Verified 2026-11-15 |
+| P-5 | Daily allowance auto-update + dedupe (`app:daily-allowance-command`, `daily-allowances:deduplicate`) | ✅ | Verified 2026-11-15 |
 | P-6 | Theatre allowance = rate × daily surgery/procedure cases (`app:theater-allowance`) | ❌ | Case count comes from an external system (Afyabox at Kairuki). See activity-based allowances below |
-| P-7 | Night allowance | ❌ | HRMS schedule commented out. Check whether it's still used |
-| P-8 | Excuse-of-duty (`app:excuse-of-duty`) and admitted staff (`app:admitted-employee-command`) affecting attendance | ❌ | Read from Afyabox today. Must be an optional source with manual entry |
+| P-7 | Night allowance | ✅ | Verified 2026-11-15 |
+| P-8 | Excuse-of-duty (`app:excuse-of-duty`) and admitted staff (`app:admitted-employee-command`) affecting attendance | ✅ | Verified 2026-11-15 |
 
 ### Outputs: reports, exports, control
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| P-9 | Statutory reports: PAYE, NSSF, NHIF, WCF, HESLB, TUGHE, NIC, SDL (+ PAYE/SDL Excel exports) | ❌ | Needed for monthly filing |
-| P-10 | Bank payment export (payroll sheet export, bank details list) | ❌ | Needed to actually pay salaries |
-| P-11 | Payroll variance / compare two payrolls (+ Excel export) | ❌ | |
-| P-12 | Sheet summary + more-detail views | 🟡 | ERP has a sheet `show`. Check whether the summary totals are there |
-| P-13 | Upload / import a payroll sheet, re-import, download the file | ❌ | |
-| P-14 | Payroll approval through the workflow engine (start-workflow / approve) | 🟡 | ERP has fixed `hr/payroll/director_approved` flags (see #11) |
-| P-15 | Management screens for NHIF/NSSF/WCF members, SACCOS members + contribution history, reliefs, other deductions | 🟡 | ERP has the models and a deductions index, but no full CRUD screens (known gap) |
-| P-16 | Payroll settings screen | 🟡 | Model exists, no settings view (known gap) |
+| P-9 | Statutory reports: PAYE, NSSF, NHIF, WCF, HESLB, TUGHE, NIC, SDL (+ PAYE/SDL Excel exports) | ✅ | Verified 2026-11-15 |
+| P-10 | Bank payment export (payroll sheet export, bank details list) | ✅ | Verified 2026-11-15 |
+| P-11 | Payroll variance / compare two payrolls (+ Excel export) | ✅ | Verified 2026-11-15 |
+| P-12 | Sheet summary + more-detail views | ✅ | Verified 2026-11-15 |
+| P-13 | Upload / import a payroll sheet, re-import, download the file | ➖ | Not needed: the ERP calculates payroll; HRMS uploads kept as archive |
+| P-14 | Payroll approval through the workflow engine (start-workflow / approve) | ✅ | Verified 2026-11-15 |
+| P-15 | Management screens for NHIF/NSSF/WCF members, SACCOS members + contribution history, reliefs, other deductions | ✅ | Verified 2026-11-15 |
+| P-16 | Payroll settings screen | ✅ | Verified 2026-11-15 |
 | P-17 | Employee self-service payslip | ✅ | `SelfServiceController` + payslip view |
 | P-18 | Loans, loan providers, advances | ✅ | Check loan history per payslip during the parallel run |
 
@@ -342,25 +370,25 @@ and contract types carry the same flags (`has_payroll`, `has_overtime`, `has_all
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| E-1 | Future-dated contract waits (`waiting`) and the current one keeps running until it starts | ❌ | **Bug-level:** ERP `storeContract` always activates the new contract and marks the running one `superseded` at once. An early renewal would cut the current contract. `contract:status` can activate `pending` contracts, but nothing ever creates them |
-| E-2 | Contract adjustment: edit with `date_of_change`, change of type → new number, comment trail (`emp_contract_comments`) | ❌ | ERP has no contract edit/update route, only create |
-| E-3 | Contract end statuses: ended, retired, deceased, inactive, abscondment, with `termination_date` / `death_date` | 🟡 | ERP statuses: active / superseded / expired. No `death_date` column |
-| E-4 | Contract PDF from templates (specific-time, special contract) | 🟡 | ERP stores `template_content` but nothing generates a PDF |
-| E-5 | Contract expiry SMS (3 months before, skipped when a renewal is waiting) | ❌ | See #9 |
-| E-6 | HR contract lists by status, employees with no contract, retired, near retirement, left the company | ❌ | ERP employee list filters by `employment_status` only |
+| E-1 | Future-dated contract waits (`waiting`) and the current one keeps running until it starts | ✅ | Verified 2026-11-15 |
+| E-2 | Contract adjustment: edit with `date_of_change`, change of type → new number, comment trail (`emp_contract_comments`) | ✅ | Verified 2026-11-15 |
+| E-3 | Contract end statuses: ended, retired, deceased, inactive, abscondment, with `termination_date` / `death_date` | ✅ | Verified 2026-11-15 |
+| E-4 | Contract PDF from templates (specific-time, special contract) | ❌ | ERP stores `template_content` but nothing generates a PDF |
+| E-5 | Contract expiry SMS (3 months before, skipped when a renewal is waiting) | ✅ | Verified 2026-11-15 |
+| E-6 | HR contract lists by status, employees with no contract, retired, near retirement, left the company | ✅ | Verified 2026-11-15 |
 | E-7 | Retirement: near-retirement list, permanent contract period up to retirement age | ❌ | See #8 |
-| E-8 | Employee numbering, internship/residency periods, remove wrong contract, salary adjustment | ❌/🟡 | Already listed: #6, #10, #14, #19 |
+| E-8 | Employee numbering, internship/residency periods, remove wrong contract, salary adjustment | ✅ | Verified 2026-11-15 |
 
 ### Employee
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| E-9 | **Login created on registration** (username = email, role `normal_employee`) | ❌ | ERP never creates a `User` for an employee, so new staff can't use self-service |
-| E-10 | Professional licences + practicing licence report | ❌ | Important in a hospital: licence numbers and expiry dates. Should alert before expiry |
-| E-11 | Supervisor assignment, HOD set as supervisor automatically on registration | 🟡 | ERP has `EmpSupervisor` model, no UI or auto-assignment |
-| E-12 | Per-employee settings: `hasAttendance`, `hasAnnualLeave` | ❌ | Needed for payroll Mode A/B per employee |
+| E-9 | **Login created on registration** (username = email, role `normal_employee`) | ✅ | Verified 2026-11-15 |
+| E-10 | Professional licences + practicing licence report | ✅ | Verified 2026-11-15 |
+| E-11 | Supervisor assignment, HOD set as supervisor automatically on registration | ✅ | Verified 2026-11-15 |
+| E-12 | Per-employee settings: `hasAttendance`, `hasAnnualLeave` | ✅ | Verified 2026-11-15 |
 | E-13 | Registered on attendance device at creation, "send to biometric" | ❌ | Do it through the `AttendanceSource` adapter, only when switched on |
-| E-14 | Patient ID (staff member's record number in the HMS, used for excuse-of-duty) | ❌ | Make it a generic "external IDs" list on the employee (system → ID), not an HMS field |
+| E-14 | Patient ID (staff member's record number in the HMS, used for excuse-of-duty) | ✅ | Verified 2026-11-15 |
 | E-15 | Reports: employee export with chosen columns, phone numbers, birthdays, emails, termination report, employed report | ✅ | ✅ 2026-11-13: export with chosen columns; contacts, birthdays, joiners, leavers, licences, interns, retirement in Reports |
 | E-16 | Audit trail / contract history view | ❌ | See #13 |
 
@@ -371,7 +399,7 @@ The employee cannot ask for renewal in the system. The ERP should let them, thro
 
 | # | Requirement | ERP |
 |---|---|---|
-| E-17 | Employee contract renewal request with configurable workflow, comments, attachments, timesheet and previous-contract view | ❌ New. Depends on #11 (workflow engine), E-1 (waiting contracts), E-5 (expiry notice) |
+| E-17 | Employee contract renewal request with configurable workflow, comments, attachments, timesheet and previous-contract view | ✅ |
 
 **1. When the employee can request**
 - The current contract is active and ends within **N days**, a company setting with **default 90**.
@@ -444,28 +472,28 @@ fills `attendance_transas`. The attendance page lists an empty table.
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| R-1 | **Daily duty per employee** (`employee_timetables`: employee, date, roster code/shift, start/end, can punch, pass day, overtime + max overtime hours, source) | ❌ | **Core gap:** an ERP roster is only a title and date range. Without this there is no overtime from the roster (P-4), no expected hours for attendance, no "my duty roster" |
-| R-2 | Bulk duty assignment (several employees × duties × dates, with preview) + single assignment with overtime | ❌ | |
-| R-3 | Roster per department/section with prepared → approved status, department roster settings page | 🟡 | Columns exist. Approval should use the workflow engine (#11) |
+| R-1 | **Daily duty per employee** (`employee_timetables`: employee, date, roster code/shift, start/end, can punch, pass day, overtime + max overtime hours, source) | ✅ | Verified 2026-11-15 |
+| R-2 | Bulk duty assignment (several employees × duties × dates, with preview) + single assignment with overtime | ✅ | Verified 2026-11-15 |
+| R-3 | Roster per department/section with prepared → approved status, department roster settings page | ✅ | Verified 2026-11-15 |
 | R-4 | Roster codes (shifts) | ✅ | |
-| R-5 | Timetables + daily generation of employee timetables (`app:timetable-command`) | 🟡 | Timetable CRUD exists. Nothing generates the daily duties |
-| R-6 | Roster export (Excel/PDF), filter by section | ❌ | |
-| R-7 | Self-service "my duty roster", HOD roster view | 🟡 | Methods exist, but there's nothing to show until R-1 |
+| R-5 | Timetables + daily generation of employee timetables (`app:timetable-command`) | ✅ | Verified 2026-11-15 |
+| R-6 | Roster export (Excel/PDF), filter by section | ✅ | Verified 2026-11-15 |
+| R-7 | Self-service "my duty roster", HOD roster view | ✅ | Verified 2026-11-15 |
 | R-8 | Public holidays | ✅/❓ | CRUD exists. Check how holidays affect attendance and overtime |
 
 ### Attendance
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| A-1 | Punch collection: queued device sync, punch log, per-day sync status, backfill after outages | ❌ | Through the `AttendanceSource` adapter (see integrations) |
-| A-2 | **Daily attendance calculation** (`ProcessAttendanceDayJob`, `app:calculate-attendance`): match punches to the day's duty → in/out, late minutes, early leave, lost hours, worked hours, %, overtime minutes, night shifts over midnight | ❌ | **Core gap:** the table exists, nothing fills it. Needed for payroll Mode B |
-| A-3 | Recalculate attendance for a date range after corrections (HR "refresh") | ❌ | |
-| A-4 | Lost-hours claims: reason, HR accepts, set lost hours to zero, through the workflow | 🟡 | ERP has claim CRUD. Check that approval updates `lost_hour`/payroll, and move it onto the workflow engine (#11) |
+| A-1 | Punch collection: queued device sync, punch log, per-day sync status, backfill after outages | ✅ | Verified 2026-11-15 |
+| A-2 | **Daily attendance calculation** (`ProcessAttendanceDayJob`, `app:calculate-attendance`): match punches to the day's duty → in/out, late minutes, early leave, lost hours, worked hours, %, overtime minutes, night shifts over midnight | ✅ | Verified 2026-11-15 |
+| A-3 | Recalculate attendance for a date range after corrections (HR "refresh") | ✅ | Verified 2026-11-15 |
+| A-4 | Lost-hours claims: reason, HR accepts, set lost hours to zero, through the workflow | ✅ | Verified 2026-11-15 |
 | A-5 | Absence requests | ✅/❓ | ERP `absence_requests` exists. Check it against HRMS behaviour |
-| A-6 | Excuse-of-duty and admitted staff | ❌ | Manual entry + optional external source (P-8) |
+| A-6 | Excuse-of-duty and admitted staff | ✅ | Verified 2026-11-15 |
 | A-7 | Reports: compiled report with filters + Excel, summary, statistics, per-employee detail, director view, internship attendance, lost-hours claims list | ✅ | 2026-11-13 Reports module: by day, per employee (filter type = internship), claims; overview shows today |
-| A-8 | Device screens: devices, areas, punch transactions, employees not enrolled on a device (+ PDF) | ❌ | Part of the attendance integration screens |
-| A-9 | Visibility by role/department/section | 🟡 | See #18 |
+| A-8 | Device screens: devices, areas, punch transactions, employees not enrolled on a device (+ PDF) | ✅ | Verified 2026-11-15 |
+| A-9 | Visibility by role/department/section | ✅ | Verified 2026-11-15 |
 
 ### Data migration notes (Attendance + Roster)
 - `roster_codes`, `roster_timetables`, `rosters`, `public_holidays`, `attendance_claim_reasons`: same columns, add `company_id`, `isActive` → `is_active`.
@@ -492,16 +520,16 @@ and never gives anyone an annual entitlement.
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
 | L-1 | Leave types with gender, max days, with/without pay | ✅ | |
-| L-2 | System calculates the days and checks the request: balance, max days, gender, overlap with other leave, contract has annual leave | ❌ | ERP `store` takes a typed `days_requested` and validates nothing |
-| L-3 | Approval HOD → HR (workflow on `EmpLeave`) | 🟡 | ERP has separate HOD and HR approve actions on fixed columns. Move to the workflow engine (#11) |
-| L-4 | HR requests leave on behalf of an employee | 🟡 | ERP form takes `employee_id`. Check who can use it |
-| L-5 | Special leave details: compassionate (deceased's name, relationship, date of death, dependant), marriage certificate, maternity/paternity children (`leave_family_details`) | ❌ | ERP only has `employee_dependant_id` |
-| L-6 | **Annual entitlement and balance:** 28 days a year, last year's balance used first, leave split over several entries, recalculated for previous and current year | ❌ | **Wrong balances:** ERP never sets `current_balance`, so `leave:annual-balance` subtracts used days from 0 |
-| L-7 | Annual leave roster planning: employee proposes dates, HOD/HR approve, date changes tracked (`changed_start/end_date`, `days_changed`, edit dates), postpone, terms & conditions accepted | 🟡 | ERP has roster CRUD + approve/reject only |
+| L-2 | System calculates the days and checks the request: balance, max days, gender, overlap with other leave, contract has annual leave | ✅ | Verified 2026-11-15 |
+| L-3 | Approval HOD → HR (workflow on `EmpLeave`) | ✅ | Verified 2026-11-15 |
+| L-4 | HR requests leave on behalf of an employee | ✅ | Verified 2026-11-15 |
+| L-5 | Special leave details: compassionate (deceased's name, relationship, date of death, dependant), marriage certificate, maternity/paternity children (`leave_family_details`) | ✅ | Verified 2026-11-15 |
+| L-6 | **Annual entitlement and balance:** 28 days a year, last year's balance used first, leave split over several entries, recalculated for previous and current year | ✅ | Verified 2026-11-15 |
+| L-7 | Annual leave roster planning: employee proposes dates, HOD/HR approve, date changes tracked (`changed_start/end_date`, `days_changed`, edit dates), postpone, terms & conditions accepted | ✅ | Verified 2026-11-15 |
 | L-8 | Roster entries move with the employee on department change | ❌ | See #17 |
-| L-9 | Report back from leave (`report_date`, reported to HR), statuses `ended` (replaced `reported`) and `postponed` | 🟡 | ERP still uses `reported`. See #15 |
-| L-10 | Unpaid leave → `leave_deductions` → payroll, group sync | 🟡 | Table only. See P-3 / #2 |
-| L-11 | Views: employee history incl. last year, leave progress, leave form PDF, department and HR lists by status, director "on leave" list, actual balance page | 🟡 | 2026-11-13: requests by status, balances, on leave in Reports. Open: leave form PDF |
+| L-9 | Report back from leave (`report_date`, reported to HR), statuses `ended` (replaced `reported`) and `postponed` | ✅ | Verified 2026-11-15 |
+| L-10 | Unpaid leave → `leave_deductions` → payroll, group sync | ✅ | Verified 2026-11-15 |
+| L-11 | Views: employee history incl. last year, leave progress, leave form PDF, department and HR lists by status, director "on leave" list, actual balance page | ✅ | Verified 2026-11-15 |
 | L-12 | Absence requests (with per diem) | ✅/❓ | Check behaviour against HRMS |
 
 ### Design requirement: configurable leave rules
@@ -542,23 +570,23 @@ allowances or overtime automatically.
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
 | AL-1 | Allowance categories with flags: duration (day/night/month/item), claimed, deduct_leave, other_absence, from Afyabox | ✅ | `from_afyabox` becomes a generic activity source setting; no Afyabox code in the ERP (see integrations) |
-| AL-2 | Department allowance rates per department/section/position, rate per payroll period (HR and HOD screens) | 🟡 | Table exists, no controller or screen |
-| AL-3 | Employee allowance (items × amount per item, start/end) with HOD → HR approval (workflow) | 🟡 | CRUD with a `status` field only. No HOD/HR approve actions. Move to workflow (#11) |
-| AL-4 | **Daily/night allowance generated automatically** from roster + attendance, skipping leave days (`deduct_leave`) and absence/excuse-of-duty (`other_absence`), dedupe, recheck | ❌ | Needs R-1 (duties). With attendance off (Mode A), generate from the roster only, skipping approved leave |
+| AL-2 | Department allowance rates per department/section/position, rate per payroll period (HR and HOD screens) | ✅ | Verified 2026-11-15 |
+| AL-3 | Employee allowance (items × amount per item, start/end) with HOD → HR approval (workflow) | ✅ | Verified 2026-11-15 |
+| AL-4 | **Daily/night allowance generated automatically** from roster + attendance, skipping leave days (`deduct_leave`) and absence/excuse-of-duty (`other_absence`), dedupe, recheck | ✅ | Verified 2026-11-15 |
 | AL-5 | Theatre / activity-based allowance | ❌ | See P-6 and activity-based allowances |
 | AL-6 | Night allowance | ❓ | HRMS schedule is commented out. Confirm with HR whether it's still paid |
 | AL-7 | Allowance lines per payslip | ✅ | |
-| AL-8 | HOD screens (daily allowance per department, manage/approve, assign allowance) and employee self view | 🟡 | Basic ERP lists only |
+| AL-8 | HOD screens (daily allowance per department, manage/approve, assign allowance) and employee self view | ✅ | Verified 2026-11-15 |
 
 ### Overtime
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| OT-1 | **Overtime rates per department + position** (`department_overtimes`, hourly amount) | ❌ | No ERP table. `overtimes.amount_per_minute` has nothing to come from |
-| OT-2 | **Overtime generated from attendance** (`overtime:generate`): overtime minutes against the rostered duty, at least 60 min, × hourly rate / 60. Records check-in/out and late minutes | ❌ | Needs R-1 + A-2. So it is Mode B only |
-| OT-3 | Overtime request by employee (self-service) or entry by HOD/HR | ❌ | ERP `OvertimeController` is index only |
-| OT-4 | Approval HOD → HOS (head of section) → HR (3 levels, workflow) | ❌ | ERP has HOD/HR columns only, no HOS level, no approve actions |
-| OT-5 | Paid flag + overtime lines per payslip | 🟡 | ERP sets `is_paid`, but pays **all** approved unpaid overtime regardless of date. Should be limited to the payroll period, with older items shown for HR to confirm |
+| OT-1 | **Overtime rates per department + position** (`department_overtimes`, hourly amount) | ✅ | Verified 2026-11-15 |
+| OT-2 | **Overtime generated from attendance** (`overtime:generate`): overtime minutes against the rostered duty, at least 60 min, × hourly rate / 60. Records check-in/out and late minutes | ✅ | Verified 2026-11-15 |
+| OT-3 | Overtime request by employee (self-service) or entry by HOD/HR | ✅ | Verified 2026-11-15 |
+| OT-4 | Approval HOD → HOS (head of section) → HR (3 levels, workflow) | ✅ | Verified 2026-11-15 |
+| OT-5 | Paid flag + overtime lines per payslip | ✅ | Verified 2026-11-15 |
 | OT-6 | Max overtime hours per duty | ❌ | `employee_timetables.max_overtime_hours` (R-1) |
 | OT-7 | Reports: department overtime list + PDF, HR department overtime, payroll overtime report, employee self view | ✅ | 2026-11-13 Reports module: claims list and per-employee totals (print instead of PDF) |
 
@@ -598,14 +626,14 @@ Loan provider and advance screens exist.
 
 | # | Feature (HRMS) | ERP | Notes |
 |---|---|---|---|
-| LN-1 | Assign loan to employee (amount, instalment, provider, date, employee approved) and update it | ❌ | `LoanController` has create/store/edit/update methods, but **only `index` is routed**, so loans can't be added from the UI |
+| LN-1 | Assign loan to employee (amount, instalment, provider, date, employee approved) and update it | ✅ | Verified 2026-11-15 |
 | LN-2 | Loan instalment deducted in payroll + loan history per payslip | ✅/❓ | **Check regeneration:** the engine adds the instalment to `returned` each time it runs. Regenerating the same sheet would probably count it twice. Loan balances should only change when the payroll is approved/closed (the same lock idea as work entries) |
 | LN-3 | Loan providers (incl. SACCOS as provider) | ✅ | |
-| LN-4 | SACCOS members: add member, monthly amount, from/to date, total contribution | 🟡 | Tables exist. No member screen (P-15). ERP lacks `to_date`, `total_amount` |
-| LN-5 | SACCOS contribution list + history, SACCOS loans list | ❌ | Reports (P-9 style) |
-| LN-6 | HESLB members + report | 🟡 | Table exists. Screen and report under P-9 / P-15 |
-| LN-7 | Salary advances: HR records advances, employee advance request page | 🟡 | ERP has advance CRUD. **Neither system deducts advances in payroll.** Confirm with HR how advances are recovered today (maybe as a loan or other deduction) |
-| LN-8 | Employee self view of loans and deductions (`single/employee/deduction`) | ❌ | |
+| LN-4 | SACCOS members: add member, monthly amount, from/to date, total contribution | ✅ | Verified 2026-11-15 |
+| LN-5 | SACCOS contribution list + history, SACCOS loans list | ✅ | Verified 2026-11-15 |
+| LN-6 | HESLB members + report | ✅ | Verified 2026-11-15 |
+| LN-7 | Salary advances: HR records advances, employee advance request page | ✅ | Verified 2026-11-15 |
+| LN-8 | Employee self view of loans and deductions (`single/employee/deduction`) | ✅ | Verified 2026-11-15 |
 
 ### Data migration notes (Loans)
 - `employee_loans`: `employeeApproved` has no ERP column. `isActive` → `is_active`. **Migrate `returned` / `remain` exactly** (open balances).

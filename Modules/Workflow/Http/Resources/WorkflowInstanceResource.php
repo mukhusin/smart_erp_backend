@@ -63,6 +63,7 @@ class WorkflowInstanceResource extends JsonResource
                     'role' => 'Role: ' . ($s->role?->name ?? '—') . ($s->same_branch ? ' (same branch)' : ''),
                     'user' => $s->user?->display_name ?? '—',
                     'department_head' => 'Head of department',
+                    'section_head' => 'Head of section (or head of department)',
                     'supervisor' => 'Supervisor (or head of department)',
                     default => $s->approver_type,
                 },

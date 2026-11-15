@@ -15,6 +15,8 @@ class WorkflowStep extends Model
 
     public const APPROVER_SUPERVISOR = 'supervisor';
 
+    public const APPROVER_SECTION_HEAD = 'section_head';
+
     protected $fillable = ['workflow_template_id', 'step_order', 'name', 'approver_type', 'role_id', 'user_id', 'same_branch', 'allow_send_back', 'approve_label', 'reject_label'];
 
     protected $casts = ['same_branch' => 'boolean', 'allow_send_back' => 'boolean'];

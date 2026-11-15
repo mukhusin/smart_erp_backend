@@ -18,6 +18,7 @@ use Modules\Core\Support\DefaultRoles;
 use Modules\Hr\Support\EmployeeFiles;
 use Modules\Hr\Support\EmployeeOptions as O;
 use Modules\Hr\Support\LeaveBalances;
+use Modules\Workflow\Models\WorkflowTemplate;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -28,12 +29,11 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class HrmsImporter
 {
-    public const STEPS = ['reference', 'organisation', 'users', 'employees', 'contracts', 'profiles', 'statutory', 'structure', 'leave', 'pay', 'payroll', 'transactions', 'roster', 'attendance', 'archive', 'roles', 'files'];
+    public const STEPS = ['reference', 'organisation', 'users', 'employees', 'contracts', 'profiles', 'statutory', 'structure', 'leave', 'pay', 'payroll', 'transactions', 'roster', 'attendance', 'archive', 'roles', 'workflows', 'files'];
 
     private const ROLE_MAP = [
         'super_admin' => DefaultRoles::COMPANY_ADMIN,
         'director_general' => 'director-general',
-        'ddg' => 'director',
         'director' => 'director',
         'director_clinical_&_medical_services' => 'director',
         'director_ivf' => 'director',
@@ -55,6 +55,12 @@ class HrmsImporter
         'approved' => 'approved', 'pending' => 'pending', 'rejected' => 'rejected'];
 
     public const OPENING_BALANCE = 'Opening balance from HRMS';
+
+    /** HRMS workflow type slug => ERP process key. */
+    private const WORKFLOW_PROCESS = [
+        'leave-request' => 'leave-request', 'overtime' => 'overtime-claim', 'salary-adjustment' => 'salary-adjustment', 'payroll-sheet' => 'payroll-sheet',
+        'allowance' => 'assigned-allowance', 'attendance-claim' => 'attendance-claim', 'contract-renewal' => 'contract-renewal',
+    ];
 
     private const CONTRACT_STATUS = ['contract end' => 'ended', 'vacation_of_office' => 'abscondment', 'expired' => 'ended', 'pending' => 'ended'];
 
@@ -1025,6 +1031,65 @@ class HrmsImporter
             $assigned['read']++;
         }
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    /** The company-wide approval chains HRMS used, one ERP workflow per process (HOD and HOS steps become department and section heads). */
+    private function stepWorkflows(): void
+    {
+        $stats = &$this->stats('workflow_templates');
+        $roles = $this->src->table('roles')->get()->mapWithKeys(function ($r) {
+            $slug = strtolower(str_replace(' ', '_', (string) $r->slug));
+            $role = Role::where('name', self::ROLE_MAP[$slug] ?? $r->name)->where('company_id', $this->companyId)->first();
+
+            return [$r->id => ['slug' => $slug, 'role' => $role]];
+        });
+        $types = $this->src->table('workflow_types')->where('is_active', 1)->pluck('slug', 'id');
+
+        foreach ($this->src->table('workflow_templates')->where('is_active', 1)->orderByDesc('is_default')->orderBy('id')->get()->unique('workflow_type_id') as $template) {
+            $stats['read']++;
+            $process = self::WORKFLOW_PROCESS[$types[$template->workflow_type_id] ?? ''] ?? null;
+            if (! $process) {
+                $stats['skipped']++;
+                $this->note('workflow_templates', "template {$template->id}: no ERP process for this HRMS workflow type");
+
+                continue;
+            }
+            $steps = [];
+            foreach ($this->src->table('workflow_steps')->where('workflow_template_id', $template->id)->orderBy('step_order')->orderBy('id')->get() as $step) {
+                $role = $roles[$step->role_id] ?? null;
+                $type = match ($role['slug'] ?? null) {
+                    'hod', 'assistant_hod' => 'department_head',
+                    'hos' => 'section_head',
+                    default => 'role',
+                };
+                if ($type === 'role' && ! ($role['role'] ?? null)) {
+                    $this->note('workflow_templates', "{$process}: step \"{$step->name}\" has an HRMS role with no ERP role, left out");
+
+                    continue;
+                }
+                $steps[] = [
+                    'step_order' => count($steps) + 1, 'name' => Str::limit(trim((string) $step->name), 100, ''), 'approver_type' => $type,
+                    'role_id' => $type === 'role' ? $role['role']->id : null, 'same_branch' => false, 'allow_send_back' => $step->sendback_label !== null,
+                    'approve_label' => in_array($step->action_label, [null, '', 'Approve'], true) ? null : Str::limit($step->action_label, 40, ''),
+                    'reject_label' => in_array($step->reject_label, [null, '', 'Reject'], true) ? null : Str::limit($step->reject_label, 40, ''),
+                ];
+            }
+            if (! $steps) {
+                $stats['skipped']++;
+
+                continue;
+            }
+
+            $existing = WorkflowTemplate::where('process', $process)->whereNull('company_branch_id')->first();
+            $erpTemplate = $existing ?? WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+            $erpTemplate->update(['is_active' => true]);
+            $erpTemplate->steps()->delete();
+            foreach ($steps as $step) {
+                $erpTemplate->steps()->create($step);
+            }
+            $existing ? $stats['updated']++ : $stats['inserted']++;
+            $this->ids->set('workflow_templates', (int) $template->id, (int) $erpTemplate->id);
+        }
     }
 
     private function stepFiles(): void

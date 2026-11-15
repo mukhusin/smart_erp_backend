@@ -8,6 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Modules\Workflow\Models\WorkflowTemplate;
 use Tests\Support\CreatesCompanies;
 use Tests\TestCase;
 
@@ -62,6 +63,10 @@ class HrmsImportTest extends TestCase
         $t('roles_permissions', fn ($b) => [$b->integer('role_id'), $b->integer('permission_id')]);
         $t('users_roles', fn ($b) => [$b->integer('user_id'), $b->integer('role_id')]);
         $t('users_permissions', fn ($b) => [$b->integer('user_id'), $b->integer('permission_id')]);
+        $t('workflow_types', fn ($b) => [$b->string('name'), $b->string('slug'), $b->boolean('is_active')]);
+        $t('workflow_templates', fn ($b) => [$b->integer('workflow_type_id'), $b->string('name'), $b->boolean('is_default'), $b->boolean('is_active')]);
+        $t('workflow_steps', fn ($b) => [$b->integer('workflow_template_id'), $b->integer('step_order'), $b->string('name'), $b->integer('role_id'),
+            $b->string('action_label')->nullable(), $b->string('reject_label')->nullable(), $b->string('sendback_label')->nullable()]);
 
         $db = DB::connection('hrms');
         $db->table('company_branches')->insert(['id' => 1, 'name' => 'Kairuki Hospital HQ']);
@@ -84,7 +89,14 @@ class HrmsImportTest extends TestCase
             ['id' => 2, 'employee_id' => 1002, 'st_no' => 'PT20', 'nature_of_contract_id' => 4, 'basic_salary' => 300000, 'start_date' => '2025-01-01', 'end_date' => '2025-12-31', 'isActive' => 0, 'status' => ' 	resigned_30_days_notes', 'created_by' => null],
         ]);
         $db->table('emp_contract_comments')->insert(['emp_contract_id' => 1, 'employee_id' => 1002, 'comment' => 'Good work', 'status' => 'active']);
-        $db->table('roles')->insert([['id' => 6, 'name' => 'Payroll Officer', 'slug' => 'payroll_officer'], ['id' => 14, 'name' => 'Normal employee', 'slug' => 'normal_employee']]);
+        $db->table('roles')->insert([['id' => 6, 'name' => 'Payroll Officer', 'slug' => 'payroll_officer'], ['id' => 14, 'name' => 'Normal employee', 'slug' => 'normal_employee'],
+            ['id' => 10, 'name' => 'HOS', 'slug' => 'hos']]);
+        $db->table('workflow_types')->insert(['id' => 2, 'name' => 'Overtime', 'slug' => 'overtime', 'is_active' => 1]);
+        $db->table('workflow_templates')->insert(['id' => 2, 'workflow_type_id' => 2, 'name' => 'Overtime', 'is_default' => 1, 'is_active' => 1]);
+        $db->table('workflow_steps')->insert([
+            ['workflow_template_id' => 2, 'step_order' => 2, 'name' => 'Payroll check', 'role_id' => 6, 'action_label' => 'Checked', 'reject_label' => 'Reject', 'sendback_label' => 'Send back'],
+            ['workflow_template_id' => 2, 'step_order' => 1, 'name' => 'HOS Approval', 'role_id' => 10, 'action_label' => 'Approve', 'reject_label' => 'Reject', 'sendback_label' => null],
+        ]);
         $db->table('permissions')->insert(['id' => 1, 'name' => 'View payroll', 'slug' => 'view-payroll']);
         $db->table('roles_permissions')->insert(['role_id' => 6, 'permission_id' => 1]);
         $db->table('users_roles')->insert([['user_id' => 51, 'role_id' => 6], ['user_id' => 50, 'role_id' => 14]]);
@@ -92,7 +104,7 @@ class HrmsImportTest extends TestCase
 
     public function test_imports_and_runs_again_without_duplicates(): void
     {
-        $steps = 'reference,organisation,users,employees,contracts,roles';
+        $steps = 'reference,organisation,users,employees,contracts,roles,workflows';
         $this->artisan('erp:import-hrms', ['company' => $this->company->slug, '--only' => $steps])->assertSuccessful();
 
         $asha = Employee::withoutCompanyScope()->where('employee_no', 'ST1001')->first();
@@ -117,6 +129,10 @@ class HrmsImportTest extends TestCase
         $this->assertTrue($juma->user->fresh()->hasRole('Payroll Officer'));
         $this->assertTrue($juma->user->fresh()->hasPermissionTo('payroll.view'));
         $this->assertTrue($asha->user->fresh()->hasRole('employee'));
+        $chain = WorkflowTemplate::withoutGlobalScopes()->where('process', 'overtime-claim')->first()->steps()->orderBy('step_order')->get();
+        $this->assertSame(['section_head', 'role'], $chain->pluck('approver_type')->all());
+        $this->assertSame('Checked', $chain[1]->approve_label);
+        $this->assertTrue((bool) $chain[1]->allow_send_back);
 
         User::whereKey($asha->user_id)->update(['password' => 'changed-in-erp']);
         DB::connection('hrms')->table('employees')->where('id', 1001)->update(['phone_number' => '0712000000']);

@@ -42702,11 +42702,12 @@
                                 },
                                 "approver_type": {
                                     "type": "string",
-                                    "description": "role = anyone with the role; user = one person; department_head = head of the requester's department; supervisor = the employee's supervisor.",
+                                    "description": "role = anyone with the role; user = one person; department_head = head of the requester's department; section_head = head of the employee's section (department head when there is none); supervisor = the employee's supervisor.",
                                     "enum": [
                                         "role",
                                         "user",
                                         "department_head",
+                                        "section_head",
                                         "supervisor"
                                     ]
                                 },
