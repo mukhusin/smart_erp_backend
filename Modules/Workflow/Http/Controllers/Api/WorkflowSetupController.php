@@ -3,14 +3,20 @@
 namespace Modules\Workflow\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CompanyBranch;
 use App\Models\ErpModule;
+use App\Models\User;
+use App\Services\CompanyContext;
+use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Workflow\Contracts\WorkflowProcess;
 use Modules\Workflow\Http\Requests\SaveWorkflowRequest;
 use Modules\Workflow\Http\Resources\WorkflowTemplateResource;
 use Modules\Workflow\Models\WorkflowTemplate;
 use Modules\Workflow\Services\WorkflowCatalog;
+use Spatie\Permission\Models\Role;
 
 /**
  * The company admin sets up approval workflows for the company's processes.
@@ -19,6 +25,39 @@ use Modules\Workflow\Services\WorkflowCatalog;
  */
 class WorkflowSetupController extends Controller
 {
+    /**
+     * Branches and roles to choose from when setting up a workflow.
+     *
+     * @response array{data: array{branches: list<array{id: int, name: string}>, roles: list<array{id: int, name: string}>}}
+     */
+    public function options(CompanyContext $context): JsonResponse
+    {
+        return response()->json(['data' => [
+            'branches' => CompanyBranch::query()->orderByDesc('is_headquarters')->orderBy('name')->get(['id', 'name'])->map(fn ($b) => ['id' => $b->id, 'name' => $b->name])->all(),
+            'roles' => Role::where('company_id', $context->id())->orderByDesc('is_system')->orderBy('name')->get(['id', 'name'])->map(fn ($r) => ['id' => $r->id, 'name' => $r->name])->all(),
+        ]]);
+    }
+
+    /**
+     * Active users of the company to pick as an approver (up to 20).
+     *
+     * @response array{data: list<array{id: int, name: string, detail: string|null}>}
+     */
+    #[QueryParameter('search', description: 'Name, username, email or employee number.', type: 'string')]
+    public function users(Request $request, CompanyContext $context): JsonResponse
+    {
+        $term = trim((string) $request->query('search'));
+        $users = User::with('employee.jobPosition')->where('company_id', $context->id())->where('is_active', true)
+            ->when($term, fn ($q) => $q->where(fn ($q) => $q->where('username', 'like', "%{$term}%")->orWhere('email', 'like', "%{$term}%")
+                ->orWhereHas('employee', fn ($e) => $e->where('fname', 'like', "%{$term}%")->orWhere('lname', 'like', "%{$term}%")->orWhere('employee_no', 'like', "%{$term}%"))))
+            ->orderBy('username')->limit(20)->get();
+
+        return response()->json(['data' => $users->map(fn (User $u) => [
+            'id' => $u->id, 'name' => $u->display_name,
+            'detail' => implode(' · ', array_filter([$u->username, $u->employee?->jobPosition?->title])) ?: null,
+        ])->values()->all()]);
+    }
+
     /**
      * List processes and their workflows.
      *
@@ -64,6 +103,7 @@ class WorkflowSetupController extends Controller
 
             if (empty($data['steps'])) {
                 $template?->delete();
+
                 return null;
             }
 

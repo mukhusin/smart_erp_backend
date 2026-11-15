@@ -7,6 +7,8 @@ use Modules\Workflow\Http\Controllers\Api\WorkflowSetupController;
 // Setting up workflows: company admin.
 Route::prefix('admin/workflows')->middleware(['auth:sanctum', 'module:admin', 'can:admin.workflow.manage'])->name('admin.workflows.')->group(function () {
     Route::get('/', [WorkflowSetupController::class, 'index'])->name('index');
+    Route::get('options', [WorkflowSetupController::class, 'options'])->name('options');
+    Route::get('users', [WorkflowSetupController::class, 'users'])->name('users');
     Route::put('{process}', [WorkflowSetupController::class, 'save'])->name('save');
 });
 
