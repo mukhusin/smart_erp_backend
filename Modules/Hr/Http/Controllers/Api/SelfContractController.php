@@ -130,4 +130,15 @@ class SelfContractController extends Controller
 
         return $employee;
     }
+
+    /**
+     * Print one of my contracts.
+     */
+    public function pdf(Request $request, \App\Models\EmployeeContract $contract, \Modules\Hr\Support\ContractDocument $document): \Illuminate\Http\Response
+    {
+        $me = \App\Models\Employee::where('user_id', $request->user()->id)->first();
+        abort_unless($me && $contract->employee_id === $me->id, 404);
+
+        return $document->pdf($request->user(), $contract);
+    }
 }

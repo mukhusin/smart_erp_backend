@@ -9817,6 +9817,57 @@
                 }
             }
         },
+        "/hr/employees/{employee}/contracts/{contract}/pdf": {
+            "get": {
+                "operationId": "hr.employees.contracts.pdf",
+                "summary": "Print a contract of employment from its contract type's template",
+                "tags": [
+                    "HR: Contracts",
+                    "EmployeeContract"
+                ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "contract",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contract ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/employees/{employee}/deductions": {
             "get": {
                 "operationId": "hr.employees.deductions.index",
@@ -16665,6 +16716,69 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/hr/contract-types/placeholders": {
+            "get": {
+                "operationId": "hr.contract-types.placeholders",
+                "summary": "Placeholders a contract template can use, and the default template",
+                "tags": [
+                    "HR: Settings",
+                    "ContractType"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "placeholders": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "default_template": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "placeholders",
+                                                "default_template"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -37824,6 +37938,48 @@
                 }
             }
         },
+        "/self/contracts/{contract}/pdf": {
+            "get": {
+                "operationId": "self.contracts.pdf",
+                "summary": "Print one of my contracts",
+                "tags": [
+                    "Self service: Contract",
+                    "SelfContract"
+                ],
+                "parameters": [
+                    {
+                        "name": "contract",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contract ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/self/renewals": {
             "post": {
                 "operationId": "self.renewals.store",
@@ -40466,6 +40622,14 @@
                             "null"
                         ],
                         "maxLength": 1000
+                    },
+                    "template_content": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Contract document (rich text) with {placeholders}; empty = the default template.",
+                        "maxLength": 100000
                     }
                 },
                 "required": [
@@ -40538,6 +40702,12 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "template_content": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -40553,7 +40723,8 @@
                     "has_allowance",
                     "has_emergency_fund",
                     "is_active",
-                    "contract_description"
+                    "contract_description",
+                    "template_content"
                 ],
                 "title": "ContractTypeResource"
             },

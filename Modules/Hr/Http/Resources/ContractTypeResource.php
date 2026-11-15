@@ -36,6 +36,7 @@ class ContractTypeResource extends JsonResource
             'has_emergency_fund' => $this->has_emergency_fund,
             'is_active' => $this->is_active,
             'contract_description' => $this->contract_description,
+            'template_content' => $this->template_content,
         ];
     }
 }

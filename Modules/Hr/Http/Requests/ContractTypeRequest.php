@@ -14,6 +14,16 @@ class ContractTypeRequest extends FormRequest
         return true;
     }
 
+    public function validated($key = null, $default = null): mixed
+    {
+        $data = parent::validated($key, $default);
+        if ($key === null && array_key_exists('template_content', $data)) {
+            $data['template_content'] = \Modules\Hr\Support\ContractDocument::clean($data['template_content']);
+        }
+
+        return $data;
+    }
+
     public function rules(): array
     {
         return [
@@ -30,6 +40,8 @@ class ContractTypeRequest extends FormRequest
             'has_emergency_fund' => ['boolean'],
             'is_active' => ['boolean'],
             'contract_description' => ['nullable', 'string', 'max:1000'],
+            /** Contract document (rich text) with {placeholders}; empty = the default template. */
+            'template_content' => ['nullable', 'string', 'max:100000'],
         ];
     }
 }

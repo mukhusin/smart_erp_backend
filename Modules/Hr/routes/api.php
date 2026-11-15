@@ -171,6 +171,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::put('contracts/{contract}', [EmployeeContractController::class, 'update'])->name('contracts.update');
         Route::post('contracts/{contract}/end', [EmployeeContractController::class, 'end'])->name('contracts.end');
         Route::post('contracts/{contract}/revert', [EmployeeContractController::class, 'revert'])->name('contracts.revert');
+        Route::get('contracts/{contract}/pdf', [EmployeeContractController::class, 'pdf'])->name('contracts.pdf');
         Route::post('renewals', [RenewalController::class, 'store'])->name('renewals.store');
     });
 
@@ -184,6 +185,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 
     Route::middleware('can:hr.contract-types.manage')->group(function () {
         Route::get('contract-types', [ContractTypeController::class, 'index'])->name('contract-types.index');
+        Route::get('contract-types/placeholders', [ContractTypeController::class, 'placeholders'])->name('contract-types.placeholders');
         Route::post('contract-types', [ContractTypeController::class, 'store'])->name('contract-types.store');
         Route::put('contract-types/{contractType}', [ContractTypeController::class, 'update'])->name('contract-types.update');
         Route::delete('contract-types/{contractType}', [ContractTypeController::class, 'destroy'])->name('contract-types.destroy');
@@ -242,6 +244,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
     Route::get('summary', [SelfSummaryController::class, 'show'])->name('summary');
     Route::get('contract', [SelfContractController::class, 'show'])->name('contract');
+    Route::get('contracts/{contract}/pdf', [SelfContractController::class, 'pdf'])->name('contracts.pdf');
     Route::get('profile', [SelfProfileController::class, 'show'])->name('profile');
     Route::get('profile/photo', [SelfProfileController::class, 'photo'])->name('profile.photo');
     Route::put('profile/contact', [SelfProfileController::class, 'updateContact'])->name('profile.contact');

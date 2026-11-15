@@ -19,6 +19,19 @@ use Modules\Hr\Http\Resources\ContractTypeResource;
 class ContractTypeController extends Controller
 {
     /**
+     * Placeholders a contract template can use, and the default template.
+     *
+     * @response array{data: array{placeholders: list<array{key: string, label: string}>, default_template: string}}
+     */
+    public function placeholders(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(['data' => [
+            'placeholders' => collect(\Modules\Hr\Support\ContractDocument::PLACEHOLDERS)->map(fn ($label, $key) => ['key' => $key, 'label' => $label])->values(),
+            'default_template' => \Modules\Hr\Support\ContractDocument::defaultTemplate(),
+        ]]);
+    }
+
+    /**
      * List contract types.
      */
     public function index(): AnonymousResourceCollection

@@ -86,4 +86,14 @@ class EmployeeContractController extends Controller
 
         return response()->json(['message' => $message, 'employee_no' => $employee->refresh()->employee_no]);
     }
+
+    /**
+     * Print a contract of employment from its contract type's template.
+     */
+    public function pdf(\Illuminate\Http\Request $request, Employee $employee, EmployeeContract $contract, \Modules\Hr\Support\ContractDocument $document): \Illuminate\Http\Response
+    {
+        abort_unless(app(\Modules\Hr\Support\EmployeeScope::class)->allows($request->user(), $employee), 404);
+
+        return $document->pdf($request->user(), $contract);
+    }
 }

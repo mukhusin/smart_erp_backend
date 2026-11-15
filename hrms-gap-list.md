@@ -10,7 +10,7 @@ items decided against are ➖. The older sections below keep the original analys
 | 1 | ~~Audit log (who changed what: old/new values, user, IP) + viewer~~ | #13, E-16 | ✅ 2026-11-15: employee, contract, pay, payroll, settings, user and workflow records; Administration → Audit log, employee History tab (`admin.audit.view`) |
 | 2 | ~~Attendance working-hours reports (company / department / section)~~ | A-7 | ✅ 2026-11-15: Reports → Working hours, totals by company / department / section / employee (planned, worked, overtime, lost hours, % worked); limited by the three working-hours permissions |
 | 3 | ~~Theatre / activity allowance from AfyaBox case counts~~ | P-6, AL-5 | ✅ 2026-11-15: per-case category "one count a day"; count entered by hand or fetched by a configurable REST source (AfyaBox = saved settings, no AfyaBox code); a failed fetch is flagged, never zero; Allowance → Activity counts; `allowance:generate` fetches the last 3 days first |
-| 4 | Contract PDF from the contract-type template | E-4 | Renewal letter exists; contract print does not |
+| 4 | ~~Contract PDF from the contract-type template~~ | E-4 | ✅ 2026-11-15: rich-text template per contract type with {placeholders} (default text when empty); PDF with signatures, job description + consent and personal information annexes; HR prints from the profile, employees from My contract |
 | 5 | ~~Payroll change log (who changed a sheet or payslip, when)~~ | §7.5 | ✅ 2026-11-15: payroll history shows each re-work with who and the totals change; pay inputs are in the audit log |
 | 6 | Bulk phone number update | §7.5 | |
 | 7 | Annual leave plans move with the employee on department change | #17, L-8 | |
