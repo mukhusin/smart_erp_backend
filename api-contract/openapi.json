@@ -10621,6 +10621,169 @@
                 }
             }
         },
+        "/hr/structure/departments/{department}/deputies": {
+            "post": {
+                "operationId": "hr.structure.deputies.store",
+                "summary": "Add a deputy head (sees and approves the same as the head)",
+                "tags": [
+                    "HR: Departments",
+                    "Department"
+                ],
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "required": true,
+                        "description": "The department ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "employee_id": {
+                                        "type": "integer"
+                                    },
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "employee_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`DepartmentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DepartmentResource"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "warnings": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "warnings"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/hr/structure/departments/{department}/deputies/{deputy}": {
+            "delete": {
+                "operationId": "hr.structure.deputies.destroy",
+                "summary": "Remove a deputy head",
+                "tags": [
+                    "HR: Departments",
+                    "Department"
+                ],
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "required": true,
+                        "description": "The department ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "deputy",
+                        "in": "path",
+                        "required": true,
+                        "description": "The deputy ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`DepartmentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/DepartmentResource"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "warnings": {
+                                                    "type": "array",
+                                                    "items": {}
+                                                }
+                                            },
+                                            "required": [
+                                                "warnings"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/hr/employees/{employee}/dependants": {
             "get": {
                 "operationId": "hr.employees.dependants.index",
@@ -15984,6 +16147,286 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/team/summary": {
+            "get": {
+                "operationId": "team.summary",
+                "summary": "Today, what is coming up, rosters and this month's overtime and allowances of the user's team",
+                "tags": [
+                    "HR: My team",
+                    "Team"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "scope": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "is_head": {
+                                                    "type": "boolean"
+                                                },
+                                                "staff": {
+                                                    "type": "integer"
+                                                },
+                                                "today": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "count": {
+                                                                "type": "integer"
+                                                            },
+                                                            "people": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "employee_no": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "detail": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "id",
+                                                                        "name",
+                                                                        "employee_no",
+                                                                        "detail"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label",
+                                                            "count",
+                                                            "people"
+                                                        ]
+                                                    }
+                                                },
+                                                "upcoming": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "count": {
+                                                                "type": "integer"
+                                                            },
+                                                            "people": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "employee_no": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "detail": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "id",
+                                                                        "name",
+                                                                        "employee_no",
+                                                                        "detail"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label",
+                                                            "count",
+                                                            "people"
+                                                        ]
+                                                    }
+                                                },
+                                                "rosters": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "title": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "status_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "from_date": {
+                                                                "type": "string"
+                                                            },
+                                                            "to_date": {
+                                                                "type": "string"
+                                                            },
+                                                            "pending_changes": {
+                                                                "type": "integer"
+                                                            },
+                                                            "link": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "title",
+                                                            "kind",
+                                                            "status",
+                                                            "status_label",
+                                                            "from_date",
+                                                            "to_date",
+                                                            "pending_changes",
+                                                            "link"
+                                                        ]
+                                                    }
+                                                },
+                                                "month": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "label": {
+                                                            "type": "string"
+                                                        },
+                                                        "overtime_hours": {
+                                                            "type": "number"
+                                                        },
+                                                        "overtime_amount": {
+                                                            "type": "number"
+                                                        },
+                                                        "overtime_pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "allowance_items": {
+                                                            "type": "number"
+                                                        },
+                                                        "allowance_amount": {
+                                                            "type": "number"
+                                                        },
+                                                        "allowance_pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "lost_hours": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "label",
+                                                        "overtime_hours",
+                                                        "overtime_amount",
+                                                        "overtime_pending",
+                                                        "allowance_items",
+                                                        "allowance_amount",
+                                                        "allowance_pending",
+                                                        "lost_hours"
+                                                    ]
+                                                },
+                                                "attendance": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "scope",
+                                                "is_head",
+                                                "staff",
+                                                "today",
+                                                "upcoming",
+                                                "rosters",
+                                                "month",
+                                                "attendance"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -36580,6 +37023,107 @@
                                                 "can_edit": {
                                                     "type": "boolean"
                                                 },
+                                                "changes_need_approval": {
+                                                    "type": "boolean"
+                                                },
+                                                "changes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "status_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "days": {
+                                                                "type": "integer"
+                                                            },
+                                                            "items": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "employee_id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "date": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "from": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "to": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "employee_id",
+                                                                        "date",
+                                                                        "from",
+                                                                        "to"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "requested_by": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "waiting_for": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "decision_comment": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "created_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "can_withdraw": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "status",
+                                                            "status_label",
+                                                            "reason",
+                                                            "days",
+                                                            "items",
+                                                            "requested_by",
+                                                            "waiting_for",
+                                                            "decision_comment",
+                                                            "created_at",
+                                                            "can_withdraw"
+                                                        ]
+                                                    }
+                                                },
                                                 "locked_before": {
                                                     "type": [
                                                         "string",
@@ -36837,6 +37381,8 @@
                                             "required": [
                                                 "roster",
                                                 "can_edit",
+                                                "changes_need_approval",
+                                                "changes",
                                                 "locked_before",
                                                 "days",
                                                 "employees",
@@ -37147,7 +37693,7 @@
         "/roster/rosters/{roster}/duties": {
             "put": {
                 "operationId": "roster.rosters.duties",
-                "summary": "Save changed days. On a published roster only today and later can change",
+                "summary": "Save changed days. On a published roster only today and later can change; changes by someone who does not head the\ndepartment (a head of section) go to the head of department as a change request and apply when approved",
                 "tags": [
                     "Roster: Duty rosters",
                     "Roster"
@@ -37186,10 +37732,17 @@
                                             "properties": {
                                                 "saved": {
                                                     "type": "integer"
+                                                },
+                                                "request_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "saved"
+                                                "saved",
+                                                "request_id"
                                             ]
                                         }
                                     },
@@ -37490,6 +38043,92 @@
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/roster/rosters/{roster}/changes/{change}/withdraw": {
+            "post": {
+                "operationId": "roster.rosters.changes.withdraw",
+                "summary": "Withdraw a roster change that is waiting for approval",
+                "tags": [
+                    "Roster: Duty rosters",
+                    "Roster"
+                ],
+                "parameters": [
+                    {
+                        "name": "roster",
+                        "in": "path",
+                        "required": true,
+                        "description": "The roster ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "change",
+                        "in": "path",
+                        "required": true,
+                        "description": "The change ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -41432,6 +42071,39 @@
                             "since"
                         ]
                     },
+                    "deputies": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "employee_id": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "employee_no": {
+                                    "type": "string"
+                                },
+                                "since": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "employee_id",
+                                "name",
+                                "employee_no",
+                                "since"
+                            ]
+                        }
+                    },
                     "positions": {
                         "type": "array",
                         "items": {
@@ -43834,6 +44506,10 @@
                             ]
                         }
                     },
+                    "is_head": {
+                        "type": "boolean",
+                        "description": "Heads (or deputies) of a department or section: they start on \"My team\"."
+                    },
                     "idle_minutes": {
                         "type": "integer",
                         "description": "Minutes without activity before the app logs out (the server ends the session too)."
@@ -43849,6 +44525,7 @@
                     "roles",
                     "permissions",
                     "acting_roles",
+                    "is_head",
                     "idle_minutes"
                 ],
                 "title": "MeResource"
@@ -45228,6 +45905,14 @@
                         },
                         "minItems": 1,
                         "maxItems": 5000
+                    },
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Why the published roster changes (sent with a change request).",
+                        "maxLength": 500
                     }
                 },
                 "required": [

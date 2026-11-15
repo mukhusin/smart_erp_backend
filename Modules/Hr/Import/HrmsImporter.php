@@ -337,6 +337,7 @@ class HrmsImporter
                 'change_reason' => $r->r_reason ?: $r->c_reason, 'is_active' => (bool) $r->isActive,
             ] : "head {$r->id}: employee or department missing";
         });
+        $this->importDeputies();
 
         foreach (['internship_periods' => ['internship', 'year_of_intern'], 'resident_periods' => ['residency', 'year_of_resident']] as $table => [$type, $yearColumn]) {
             $this->sync($table, 'employee_placements', function ($r) use ($type, $yearColumn) {
@@ -998,6 +999,30 @@ class HrmsImporter
         });
     }
 
+    /** HRMS assistant HODs (a role, not a head record) become deputy heads of their department. */
+    private function importDeputies(): void
+    {
+        $role = $this->src->table('roles')->where('slug', 'assistant_hod')->value('id');
+        if (! $role) {
+            return;
+        }
+        $users = $this->src->table('users_roles')->where('role_id', $role)->pluck('user_id');
+        foreach ($this->src->table('employees')->whereIn('user_id', $users)->get(['id', 'department_id']) as $e) {
+            $employee = $this->ids->get('employees', $e->id);
+            $department = $this->ids->get('departments', $e->department_id);
+            if (! $employee || ! $department) {
+                continue;
+            }
+            $exists = DB::table('head_of_departments')->where('employee_id', $employee)->where('department_id', $department)->where('is_active', true)->exists();
+            if (! $exists) {
+                DB::table('head_of_departments')->insert(['employee_id' => $employee, 'department_id' => $department, 'level' => 'hod', 'is_deputy' => true,
+                    'started_at' => now()->toDateString(), 'change_reason' => 'Assistant HOD in HRMS', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()]);
+                $stats = &$this->stats('head_of_deaprtments');
+                $stats['inserted']++;
+            }
+        }
+    }
+
     private function stepRoles(): void
     {
         $permissions = Permission::pluck('name')->all();
@@ -1015,7 +1040,8 @@ class HrmsImporter
             $existing ? $stats['updated']++ : $stats['inserted']++;
             if (! isset(self::ROLE_MAP[$slug])) {
                 $mapped = $this->mapPermissions($hrmsPermissions->get($role->id, collect())->pluck('slug')->all(), $permissions);
-                $erpRole->givePermissionTo(array_merge($mapped, ['self-service.use']));
+                $standard = in_array($name, ['hod', 'section-head'], true) ? array_intersect(DefaultRoles::expand(DefaultRoles::ROLES[$name]), $permissions) : [];
+                $erpRole->givePermissionTo(array_values(array_unique(array_merge($mapped, $standard, ['self-service.use']))));
             }
             $roleIds[$role->id] = $erpRole;
         }

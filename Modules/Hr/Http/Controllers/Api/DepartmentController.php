@@ -41,7 +41,7 @@ class DepartmentController extends Controller
     public function show(Department $department): DepartmentResource
     {
         return new DepartmentResource($this->withDetails(Department::whereKey($department->id))
-            ->with(['heads.employee', 'sections' => fn ($q) => $this->withDetails($q)->orderBy('name'),
+            ->with(['heads.employee', 'deputies', 'sections' => fn ($q) => $this->withDetails($q)->orderBy('name'),
                 'positions' => fn ($q) => $q->withCount(['employees as staff_count' => fn ($e) => $e->active()])->orderByDesc('is_active')->orderBy('title')])
             ->firstOrFail());
     }
@@ -99,6 +99,31 @@ class DepartmentController extends Controller
             'reason' => ['nullable', 'string', 'max:255'],
         ]);
         $warnings = $heads->appoint($department, Employee::findOrFail($data['employee_id']), $data['reason'] ?? null, $request->user());
+
+        return $this->show($department)->additional(['meta' => ['warnings' => $warnings]]);
+    }
+
+    /**
+     * Add a deputy head (sees and approves the same as the head).
+     */
+    public function appointDeputy(Request $request, Department $department, AppointHead $heads)
+    {
+        $data = $request->validate([
+            'employee_id' => ['required', 'integer', Rule::exists('employees', 'id')->where('company_id', $department->company_id)->whereNull('deleted_at')],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+        $warnings = $heads->appointDeputy($department, Employee::findOrFail($data['employee_id']), $data['reason'] ?? null, $request->user());
+
+        return $this->show($department)->additional(['meta' => ['warnings' => $warnings]]);
+    }
+
+    /**
+     * Remove a deputy head.
+     */
+    public function removeDeputy(Department $department, \App\Models\HeadOfDepartment $deputy, AppointHead $heads)
+    {
+        abort_unless($deputy->department_id === $department->id && $deputy->is_deputy && $deputy->is_active, 404);
+        $warnings = $heads->removeDeputy($deputy);
 
         return $this->show($department)->additional(['meta' => ['warnings' => $warnings]]);
     }

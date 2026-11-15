@@ -18,5 +18,6 @@ class Department extends Model {
     public function positions() { return $this->hasMany(JobPosition::class); }
     public function sectionEmployees() { return $this->hasMany(Employee::class, 'section_id'); }
     public function heads() { return $this->hasMany(HeadOfDepartment::class)->latest('id'); }
-    public function headOfDepartment() { return $this->hasOne(HeadOfDepartment::class)->where('is_active', true)->with('employee'); }
+    public function headOfDepartment() { return $this->hasOne(HeadOfDepartment::class)->where('is_active', true)->where('is_deputy', false)->with('employee'); }
+    public function deputies() { return $this->hasMany(HeadOfDepartment::class)->where('is_active', true)->where('is_deputy', true)->with('employee'); }
 }

@@ -46,6 +46,17 @@ final class DefaultLeaveTypes
         self::supervisorThenHr(OvertimeClaimProcess::KEY);
         self::hrOnly(ProfileItemProcess::KEY);
         self::supervisorThenHr(SalaryAdvanceProcess::KEY);
+        self::departmentHead(\Modules\Hr\Workflow\DutyRosterProcess::KEY);
+        self::departmentHead(\Modules\Hr\Workflow\DutyRosterChangeProcess::KEY);
+    }
+
+    public static function departmentHead(string $process): void
+    {
+        if (WorkflowTemplate::where('process', $process)->exists()) {
+            return;
+        }
+        $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+        $template->steps()->create(['step_order' => 1, 'name' => 'Head of department', 'approver_type' => 'department_head', 'allow_send_back' => true]);
     }
 
     public static function hrOnly(string $process): void

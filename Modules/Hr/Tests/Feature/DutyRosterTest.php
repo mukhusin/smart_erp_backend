@@ -152,7 +152,14 @@ class DutyRosterTest extends TestCase
         $this->actingAs($this->admin)->putJson('/api/v1/admin/workflows/duty-roster', [
             'company_branch_id' => null, 'is_active' => true, 'steps' => [['name' => 'Matron', 'approver_type' => 'user', 'user_id' => $matron->id]],
         ])->assertOk();
-        $id = $this->postJson('/api/v1/roster/rosters', ['department_id' => $this->ward->id, 'title' => 'Ward A late November', 'from_date' => '2026-11-10', 'to_date' => '2026-11-30'])->json('data.id');
+        $sister = User::factory()->create(['company_id' => $this->company->id]);
+        $this->inCompany(function () use ($sister) {
+            $sister->assignRole('employee');
+            $this->staff['asha']->update(['user_id' => $sister->id]);
+        });
+        $this->postJson("/api/v1/hr/structure/departments/{$this->ward->id}/head", ['employee_id' => $this->staff['asha']->id])->assertOk();
+        $this->admin = $sister->refresh();
+        $id = $this->actingAs($sister)->postJson('/api/v1/roster/rosters', ['department_id' => $this->ward->id, 'title' => 'Ward A late November', 'from_date' => '2026-11-10', 'to_date' => '2026-11-30'])->json('data.id');
         $this->postJson("/api/v1/roster/rosters/{$id}/submit")->assertUnprocessable()->assertJsonValidationErrors(['roster' => 'Give employees']);
         $this->duties($id, [['asha', '2026-11-11', 'M'], ['asha', '2026-11-20', 'M']])->assertOk();
 
@@ -168,8 +175,9 @@ class DutyRosterTest extends TestCase
         $this->actingAs($this->admin);
 
         $this->duties($id, [['asha', '2026-11-11', 'E']])->assertUnprocessable()->assertJsonValidationErrors(['duties.0.date' => 'Past days']);
-        $this->duties($id, [['asha', '2026-11-20', 'E']])->assertOk();
-        $this->assertSame('E', $this->day('asha', '2026-11-20')->code);
+        $this->duties($id, [['asha', '2026-11-20', 'E']])->assertOk()->assertJsonPath('data.request_id', fn ($v) => $v > 0);
+        $change = \Modules\Workflow\Models\WorkflowInstance::where('process', 'duty-roster-change')->first();
+        $this->assertNotNull($change, 'a head of section changing a published roster asks the head of department');
     }
 
     public function test_new_roster_repeats_the_rotation_and_skips_clashes(): void

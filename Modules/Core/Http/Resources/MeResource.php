@@ -80,6 +80,8 @@ class MeResource extends JsonResource
                 'for_user' => $h->fromUser?->display_name,
                 'ends_at' => $h->ends_at?->toIso8601String(),
             ])->values()->all(),
+            /** Heads (or deputies) of a department or section: they start on "My team". */
+            'is_head' => (bool) app(\Modules\Hr\Support\Heads::class)->isHead($this->resource),
             /** Minutes without activity before the app logs out (the server ends the session too). */
             'idle_minutes' => (int) config('session.idle_minutes'),
         ];

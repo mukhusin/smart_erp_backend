@@ -93,11 +93,9 @@ class ManageRosters
      *
      * @param  list<array{employee_id: int, date: string, roster_code_id: int|null, overtime?: bool}>  $items
      */
-    public function saveDuties(Roster $roster, array $items, User $by): int
+    /** @return \Illuminate\Support\Collection<int, RosterCode> the duty codes used */
+    public function validateItems(Roster $roster, array $items): \Illuminate\Support\Collection
     {
-        if (! $roster->editable()) {
-            throw ValidationException::withMessages(['duties' => 'This roster is waiting for approval. Withdraw it to make changes.']);
-        }
         $employees = $this->employees($roster)->pluck('id')->flip();
         $codes = RosterCode::whereIn('id', collect($items)->pluck('roster_code_id')->filter()->unique())->get()->keyBy('id');
         $today = now()->startOfDay();
@@ -130,6 +128,16 @@ class ManageRosters
             throw ValidationException::withMessages($errors);
         }
 
+        return $codes;
+    }
+
+    public function saveDuties(Roster $roster, array $items, User $by): int
+    {
+        if (! $roster->editable()) {
+            throw ValidationException::withMessages(['duties' => 'This roster is waiting for approval. Withdraw it to make changes.']);
+        }
+        $codes = $this->validateItems($roster, $items);
+
         return DB::transaction(function () use ($roster, $items, $codes, $by) {
             foreach ($items as $item) {
                 $existing = $roster->duties()->where('employee_id', $item['employee_id'])->whereDate('day_date', $item['date'])->first();
@@ -149,6 +157,71 @@ class ManageRosters
         });
     }
 
+    /** The user heads (or deputises for) the roster's department; for changes to a published roster, HR with company-wide rights too. */
+    public function approvesOwn(User $by, Roster $roster, bool $companyWide = true): bool
+    {
+        if ($companyWide && app(\Modules\Hr\Support\EmployeeScope::class)->rules($by) === null) {
+            return true;
+        }
+        $me = $by->employee;
+
+        return $me && \App\Models\HeadOfDepartment::where('employee_id', $me->id)->where('department_id', $roster->department_id)->where('is_active', true)->exists();
+    }
+
+    /**
+     * Saves changes, or for a published roster changed by someone who does not head the department (a head of section),
+     * keeps them as a change request for the head of department; they are applied when approved.
+     *
+     * @return array{saved: int, request_id: int|null}
+     */
+    public function change(Roster $roster, array $items, User $by, ?string $reason = null): array
+    {
+        if ($roster->status !== Roster::PUBLISHED || $this->approvesOwn($by, $roster)) {
+            return ['saved' => $this->saveDuties($roster, $items, $by), 'request_id' => null];
+        }
+        $this->validateItems($roster, $items);
+        if (\App\Models\RosterChangeRequest::where('roster_id', $roster->id)->where('status', 'pending')->exists()) {
+            throw ValidationException::withMessages(['duties' => 'A change to this roster is already waiting for the head of department. Wait for it, or withdraw it first.']);
+        }
+        $codes = RosterCode::whereIn('id', collect($items)->pluck('roster_code_id')->filter())->pluck('code', 'id');
+        $existing = $roster->duties()->get()->keyBy(fn ($d) => $d->employee_id.'|'.$d->day_date->toDateString());
+        $rows = collect($items)->map(fn ($i) => $i + [
+            'from' => $existing->get($i['employee_id'].'|'.$i['date'])?->code, 'to' => $i['roster_code_id'] ? ($codes[$i['roster_code_id']] ?? null) : null,
+        ])->filter(fn ($i) => $i['from'] !== $i['to'] || array_key_exists('overtime', $i))->values()->all();
+        if (! $rows) {
+            return ['saved' => 0, 'request_id' => null];
+        }
+        $request = \App\Models\RosterChangeRequest::create(['roster_id' => $roster->id, 'items' => $rows, 'reason' => $reason, 'status' => 'pending', 'requested_by' => $by->id]);
+        if (! $this->workflow->start(\Modules\Hr\Workflow\DutyRosterChangeProcess::KEY, $request, $by)) {
+            $this->applyChange($request);
+        }
+
+        return ['saved' => 0, 'request_id' => $request->id];
+    }
+
+    public function applyChange(\App\Models\RosterChangeRequest $request): void
+    {
+        $roster = $request->roster;
+        $by = $request->requester ?? auth()->user();
+        $items = collect($request->items)->filter(fn ($i) => Carbon::parse($i['date'])->startOfDay()->gte(now()->startOfDay()))
+            ->map(fn ($i) => array_intersect_key($i, array_flip(['employee_id', 'date', 'roster_code_id', 'overtime', 'max_overtime_hours'])))->values()->all();
+        if ($items) {
+            $this->saveDuties($roster, $items, $by);
+        }
+        $request->update(['status' => 'applied', 'decided_at' => now()]);
+    }
+
+    public function withdrawChange(\App\Models\RosterChangeRequest $request, User $by): void
+    {
+        if ($request->status !== 'pending') {
+            throw ValidationException::withMessages(['change' => 'Only a change waiting for approval can be withdrawn.']);
+        }
+        if ($instance = $request->workflow()->where('status', 'pending')->first()) {
+            $this->workflow->cancel($instance, $by);
+        }
+        $request->refresh()->status === 'pending' && $request->update(['status' => 'cancelled', 'decided_at' => now()]);
+    }
+
     public function submit(Roster $roster, User $by): Roster
     {
         if (! in_array($roster->status, [Roster::DRAFT, Roster::REJECTED], true)) {
@@ -158,7 +231,7 @@ class ManageRosters
             throw ValidationException::withMessages(['roster' => 'Give employees their duties before submitting.']);
         }
         $roster->update(['status' => Roster::PENDING, 'submitted_at' => now(), 'decision_comment' => null]);
-        if (! $this->workflow->start(DutyRosterProcess::KEY, $roster, $by)) {
+        if ($this->approvesOwn($by, $roster) || ! $this->workflow->start(DutyRosterProcess::KEY, $roster, $by)) {
             $this->publish($roster);
         }
 

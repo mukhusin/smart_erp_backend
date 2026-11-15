@@ -8,6 +8,7 @@ use Modules\Hr\Workflow\AllowanceClaimProcess;
 use Modules\Hr\Workflow\AssignedAllowanceProcess;
 use Modules\Hr\Workflow\AttendanceClaimProcess;
 use Modules\Hr\Workflow\ContractRenewalProcess;
+use Modules\Hr\Workflow\DutyRosterChangeProcess;
 use Modules\Hr\Workflow\DutyRosterProcess;
 use Modules\Hr\Workflow\LeaveRequestProcess;
 use Modules\Hr\Workflow\LoanProcess;
@@ -32,6 +33,7 @@ final class WorkflowCatalog
         UserAccessChangeProcess::class,
         ContractRenewalProcess::class,
         DutyRosterProcess::class,
+        DutyRosterChangeProcess::class,
         LeaveRequestProcess::class,
         AllowanceClaimProcess::class,
         OvertimeClaimProcess::class,

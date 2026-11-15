@@ -4,6 +4,10 @@ Steps to run on the server when a release needs more than pulling the code. Newe
 
 ## Switch-over from HRMS (runbook, rehearsed 2026-11-15)
 
+Production dry run (15 Nov 2026 dump, restored to a separate database): 817 employees, 26 payrolls, 10,454 payslips,
+599,897 attendance days, 821 users — 12 min 34 s, all 15 checks OK; 130 pending claims and 86 pending salary adjustments
+imported as cancelled; 1 assistant HOD imported as deputy head.
+
 Rehearsed on a new empty database with the local HRMS copy (data to Aug 2026: 776 employees, 9,203 payslips, 276,766 daily
 allowances, 559,574 attendance days): full import **10 min 43 s**, peak memory ~400 MB, all 15 checks OK. A second run (the
 switch-day catch-up) took **2 min 49 s**, inserted nothing and still matched. Use `php -d memory_limit=2G`.
@@ -62,7 +66,11 @@ pointing to a payroll that no longer exists, annual leave plans never requested 
    tables (reading punches alone needed SELECT). It runs on the `attendance` queue (the worker already listens to it) and
    nightly at 01:30 (`attendance:push-staff`). Companies whose attendance is not BioTime are never touched.
 
-6. Give "View audit log" to the roles that should see Administration → Audit log and the employee History tab.
+6. Heads (2026-11-15): the migration adds "Duty roster" and "Duty roster change" approval (one step: head of department) to
+   companies that have none. Re-run the import `roles` step (`--only=roles`) so the section-head role gets `roster.manage`
+   (heads of section prepare their section's roster). Deputies are added in HR → Departments → Add deputy.
+
+7. Give "View audit log" to the roles that should see Administration → Audit log and the employee History tab.
 
 ## Self-service profile (2026-11-13)
 

@@ -29,6 +29,7 @@ class AppointHead
             throw ValidationException::withMessages(['employee_id' => 'This employee has left the organization.']);
         }
         $current = $department->headOfDepartment()->first();
+        $department->deputies()->where('employee_id', $employee->id)->update(['is_active' => false, 'ended_at' => now()->toDateString(), 'change_reason' => 'Became head']);
         if ($current && (int) $current->employee_id === $employee->id) {
             throw ValidationException::withMessages(['employee_id' => 'This employee is already the head.']);
         }
@@ -48,6 +49,32 @@ class AppointHead
         ]);
 
         return array_values($warnings);
+    }
+
+    /** @return list<string> warnings for HR */
+    public function appointDeputy(Department $department, Employee $employee, ?string $reason, ?User $by): array
+    {
+        if ($employee->employment_status === 'terminated') {
+            throw ValidationException::withMessages(['employee_id' => 'This employee has left the organization.']);
+        }
+        if ($department->heads()->where('employee_id', $employee->id)->where('is_active', true)->exists()) {
+            throw ValidationException::withMessages(['employee_id' => 'This employee is already the head or a deputy here.']);
+        }
+        $level = $department->parent_id ? HeadOfDepartment::SECTION : HeadOfDepartment::DEPARTMENT;
+        $department->heads()->create([
+            'employee_id' => $employee->id, 'level' => $level, 'is_deputy' => true, 'started_at' => now()->toDateString(),
+            'change_reason' => $reason, 'appointed_by' => $by?->id, 'is_active' => true,
+        ]);
+
+        return array_values(array_filter([$this->syncRole($employee, $level, "Appointed deputy head of {$department->name}")]));
+    }
+
+    /** @return list<string> */
+    public function removeDeputy(HeadOfDepartment $deputy): array
+    {
+        $deputy->update(['is_active' => false, 'ended_at' => now()->toDateString()]);
+
+        return array_values(array_filter([$this->syncRole($deputy->employee, $deputy->level, 'No longer deputy head of '.$deputy->department?->name)]));
     }
 
     /** @return list<string> */

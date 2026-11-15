@@ -37,7 +37,7 @@ final class DefaultRoles
             'attendance.working-hours.department', 'allowance.department.view', 'allowance.daily.manage', 'overtime.view', 'reports.view', 'self-service.use',
         ],
         'section-head' => [
-            'hr.employees.view-section', 'roster.section.view', 'attendance.working-hours.section', 'reports.view', 'self-service.use',
+            'hr.employees.view-section', 'roster.section.view', 'roster.manage', 'attendance.working-hours.section', 'reports.view', 'self-service.use',
         ],
         'employee' => ['self-service.use'],
     ];

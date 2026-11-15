@@ -224,6 +224,8 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::delete('{department}', [DepartmentController::class, 'destroy'])->name('destroy');
         Route::post('{department}/head', [DepartmentController::class, 'appointHead'])->name('head');
         Route::post('{department}/head/remove', [DepartmentController::class, 'removeHead'])->name('head.remove');
+        Route::post('{department}/deputies', [DepartmentController::class, 'appointDeputy'])->name('deputies.store');
+        Route::delete('{department}/deputies/{deputy}', [DepartmentController::class, 'removeDeputy'])->name('deputies.destroy');
     });
 
     Route::middleware('can:hr.number-formats.manage')->group(function () {
@@ -242,6 +244,8 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
         Route::delete('licence-types/{licenceType}', [LicenceTypeController::class, 'destroy'])->name('licence-types.destroy');
     });
 });
+
+Route::get('team/summary', [\Modules\Hr\Http\Controllers\Api\TeamController::class, 'summary'])->middleware(['auth:sanctum', 'module:hr'])->name('team.summary');
 
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
     Route::get('summary', [SelfSummaryController::class, 'show'])->name('summary');
@@ -307,6 +311,7 @@ Route::prefix('roster')->middleware(['auth:sanctum', 'module:roster'])->name('ro
     Route::put('rosters/{roster}/duties', [RosterController::class, 'duties'])->name('rosters.duties');
     Route::post('rosters/{roster}/submit', [RosterController::class, 'submit'])->name('rosters.submit');
     Route::post('rosters/{roster}/withdraw', [RosterController::class, 'withdraw'])->name('rosters.withdraw');
+    Route::post('rosters/{roster}/changes/{change}/withdraw', [RosterController::class, 'withdrawChange'])->name('rosters.changes.withdraw');
 
     Route::middleware('can:roster.timetables.manage')->group(function () {
         Route::get('codes', [RosterCodeController::class, 'index'])->name('codes.index');

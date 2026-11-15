@@ -442,6 +442,12 @@ class HrReports
         return $this->sheet->seesSalary($user);
     }
 
+    /** Overtime and daily allowance amounts: also shown to heads of department and section. */
+    private function payItemMoney(User $user): bool
+    {
+        return $this->money($user) || app(Heads::class)->isHead($user);
+    }
+
     private function reportLeaveRequests(array $v, User $user): array
     {
         $ids = $this->employees($v, $user, false)->select('id');
@@ -487,7 +493,7 @@ class HrReports
 
     private function reportOvertime(array $v, User $user): array
     {
-        $money = $this->money($user);
+        $money = $this->payItemMoney($user);
         $ids = $this->employees($v, $user, false)->select('id');
         $rows = Overtime::with(['employee.department', 'employee.section', 'employee.jobPosition', 'workflow.steps'])
             ->whereIn('employee_id', $ids)
@@ -610,7 +616,7 @@ class HrReports
 
     private function reportOvertimeSummary(array $v, User $user): array
     {
-        $money = $this->money($user);
+        $money = $this->payItemMoney($user);
         $ids = $this->employees($v, $user, false)->select('id');
         $rows = Overtime::with(['employee.department', 'employee.section', 'employee.jobPosition'])
             ->whereIn('employee_id', $ids)->where('status', 'approved')

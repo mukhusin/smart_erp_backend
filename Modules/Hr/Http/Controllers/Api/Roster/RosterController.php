@@ -91,7 +91,7 @@ class RosterController extends Controller
     /**
      * A roster with its days, employees, duties and the duty codes to choose from.
      *
-     * @response array{data: array{roster: array{id: int, title: string, department: array{id: int, name: string}|null, section: array{id: int, name: string}|null, from_date: string, to_date: string, days: int, status: string, status_label: string, employees: int, prepared_by: string|null, waiting_for: string|null, decision_comment: string|null, can_manage: bool}, can_edit: bool, locked_before: string|null, days: list<array{date: string, weekday: string, weekend: bool, holiday: string|null}>, employees: list<array{id: int, name: string, employee_no: string|null, position: string|null}>, duties: list<array{employee_id: int, date: string, roster_code_id: int|null, code: string, duty: string, color: string|null, is_working: bool, start_time: string|null, end_time: string|null, hours: float, overtime: bool, max_overtime_hours: float|null}>, codes: list<array{id: int, code: string, duty: string, description: string|null, is_working: bool, start_time: string|null, end_time: string|null, crosses_midnight: bool, work_hour: float, break_minutes: int, color: string|null, is_active: bool}>, absences: list<array{employee_id: int, date: string, kind: string, code: string|null, label: string|null, color: string|null}>}}
+     * @response array{data: array{roster: array{id: int, title: string, department: array{id: int, name: string}|null, section: array{id: int, name: string}|null, from_date: string, to_date: string, days: int, status: string, status_label: string, employees: int, prepared_by: string|null, waiting_for: string|null, decision_comment: string|null, can_manage: bool}, can_edit: bool, changes_need_approval: bool, changes: list<array{id: int, status: string, status_label: string, reason: string|null, days: int, items: list<array{employee_id: int, date: string, from: string|null, to: string|null}>, requested_by: string|null, waiting_for: string|null, decision_comment: string|null, created_at: string|null, can_withdraw: bool}>, locked_before: string|null, days: list<array{date: string, weekday: string, weekend: bool, holiday: string|null}>, employees: list<array{id: int, name: string, employee_no: string|null, position: string|null}>, duties: list<array{employee_id: int, date: string, roster_code_id: int|null, code: string, duty: string, color: string|null, is_working: bool, start_time: string|null, end_time: string|null, hours: float, overtime: bool, max_overtime_hours: float|null}>, codes: list<array{id: int, code: string, duty: string, description: string|null, is_working: bool, start_time: string|null, end_time: string|null, crosses_midnight: bool, work_hour: float, break_minutes: int, color: string|null, is_active: bool}>, absences: list<array{employee_id: int, date: string, kind: string, code: string|null, label: string|null, color: string|null}>}}
      */
     public function show(Request $request, Roster $roster): JsonResponse
     {
@@ -106,6 +106,16 @@ class RosterController extends Controller
         return response()->json(['data' => [
             'roster' => $this->row($roster, $request),
             'can_edit' => $canManage && $roster->editable(),
+            /** Changes to this published roster are sent to the head of department for approval. */
+            'changes_need_approval' => $canManage && $roster->status === Roster::PUBLISHED && ! $this->rosters->approvesOwn($request->user(), $roster),
+            /** @var list<array{id: int, status: string, status_label: string, reason: string|null, days: int, items: list<array{employee_id: int, date: string, from: string|null, to: string|null}>, requested_by: string|null, waiting_for: string|null, decision_comment: string|null, created_at: string|null, can_withdraw: bool}> */
+            'changes' => \App\Models\RosterChangeRequest::with(['requester', 'workflow.steps'])->where('roster_id', $roster->id)->latest('id')->limit(10)->get()->map(fn ($c) => [
+                'id' => $c->id, 'status' => $c->status, 'status_label' => \App\Models\RosterChangeRequest::STATUS_LABELS[$c->status] ?? $c->status, 'reason' => $c->reason,
+                'days' => count($c->items ?? []), 'items' => collect($c->items)->map(fn ($i) => ['employee_id' => (int) $i['employee_id'], 'date' => $i['date'], 'from' => $i['from'] ?? null, 'to' => $i['to'] ?? null])->values()->all(),
+                'requested_by' => $c->requester?->display_name, 'waiting_for' => $c->status === 'pending' ? $c->workflow?->steps?->firstWhere('status', 'pending')?->name : null,
+                'decision_comment' => $c->decision_comment, 'created_at' => $c->created_at?->toIso8601String(),
+                'can_withdraw' => $c->status === 'pending' && ($c->requested_by === $request->user()->id || $this->rosters->approvesOwn($request->user(), $roster)),
+            ])->values(),
             'locked_before' => $roster->status === Roster::PUBLISHED ? now()->toDateString() : null,
             'days' => collect(CarbonPeriod::create($roster->from_date, $roster->to_date))->map(fn ($d) => [
                 'date' => $d->toDateString(), 'weekday' => $d->format('D'), 'weekend' => $d->isWeekend(), 'holiday' => $calendar->holidayOn($d)?->title,
@@ -223,15 +233,29 @@ class RosterController extends Controller
     }
 
     /**
-     * Save changed days. On a published roster only today and later can change.
+     * Save changed days. On a published roster only today and later can change; changes by someone who does not head the
+     * department (a head of section) go to the head of department as a change request and apply when approved.
      *
-     * @response array{data: array{saved: int}}
+     * @response array{data: array{saved: int, request_id: int|null}}
      */
     public function duties(RosterDutiesRequest $request, Roster $roster): JsonResponse
     {
         $this->authorizeManage($request, $roster);
+        $d = $request->validated();
 
-        return response()->json(['data' => ['saved' => $this->rosters->saveDuties($roster, $request->validated()['duties'], $request->user())]]);
+        return response()->json(['data' => $this->rosters->change($roster, $d['duties'], $request->user(), $d['reason'] ?? null)]);
+    }
+
+    /**
+     * Withdraw a roster change that is waiting for approval.
+     */
+    public function withdrawChange(Request $request, Roster $roster, \App\Models\RosterChangeRequest $change): JsonResponse
+    {
+        abort_unless($change->roster_id === $roster->id, 404);
+        abort_unless($change->requested_by === $request->user()->id || $this->rosters->approvesOwn($request->user(), $roster), 403);
+        $this->rosters->withdrawChange($change, $request->user());
+
+        return response()->json(['data' => ['status' => $change->refresh()->status]]);
     }
 
     /**

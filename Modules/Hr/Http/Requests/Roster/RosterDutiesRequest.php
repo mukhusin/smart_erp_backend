@@ -23,6 +23,8 @@ class RosterDutiesRequest extends FormRequest
             'duties.*.overtime' => ['boolean'],
             /** Most overtime hours that may be claimed for this duty (with overtime on). */
             'duties.*.max_overtime_hours' => ['nullable', 'numeric', 'min:0.5', 'max:24'],
+            /** Why the published roster changes (sent with a change request). */
+            'reason' => ['nullable', 'string', 'max:500'],
         ];
     }
 }
