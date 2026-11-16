@@ -59,7 +59,7 @@ class PaymentSetupController extends Controller
         $ids = null;
         if (! $this->access->can($user, 'manage')) {
             $rules = $this->access->can($user, 'request') ? $scope->rules($user) : ['departments' => []];
-            $ids = $rules === null ? null : $rules['departments'];
+            $ids = $rules === null ? null : array_values(array_unique(array_filter([...$rules['departments'], $this->access->ownDepartment($user)])));
         }
         $money = $this->access->finance($user) || $this->access->cashier($user);
 

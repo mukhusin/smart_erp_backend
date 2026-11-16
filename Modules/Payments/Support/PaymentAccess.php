@@ -44,9 +44,17 @@ class PaymentAccess
         return $rules === null ? null : array_values(array_unique($rules['departments']));
     }
 
+    /** Department of the user's own employee record: every staff member may ask for payment from it. */
+    public function ownDepartment(User $user): ?int
+    {
+        $department = (int) $user->employee?->department_id;
+
+        return $department && $this->access->can($user, 'self-service.use') ? $department : null;
+    }
+
     public function canRequest(User $user, int $departmentId): bool
     {
-        if ($this->can($user, 'manage')) {
+        if ($this->can($user, 'manage') || $this->ownDepartment($user) === $departmentId) {
             return true;
         }
         if (! $this->can($user, 'request')) {

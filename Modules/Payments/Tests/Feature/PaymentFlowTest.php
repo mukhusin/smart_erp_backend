@@ -188,4 +188,28 @@ class PaymentFlowTest extends TestCase
         $this->actingAs($this->director)->getJson("/api/v1/payments/requests/{$id}")->assertForbidden();
         $this->actingAs($this->head)->deleteJson("/api/v1/payments/requests/{$id}")->assertOk();
     }
+
+    public function test_staff_member_requests_payment_for_own_department_from_self_service(): void
+    {
+        [$staff, $lab] = app(CompanyContext::class)->run($this->company, function () {
+            $lab = Department::create(['name' => 'Laboratory', 'is_active' => true]);
+            $staff = tap(User::factory()->create(['company_id' => $this->company->id]))->assignRole('employee');
+            Employee::create(['employee_no' => 'ST1', 'fname' => 'Juma', 'lname' => 'Staff', 'gender' => 'Male', 'department_id' => $this->pharmacy->id,
+                'user_id' => $staff->id, 'employment_status' => 'confirmed', 'date_of_birth' => '1992-01-01']);
+
+            return [$staff, $lab];
+        });
+        $this->actingAs($this->finance)->putJson('/api/v1/payments/settings', ['payable_account_id' => $this->acc['2100'], 'withholding_account_id' => null, 'require_attachment' => false])->assertOk();
+        $this->actingAs($staff)->getJson('/api/v1/payments/lookups')->assertJsonCount(1, 'data.departments')->assertJsonPath('data.departments.0.name', 'Pharmacy');
+        $this->getJson('/api/v1/payments/budget-lines?department_id='.$this->pharmacy->id)->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson('/api/v1/payments/budget-lines?department_id='.$lab->id)->assertForbidden();
+        $body = ['department_id' => $this->pharmacy->id, 'title' => 'Outreach transport', 'lines' => [['budget_item_id' => $this->item, 'amount' => 40000]],
+            'payees' => [['name' => 'Juma Staff', 'kind' => 'staff', 'method' => 'mobile', 'mobile_number' => '0713000000', 'amount' => 40000]]];
+        $this->postJson('/api/v1/payments/requests', ['department_id' => $lab->id] + $body)->assertForbidden();
+        $id = $this->postJson('/api/v1/payments/requests', $body)->assertCreated()->json('data.id');
+        $this->postJson("/api/v1/payments/requests/{$id}/submit")->assertOk()->assertJsonPath('data.status', 'pending');
+        $this->getJson('/api/v1/payments/requests?mine=1')->assertJsonCount(1, 'data')->assertJsonPath('data.0.waiting_for', 'Step 1');
+        $this->getJson("/api/v1/payments/requests/{$id}")->assertJsonPath('data.can.withdraw', true)->assertJsonPath('data.can.voucher', false);
+        $this->getJson('/api/v1/payments/vouchers')->assertForbidden();
+    }
 }
