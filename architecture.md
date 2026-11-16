@@ -831,3 +831,58 @@ Legacy empty Blade-era tables (suppliers, bills, purchase_*, inventory_*, stock_
 migration only when empty. Permissions `procurement.view|suppliers|manage|approve`, `inventory.view|catalogue|stores|
 manage`. Next: step 3 procurement core (plan, requisition with budget hold, quotations, purchase order, GRN with the
 clearing account) and step 4 store ledger.
+
+## 20. Kairuki Hospital accounting requirements — coverage (2026-11-16)
+
+Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ part · ✗ not yet.
+
+| Area | Status | Notes |
+|---|---|---|
+| Chart of accounts, journals with approval, period close, trial balance, audit trail | ✓ | year-end closing ✗ |
+| Departmental / cost-centre tracking, budgeting and variance | ✓ | line dimensions department, fund, activity, budget line |
+| Multi-currency, revaluation | ✗ | currency only on bank accounts |
+| Multi-entity / branches | ◐ | multi-company and branches ✓; consolidation and intercompany ✗ |
+| AP: vendor register, WHT, payment requests → vouchers → payment lists, bank file | ✓ | |
+| AP: supplier invoices, 3-way match (PO, delivery, invoice), AP ageing, scheduled payments, cheque printing | ✗ | supplier bills come with procurement (step 3) |
+| AR: customers, invoices, receipts with/without invoice, credit notes, ageing, statements | ✓ | |
+| AR: credit control (limit blocking), payment plans, co-payment, insurance claim lifecycle, Afyabox patient billing | ✗ | credit limit stored, not enforced |
+| Bank: several accounts, cash book | ✓ | |
+| Bank reconciliation, cash flow forecast, petty cash / imprest, cashier-system link | ✗ | |
+| Fixed assets: categories with depreciation rules | ◐ | register, tags, depreciation, transfer, disposal, revaluation, maintenance ✗ (step 5) |
+| Inventory & pharmacy: catalogue, stores, batch/expiry flags | ◐ | ledger, FIFO/weighted average, consumption, auto-reorder ✗ (step 4); LIFO not allowed under IFRS |
+| Payroll: attendance link, allowances, cost per department, posting to GL, statutory reports | ✓ | gratuity / benefit accruals ✗ |
+| Reports: income statement, financial position, cash book, fund statement, budget vs actual, dashboards, PDF/CSV | ✓ | cash flow statement ✗, departmental profitability ◐, service line and insurance-vs-cash trends ✗, custom dashboards ✗ |
+| Tax: payroll statutory (PAYE, NSSF, NHIF, WCF, SDL), WHT | ✓ | VAT input/output and returns ✗ |
+| Security: roles, permissions, multi-level workflow with amount steps, audit log | ✓ | default roles for auditor (read-only), AP clerk, AR clerk, cashier ✗ |
+| Integration: CSV import (chart, items), CSV/PDF export | ✓ | APIs for Afyabox / HIS / lab / pharmacy / NHIF e-claims ✗; Excel/XML export ✗ |
+| Web, responsive | ✓ | mobile app ✗; backups are a server task |
+
+**Added to the plan from this document** (after procurement step 3, in this order): default finance roles (auditor
+read-only, AP clerk, AR clerk, cashier); bank reconciliation; supplier invoices with 3-way match and AP ageing; VAT
+(input/output accounts, VAT on invoices and bills, VAT return); cash flow statement (indirect, IFRS for SMEs); petty
+cash and imprest with retirement; external system integration — generic, not vendor specific: any HIS/billing/lab/pharmacy/insurer
+system (Afyabox is only the first connector) sends patient bills, receipts and insurance claims into Billing &
+Receipts through the signed external API (claims: submitted, partly paid, rejected, resubmitted; departmental and
+service-line revenue); recurring journals and
+year-end closing; multi-currency with revaluation; gratuity accrual; asset maintenance schedule (with step 5).
+
+**Accounting framework (decided for discussion, 2026-11-16):** not IFRS only. A company setting `framework` = IFRS
+(full) | IFRS for SMEs (default) | US GAAP | local framework. It drives: allowed stock costing methods (FIFO, weighted
+average, specific identification; LIFO offered only under US GAAP or a local framework, with a warning that tax rules
+differ by country), statement wording (company vs non-profit) and whether revaluation is allowed. Built with stock
+costing in step 4. Recommendation to Kairuki: FIFO for medicines (also matches expiry control).
+
+**Step 3 done (2026-11-16) — procurement core:** purchase requisition (lines from the catalogue, budget line per line,
+normal or special with reason) → submit holds the estimate (`purchase-requisition` workflow: head of department, then
+finance) → request for quotations with recorded quotations, comparison and award per line (minimum quotes from
+settings or a written reason; `quotation-award` workflow drafts one purchase order per winner) or a direct order
+(direct under the limit, single source or framework with reason) → purchase order (`purchase-order` workflow with
+amount steps; approval releases the requisition hold for the ordered part and commits the order amount; PDF,
+acknowledgement, cancel releases) → goods received note (delivered / accepted / rejected with reason, batch, expiry,
+serials; `goods-receipt` inspection workflow) → on acceptance: journal Dr inventory / asset / expense (from the item
+category) with the budget line, Cr goods-received clearing; the order commitment becomes spent; order partly or fully
+delivered; exactly one supplier bill (payment request already approved, lines on the clearing account, payee = the
+supplier's approved bank account) and the `GoodsAccepted` event (stores and assets listen in steps 4–5). 3-way match:
+the supplier invoice recorded on the delivery must equal order price × accepted quantity (tolerance in settings)
+before a voucher can be prepared; the voucher debits clearing (no second budget effect). Not yet: procurement plan and
+packages, tenders, contracts, framework agreements (step 6).

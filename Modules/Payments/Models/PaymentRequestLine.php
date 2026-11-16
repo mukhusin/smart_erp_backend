@@ -7,7 +7,7 @@ use Modules\Budgeting\Models\BudgetItem;
 
 class PaymentRequestLine extends Model
 {
-    protected $fillable = ['payment_request_id', 'budget_item_id', 'description', 'amount'];
+    protected $fillable = ['payment_request_id', 'budget_item_id', 'account_id', 'description', 'amount'];
 
     protected $casts = ['amount' => 'float'];
 

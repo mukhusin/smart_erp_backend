@@ -35,7 +35,7 @@ final class DefaultRoles
         'hod' => [
             'hr.employees.view-department', 'leave.department.view', 'leave.approve-hod', 'leave.annual-roster.manage', 'leave.absence.manage', 'roster.department.view', 'roster.manage',
             'attendance.working-hours.department', 'allowance.department.view', 'allowance.daily.manage', 'overtime.view', 'reports.view', 'self-service.use',
-            'tasks.use', 'tasks.assign', 'tasks.activities.manage', 'appraisals.use', 'appraisals.review', 'planning.department', 'budgeting.prepare', 'payments.request',
+            'tasks.use', 'tasks.assign', 'tasks.activities.manage', 'appraisals.use', 'appraisals.review', 'planning.department', 'budgeting.prepare', 'payments.request', 'procurement.request',
         ],
         'section-head' => [
             'hr.employees.view-section', 'roster.section.view', 'roster.manage', 'attendance.working-hours.section', 'reports.view', 'self-service.use',

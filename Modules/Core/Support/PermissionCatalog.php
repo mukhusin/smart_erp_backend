@@ -170,7 +170,10 @@ final class PermissionCatalog
         ],
         'procurement' => [
             'procurement.view' => 'View suppliers, plans, requisitions and orders',
+            'procurement.request' => 'Raise purchase requisitions for own departments',
             'procurement.suppliers' => 'Maintain the supplier register (details, bank accounts, documents)',
+            'procurement.orders' => 'Request quotations, propose awards and prepare purchase orders (procurement officer)',
+            'procurement.receive' => 'Receive goods into any store',
             'procurement.manage' => 'Run procurement and blacklist suppliers (head of procurement)',
             'procurement.approve' => 'Approve purchase requests',
         ],

@@ -55,6 +55,7 @@ final class DefaultLeaveTypes
         self::budgeting();
         self::payments();
         self::receivables();
+        self::procurement();
     }
 
     public static function budgeting(): void
@@ -112,6 +113,31 @@ final class DefaultLeaveTypes
             }
             $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
             $template->steps()->create(['step_order' => 1, 'name' => $name, 'approver_type' => 'role', 'role_id' => $finance->id, 'allow_send_back' => false]);
+        }
+    }
+
+    public static function procurement(): void
+    {
+        $company = app(CompanyContext::class)->id();
+        $finance = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
+        $director = Role::where('name', 'director-general')->where('company_id', $company)->first();
+        if (! $finance) {
+            return;
+        }
+        $chains = [
+            'purchase-requisition' => [['Head of department', 'department_head', null, null], ['Finance (budget check)', 'role', $finance->id, null]],
+            'quotation-award' => [[$director ? 'Director general' : 'Chief accountant', 'role', ($director ?? $finance)->id, null]],
+            'purchase-order' => array_values(array_filter([['Chief accountant', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, 10000000] : null])),
+            'goods-receipt' => [['Head of department (inspection)', 'department_head', null, null]],
+        ];
+        foreach ($chains as $process => $steps) {
+            if (WorkflowTemplate::where('process', $process)->exists()) {
+                continue;
+            }
+            $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+            foreach ($steps as $i => [$name, $type, $role, $min]) {
+                $template->steps()->create(['step_order' => $i + 1, 'name' => $name, 'approver_type' => $type, 'role_id' => $role, 'min_amount' => $min, 'allow_send_back' => true]);
+            }
         }
     }
 

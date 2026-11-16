@@ -19,7 +19,7 @@ class PaymentRequest extends Model
         'cancelled' => 'Cancelled', 'vouchered' => 'Voucher prepared', 'paid' => 'Paid',
     ];
 
-    protected $fillable = ['company_id', 'number', 'budget_id', 'department_id', 'title', 'purpose', 'needed_by', 'total', 'status', 'over_budget',
+    protected $fillable = ['company_id', 'number', 'budget_id', 'department_id', 'title', 'purpose', 'needed_by', 'total', 'status', 'over_budget', 'source_type', 'source_id', 'supplier_id',
         'requested_by', 'submitted_at', 'decision_comment', 'decided_at'];
 
     protected $casts = ['needed_by' => 'date', 'total' => 'float', 'over_budget' => 'boolean', 'submitted_at' => 'datetime', 'decided_at' => 'datetime'];

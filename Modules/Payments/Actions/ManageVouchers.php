@@ -27,6 +27,12 @@ class ManageVouchers
         if ($r->status !== 'approved') {
             throw ValidationException::withMessages(['request' => 'A voucher is prepared from an approved request that has no voucher yet.']);
         }
+        if ($r->source_type && $r->source_type === (new \Modules\Procurement\Models\GoodsReceipt)->getMorphClass()) {
+            $grn = \Modules\Procurement\Models\GoodsReceipt::find($r->source_id);
+            if (! $grn || ! app(\Modules\Procurement\Actions\ManageReceipts::class)->matches($grn)) {
+                throw ValidationException::withMessages(['request' => 'Record the supplier invoice on the goods received note first; it must match the goods accepted (3-way match).']);
+            }
+        }
         $settings = PaymentSetting::current();
         if (! $settings->payable_account_id) {
             throw ValidationException::withMessages(['settings' => 'Choose the payables account in payment settings first.']);
@@ -71,10 +77,10 @@ class ManageVouchers
             $r = $v->request()->with(['lines.item', 'payees'])->first();
             $settings = PaymentSetting::current();
             $by = $v->preparer;
-            $lines = $r->lines->map(fn ($l) => [
-                'account_id' => $l->item->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item->department_id,
-                'fund_source_id' => $l->item->fund_source_id, 'task_activity_id' => $l->item->task_activity_id, 'budget_item_id' => $l->budget_item_id,
-            ])->all();
+            $lines = $r->lines->map(fn ($l) => $l->account_id
+                ? ['account_id' => $l->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item->department_id]
+                : ['account_id' => $l->item->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item->department_id,
+                    'fund_source_id' => $l->item->fund_source_id, 'task_activity_id' => $l->item->task_activity_id, 'budget_item_id' => $l->budget_item_id])->all();
             $lines[] = ['account_id' => $settings->payable_account_id, 'credit' => $v->net, 'description' => 'Payable: '.$r->payees->pluck('name')->join(', ')];
             if ($v->withholding > 0) {
                 $lines[] = ['account_id' => $settings->withholding_account_id, 'credit' => $v->withholding, 'description' => 'Withholding tax'];
@@ -160,7 +166,7 @@ class ManageVouchers
             if ($v->journal) {
                 $this->posting->reverse($v->journal, now()->toDateString(), $by, "{$v->number} voided: {$reason}");
             }
-            foreach ($r->lines as $l) {
+            foreach ($r->lines->whereNull('account_id') as $l) {
                 $this->budgets->record($l->budget_item_id, 'committed', $l->amount, $r, 'Voucher voided', $by);
             }
             $r->payees()->update(['withholding' => 0]);
