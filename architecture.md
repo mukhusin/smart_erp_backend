@@ -752,3 +752,16 @@ Permissions `receivables.view|bill|receipts|manage`. Document numbers shared via
 
 **Next:** payment list item status (sent/paid/failed, re-pay failed items), supplier bills (payables), imprest,
 payroll posting, paid-payment void with approval.
+
+### 18.6 Finance reports and module grouping (2026-11-16)
+
+**Finance and planning reports** (`Modules/Reporting`, `GET reports/finance[/{key}[/csv|/pdf]]`, same shape as HR
+reports, each report gated by its module and permissions): Accounting — statement of income and expenditure, statement
+of financial position, cash book, trial balance, income and expenditure by fund source, journal register, payments and
+receipts registers; Payroll — employee earnings for the year, changes from last month; Loans — outstanding, by
+provider, repayments by month, salary advances; Budgeting — budget vs actual (group by department/account/activity/
+fund/line), by period, held and committed, transfers; Planning — activities with budget and progress, performance by
+department and by strategic objective. Missing choices (no budget, plan, payroll) give an empty report, not an error.
+
+**Grouping:** Payments and Billing & Receipts stay separate modules (licensing, permissions, workflows) but open from
+inside Accounting (`ErpModuleSeeder::INSIDE_ACCOUNTING`, `parent_slug = accounting`), like the HR sub-modules.

@@ -10,6 +10,9 @@ class ErpModuleSeeder extends Seeder
     /** Modules opened from inside Human Resources instead of their own dashboard tile. */
     public const INSIDE_HR = ['roster', 'leave', 'attendance', 'allowance', 'overtime'];
 
+    /** Modules opened from inside Accounting: payments out and money in. */
+    public const INSIDE_ACCOUNTING = ['payments', 'receivables'];
+
     public function run(): void
     {
         $modules = [
@@ -284,7 +287,11 @@ class ErpModuleSeeder extends Seeder
         ];
 
         foreach ($modules as $data) {
-            $data['parent_slug'] = in_array($data['slug'], self::INSIDE_HR, true) ? 'hr' : null;
+            $data['parent_slug'] = match (true) {
+                in_array($data['slug'], self::INSIDE_HR, true) => 'hr',
+                in_array($data['slug'], self::INSIDE_ACCOUNTING, true) => 'accounting',
+                default => null,
+            };
             ErpModule::updateOrCreate(['slug' => $data['slug']], $data);
         }
 
