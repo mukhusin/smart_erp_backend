@@ -51,6 +51,36 @@ final class DefaultLeaveTypes
         self::supervisorOnly(\Modules\Tasks\Workflow\TaskProgressProcess::KEY);
         self::appraisal();
         self::departmentPlan();
+        self::manualJournal();
+        self::budgeting();
+    }
+
+    public static function budgeting(): void
+    {
+        $company = app(CompanyContext::class)->id();
+        $finance = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
+        $director = Role::where('name', 'director-general')->where('company_id', $company)->first() ?? $finance;
+        if (! $finance) {
+            return;
+        }
+        foreach (['department-budget' => ['Finance', $finance], 'budget-approval' => ['Director general', $director], 'budget-transfer' => ['Finance', $finance]] as $process => [$name, $role]) {
+            if (WorkflowTemplate::where('process', $process)->exists()) {
+                continue;
+            }
+            $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+            $template->steps()->create(['step_order' => 1, 'name' => $name, 'approver_type' => 'role', 'role_id' => $role->id, 'allow_send_back' => true]);
+        }
+    }
+
+    public static function manualJournal(): void
+    {
+        $company = app(CompanyContext::class)->id();
+        $role = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
+        if (! $role || WorkflowTemplate::where('process', \Modules\Accounting\Workflow\ManualJournalProcess::KEY)->exists()) {
+            return;
+        }
+        $template = WorkflowTemplate::create(['process' => \Modules\Accounting\Workflow\ManualJournalProcess::KEY, 'company_branch_id' => null, 'is_active' => true]);
+        $template->steps()->create(['step_order' => 1, 'name' => 'Chief accountant', 'approver_type' => 'role', 'role_id' => $role->id, 'allow_send_back' => true]);
     }
 
     public static function departmentPlan(): void

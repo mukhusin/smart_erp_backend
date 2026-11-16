@@ -611,3 +611,79 @@ before building; agreed so far:
   minimums are prorated).
 - Results are used for decisions such as **contract renewal** (shown on the renewal request, gap list E-17).
 
+
+## 18. Planning, budgeting and accounting as one chain (designed 2026-11-17)
+
+Based on how Oracle (budgetary control and encumbrance), PeopleSoft (commitment control), Odoo (budget vs committed vs
+achieved) and FP&A tools (versions, scenarios, drivers, rolling forecasts) work, and on the Tanzanian public-sector
+chain (PlanRep → FFARS/MUSE: activity, GFS code, fund source, payment voucher, ledger). It follows §8 rules 2–4.
+
+**The chain:** strategic objective → annual-plan activity → **sub-activity** → **budget item** (sub-activity × account
+with GFS code × fund source × department, phased by month or quarter) → **commitment** (payment request, purchase request
+or order reserves the money) → **payment voucher** → **journal** (posting engine) → **general ledger** → budget vs actual
+→ back into planning (rolling forecast, next year's baseline).
+
+**Shared master data (Accounting):** fiscal years and periods (open/closed), one chart of accounts (each postable
+account may carry a GFS code and is marked budgetable), fund sources (own revenue, insurance/NHIF, donor, grant…),
+departments as cost centres, projects later. Every money line carries the same dimensions (§8 rule 3).
+
+**Budgeting:**
+- A budget per fiscal year, prepared from the approved annual plan: each department budgets its sub-activities, with
+  last year's actuals shown beside the input. Line = quantity × unit cost × frequency (simple drivers), phased by period.
+- Versions: **original** (approved and locked) and **revised** (original + approved transfers and supplementary
+  budget). Department submission and company approval through the workflow engine; every change audited.
+- **Transfers (virement):** from one budget item to another, with reason and approval; original stays visible.
+- **Control** (`BudgetService::check`): available = revised budget − actual − open commitments, per item. Per company:
+  off, warn, or block; an override needs a permission and goes to approval. Funds are reserved when a request is
+  submitted, converted when it is ordered, and consumed when the voucher is posted (released if rejected/cancelled).
+
+**Accounting:** journals only through the posting service (manual journals with approval for adjustments), period
+closing, general ledger, trial balance. Payment request (lines against budget items) → approval → payment voucher
+(bank/cash, reference) → posting: Dr expense (account + dimensions) / Cr bank. Payroll posts through posting rules.
+
+**Reports:** budget vs actual with budget, revised, committed, actual, available, variance and %, by period, department,
+activity, account/GFS and fund source; every actual drills down to the journal line and its source document.
+
+**Phases:** A) accounting foundation (periods, chart of accounts with GFS, fund sources, journals, posting, ledger,
+trial balance); B) budgeting (sub-activities, items, phasing, versions, approval, transfers, budget vs actual);
+C) expenditure (payment requests with funds check and commitments, vouchers, postings, payroll posting);
+D) procurement (PR/PO encumbrance, three-way match), revenue/billing, driver-based scenarios and rolling forecasts.
+
+### 18.1 Requirements document and decisions (2026-11-17)
+
+Requirements: "Planning, Budgeting & Accounting — Functional Requirements" (IDs GEN, PLN, BUD, ACC, RPT, NFR). Decisions:
+
+- **Release (BUD-30..36): configurable per company, default direct.** Opening a quarter (with approval) releases that
+  quarter's budget at once; a company can switch on fund requests + allocation (government style).
+- **Reservation (BUD-43): on submission** of a payment/purchase request; released on reject, withdraw or cancel;
+  converted to spent when paid; balances re-checked at approval. Concurrent spending locks the line (BUD-45).
+- **Statements (ACC-84): IFRS for SMEs** (accrual): financial position, income statement, cash flow, changes in equity,
+  budget vs actual; account-to-line mapping without code changes (ACC-85).
+- **Order: control first.** (1) budget balance ledger: every movement (approved, released, requested, committed, spent,
+  transfer) stored as an entry and balances = sum of entries (BUD-40..48) + quarter release/fund requests + amount-based
+  approval steps in the workflow engine (GEN-31); (2) payment requests → vouchers → posting (many payees, withholding
+  tax, voucher approval, bank lists, cancel/void), imprest and petty cash; (3) payables, receipts/billing, bank
+  reconciliation, tax; (4) year-end closing and carry-over, financial statements, planning targets/KPIs/weights,
+  progress and performance report.
+
+**Coverage after phases A–B (backend):** built — GEN-01..03, 10..12, 20..24, 30, 32..36, 40..41; PLN-01..03, 10, 12,
+14 (as activities' targets), 20..21, 24, 28; BUD-01..04 (department ceilings), 10, 17, 20..22, 50, 55..56 (transfer
+register); ACC-01, 03 (partly), 04, 51..55, 60, 80, 83; RPT-04, 06, 08, 13. Next: GEN-31, 42..43; BUD-30..48, 51..54,
+60..61; ACC-02, 10..23, 30..33, 40..45, 50, 61..65, 70..72, 81..85; PLN-11, 15..16, 22..23, 30..34; remaining RPT.
+
+### 18.2 Target users: private institutions and NGOs, not government (2026-11-17)
+
+Smart ERP is built for **private companies (e.g. private hospitals like Kairuki) and NGOs**. The requirements document
+came from a government ERP; we take its control ideas, not its government processes:
+
+- **Kept:** plan → budget → commitment → payment → ledger chain, budget balances and control, approvals (amount-based),
+  audit trail, reallocation/supplementary budget, payments/imprest/petty cash, payables/receivables, bank
+  reconciliation, tax (VAT, withholding), year-end, IFRS for SMEs statements.
+- **Optional / low priority:** GFS codes (off by default), quarter release with fund requests and allocation
+  (default: opening a quarter releases it, or no release step).
+- **Out of scope:** national planning/budget systems, treasury submission, government consolidation and inter-entity
+  elimination (BUD-62, ACC-86, NFR-01, NFR-04), government payment gateway.
+- **Added for NGOs:** donor grants as fund sources with donor, grant period, currency and amount; restricted vs
+  unrestricted funds; budget lines per grant (and donor budget line codes); spending checked against the grant as well
+  as the budget line; multi-currency (donor currency vs local); indirect cost / overhead rate; donor reports (budget vs
+  actual per grant, in the grant's currency and periods).

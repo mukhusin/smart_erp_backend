@@ -32,6 +32,11 @@ class TaskActivity extends Model
         return $this->belongsTo(StrategicObjective::class, 'strategic_objective_id');
     }
 
+    public function subActivities()
+    {
+        return $this->hasMany(\Modules\Planning\Models\SubActivity::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     public function tasks()
     {
         return $this->hasMany(Task::class);

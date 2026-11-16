@@ -131,6 +131,11 @@ final class PermissionCatalog
             'planning.view' => 'View all plans',
             'planning.manage' => 'Manage strategic and annual plans',
         ],
+        'budgeting' => [
+            'budgeting.prepare' => 'Prepare the budget of own departments and request transfers',
+            'budgeting.view' => 'View all budgets and budget vs actual',
+            'budgeting.manage' => 'Run the budget cycle, ceilings and transfers for any department',
+        ],
         'appraisals' => [
             'appraisals.use' => 'Own appraisal (self-assessment, acknowledgement)',
             'appraisals.review' => 'See and review appraisals of staff in own scope (mid-year review)',
@@ -142,8 +147,9 @@ final class PermissionCatalog
             'reports.generate' => 'Generate and export reports',
         ],
         'accounting' => [
-            'accounting.view' => 'View accounts and journals',
-            'accounting.manage' => 'Post journals and manage accounts',
+            'accounting.view' => 'View accounts, journals, ledger and financial reports',
+            'accounting.journals' => 'Enter manual journals',
+            'accounting.manage' => 'Manage chart of accounts, fiscal years, fund sources, bank accounts and settings',
         ],
         'bills' => [
             'bills.view' => 'View bills',

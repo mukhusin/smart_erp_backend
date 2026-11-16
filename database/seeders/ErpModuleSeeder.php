@@ -140,6 +140,17 @@ class ErpModuleSeeder extends Seeder
                 'is_core'     => false,
             ],
             [
+                'slug'        => 'budgeting',
+                'name'        => 'Budgeting',
+                'description' => 'Budgets from the annual plan, transfers, budget control and budget vs actual.',
+                'icon'        => 'bi-wallet2',
+                'color'       => 'success',
+                'route_name'  => 'budgeting.index',
+                'category'    => 'Finance',
+                'sort_order'  => 21,
+                'is_core'     => false,
+            ],
+            [
                 'slug'        => 'bills',
                 'name'        => 'Bills Management',
                 'description' => 'Manage supplier bills, payments and vendor accounts payable.',

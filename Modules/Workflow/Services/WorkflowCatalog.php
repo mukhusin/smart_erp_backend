@@ -20,7 +20,11 @@ use Modules\Hr\Workflow\PayrollSheetProcess;
 use Modules\Hr\Workflow\ProfileItemProcess;
 use Modules\Hr\Workflow\SalaryAdjustmentProcess;
 use Modules\Hr\Workflow\SalaryAdvanceProcess;
+use Modules\Accounting\Workflow\ManualJournalProcess;
 use Modules\Appraisals\Workflow\AppraisalProcess;
+use Modules\Budgeting\Workflow\BudgetApprovalProcess;
+use Modules\Budgeting\Workflow\BudgetTransferProcess;
+use Modules\Budgeting\Workflow\DepartmentBudgetProcess;
 use Modules\Planning\Workflow\DepartmentPlanProcess;
 use Modules\Tasks\Workflow\TaskProgressProcess;
 use Modules\Workflow\Contracts\WorkflowProcess;
@@ -53,6 +57,10 @@ final class WorkflowCatalog
         TaskProgressProcess::class,
         AppraisalProcess::class,
         DepartmentPlanProcess::class,
+        ManualJournalProcess::class,
+        DepartmentBudgetProcess::class,
+        BudgetApprovalProcess::class,
+        BudgetTransferProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

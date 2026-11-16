@@ -13,6 +13,8 @@ class ApiContractTest extends TestCase
         'self.advances.withdraw', 'loans.advances.cancel', 'self.overtime.withdraw', 'payroll.sheets.generate', 'payroll.sheets.submit', 'payroll.sheets.withdraw',
         'planning.annual.open', 'planning.annual.close', 'planning.department.action', 'platform.companies.resend-invite', 'roster.rosters.submit',
         'roster.rosters.withdraw', 'roster.rosters.changes.withdraw', 'self.renewals.withdraw', 'self.leave.withdraw', 'tasks.withdraw-update',
+        'accounting.periods.close', 'accounting.periods.reopen', 'accounting.journals.submit', 'accounting.journals.withdraw',
+        'budgeting.budgets.open', 'budgeting.budgets.submit', 'budgeting.budgets.close', 'budgeting.departments.action', 'budgeting.transfers.withdraw',
     ];
 
     private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store'];

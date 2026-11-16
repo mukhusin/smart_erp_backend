@@ -23,14 +23,14 @@ class DepartmentPlanController extends Controller
     /**
      * A department's plan for the year: its activities with outputs, targets, KPIs and progress from tasks.
      *
-     * @response array{data: array{id: int, status: string, status_label: string, decision_comment: string|null, submitted_at: string|null, submitted_by: string|null, waiting_for: string|null}, plan: array{id: int, title: string, year: int, status: string, submission_due: string|null}, department: array{id: int, name: string}, objectives: list<array{id: int, label: string}>, activities: list<array{id: int, code: string|null, title: string, description: string|null, output: string|null, target: string|null, kpi: string|null, quarters: string|null, objective: array{id: int, label: string}|null, is_active: bool, tasks: int, open_tasks: int, progress: int}>, can: array{edit: bool, submit: bool, withdraw: bool, reopen: bool}}
+     * @response array{data: array{id: int, status: string, status_label: string, decision_comment: string|null, submitted_at: string|null, submitted_by: string|null, waiting_for: string|null}, plan: array{id: int, title: string, year: int, status: string, submission_due: string|null}, department: array{id: int, name: string}, objectives: list<array{id: int, label: string}>, activities: list<array{id: int, code: string|null, title: string, description: string|null, output: string|null, target: string|null, kpi: string|null, quarters: string|null, objective: array{id: int, label: string}|null, is_active: bool, tasks: int, open_tasks: int, progress: int, sub_activities: list<array{id: int, code: string|null, title: string, output: string|null, quarters: string|null}>}>, sub_activities_editable: bool, can: array{edit: bool, submit: bool, withdraw: bool, reopen: bool}}
      */
     public function show(Request $request, AnnualPlan $plan, Department $department): JsonResponse
     {
         $user = $request->user();
         abort_unless($this->access->canView($user, $department->id), 403);
         $dp = $this->find($plan, $department);
-        $activities = TaskActivity::with('objective')->where('annual_plan_id', $plan->id)->where('department_id', $department->id)
+        $activities = TaskActivity::with(['objective', 'subActivities'])->where('annual_plan_id', $plan->id)->where('department_id', $department->id)
             ->withCount(['tasks', 'tasks as open_tasks_count' => fn ($q) => $q->whereIn('status', ['todo', 'in_progress', 'review', 'returned'])])
             ->withAvg(['tasks' => fn ($q) => $q->where('status', '!=', 'cancelled')], 'progress')
             ->orderByRaw('code IS NULL')->orderBy('code')->orderBy('title')->get();
@@ -48,7 +48,9 @@ class DepartmentPlanController extends Controller
                 'id' => $a->id, 'code' => $a->code, 'title' => $a->title, 'description' => $a->description, 'output' => $a->output, 'target' => $a->target, 'kpi' => $a->kpi,
                 'quarters' => $a->quarters, 'objective' => $a->objective ? ['id' => $a->objective->id, 'label' => $a->objective->label()] : null, 'is_active' => (bool) $a->is_active,
                 'tasks' => (int) $a->tasks_count, 'open_tasks' => (int) $a->open_tasks_count, 'progress' => (int) round((float) ($a->tasks_avg_progress ?? 0)),
+                'sub_activities' => $a->subActivities->map(fn ($x) => ['id' => $x->id, 'code' => $x->code, 'title' => $x->title, 'output' => $x->output, 'quarters' => $x->quarters])->values(),
             ])->values(),
+            'sub_activities_editable' => $plan->status !== 'closed' && $this->access->canPlan($user, $department->id),
             'can' => [
                 'edit' => $editable,
                 'submit' => $editable,

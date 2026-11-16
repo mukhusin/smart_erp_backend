@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Planning\Http\Controllers\Api\AnnualPlanController;
 use Modules\Planning\Http\Controllers\Api\DepartmentPlanController;
 use Modules\Planning\Http\Controllers\Api\StrategicPlanController;
+use Modules\Planning\Http\Controllers\Api\SubActivityController;
 
 Route::prefix('planning')->middleware(['auth:sanctum', 'module:planning'])->name('planning.')->group(function () {
     Route::get('strategic-plans', [StrategicPlanController::class, 'index'])->name('strategic.index');
@@ -27,5 +28,8 @@ Route::prefix('planning')->middleware(['auth:sanctum', 'module:planning'])->name
     Route::post('annual-plans/{plan}/departments/{department}/activities', [DepartmentPlanController::class, 'storeActivity'])->name('department.activities.store');
     Route::put('annual-plans/{plan}/departments/{department}/activities/{activity}', [DepartmentPlanController::class, 'updateActivity'])->name('department.activities.update');
     Route::delete('annual-plans/{plan}/departments/{department}/activities/{activity}', [DepartmentPlanController::class, 'destroyActivity'])->name('department.activities.destroy');
+    Route::post('annual-plans/{plan}/departments/{department}/activities/{activity}/sub-activities', [SubActivityController::class, 'store'])->name('sub-activities.store');
+    Route::put('annual-plans/{plan}/departments/{department}/activities/{activity}/sub-activities/{sub}', [SubActivityController::class, 'update'])->name('sub-activities.update');
+    Route::delete('annual-plans/{plan}/departments/{department}/activities/{activity}/sub-activities/{sub}', [SubActivityController::class, 'destroy'])->name('sub-activities.destroy');
     Route::post('annual-plans/{plan}/departments/{department}/{action}', [DepartmentPlanController::class, 'action'])->whereIn('action', ['submit', 'withdraw', 'reopen'])->name('department.action');
 });
