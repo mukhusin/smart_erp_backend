@@ -20,6 +20,9 @@ use Modules\Hr\Workflow\PayrollSheetProcess;
 use Modules\Hr\Workflow\ProfileItemProcess;
 use Modules\Hr\Workflow\SalaryAdjustmentProcess;
 use Modules\Hr\Workflow\SalaryAdvanceProcess;
+use Modules\Appraisals\Workflow\AppraisalProcess;
+use Modules\Planning\Workflow\DepartmentPlanProcess;
+use Modules\Tasks\Workflow\TaskProgressProcess;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
 /**
@@ -47,6 +50,9 @@ final class WorkflowCatalog
         ProfileItemProcess::class,
         AbsenceRequestProcess::class,
         ExcuseOfDutyProcess::class,
+        TaskProgressProcess::class,
+        AppraisalProcess::class,
+        DepartmentPlanProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

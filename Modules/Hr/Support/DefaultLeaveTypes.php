@@ -48,6 +48,44 @@ final class DefaultLeaveTypes
         self::supervisorThenHr(SalaryAdvanceProcess::KEY);
         self::departmentHead(\Modules\Hr\Workflow\DutyRosterProcess::KEY);
         self::departmentHead(\Modules\Hr\Workflow\DutyRosterChangeProcess::KEY);
+        self::supervisorOnly(\Modules\Tasks\Workflow\TaskProgressProcess::KEY);
+        self::appraisal();
+        self::departmentPlan();
+    }
+
+    public static function departmentPlan(): void
+    {
+        $company = app(CompanyContext::class)->id();
+        $role = Role::where('name', 'director-general')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
+        if (! $role || WorkflowTemplate::where('process', \Modules\Planning\Workflow\DepartmentPlanProcess::KEY)->exists()) {
+            return;
+        }
+        $template = WorkflowTemplate::create(['process' => \Modules\Planning\Workflow\DepartmentPlanProcess::KEY, 'company_branch_id' => null, 'is_active' => true]);
+        $template->steps()->create(['step_order' => 1, 'name' => 'Director general', 'approver_type' => 'role', 'role_id' => $role->id, 'allow_send_back' => false]);
+    }
+
+    public static function appraisal(): void
+    {
+        if (WorkflowTemplate::where('process', \Modules\Appraisals\Workflow\AppraisalProcess::KEY)->exists()) {
+            return;
+        }
+        $company = app(CompanyContext::class)->id();
+        $hr = Role::where('name', 'hr-manager')->where('company_id', $company)->first() ?? Role::where('name', 'hr-officer')->where('company_id', $company)->first();
+        $template = WorkflowTemplate::create(['process' => \Modules\Appraisals\Workflow\AppraisalProcess::KEY, 'company_branch_id' => null, 'is_active' => true]);
+        $template->steps()->create(['step_order' => 1, 'name' => 'Supervisor', 'approver_type' => 'supervisor', 'allow_send_back' => true]);
+        $template->steps()->create(['step_order' => 2, 'name' => 'Head of department', 'approver_type' => 'department_head', 'allow_send_back' => true]);
+        if ($hr) {
+            $template->steps()->create(['step_order' => 3, 'name' => 'HR moderation', 'approver_type' => 'role', 'role_id' => $hr->id, 'allow_send_back' => true]);
+        }
+    }
+
+    public static function supervisorOnly(string $process): void
+    {
+        if (WorkflowTemplate::where('process', $process)->exists()) {
+            return;
+        }
+        $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+        $template->steps()->create(['step_order' => 1, 'name' => 'Supervisor', 'approver_type' => 'supervisor', 'allow_send_back' => false]);
     }
 
     public static function departmentHead(string $process): void

@@ -120,9 +120,22 @@ final class PermissionCatalog
             'loans.view' => 'View loans',
             'loans.manage' => 'Manage employee loans',
         ],
+        'tasks' => [
+            'tasks.use' => 'Use tasks (own tasks, progress, comments)',
+            'tasks.assign' => 'Assign tasks to staff in own scope and review them',
+            'tasks.activities.manage' => 'Manage department activities',
+            'tasks.view-all' => 'View all tasks of the company',
+        ],
+        'planning' => [
+            'planning.department' => 'Prepare the annual plan of own departments',
+            'planning.view' => 'View all plans',
+            'planning.manage' => 'Manage strategic and annual plans',
+        ],
         'appraisals' => [
-            'appraisals.view' => 'View appraisals',
-            'appraisals.manage' => 'Manage appraisal templates and scores',
+            'appraisals.use' => 'Own appraisal (self-assessment, acknowledgement)',
+            'appraisals.review' => 'See and review appraisals of staff in own scope (mid-year review)',
+            'appraisals.view' => 'View all appraisals',
+            'appraisals.manage' => 'Manage appraisal periods, settings and competencies',
         ],
         'reports' => [
             'reports.view' => 'View reports',

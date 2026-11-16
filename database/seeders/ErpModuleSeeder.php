@@ -177,6 +177,17 @@ class ErpModuleSeeder extends Seeder
 
             // ── Performance ────────────────────────────────────────────
             [
+                'slug'        => 'tasks',
+                'name'        => 'Tasks',
+                'description' => 'Department activities, tasks assigned or added by staff, progress approved by the supervisor.',
+                'icon'        => 'bi-list-check',
+                'color'       => 'primary',
+                'route_name'  => 'tasks.index',
+                'category'    => 'Performance',
+                'sort_order'  => 39,
+                'is_core'     => false,
+            ],
+            [
                 'slug'        => 'appraisals',
                 'name'        => 'Appraisals',
                 'description' => 'Department appraisal templates, KPIs and employee performance evaluations.',
@@ -185,6 +196,17 @@ class ErpModuleSeeder extends Seeder
                 'route_name'  => 'appraisals.dashboard',
                 'category'    => 'Performance',
                 'sort_order'  => 40,
+                'is_core'     => false,
+            ],
+            [
+                'slug'        => 'planning',
+                'name'        => 'Planning',
+                'description' => 'Strategic plan, objectives and annual plans of department activities with targets and KPIs.',
+                'icon'        => 'bi-bullseye',
+                'color'       => 'info',
+                'route_name'  => 'planning.index',
+                'category'    => 'Performance',
+                'sort_order'  => 38,
                 'is_core'     => false,
             ],
 

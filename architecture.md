@@ -480,6 +480,33 @@ paused. The tab estimates monthly amounts from the active contract's basic salar
 - Reuses fiscal periods and dimensions from the accounting backbone; budgets can be attached later.
 - Likely link (to confirm): annual plan activities feed the department activities used in performance appraisal below.
 
+### NOTE: planning, budgeting and projects (to discuss, 2026-11-16)
+
+**Planning and budgeting: one module or two?** Suggestion: **two modules over one shared structure.**
+
+- Shared: fiscal periods, departments/cost centres, the chart of accounts and the **activity** (one record used by
+  planning, budget, tasks and appraisal; no copies).
+- **Planning** (strategic plan → annual plan → activities with objective, output, target, KPI) answers *what* we do.
+- **Budgeting** (budget per activity and account line, versions draft/approved/revised, approval through the
+  workflow engine, budget vs actual from accounting, commitments from purchase requests) answers *with what money*.
+- Why separate: different users and approvals (planners/heads vs finance), a company can use one without the other
+  (budget without a strategic plan is common), and budget control must hook into purchasing/accounting.
+- Why one screen still works: the annual plan page shows each activity's budget and spend; "plan and budget" can be
+  prepared together in one wizard, saved into the two modules.
+- Alternative (one module "Planning & Budgeting"): simpler menus, but budget control then depends on planning being
+  switched on. Decide before building Planning.
+
+**Project module (to consider).**
+
+- A project = a time-bound piece of work with its own budget, team, milestones and deliverables (e.g. a donor-funded
+  programme, a building or IT project), possibly across departments and years.
+- Reuses: **tasks** (project tasks are ordinary tasks with `project_id`; milestones = parent tasks), **budgeting**
+  (project budget lines, budget vs actual), accounting dimensions (project as a cost dimension on journals, purchases,
+  payroll cost allocation), **workflow** (project approval, budget revision), HR (team members, time spent).
+- Links: an annual-plan activity can be delivered by a project; staff time on project tasks can feed appraisal and
+  donor reporting (timesheets).
+- Order to discuss: tasks (now) → appraisal → planning/budgeting → projects, keeping `project_id` in mind on tasks.
+
 ### Contract renewal (built 2026-11-12)
 
 Two ways to renew, both through the dynamic approval workflow (process `contract-renewal`, module hr), in
@@ -496,6 +523,58 @@ Two ways to renew, both through the dynamic approval workflow (process `contract
   No workflow set up = approved at once. Rejected keeps the approver's reason; the starter can withdraw while pending.
 - HR → Contract renewals lists them (open by default). Approvers see the current contract, proposal, comment,
   attachments and previous contracts in the approval request.
+
+### Task management and appraisal (decided 2026-11-16)
+
+One system in two layers: **task management** records the daily work; the **appraisal** reads it at period end.
+
+- Department objectives/activities (head of department, per year) → tasks and sub-tasks (assigned by a head, or added by
+  the employee) → progress updates (what was done, % done, capped per update) approved by the supervisor through the
+  workflow engine → appraisal.
+- Tasks: priority, start/due date, attachments, checklist, status To do / In progress / Waiting for review / Done /
+  Returned, overdue flag, comments, notifications, recurring tasks. Views: My tasks (self-service), Team tasks (heads,
+  My team), company view (HR). Reports on completion and timeliness, never pay.
+- **Visibility: staff see only their own tasks** (not colleagues'); heads see their team's.
+- **Appraisal period: configured by the HR manager; default yearly with a mid-year review** (quarterly possible).
+- **Score parts and weights configured by the company** (e.g. objectives/tasks, competencies, attendance; any part can
+  be switched off).
+- **Raters: both the direct supervisor and the head of department**; the HOD can rate even when the supervisor is not
+  the HOD (supervisor rates, HOD confirms or adjusts).
+- **Ratings: configurable; default percentage** (a 1–5 labelled scale is an option).
+- Flow (workflow engine): goal setting → mid-year review → self-assessment → supervisor review → HOD rating/confirmation
+  → HR moderation → employee acknowledgement. Leave-aware due dates. Appraisal PDF, distribution per department,
+  history on the profile (HR).
+- Build order: 1) task management, 2) appraisal on top, 3) link to Planning (annual plan activities).
+
+**Built 2026-11-17.**
+
+- **Tasks** (`Modules/Tasks`, module `tasks`): department activities per year, tasks/sub-tasks, checklist, comments,
+  weekly/monthly repeat, progress updates approved through workflow `task-progress` (default: supervisor), cap per
+  update in HR settings (`task_max_step`, default 30). Finishing a task given by someone else goes to review. Daily
+  `tasks:daily` (06:00) repeats tasks and sends due/overdue reminders.
+- **Appraisals** (`Modules/Appraisals`, module `appraisals`): HR sets the scale, mid-year review, parts with weights
+  (must add to 100) and rating bands; competencies list. A period (draft → open → closed) snapshots the settings and
+  competencies when opened and gives each active staff member an appraisal. Employee self-assessment → workflow
+  `appraisal` (default Supervisor → Head of department → HR moderation). Each reviewer rates on the appraisal page and
+  approves or returns it; when the supervisor is also the HOD both steps pass in one go. Final score = weighted parts,
+  taken from the latest rater (HR > HOD > supervisor > self). Employee acknowledges (agree/disagree). Tasks of the
+  period are shown with a suggested tasks score. PDF per appraisal; period page shows status, ratings and departments.
+- Not yet: leave-aware due dates, appraisal history on the HR profile, renewal request showing the last score.
+
+**Planning built 2026-11-17** (`Modules/Planning`, module `planning`; decision: Planning and Budgeting are two modules
+sharing one activity record):
+
+- Strategic plan (years, vision, mission, one active at a time) → strategic objectives (code, title).
+- Annual plan per financial year (dates default from the company's `fiscal_year_start`), optionally following a
+  strategic plan. Opening it gives every top-level department a department plan.
+- The HOD (`planning.department`) adds activities (code, objective, output, target, KPI, quarters) and submits;
+  approval through workflow `department-plan` (default: director general). Approved activities become active.
+- Activities are the same `task_activities` records Tasks and Appraisal use. When Planning is used for a year,
+  activities for that year can only be changed in Planning; tasks can only go under active (approved) activities.
+  Companies without Planning keep department activities in Tasks.
+- Progress of activities, departments and objectives comes from the tasks under them.
+- Next: Budgeting (budget lines per activity and account, versions, workflow approval, budget vs actual); projects
+  later, with tasks designed so a `project_id` can be added.
 
 ### Performance appraisal (new design, replaces the HRMS one)
 

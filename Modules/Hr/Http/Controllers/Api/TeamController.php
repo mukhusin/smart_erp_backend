@@ -26,10 +26,10 @@ use Modules\Hr\Support\EmployeeScope;
 use Modules\Hr\Support\Heads;
 
 /**
- * "My team": the start page of heads of department and section (and their deputies). Everything is limited to the
+ * "My department": the start page of heads of department and section (and their deputies). Everything is limited to the
  * staff they head; amounts are shown for overtime and daily allowances only.
  *
- * @tags HR: My team
+ * @tags HR: My department
  */
 class TeamController extends Controller
 {
