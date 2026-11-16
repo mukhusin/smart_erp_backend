@@ -111,4 +111,44 @@ class HeadsAndRostersTest extends TestCase
         $this->actingAs($this->users['sister'])->getJson('/api/v1/team/summary')->assertOk()->assertJsonPath('data.staff', 3);
         $this->actingAs($this->users['asha'])->getJson('/api/v1/team/summary')->assertForbidden();
     }
+
+    public function test_heads_see_no_contract_figures_no_profiles_and_only_active_staff(): void
+    {
+        app(CompanyContext::class)->run($this->company, fn () => Employee::create(['employee_no' => 'LEFT', 'fname' => 'Gone', 'lname' => 'X', 'gender' => 'Female',
+            'department_id' => $this->nursing->id, 'employment_status' => 'terminated']));
+        $sister = $this->users['sister'];
+        $this->actingAs($this->users['matron']);
+
+        $summary = $this->getJson('/api/v1/hr/summary')->assertOk()->json('data');
+        $this->assertTrue($summary['limited']);
+        $this->assertNull($summary['contracts_ending']);
+        $this->assertNull($summary['without_contract']);
+        $this->assertNull($summary['renewals']);
+        $this->assertSame([], $summary['movement']);
+        $this->getJson('/api/v1/hr/stats/contracts_ending')->assertForbidden();
+        $this->getJson('/api/v1/hr/stats/employees')->assertOk();
+
+        $groups = collect($this->getJson('/api/v1/reports/hr')->assertOk()->json('data'))->pluck('group')->unique()->values()->all();
+        $this->assertSame([], array_diff($groups, ['Leave', 'Duty roster', 'Overtime']));
+        $this->assertContains('Duty roster', $groups);
+        $this->getJson('/api/v1/reports/hr/retirement')->assertNotFound();
+        $this->getJson('/api/v1/reports/hr/contracts-ending')->assertNotFound();
+        $overview = $this->getJson('/api/v1/reports/overview')->assertOk()->json('data');
+        $this->assertTrue($overview['limited']);
+        $this->assertNull($overview['contracts']);
+        $this->assertNull($overview['staff']['retiring_12_months']);
+
+        $this->getJson("/api/v1/hr/employees/{$this->staff['asha']->id}")->assertForbidden();
+        $this->getJson("/api/v1/hr/employees/{$this->staff['asha']->id}/contracts")->assertForbidden();
+        $this->getJson('/api/v1/hr/employees/export')->assertForbidden();
+        $names = collect($this->getJson('/api/v1/hr/employees?filter[view]=no_contract')->assertOk()->json('data'))->pluck('employee_no')->all();
+        $this->assertNotContains('LEFT', $names);
+        $this->assertContains('ASHA', $names);
+
+        $team = $this->actingAs($sister)->getJson('/api/v1/team/summary')->assertOk()->json('data');
+        $this->assertSame(['leave_starting', 'birthdays'], array_column($team['upcoming'], 'key'));
+
+        $this->actingAs($this->admin)->getJson('/api/v1/hr/summary')->assertJsonPath('data.limited', false);
+        $this->getJson("/api/v1/hr/employees/{$this->staff['asha']->id}")->assertOk();
+    }
 }

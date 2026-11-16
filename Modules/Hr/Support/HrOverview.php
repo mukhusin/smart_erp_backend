@@ -71,6 +71,13 @@ class HrOverview
             'attendance' => null,
         ];
 
+        $data['limited'] = app(Heads::class)->limited($user);
+        if ($data['limited']) {
+            $data['staff'] = array_merge($data['staff'], ['probation' => null, 'joined_this_month' => null, 'left_this_month' => null, 'retiring_12_months' => null]);
+            $data['movement'] = [];
+            $data['contracts'] = null;
+        }
+
         if ($this->sheet->seesSalary($user)) {
             $bill = EmployeeContract::whereIn('employee_id', $ids)->where('is_active', true);
             $data['salary'] = ['monthly_basic' => (float) (clone $bill)->sum('basic_salary'), 'contracts' => (clone $bill)->count()];

@@ -118,7 +118,7 @@ class LookupController extends Controller
      * `employees`, `renewals`, `placements`, `departments`, `positions`: breakdowns for each HR page.
      * Counts cover only the employees the user may see (`scope`); department and position totals are organisation wide.
      *
-     * @response array{data: array{total: int, probation: int, without_account: int, invited: int, without_contract: int, contracts_ending: int, licences_expiring: int, placements_active: int, placements_ending: int, employees: array{confirmed: int, probation: int, female: int, male: int, by_type: list<array{key: string, label: string, count: int}>}, renewals: array{pending: int, approved: int, renewed_this_year: int, rejected_this_year: int, ending_90_days: int}, placements: array{active: int, upcoming: int, ending_30_days: int, internship: int, residency: int}, departments: array{total: int, sections: int, staffed: int, top: list<array{id: int, name: string, count: int}>}, positions: array{total: int, filled: int, top: list<array{id: int, name: string, count: int}>}, movement: list<array{month: string, joined: int, left: int}>, scope: array{all: bool, label: string}}}
+     * @response array{data: array{limited: bool, total: int, probation: int|null, without_account: int|null, invited: int|null, without_contract: int|null, contracts_ending: int|null, licences_expiring: int|null, placements_active: int, placements_ending: int, employees: array{confirmed: int, probation: int, female: int, male: int, by_type: list<array{key: string, label: string, count: int}>}, renewals: null|array{pending: int, approved: int, renewed_this_year: int, rejected_this_year: int, ending_90_days: int}, placements: array{active: int, upcoming: int, ending_30_days: int, internship: int, residency: int}, departments: array{total: int, sections: int, staffed: int, top: list<array{id: int, name: string, count: int}>}, positions: array{total: int, filled: int, top: list<array{id: int, name: string, count: int}>}, movement: list<array{month: string, joined: int, left: int}>, scope: array{all: bool, label: string}}}
      */
     public function summary(EmployeeScope $scope): JsonResponse
     {
@@ -129,18 +129,21 @@ class LookupController extends Controller
         $staff = (clone $active)->with(['department:id,name', 'jobPosition:id,title'])->get(['id', 'gender', 'emp_type', 'employment_status', 'department_id', 'job_position_id']);
         $placements = EmployeePlacement::whereIn('employee_id', $currentIds);
         $renewals = ContractRenewal::whereIn('employee_id', $scope->apply(Employee::query(), request()->user())->select('id'));
-        $contractsEnding = $scope->apply(Employee::query()->contractEnding(), request()->user())->count();
+        $limited = app(\Modules\Hr\Support\Heads::class)->limited(request()->user());
+        $contractsEnding = $limited ? null : $scope->apply(Employee::query()->contractEnding(), request()->user())->count();
         $top = fn ($key, $name) => $staff->whereNotNull($key)->groupBy($key)->map(fn ($g, $id) => ['id' => (int) $id, 'name' => $name($g->first()) ?? '—', 'count' => $g->count()])
             ->sortByDesc('count')->take(5)->values()->all();
 
         return response()->json(['data' => [
+            /** Heads (department/section view only) get no contract, account, licence or movement figures (those are null / empty). */
+            'limited' => $limited,
             'total' => $staff->count(),
-            'probation' => $staff->where('employment_status', 'probation')->count(),
-            'without_account' => (clone $active)->whereNull('user_id')->count(),
-            'invited' => $scope->apply(Employee::query()->invitePending(), request()->user())->count(),
-            'without_contract' => $scope->apply(Employee::query()->withoutContract(), request()->user())->count(),
+            'probation' => $limited ? null : $staff->where('employment_status', 'probation')->count(),
+            'without_account' => $limited ? null : (clone $active)->whereNull('user_id')->count(),
+            'invited' => $limited ? null : $scope->apply(Employee::query()->invitePending(), request()->user())->count(),
+            'without_contract' => $limited ? null : $scope->apply(Employee::query()->withoutContract(), request()->user())->count(),
             'contracts_ending' => $contractsEnding,
-            'licences_expiring' => $scope->apply(Employee::query()->licenceExpiring(), request()->user())->count(),
+            'licences_expiring' => $limited ? null : $scope->apply(Employee::query()->licenceExpiring(), request()->user())->count(),
             'placements_active' => (clone $placements)->where('status', 'active')->count(),
             'placements_ending' => (clone $placements)->where('status', 'active')->whereDate('end_date', '<=', $today->addDays(30))->count(),
             'employees' => [
@@ -151,7 +154,7 @@ class LookupController extends Controller
                 'by_type' => collect(EmployeeOptions::EMPLOYMENT_TYPES)->map(fn ($label, $key) => ['key' => $key, 'label' => $label, 'count' => $staff->where('emp_type', $key)->count()])
                     ->filter(fn ($t) => $t['count'] > 0)->sortByDesc('count')->values()->all(),
             ],
-            'renewals' => [
+            'renewals' => $limited ? null : [
                 'pending' => (clone $renewals)->where('status', 'pending')->count(),
                 'approved' => (clone $renewals)->where('status', 'approved')->count(),
                 'renewed_this_year' => (clone $renewals)->where('status', 'completed')->whereDate('updated_at', '>=', $today->startOfYear())->count(),
@@ -176,7 +179,7 @@ class LookupController extends Controller
                 'filled' => $staff->whereNotNull('job_position_id')->unique('job_position_id')->count(),
                 'top' => $top('job_position_id', fn ($e) => $e->jobPosition?->title),
             ],
-            'movement' => app(\Modules\Hr\Support\HrOverview::class)->movementFor(request()->user()),
+            'movement' => $limited ? [] : app(\Modules\Hr\Support\HrOverview::class)->movementFor(request()->user()),
             'scope' => $scope->describe(request()->user()),
         ]]);
     }

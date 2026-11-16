@@ -87,6 +87,7 @@ class DepartmentStructureTest extends TestCase
         $head = $this->staff('head', $nursing);
         $this->staff('nurse', $nursing);
         $this->postJson("/api/v1/hr/structure/departments/{$nursing}/head", ['employee_id' => $head->id])->assertOk();
+        $this->giveActiveContracts($this->company);
 
         $this->actingAs($head->user->refresh())->getJson('/api/v1/hr/employees')->assertOk()->assertJsonCount(2, 'data');
         $this->getJson('/api/v1/hr/structure/departments')->assertOk();

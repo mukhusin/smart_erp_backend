@@ -27,6 +27,12 @@ class Heads
         ];
     }
 
+    /** Heads and others with only a department or section view: no contract-based statistics or reports (no contracts, licences, accounts, retirement, joiners/leavers). */
+    public function limited(User $user): bool
+    {
+        return ! app(\Modules\Core\Services\AccessService::class)->can($user, 'hr.contracts.manage') && app(EmployeeScope::class)->rules($user) !== null;
+    }
+
     public function isHead(User $user): bool
     {
         $h = $this->of($user);

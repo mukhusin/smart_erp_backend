@@ -22,6 +22,9 @@ class EnsureEmployeeScope
         if ($employee instanceof Employee && ! $this->scope->allows($user, $employee)) {
             abort(404);
         }
+        if ($employee && $request->isMethod('GET') && $request->route()?->getName() !== 'hr.employees.photo' && app(\Modules\Hr\Support\Heads::class)->limited($user)) {
+            abort(403, 'Employee details are for HR.');
+        }
 
         return $next($request);
     }

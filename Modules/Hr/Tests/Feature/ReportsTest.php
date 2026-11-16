@@ -151,9 +151,7 @@ class ReportsTest extends TestCase
         $hod->assignRole('hod');
         app(CompanyContext::class)->run($this->company, fn () => Employee::create(['employee_no' => 'H1', 'fname' => 'Hamisi', 'lname' => 'Y', 'gender' => 'Male',
             'emp_type' => 'full_time', 'employment_status' => 'confirmed', 'department_id' => $this->other, 'user_id' => $hod->id]));
-        $data = $this->actingAs($hod)->getJson('/api/v1/reports/hr/attendance-hours?from=2026-11-01&to=2026-11-12')->assertOk()->json('data');
-        $this->assertSame(['Pharmacy'], array_column($data['rows'], 'group'));
-        $this->assertStringContainsString('limited to your department', $data['subtitle']);
+        $this->actingAs($hod)->getJson('/api/v1/reports/hr/attendance-hours?from=2026-11-01&to=2026-11-12')->assertNotFound();
     }
 
     public function test_hod_sees_own_department_without_money(): void

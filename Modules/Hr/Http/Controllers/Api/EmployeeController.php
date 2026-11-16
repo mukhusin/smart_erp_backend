@@ -61,7 +61,8 @@ class EmployeeController extends Controller
 
     private function query(Request $request, EmployeeScope $scope): QueryBuilder
     {
-        $base = Employee::with(self::WITH)->when(! in_array($request->input('filter.emp_type'), ['internship', 'resident'], true), fn ($q) => $q->staff());
+        $base = Employee::with(self::WITH)->when(! in_array($request->input('filter.emp_type'), ['internship', 'resident'], true), fn ($q) => $q->staff())
+            ->when(app(\Modules\Hr\Support\Heads::class)->limited($request->user()), fn ($q) => $q->active());
 
         return QueryBuilder::for($scope->apply($base, $request->user()))
             ->allowedFilters(
@@ -73,7 +74,7 @@ class EmployeeController extends Controller
                 AllowedFilter::exact('job_position_id'),
                 AllowedFilter::exact('employment_status'),
                 AllowedFilter::exact('emp_type'),
-                AllowedFilter::callback('view', fn ($q, $v) => match ($v) {
+                AllowedFilter::callback('view', fn ($q, $v) => match (app(\Modules\Hr\Support\Heads::class)->limited(request()->user()) ? 'active' : $v) {
                     'active' => $q->active(),
                     'no_contract' => $q->withoutContract(),
                     'contract_ending' => $q->contractEnding(),
@@ -92,6 +93,7 @@ class EmployeeController extends Controller
      */
     public function exportColumns(Request $request, EmployeeSheet $sheet): JsonResponse
     {
+        abort_if(app(\Modules\Hr\Support\Heads::class)->limited(request()->user()), 403, 'Employee exports are for HR.');
         $columns = $sheet->columnsFor(implode(',', array_keys(EmployeeSheet::EXPORT_COLUMNS)), $request->user());
 
         return response()->json([
@@ -113,6 +115,7 @@ class EmployeeController extends Controller
     #[QueryParameter('columns', description: 'Comma-separated keys from export-columns; default set when empty.', type: 'string')]
     public function export(Request $request, EmployeeScope $scope, EmployeeSheet $sheet): Response
     {
+        abort_if(app(\Modules\Hr\Support\Heads::class)->limited(request()->user()), 403, 'Employee exports are for HR.');
         $columns = $sheet->columnsFor($request->query('columns'), $request->user());
         $employees = $this->query($request, $scope)->with('activeContract')->reorder('employee_no')->get();
 

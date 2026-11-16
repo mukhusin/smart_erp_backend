@@ -11792,6 +11792,28 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "Employee exports are for HR."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -11826,6 +11848,28 @@
                                     "required": [
                                         "data",
                                         "default"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "Employee exports are for HR."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -14719,26 +14763,47 @@
                                         "data": {
                                             "type": "object",
                                             "properties": {
+                                                "limited": {
+                                                    "type": "boolean"
+                                                },
                                                 "total": {
                                                     "type": "integer"
                                                 },
                                                 "probation": {
-                                                    "type": "integer"
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "without_account": {
-                                                    "type": "integer"
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "invited": {
-                                                    "type": "integer"
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "without_contract": {
-                                                    "type": "integer"
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "contracts_ending": {
-                                                    "type": "integer"
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "licences_expiring": {
-                                                    "type": "integer"
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "placements_active": {
                                                     "type": "integer"
@@ -14793,7 +14858,10 @@
                                                     ]
                                                 },
                                                 "renewals": {
-                                                    "type": "object",
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
                                                     "properties": {
                                                         "pending": {
                                                             "type": "integer"
@@ -14965,6 +15033,7 @@
                                                 }
                                             },
                                             "required": [
+                                                "limited",
                                                 "total",
                                                 "probation",
                                                 "without_account",
@@ -35403,8 +35472,7 @@
                                                             "minimum": 0
                                                         },
                                                         "probation": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "null"
                                                         },
                                                         "by_type": {
                                                             "type": "array",
@@ -35446,20 +35514,17 @@
                                                             }
                                                         },
                                                         "joined_this_month": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "null"
                                                         },
                                                         "left_this_month": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "null"
                                                         },
                                                         "interns": {
                                                             "type": "integer",
                                                             "minimum": 0
                                                         },
                                                         "retiring_12_months": {
-                                                            "type": "integer",
-                                                            "minimum": 0
+                                                            "type": "null"
                                                         }
                                                     },
                                                     "required": [
@@ -35481,44 +35546,10 @@
                                                 "movement": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "month": {
-                                                                "type": "string"
-                                                            },
-                                                            "joined": {
-                                                                "anyOf": [
-                                                                    {
-                                                                        "type": "string"
-                                                                    },
-                                                                    {
-                                                                        "type": "integer",
-                                                                        "enum": [
-                                                                            0
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            },
-                                                            "left": {
-                                                                "anyOf": [
-                                                                    {
-                                                                        "type": "string"
-                                                                    },
-                                                                    {
-                                                                        "type": "integer",
-                                                                        "enum": [
-                                                                            0
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            }
-                                                        },
-                                                        "required": [
-                                                            "month",
-                                                            "joined",
-                                                            "left"
-                                                        ]
-                                                    }
+                                                        "type": "string"
+                                                    },
+                                                    "minItems": 0,
+                                                    "maxItems": 0
                                                 },
                                                 "leave": {
                                                     "type": "object",
@@ -35543,31 +35574,7 @@
                                                     ]
                                                 },
                                                 "contracts": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "ending_30_days": {
-                                                            "type": "integer",
-                                                            "minimum": 0
-                                                        },
-                                                        "ending_90_days": {
-                                                            "type": "integer",
-                                                            "minimum": 0
-                                                        },
-                                                        "without_contract": {
-                                                            "type": "integer",
-                                                            "minimum": 0
-                                                        },
-                                                        "licences_expired": {
-                                                            "type": "integer",
-                                                            "minimum": 0
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "ending_30_days",
-                                                        "ending_90_days",
-                                                        "without_contract",
-                                                        "licences_expired"
-                                                    ]
+                                                    "type": "null"
                                                 },
                                                 "salary": {
                                                     "type": "object",
@@ -35654,6 +35661,9 @@
                                                         "tracked",
                                                         "statuses"
                                                     ]
+                                                },
+                                                "limited": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -35666,7 +35676,8 @@
                                                 "contracts",
                                                 "salary",
                                                 "payroll",
-                                                "attendance"
+                                                "attendance",
+                                                "limited"
                                             ]
                                         }
                                     },

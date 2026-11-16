@@ -86,7 +86,7 @@ class EmployeeScopeTest extends TestCase
 
         $this->assertSame(['HOD', 'LABTECH', 'NURSE', 'NURSE2'], $this->listed($hod));
         $this->getJson('/api/v1/hr/employees?per_page=5')->assertJsonPath('meta.scope.all', false)->assertJsonPath('meta.scope.label', 'Employees of Laboratory, Nursing');
-        $this->getJson("/api/v1/hr/employees/{$this->staff['nurse']->id}")->assertOk();
+        $this->getJson("/api/v1/hr/employees/{$this->staff['nurse']->id}")->assertForbidden();
         $this->getJson("/api/v1/hr/employees/{$this->staff['pharmacist']->id}")->assertNotFound();
         $this->getJson("/api/v1/hr/employees/{$this->staff['pharmacist']->id}/contracts")->assertNotFound();
         $this->getJson('/api/v1/hr/summary')->assertJsonPath('data.total', 4);

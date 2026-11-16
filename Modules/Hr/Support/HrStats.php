@@ -26,8 +26,13 @@ class HrStats
 
     public function __construct(private readonly EmployeeScope $scope) {}
 
+    /** Lists heads (department/section view only) cannot open: contract, account, licence and renewal based. */
+    public const LIMITED_OUT = ['probation', 'without_account', 'invited', 'without_contract', 'contracts_ending', 'licences_expiring',
+        'renewals_pending', 'renewals_approved', 'renewals_renewed', 'renewals_rejected'];
+
     public function run(string $stat, ?string $value, User $user): array
     {
+        abort_if(in_array($stat, self::LIMITED_OUT, true) && app(Heads::class)->limited($user), 403, 'This list is for HR.');
         $today = CarbonImmutable::today();
         $active = fn () => $this->scope->apply(Employee::query()->active(), $user);
         $scoped = fn (Builder $q) => $this->scope->apply($q, $user);

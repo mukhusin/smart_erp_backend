@@ -7,6 +7,7 @@ use App\Models\AttendanceSetting;
 use App\Models\AttendanceTransa;
 use App\Models\CompanyBranch;
 use App\Models\Department;
+use App\Models\EmployeeTimetable;
 use App\Models\Heslb;
 use App\Models\Nhif;
 use App\Models\Nssf;
@@ -41,7 +42,7 @@ class HrReports
         'contracts-ending' => ['title' => 'Contracts ending', 'group' => 'Contracts'],
         'licences' => ['title' => 'Professional licences', 'group' => 'Contracts'],
         'interns' => ['title' => 'Interns and residents', 'group' => 'Movement'],
-        'on-leave' => ['title' => 'Staff on leave', 'group' => 'Staff'],
+        'on-leave' => ['title' => 'Staff on leave', 'group' => 'Leave', 'module' => 'leave'],
         'leave-requests' => ['title' => 'Leave requests', 'group' => 'Leave', 'module' => 'leave'],
         'leave-balances' => ['title' => 'Leave balances', 'group' => 'Leave', 'module' => 'leave'],
         'overtime' => ['title' => 'Overtime claims', 'group' => 'Overtime', 'module' => 'overtime'],
@@ -50,11 +51,15 @@ class HrReports
         'payroll-departments' => ['title' => 'Payroll by department', 'group' => 'Payroll', 'module' => 'payroll', 'permission' => 'payroll.view'],
         'payroll-statutory' => ['title' => 'Statutory remittance list', 'group' => 'Payroll', 'module' => 'payroll', 'permission' => 'payroll.view'],
         'payroll-bank' => ['title' => 'Bank list (net pay)', 'group' => 'Payroll', 'module' => 'payroll', 'permission' => 'payroll.view'],
+        'roster-duties' => ['title' => 'Duty roster (who works when)', 'group' => 'Duty roster', 'module' => 'roster'],
         'attendance-daily' => ['title' => 'Attendance by day', 'group' => 'Attendance', 'module' => 'attendance'],
         'attendance-summary' => ['title' => 'Attendance per employee', 'group' => 'Attendance', 'module' => 'attendance'],
         'attendance-hours' => ['title' => 'Working hours', 'group' => 'Attendance', 'module' => 'attendance'],
         'attendance-claims' => ['title' => 'Lost-hours claims', 'group' => 'Attendance', 'module' => 'attendance'],
     ];
+
+    /** The only report groups heads of department and section (department/section view) get. */
+    private const HEADS_GROUPS = ['Leave', 'Duty roster', 'Overtime'];
 
     private const SCHEMES = ['paye' => 'PAYE', 'nssf' => 'NSSF', 'nhif' => 'NHIF', 'heslb' => 'HESLB', 'wcf' => 'WCF', 'sdl' => 'SDL'];
 
@@ -78,6 +83,9 @@ class HrReports
     public function available(string $key, User $user): bool
     {
         $module = self::REPORTS[$key]['module'] ?? null;
+        if (! in_array(self::REPORTS[$key]['group'], self::HEADS_GROUPS, true) && app(Heads::class)->limited($user)) {
+            return false;
+        }
         if (isset(self::REPORTS[$key]['permission']) && ! $this->access->can($user, self::REPORTS[$key]['permission'])) {
             return false;
         }
@@ -142,6 +150,11 @@ class HrReports
             'payroll-statutory' => [$this->sheetFilter(), ['key' => 'scheme', 'label' => 'Scheme', 'type' => 'select', 'default' => 'paye',
                 'options' => array_map(fn ($k, $l) => ['value' => $k, 'label' => $l], array_keys(self::SCHEMES), self::SCHEMES)]],
             'payroll-bank' => [$this->sheetFilter()],
+            'roster-duties' => [
+                ['key' => 'from', 'label' => 'From', 'type' => 'date', 'default' => $today->startOfWeek()->toDateString()],
+                ['key' => 'to', 'label' => 'To', 'type' => 'date', 'default' => $today->endOfWeek()->toDateString()],
+                ['key' => 'status', 'label' => 'Duty', 'type' => 'select', 'default' => 'working', 'options' => [['value' => 'working', 'label' => 'Working duties'], ['value' => 'all', 'label' => 'All, with days off']]],
+            ],
             'attendance-hours' => [
                 ['key' => 'from', 'label' => 'From', 'type' => 'date', 'default' => $monthStart],
                 ['key' => 'to', 'label' => 'To', 'type' => 'date', 'default' => $today->toDateString()],
@@ -251,6 +264,7 @@ class HrReports
             'month' => 'Payroll', 'gross' => 'Gross', 'paye' => 'PAYE', 'nssf' => 'NSSF', 'nhif' => 'NHIF', 'heslb' => 'HESLB', 'wcf' => 'WCF', 'sdl' => 'SDL',
             'deductions' => 'Deductions', 'net' => 'Net pay', 'cost' => 'Employer cost', 'basic' => 'Basic', 'member_no' => 'Member / TIN no.',
             'employee_amount' => 'Employee', 'employer_amount' => 'Employer', 'bank' => 'Bank', 'bank_branch' => 'Branch', 'account' => 'Account',
+            'duty' => 'Duty', 'time' => 'Time',
             'group' => 'Group', 'staff' => 'Staff', 'planned_hours' => 'Planned hours', 'worked_hours' => 'Worked hours',
             'overtime_hours' => 'Overtime hours', 'worked_percent' => 'Worked % of planned',
         ];
@@ -612,6 +626,23 @@ class HrReports
         }
 
         return [$subtitle.($missing ? " · {$missing} without a bank account (paid in cash)" : ''), ['employee_no', 'name', 'bank', 'bank_branch', 'account', 'net'], $rows->all()];
+    }
+
+    private function reportRosterDuties(array $v, User $user): array
+    {
+        abort_if(CarbonImmutable::parse($v['from'])->diffInDays(CarbonImmutable::parse($v['to'])) > 62, 422, 'Choose at most two months.');
+        $employees = $this->employees($v, $user, 'duty')->get()->keyBy('id');
+        $rows = EmployeeTimetable::with('roster:id,title,status')->whereIn('employee_id', $employees->keys())->where('source', EmployeeTimetable::ROSTER)
+            ->whereDate('day_date', '>=', $v['from'])->whereDate('day_date', '<=', $v['to'])
+            ->when(($v['status'] ?? 'working') === 'working', fn ($q) => $q->where('can_punch', true))
+            ->whereHas('roster', fn ($q) => $q->where('status', 'published'))
+            ->orderBy('day_date')->get()
+            ->map(fn ($t) => $this->person($employees[$t->employee_id]) + [
+                'date' => $t->day_date->toDateString(), 'duty' => trim(($t->code ? $t->code.' · ' : '').$t->duty),
+                'time' => $t->can_punch ? substr((string) $t->start_time, 0, 5).'–'.substr((string) $t->end_time, 0, 5) : null, 'hours' => (float) $t->work_hour,
+            ])->sortBy(fn ($r) => $r['date'].$r['name'])->values();
+
+        return [$this->period($v).' · published rosters', ['date', 'employee_no', 'name', 'department', 'duty', 'time', 'hours'], $rows->all()];
     }
 
     private function reportOvertimeSummary(array $v, User $user): array
