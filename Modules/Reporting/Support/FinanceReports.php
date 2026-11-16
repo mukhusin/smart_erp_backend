@@ -38,6 +38,7 @@ class FinanceReports
         'income-statement' => ['title' => 'Statement of income and expenditure', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'financial-position' => ['title' => 'Statement of financial position', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'cash-book' => ['title' => 'Cash book', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
+        'budget-comparison' => ['title' => 'Statement of comparison of budget and actual amounts', 'group' => 'Accounting', 'module' => 'budgeting', 'permissions' => ['accounting.view', 'budgeting.view', 'budgeting.manage']],
         'trial-balance' => ['title' => 'Trial balance', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'fund-statement' => ['title' => 'Income and expenditure by fund source', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'journal-register' => ['title' => 'Journal register', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
@@ -71,7 +72,7 @@ class FinanceReports
         'from' => 'From', 'to' => 'To', 'reason' => 'Reason', 'requested_by' => 'Requested by', 'activity' => 'Activity', 'objective' => 'Objective', 'output' => 'Output',
         'target' => 'Target', 'kpi' => 'KPI', 'quarters' => 'Quarters', 'subs' => 'Sub-activities', 'budget' => 'Budget', 'spent' => 'Spent', 'tasks' => 'Tasks',
         'done' => 'Done', 'overdue' => 'Overdue', 'progress' => 'Progress %', 'activities' => 'Activities', 'plan_status' => 'Plan', 'period' => 'Period',
-        'planned' => 'Planned', 'variance' => 'Variance', 'opening' => 'Opening', 'in' => 'Money in', 'out' => 'Money out', 'documents' => 'Documents',
+        'planned' => 'Planned', 'variance' => 'Variance', 'final' => 'Final budget', 'difference' => 'Difference', 'opening' => 'Opening', 'in' => 'Money in', 'out' => 'Money out', 'documents' => 'Documents',
     ];
 
     public function __construct(private readonly AccessService $access, private readonly BudgetFigures $figures) {}
@@ -81,7 +82,9 @@ class FinanceReports
     {
         $keys = array_values(array_filter(array_keys(self::REPORTS), fn ($k) => $this->available($k, $user)));
 
-        return array_map(fn ($k) => ['key' => $k, 'title' => self::REPORTS[$k]['title'], 'group' => self::REPORTS[$k]['group'], 'filters' => $this->filters($k)], $keys);
+        $w = app(\Modules\Accounting\Services\AccountingPolicies::class)->wording();
+
+        return array_map(fn ($k) => ['key' => $k, 'title' => match ($k) { 'income-statement' => $w['performance'], 'financial-position' => $w['position'], default => self::REPORTS[$k]['title'] }, 'group' => self::REPORTS[$k]['group'], 'filters' => $this->filters($k)], $keys);
     }
 
     public function available(string $key, User $user): bool
@@ -101,7 +104,10 @@ class FinanceReports
             [$subtitle, $columns, $rows] = [$e->getMessage(), ['description'], []];
         }
 
-        return ['key' => $key, 'title' => self::REPORTS[$key]['title'], 'subtitle' => $subtitle,
+        $w = app(\Modules\Accounting\Services\AccountingPolicies::class)->wording();
+        $title = match ($key) { 'income-statement' => $w['performance'], 'financial-position' => $w['position'], default => self::REPORTS[$key]['title'] };
+
+        return ['key' => $key, 'title' => $title, 'subtitle' => $subtitle,
             'columns' => array_map(fn ($c) => ['key' => $c, 'label' => self::LABELS[$c] ?? ucfirst(str_replace('_', ' ', $c))], $columns), 'rows' => array_values($rows), 'total' => count($rows)];
     }
 
@@ -142,6 +148,7 @@ class FinanceReports
                 ['value' => 'department', 'label' => 'Department'], ['value' => 'account', 'label' => 'Account'], ['value' => 'activity', 'label' => 'Activity'],
                 ['value' => 'fund', 'label' => 'Fund source'], ['value' => 'item', 'label' => 'Budget line']]], $departments],
             'budget-quarterly', 'budget-commitments' => [$budget, $departments],
+            'budget-comparison' => [$budget],
             'budget-transfers' => [$budget],
             'plan-activities' => [$plan, $departments],
             'plan-performance', 'objective-performance' => [$plan],
@@ -167,7 +174,8 @@ class FinanceReports
             ->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
         $rows = [];
         $totals = [];
-        foreach (['revenue' => 'Income', 'expense' => 'Expenditure'] as $type => $label) {
+        $w = app(\Modules\Accounting\Services\AccountingPolicies::class)->wording($v['to']);
+        foreach (['revenue' => $w['revenue'], 'expense' => $w['expense']] as $type => $label) {
             $rows[] = ['code' => '', 'account' => strtoupper($label), 'amount' => null];
             $total = 0;
             foreach (Account::where('type', $type)->where('is_postable', true)->orderBy('code')->get() as $a) {
@@ -181,7 +189,7 @@ class FinanceReports
             $totals[$type] = round($total, 2);
             $rows[] = ['code' => '', 'account' => "Total {$label}", 'amount' => $totals[$type]];
         }
-        $rows[] = ['code' => '', 'account' => 'Surplus / (deficit) for the period', 'amount' => round($totals['revenue'] - $totals['expense'], 2)];
+        $rows[] = ['code' => '', 'account' => $w['result'], 'amount' => round($totals['revenue'] - $totals['expense'], 2)];
         $dept = $v['department_id'] ? ' · '.Department::find($v['department_id'])?->name : '';
 
         return ["{$this->d($v['from'])} to {$this->d($v['to'])}{$dept}", ['code', 'account', 'amount'], $rows];
@@ -195,7 +203,8 @@ class FinanceReports
         $surplus = round($accounts->whereIn('type', ['revenue'])->sum($bal) - $accounts->whereIn('type', ['expense'])->sum($bal), 2);
         $rows = [];
         $totals = [];
-        foreach (['asset' => 'Assets', 'liability' => 'Liabilities', 'equity' => 'Fund balances and reserves'] as $type => $label) {
+        $w = app(\Modules\Accounting\Services\AccountingPolicies::class)->wording($v['date']);
+        foreach (['asset' => 'Assets', 'liability' => 'Liabilities', 'equity' => $w['equity']] as $type => $label) {
             $rows[] = ['code' => '', 'account' => strtoupper($label), 'amount' => null];
             $total = 0;
             foreach ($accounts->where('type', $type) as $a) {
@@ -206,13 +215,13 @@ class FinanceReports
                 }
             }
             if ($type === 'equity') {
-                $rows[] = ['code' => '', 'account' => 'Accumulated surplus / (deficit)', 'amount' => $surplus];
+                $rows[] = ['code' => '', 'account' => $w['accumulated'], 'amount' => $surplus];
                 $total += $surplus;
             }
             $totals[$type] = round($total, 2);
             $rows[] = ['code' => '', 'account' => "Total {$label}", 'amount' => $totals[$type]];
         }
-        $rows[] = ['code' => '', 'account' => 'Total liabilities and fund balances', 'amount' => round($totals['liability'] + $totals['equity'], 2)];
+        $rows[] = ['code' => '', 'account' => $w['total_claims'], 'amount' => round($totals['liability'] + $totals['equity'], 2)];
 
         return ['As at '.$this->d($v['date']), ['code', 'account', 'amount'], $rows];
     }
@@ -451,6 +460,29 @@ class FinanceReports
         }
 
         return ["{$budget->title} · income and expenditure lines · used = actual + held + committed", ['group', 'original', 'revised', 'released', 'held', 'committed', 'actual', 'available', 'used'], $rows->all()];
+    }
+
+    /** IPSAS 24 style: original and final budget against actual on the same basis, by account. */
+    private function reportBudgetComparison(array $v): array
+    {
+        $budget = $this->budget($v);
+        $w = app(\Modules\Accounting\Services\AccountingPolicies::class)->wording();
+        $rows = collect();
+        foreach (['revenue' => $w['revenue'], 'expense' => $w['expense']] as $type => $heading) {
+            $items = $this->budgetRows($budget, null)->filter(fn ($r) => ($r['account']['type'] ?? 'expense') === $type);
+            if ($items->isEmpty()) {
+                continue;
+            }
+            $rows->push(['account' => strtoupper($heading), 'original' => null, 'final' => null, 'actual' => null, 'difference' => null]);
+            foreach ($items->groupBy(fn ($r) => $r['account'] ? $r['account']['code'].' '.$r['account']['name'] : 'Other')->sortKeys() as $name => $g) {
+                $rows->push(['account' => (string) $name, 'original' => round($g->sum('original'), 2), 'final' => round($g->sum('revised'), 2), 'actual' => round($g->sum('actual'), 2),
+                    'difference' => round($g->sum('revised') - $g->sum('actual'), 2)]);
+            }
+            $rows->push(['account' => "Total {$heading}", 'original' => round($items->sum('original'), 2), 'final' => round($items->sum('revised'), 2), 'actual' => round($items->sum('actual'), 2),
+                'difference' => round($items->sum('revised') - $items->sum('actual'), 2)]);
+        }
+
+        return ["{$budget->title} · difference = final budget − actual", ['account', 'original', 'final', 'actual', 'difference'], $rows->all()];
     }
 
     private function reportBudgetQuarterly(array $v): array

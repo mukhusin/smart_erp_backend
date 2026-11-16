@@ -886,3 +886,55 @@ supplier's approved bank account) and the `GoodsAccepted` event (stores and asse
 the supplier invoice recorded on the delivery must equal order price × accepted quantity (tolerance in settings)
 before a voucher can be prepared; the voucher debits clearing (no second budget effect). Not yet: procurement plan and
 packages, tenders, contracts, framework agreements (step 6).
+
+### 18.7 Configurable accounting framework (design, 2026-11-16)
+
+A company chooses a framework profile: IFRS | IFRS for SMEs (default) | US GAAP | IPSAS | Local / regulatory (named by
+the company, every option open). A profile is data (`FrameworkCatalog`): for each policy the allowed values and the
+default; the company may adjust policies only within what its profile allows. Code reads policies, never the profile
+name, so new profiles are data only.
+
+Policies: stock costing (FIFO, weighted average, specific identification; LIFO only US GAAP / local), stock write-down
+(lower of cost and NRV; reversal not under US GAAP; IPSAS current replacement cost for items given away), asset
+measurement (cost / revaluation; US GAAP cost only), impairment reversal (not under US GAAP), component depreciation
+(required IFRS / IPSAS), cash flow method (direct / indirect), budget-vs-actual statement (required IPSAS 24 when the
+budget is public), non-exchange revenue rules (IAS 20 / IPSAS 23 / ASC 958). Terminology per profile drives statement
+titles (financial position vs balance sheet, profit or loss vs financial performance vs income and expenditure,
+equity vs net assets vs fund balances). Regulatory returns are report packs added on top of any profile.
+
+Safeguards: once there are postings the profile and policies change only from the start of a fiscal year; each change
+is kept with its effective date (IAS 8); closed periods keep their policy; one framework per company (parallel
+multi-GAAP books later if a group needs it). Hooks: step 4 stock costing and write-down, step 5 asset measurement,
+impairment reversal and components, reports now (titles, IPSAS budget comparison), cash flow method when built,
+grant/donation recognition in Billing & Receipts and fund sources.
+
+### 18.8 Plan note: sectors, multi-book ledger and local compliance (2026-11-16)
+
+Kept from the user's note; not built yet.
+- **Feature packs, not sectors** (user, 2026-11-16): the sectors below are only examples. No company is tied to a sector; each
+  company chooses its framework profile, its policies and which optional feature packs it switches on. Examples on top of
+  the framework profiles (§18.7): banks — full IFRS / IFRS 9 (expected credit loss, effective
+  interest, instrument classes) as a separate sub-ledger pack; public hospitals and schools — IPSAS accrual or cash, fund
+  and grant (non-exchange revenue) tracking, budget-to-actual encumbrance; private hospitals and schools — IFRS or IFRS
+  for SMEs with IFRS 15 revenue over time (tuition terms, multi-day inpatient stays) through deferred revenue schedules,
+  and insurance claim write-offs.
+- **Multi-book ledger:** replaces "one framework per company" in §18.7 as the target. A journal line belongs to a book
+  (primary IFRS / IPSAS book; optional tax or local regulatory book); one operational transaction posts to every active
+  book through posting rules, with book-specific adjustments only where policies differ. Today everything posts to the
+  primary book; the book column is added before multi-book is needed so no data is migrated twice.
+- **Segmented accounts:** keep the dimensions on journal lines (entity/branch, fund, department, natural account, cost
+  centre, project/grant, activity, budget line) rather than encoding them in account codes; add project/grant as a
+  first-class dimension for NGOs and schools.
+- **Sub-ledger rule engines:** complex schedules (IFRS 16 leases, IFRS 9 impairment, IFRS 15 deferred revenue,
+  depreciation) live in sub-ledgers that post automatic, traceable journals to the general ledger.
+- **Period controls:** date-effective exchange rates, posted journals immutable (reversal only — already so), fiscal
+  calendars per company (academic year for schools, calendar year for banks — already configurable).
+- **Tanzania / East Africa:** NBAA-adopted IFRS and IPSAS; TRA rules (VAT, WHT, PAYE — PAYE and WHT built, VAT planned);
+  EFD/VFD fiscal receipt integration for receipts and invoices; BoT regulatory returns for financial institutions
+  (with the bank pack).
+
+**§18.7 built (2026-11-16):** `FrameworkCatalog` (profiles, policies, allowed values, wording), `AccountingPolicies`
+(policies in force on a date; change history `accounting_policy_changes` with effective date and reason; after the first
+posting a change starts only at an open fiscal year), `accounting_settings.framework|framework_name|policies`, endpoint
+`GET/PUT accounting/framework`, statements titled by the framework wording, report "Statement of comparison of budget and
+actual amounts" (IPSAS 24 style), and `journal_entries.book` (default `primary`) ready for the multi-book ledger.

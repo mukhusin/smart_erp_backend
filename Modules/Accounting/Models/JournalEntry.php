@@ -18,7 +18,7 @@ class JournalEntry extends Model
 
     protected $fillable = [
         'company_id', 'reference_no', 'date', 'fiscal_period_id', 'entry_type', 'source_type', 'source_id', 'description', 'total', 'status',
-        'created_by', 'posted_at', 'posted_by', 'reversal_of_id', 'decision_comment',
+        'created_by', 'posted_at', 'posted_by', 'reversal_of_id', 'decision_comment', 'book',
     ];
 
     protected $casts = ['date' => 'date', 'posted_at' => 'datetime', 'total' => 'float'];

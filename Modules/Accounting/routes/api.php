@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Accounting\Http\Controllers\Api\AccountController;
 use Modules\Accounting\Http\Controllers\Api\FiscalYearController;
+use Modules\Accounting\Http\Controllers\Api\FrameworkController;
 use Modules\Accounting\Http\Controllers\Api\JournalController;
 use Modules\Accounting\Http\Controllers\Api\MasterDataController;
 use Modules\Accounting\Http\Controllers\Api\PayrollPostingController;
@@ -12,6 +13,7 @@ use Modules\Accounting\Http\Controllers\Api\SettingsController;
 Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'can:accounting.view'])->name('accounting.')->group(function () {
     Route::get('settings', [SettingsController::class, 'settings'])->name('settings.show');
     Route::get('lookups', [SettingsController::class, 'lookups'])->name('lookups');
+    Route::get('framework', [FrameworkController::class, 'show'])->name('framework.show');
     Route::get('accounts', [AccountController::class, 'accounts'])->name('accounts.index');
     Route::get('accounts/template', [AccountController::class, 'accountsTemplate'])->name('accounts.template');
     Route::get('fund-sources', [MasterDataController::class, 'fundSources'])->name('fund-sources.index');
@@ -37,6 +39,7 @@ Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'c
 
     Route::middleware('can:accounting.manage')->group(function () {
         Route::put('settings', [SettingsController::class, 'updateSettings'])->name('settings.update');
+        Route::put('framework', [FrameworkController::class, 'update'])->name('framework.update');
         Route::put('payroll-posting', [PayrollPostingController::class, 'updateSettings'])->name('payroll-posting.update');
         Route::post('accounts', [AccountController::class, 'storeAccount'])->name('accounts.store');
         Route::post('accounts/import', [AccountController::class, 'importAccounts'])->name('accounts.import');
