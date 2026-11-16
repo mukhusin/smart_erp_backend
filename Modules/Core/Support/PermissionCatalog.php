@@ -169,8 +169,9 @@ final class PermissionCatalog
             'bills.manage' => 'Manage bills and payments',
         ],
         'procurement' => [
-            'procurement.view' => 'View purchase requests and orders',
-            'procurement.manage' => 'Manage purchase requests and orders',
+            'procurement.view' => 'View suppliers, plans, requisitions and orders',
+            'procurement.suppliers' => 'Maintain the supplier register (details, bank accounts, documents)',
+            'procurement.manage' => 'Run procurement and blacklist suppliers (head of procurement)',
             'procurement.approve' => 'Approve purchase requests',
         ],
         'assets' => [
@@ -184,8 +185,10 @@ final class PermissionCatalog
             'fleet.manage' => 'Manage vehicles, fuel and maintenance',
         ],
         'inventory' => [
-            'inventory.view' => 'View stock',
-            'inventory.manage' => 'Manage items and stock movements',
+            'inventory.view' => 'View the catalogue, stores and stock of all stores',
+            'inventory.catalogue' => 'Maintain the item catalogue, categories and units',
+            'inventory.stores' => 'Set up stores, locations and store staff',
+            'inventory.manage' => 'Manage items, stores and stock movements',
         ],
     ];
 

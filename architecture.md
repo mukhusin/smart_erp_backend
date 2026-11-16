@@ -821,3 +821,13 @@ committed again); approved payrolls post to the ledger through the `PayrollAppro
 expense per department on the department's salary budget line, deductions and net pay as payables; posting errors
 are kept on the sheet and can be retried) and net salaries are recorded as paid from a bank. Report menus split into
 Accounting, Payroll (finance + HR payroll reports), Loans, Budgeting and Planning.
+
+**Step 2 done (2026-11-16):** modules `Procurement` (supplier register: one record per TIN, bank accounts through the
+`supplier-bank-account` workflow, documents with expiry flags, blacklist by `procurement.manage`) and `Inventory`
+(units, categories carrying inventory/expense/revenue/asset/depreciation accounts and useful life, residual % and
+capitalisation threshold; items numbered by category prefix with unit conversions, tracking flags and levels; CSV
+import; stores with kind, branch, department, nested bins and officer/manager staff; per-store levels and shelf).
+Legacy empty Blade-era tables (suppliers, bills, purchase_*, inventory_*, stock_movements) are dropped by the
+migration only when empty. Permissions `procurement.view|suppliers|manage|approve`, `inventory.view|catalogue|stores|
+manage`. Next: step 3 procurement core (plan, requisition with budget hold, quotations, purchase order, GRN with the
+clearing account) and step 4 store ledger.

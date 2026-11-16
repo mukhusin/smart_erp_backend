@@ -31,6 +31,7 @@ use Modules\Payments\Workflow\PaymentRequestProcess;
 use Modules\Payments\Workflow\PaymentVoidProcess;
 use Modules\Payments\Workflow\PaymentVoucherProcess;
 use Modules\Planning\Workflow\DepartmentPlanProcess;
+use Modules\Procurement\Workflow\SupplierBankAccountProcess;
 use Modules\Receivables\Workflow\CreditNoteProcess;
 use Modules\Receivables\Workflow\InvoiceProcess;
 use Modules\Receivables\Workflow\ReceiptVoidProcess;
@@ -77,6 +78,7 @@ final class WorkflowCatalog
         InvoiceProcess::class,
         CreditNoteProcess::class,
         ReceiptVoidProcess::class,
+        SupplierBankAccountProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

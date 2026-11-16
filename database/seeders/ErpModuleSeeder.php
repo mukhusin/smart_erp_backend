@@ -189,7 +189,7 @@ class ErpModuleSeeder extends Seeder
             [
                 'slug'        => 'procurement',
                 'name'        => 'Procurement',
-                'description' => 'Purchase requests, purchase orders and vendor management.',
+                'description' => 'Supplier register, procurement plan, requisitions, quotations, purchase orders and goods received.',
                 'icon'        => 'bi-box-seam',
                 'color'       => 'info',
                 'route_name'  => 'procurement.dashboard',
@@ -275,8 +275,8 @@ class ErpModuleSeeder extends Seeder
             // ── Inventory ──────────────────────────────────────────────
             [
                 'slug'        => 'inventory',
-                'name'        => 'Inventory',
-                'description' => 'Manage stock items, categories, stock-in/out movements and low-stock alerts.',
+                'name'        => 'Stores & Inventory',
+                'description' => 'Item catalogue, stores and locations, stock in and out, transfers, stock takes and alerts.',
                 'icon'        => 'bi-boxes',
                 'color'       => 'success',
                 'route_name'  => 'inventory.dashboard',

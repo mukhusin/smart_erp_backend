@@ -106,7 +106,7 @@ final class DefaultLeaveTypes
         if (! $finance) {
             return;
         }
-        foreach (['credit-note' => 'Chief accountant', 'receipt-void' => 'Chief accountant'] as $process => $name) {
+        foreach (['credit-note' => 'Chief accountant', 'receipt-void' => 'Chief accountant', 'supplier-bank-account' => 'Chief accountant'] as $process => $name) {
             if (WorkflowTemplate::where('process', $process)->exists()) {
                 continue;
             }

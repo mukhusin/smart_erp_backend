@@ -41,7 +41,7 @@ final class DefaultRoles
             'hr.employees.view-section', 'roster.section.view', 'roster.manage', 'attendance.working-hours.section', 'reports.view', 'self-service.use',
             'tasks.use', 'tasks.assign', 'appraisals.use', 'appraisals.review',
         ],
-        'accountant' => ['accounting.*', 'budgeting.*', 'payments.*', 'receivables.*', 'self-service.use', 'tasks.use', 'appraisals.use'],
+        'accountant' => ['accounting.*', 'budgeting.*', 'payments.*', 'receivables.*', 'procurement.view', 'inventory.view', 'self-service.use', 'tasks.use', 'appraisals.use'],
         'employee' => ['self-service.use', 'tasks.use', 'appraisals.use'],
     ];
 
