@@ -2,6 +2,7 @@
 
 namespace Modules\Hr\Http\Controllers\Api;
 
+use Modules\Hr\Http\Requests\DeductionMemberRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
@@ -63,17 +64,10 @@ class DeductionController extends Controller
      *
      * @response array{message: string}
      */
-    public function update(Request $request, Employee $employee, string $scheme): JsonResponse
+    public function update(DeductionMemberRequest $request, Employee $employee, string $scheme): JsonResponse
     {
         $s = S::get($scheme);
-        $data = $request->validate([
-            'contribution_no' => array_values(array_filter([$s['number'] === 'required' ? 'required' : 'nullable', 'string', 'max:50'])),
-            'value' => ['required', 'numeric', 'min:0', $s['type'] === 'percent' ? 'max:'.($s['total'] ?? 100) : 'max:9999999999'],
-            'is_active' => ['sometimes', 'boolean'],
-        ], [
-            'contribution_no.required' => "Enter the {$s['label']} ".strtolower((string) $s['number_label']).'.',
-            'value.max' => $s['total'] ? "The employee's share cannot be more than {$s['total']}%." : 'The value is too high.',
-        ]);
+        $data = $request->validated();
 
         $number = isset($data['contribution_no']) ? trim($data['contribution_no']) : null;
         if ($s['unique'] && $number) {

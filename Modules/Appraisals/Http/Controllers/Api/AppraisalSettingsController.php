@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Modules\Appraisals\Http\Requests\AppraisalCompetencyRequest;
 use Modules\Appraisals\Models\AppraisalCompetency;
 use Modules\Appraisals\Models\AppraisalScore;
 use Modules\Appraisals\Models\AppraisalSetting;
@@ -65,15 +66,15 @@ class AppraisalSettingsController extends Controller
     }
 
     /** @response array{data: array{id: int, name: string, description: string|null, is_active: bool, sort_order: int}} */
-    public function storeCompetency(Request $request): JsonResponse
+    public function storeCompetency(AppraisalCompetencyRequest $request): JsonResponse
     {
-        return response()->json(['data' => $this->competency(AppraisalCompetency::create($this->validated($request)))], 201);
+        return response()->json(['data' => $this->competency(AppraisalCompetency::create($request->validated()))], 201);
     }
 
     /** @response array{data: array{id: int, name: string, description: string|null, is_active: bool, sort_order: int}} */
-    public function updateCompetency(Request $request, AppraisalCompetency $competency): JsonResponse
+    public function updateCompetency(AppraisalCompetencyRequest $request, AppraisalCompetency $competency): JsonResponse
     {
-        $competency->update($this->validated($request));
+        $competency->update($request->validated());
 
         return response()->json(['data' => $this->competency($competency)]);
     }
@@ -87,16 +88,6 @@ class AppraisalSettingsController extends Controller
         $competency->delete();
 
         return response()->json(['message' => 'Competency deleted.']);
-    }
-
-    private function validated(Request $request): array
-    {
-        return $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'is_active' => ['sometimes', 'boolean'],
-            'sort_order' => ['sometimes', 'integer', 'between:0,999'],
-        ]);
     }
 
     private function competency(AppraisalCompetency $c): array

@@ -7,6 +7,7 @@ use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Planning\Actions\ManagePlanning;
+use Modules\Planning\Http\Requests\PlanActivityRequest;
 use Modules\Planning\Models\AnnualPlan;
 use Modules\Planning\Models\DepartmentPlan;
 use Modules\Planning\Support\PlanningAccess;
@@ -58,20 +59,20 @@ class DepartmentPlanController extends Controller
     }
 
     /** @response array{data: array{id: int}} */
-    public function storeActivity(Request $request, AnnualPlan $plan, Department $department): JsonResponse
+    public function storeActivity(PlanActivityRequest $request, AnnualPlan $plan, Department $department): JsonResponse
     {
         abort_unless($this->access->canPlan($request->user(), $department->id), 403);
-        $a = $this->planning->saveActivity($this->find($plan, $department), $this->validated($request), $request->user());
+        $a = $this->planning->saveActivity($this->find($plan, $department), $request->validated(), $request->user());
 
         return response()->json(['data' => ['id' => $a->id]], 201);
     }
 
     /** @response array{data: array{id: int}} */
-    public function updateActivity(Request $request, AnnualPlan $plan, Department $department, TaskActivity $activity): JsonResponse
+    public function updateActivity(PlanActivityRequest $request, AnnualPlan $plan, Department $department, TaskActivity $activity): JsonResponse
     {
         abort_unless($this->access->canPlan($request->user(), $department->id), 403);
         abort_unless($activity->annual_plan_id === $plan->id && $activity->department_id === $department->id, 404);
-        $a = $this->planning->saveActivity($this->find($plan, $department), $this->validated($request), $request->user(), $activity);
+        $a = $this->planning->saveActivity($this->find($plan, $department), $request->validated(), $request->user(), $activity);
 
         return response()->json(['data' => ['id' => $a->id]]);
     }
@@ -108,19 +109,5 @@ class DepartmentPlanController extends Controller
     private function find(AnnualPlan $plan, Department $department): DepartmentPlan
     {
         return DepartmentPlan::where('annual_plan_id', $plan->id)->where('department_id', $department->id)->firstOr(fn () => abort(404, 'This department has no plan for the year. Open the annual plan first.'));
-    }
-
-    private function validated(Request $request): array
-    {
-        return $request->validate([
-            'code' => ['nullable', 'string', 'max:20'],
-            'title' => ['required', 'string', 'max:200'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'output' => ['nullable', 'string', 'max:500'],
-            'target' => ['nullable', 'string', 'max:500'],
-            'kpi' => ['nullable', 'string', 'max:500'],
-            'quarters' => ['nullable', 'string', 'regex:/^[1-4](,[1-4]){0,3}$/'],
-            'strategic_objective_id' => ['nullable', 'integer'],
-        ]);
     }
 }

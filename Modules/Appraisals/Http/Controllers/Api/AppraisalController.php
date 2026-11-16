@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Appraisals\Actions\ManageAppraisals;
+use Modules\Appraisals\Http\Requests\AppraisalScoresRequest;
 use Modules\Appraisals\Models\Appraisal;
 use Modules\Appraisals\Models\AppraisalScore;
 use Modules\Appraisals\Support\AppraisalAccess;
@@ -126,10 +127,10 @@ class AppraisalController extends Controller
      *
      * @response array{data: array{id: int, status: string}}
      */
-    public function self(Request $request, Appraisal $appraisal): JsonResponse
+    public function self(AppraisalScoresRequest $request, Appraisal $appraisal): JsonResponse
     {
         abort_unless($this->access->canView($request->user(), $appraisal), 404);
-        $data = $this->validated($request) + $request->validate(['submit' => ['required', 'boolean']]);
+        $data = $request->validated();
         $a = $this->appraisals->saveSelf($appraisal, $request->user(), $data['scores'] ?? [], $data['comment'] ?? null, (bool) $data['submit']);
 
         return response()->json(['data' => ['id' => $a->id, 'status' => $a->status]]);
@@ -140,10 +141,10 @@ class AppraisalController extends Controller
      *
      * @response array{data: array{id: int, status: string}}
      */
-    public function review(Request $request, Appraisal $appraisal): JsonResponse
+    public function review(AppraisalScoresRequest $request, Appraisal $appraisal): JsonResponse
     {
         abort_unless($this->access->canView($request->user(), $appraisal), 404);
-        $data = $this->validated($request) + $request->validate(['decision' => ['required', 'in:approve,return']]);
+        $data = $request->validated();
         $a = $this->appraisals->review($appraisal, $request->user(), $data['scores'] ?? [], $data['comment'] ?? null, $data['decision']);
 
         return response()->json(['data' => ['id' => $a->id, 'status' => $a->status]]);
@@ -201,20 +202,6 @@ class AppraisalController extends Controller
             'a' => $a, 'parts' => $a->cycle->parts(), 'competencies' => $a->cycle->config['competencies'] ?? [], 'scale' => $scale,
             'scores' => collect(array_keys(AppraisalScore::RATERS))->filter(fn ($r) => $a->scores->where('rater', $r)->isNotEmpty())->map(fn ($r) => $this->raterScores($a, $r, $scale))->values()->all(),
             'tasks' => $this->scoring->tasks($a),
-        ]);
-    }
-
-    private function validated(Request $request): array
-    {
-        return $request->validate([
-            'scores' => ['nullable', 'array'],
-            'scores.tasks' => ['nullable', 'numeric'],
-            'scores.attendance' => ['nullable', 'numeric'],
-            'scores.competencies' => ['nullable', 'array'],
-            'scores.competencies.*' => ['nullable', 'numeric'],
-            'scores.comments' => ['nullable', 'array'],
-            'scores.comments.*' => ['nullable', 'string', 'max:2000'],
-            'comment' => ['nullable', 'string', 'max:3000'],
         ]);
     }
 

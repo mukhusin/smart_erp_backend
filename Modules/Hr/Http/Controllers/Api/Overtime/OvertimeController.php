@@ -2,6 +2,7 @@
 
 namespace Modules\Hr\Http\Controllers\Api\Overtime;
 
+use Modules\Hr\Http\Requests\OvertimeRateRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Employee;
@@ -14,7 +15,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
 use Modules\Core\Services\AccessService;
 use Modules\Hr\Actions\ManageOvertime;
 use Modules\Hr\Http\Requests\OvertimeClaimRequest;
@@ -51,7 +51,7 @@ class OvertimeController extends Controller
      *
      * @response array{data: array{id: int, department: array{id: int, name: string}|null, section: array{id: int, name: string}|null, position: array{id: int, title: string}|null, unit: string, amount: float, is_active: bool}}
      */
-    public function storeRate(Request $request): JsonResponse
+    public function storeRate(OvertimeRateRequest $request): JsonResponse
     {
         return response()->json(['data' => $this->rate(OvertimeRate::create($this->rateData($request) + ['updated_by' => $request->user()->id])->load(['department', 'section', 'jobPosition']))], 201);
     }
@@ -61,7 +61,7 @@ class OvertimeController extends Controller
      *
      * @response array{data: array{id: int, department: array{id: int, name: string}|null, section: array{id: int, name: string}|null, position: array{id: int, title: string}|null, unit: string, amount: float, is_active: bool}}
      */
-    public function updateRate(Request $request, OvertimeRate $rate): JsonResponse
+    public function updateRate(OvertimeRateRequest $request, OvertimeRate $rate): JsonResponse
     {
         $rate->update($this->rateData($request, $rate) + ['updated_by' => $request->user()->id]);
 
@@ -225,16 +225,7 @@ class OvertimeController extends Controller
     private function rateData(Request $request, ?OvertimeRate $rate = null): array
     {
         $company = app(CompanyContext::class)->id();
-        $d = $request->validate([
-            /** Department, or a section (its department is found). */
-            'department_id' => ['required', 'integer', Rule::exists('departments', 'id')->where('company_id', $company)->whereNull('deleted_at')],
-            /** Empty: every position. */
-            'job_position_id' => ['nullable', 'integer', Rule::exists('job_positions', 'id')->where('company_id', $company)],
-            /** hour (paid by the minutes) or shift (one shift per claim). */
-            'unit' => ['required', 'in:hour,shift'],
-            'amount' => ['required', 'numeric', 'min:0', 'max:999999999'],
-            'is_active' => ['boolean'],
-        ]);
+        $d = $request->validated();
         $department = Department::findOrFail($d['department_id']);
         [$departmentId, $sectionId] = $department->parent_id ? [$department->parent_id, $department->id] : [$department->id, null];
         abort_if(OvertimeRate::where('department_id', $departmentId)->where('section_id', $sectionId)->where('job_position_id', $d['job_position_id'] ?? null)

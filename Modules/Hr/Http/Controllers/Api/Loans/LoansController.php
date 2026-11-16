@@ -2,18 +2,17 @@
 
 namespace Modules\Hr\Http\Controllers\Api\Loans;
 
+use Modules\Hr\Http\Requests\LoanProviderRequest;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeeLoan;
 use App\Models\EmployeeMonthlyAdvance;
 use App\Models\LoanProvider;
-use App\Services\CompanyContext;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
 use Modules\Hr\Actions\ManageLoans;
 use Modules\Hr\Http\Requests\LoanRequest;
 use Modules\Hr\Support\EmployeeScope;
@@ -42,7 +41,7 @@ class LoansController extends Controller
      *
      * @response array{data: array{id: int, name: string, short_name: string|null, description: string|null, is_active: bool, open_loans: int, outstanding: float}}
      */
-    public function storeProvider(Request $request): JsonResponse
+    public function storeProvider(LoanProviderRequest $request): JsonResponse
     {
         return response()->json(['data' => $this->provider(LoanProvider::create($this->providerData($request)))], 201);
     }
@@ -52,7 +51,7 @@ class LoansController extends Controller
      *
      * @response array{data: array{id: int, name: string, short_name: string|null, description: string|null, is_active: bool, open_loans: int, outstanding: float}}
      */
-    public function updateProvider(Request $request, LoanProvider $provider): JsonResponse
+    public function updateProvider(LoanProviderRequest $request, LoanProvider $provider): JsonResponse
     {
         $provider->update($this->providerData($request, $provider));
 
@@ -344,10 +343,7 @@ class LoansController extends Controller
 
     private function providerData(Request $request, ?LoanProvider $provider = null): array
     {
-        $d = $request->validate([
-            'name' => ['required', 'string', 'max:150', Rule::unique('loan_providers', 'name')->where('company_id', app(CompanyContext::class)->id())->whereNull('deleted_at')->ignore($provider?->id)],
-            'short_name' => ['nullable', 'string', 'max:30'], 'description' => ['nullable', 'string', 'max:255'], 'is_active' => ['boolean'],
-        ], ['name.unique' => 'This provider is already on the list.']);
+        $d = $request->validated();
 
         return $d + ['is_active' => $provider?->is_active ?? true];
     }

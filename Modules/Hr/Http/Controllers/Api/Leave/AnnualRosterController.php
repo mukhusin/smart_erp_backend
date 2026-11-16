@@ -2,6 +2,7 @@
 
 namespace Modules\Hr\Http\Controllers\Api\Leave;
 
+use Modules\Hr\Http\Requests\AnnualLeavePlanRequest;
 use App\Http\Controllers\Controller;
 use App\Models\AnnualLeaveRoster;
 use App\Models\Department;
@@ -103,7 +104,7 @@ class AnnualRosterController extends Controller
      *
      * @response array{data: array{id: int, start_date: string, end_date: string, days: int, status: string, status_label: string, description: string|null}}
      */
-    public function storePlan(Request $request, Roster $roster): JsonResponse
+    public function storePlan(AnnualLeavePlanRequest $request, Roster $roster): JsonResponse
     {
         $this->authorizeManage($request, $roster);
 
@@ -115,7 +116,7 @@ class AnnualRosterController extends Controller
      *
      * @response array{data: array{id: int, start_date: string, end_date: string, days: int, status: string, status_label: string, description: string|null}}
      */
-    public function updatePlan(Request $request, Roster $roster, AnnualLeaveRoster $plan): JsonResponse
+    public function updatePlan(AnnualLeavePlanRequest $request, Roster $roster, AnnualLeaveRoster $plan): JsonResponse
     {
         $this->authorizeManage($request, $roster);
         abort_unless($plan->roster_id === $roster->id, 404);
@@ -171,13 +172,7 @@ class AnnualRosterController extends Controller
 
     private function planData(Request $request): array
     {
-        return $request->validate([
-            'employee_id' => ['required', 'integer'],
-            'start_date' => ['required', 'date'],
-            /** Days of annual leave, counted by the annual leave rule. */
-            'days' => ['required', 'integer', 'min:1', 'max:366'],
-            'description' => ['nullable', 'string', 'max:255'],
-        ]);
+        return $request->validated();
     }
 
     private function plan(AnnualLeaveRoster $p): array

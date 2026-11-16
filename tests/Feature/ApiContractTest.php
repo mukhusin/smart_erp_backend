@@ -1,0 +1,36 @@
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ApiContractTest extends TestCase
+{
+    private const NO_INPUT = [
+        'admin.handovers.revoke', 'appraisals.cycles.close', 'appraisals.withdraw', 'appraisals.cancel', 'workflow.cancel', 'attendance.sync',
+        'attendance.employees.push-all', 'attendance.employees.push', 'auth.logout', 'hr.renewals.withdraw', 'hr.employees.invite', 'hr.messages.cancel',
+        'hr.settings.renewal-letter.reset', 'hr.sick-sheets.cancel', 'self.sick-sheets.withdraw', 'leave.annual-rosters.publish', 'leave.absences.cancel',
+        'self.advances.withdraw', 'loans.advances.cancel', 'self.overtime.withdraw', 'payroll.sheets.generate', 'payroll.sheets.submit', 'payroll.sheets.withdraw',
+        'planning.annual.open', 'planning.annual.close', 'planning.department.action', 'platform.companies.resend-invite', 'roster.rosters.submit',
+        'roster.rosters.withdraw', 'roster.rosters.changes.withdraw', 'self.renewals.withdraw', 'self.leave.withdraw', 'tasks.withdraw-update',
+    ];
+
+    private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store'];
+
+    public function test_every_endpoint_that_takes_input_declares_its_request_body(): void
+    {
+        $contract = json_decode(file_get_contents(base_path('api-contract/openapi.json')), true);
+        $missing = [];
+        foreach ($contract['paths'] as $path => $methods) {
+            foreach ($methods as $method => $operation) {
+                $id = $operation['operationId'] ?? "{$method} {$path}";
+                if (in_array($method, ['post', 'put', 'patch'], true) && ! isset($operation['requestBody'])
+                    && ! in_array($id, self::NO_INPUT, true) && ! in_array($id, self::UPLOADS, true)) {
+                    $missing[] = $id;
+                }
+            }
+        }
+
+        $this->assertSame([], $missing, 'These endpoints take input but the API contract has no request body, so the generated frontend client sends nothing. Validate with a FormRequest or inline $request->validate() in the controller method, then run scramble:export.');
+    }
+}

@@ -2,6 +2,8 @@
 
 namespace Modules\Hr\Http\Controllers\Api\Allowance;
 
+use Modules\Hr\Http\Requests\AllowanceRateRequest;
+use Modules\Hr\Http\Requests\AllowanceCategoryRequest;
 use App\Http\Controllers\Controller;
 use App\Models\AllowanceCategory;
 use App\Models\DailyAllowance;
@@ -13,7 +15,6 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rule;
 
 /**
  * Allowance categories (HRMS allowance categories) and rates (HRMS department allowances).
@@ -40,7 +41,7 @@ class AllowanceSetupController extends Controller
      *
      * @response array{data: array{id: int, name: string, code: string, unit: string, unit_label: string, generation: string, activity_source: string|null, activity_config: array{url: string|null, params: array<string, string>, has_token: bool, count_path: string|null, list_path: string|null, count_field: string|null, id_field: string|null, ids: list<string>}|null, deduct_leave: bool, other_absence: bool, taxable: bool, description: string|null, is_active: bool, rates_count: int}}
      */
-    public function storeCategory(Request $request): JsonResponse
+    public function storeCategory(AllowanceCategoryRequest $request): JsonResponse
     {
         return response()->json(['data' => self::category(AllowanceCategory::create($this->categoryData($request)))], 201);
     }
@@ -50,7 +51,7 @@ class AllowanceSetupController extends Controller
      *
      * @response array{data: array{id: int, name: string, code: string, unit: string, unit_label: string, generation: string, activity_source: string|null, activity_config: array{url: string|null, params: array<string, string>, has_token: bool, count_path: string|null, list_path: string|null, count_field: string|null, id_field: string|null, ids: list<string>}|null, deduct_leave: bool, other_absence: bool, taxable: bool, description: string|null, is_active: bool, rates_count: int}}
      */
-    public function updateCategory(Request $request, AllowanceCategory $category): JsonResponse
+    public function updateCategory(AllowanceCategoryRequest $request, AllowanceCategory $category): JsonResponse
     {
         $category->update($this->categoryData($request, $category));
 
@@ -96,7 +97,7 @@ class AllowanceSetupController extends Controller
      *
      * @response array{data: array{id: int, category: array{id: int, name: string, unit: string}|null, department: array{id: int, name: string}|null, section: array{id: int, name: string}|null, position: array{id: int, title: string}|null, amount: float, is_active: bool}}
      */
-    public function storeRate(Request $request): JsonResponse
+    public function storeRate(AllowanceRateRequest $request): JsonResponse
     {
         $rate = DepartmentAllowance::create($this->rateData($request) + ['created_by' => $request->user()->id]);
 
@@ -108,7 +109,7 @@ class AllowanceSetupController extends Controller
      *
      * @response array{data: array{id: int, category: array{id: int, name: string, unit: string}|null, department: array{id: int, name: string}|null, section: array{id: int, name: string}|null, position: array{id: int, title: string}|null, amount: float, is_active: bool}}
      */
-    public function updateRate(Request $request, DepartmentAllowance $rate): JsonResponse
+    public function updateRate(AllowanceRateRequest $request, DepartmentAllowance $rate): JsonResponse
     {
         $rate->update($this->rateData($request, $rate) + ['last_updated_by' => $request->user()->employee?->id]);
 
@@ -157,37 +158,7 @@ class AllowanceSetupController extends Controller
     private function categoryData(Request $request, ?AllowanceCategory $category = null): array
     {
         $company = app(CompanyContext::class)->id();
-        $d = $request->validate([
-            'name' => ['required', 'string', 'max:100', Rule::unique('allowance_categories', 'category')->where('company_id', $company)->ignore($category?->id)],
-            'code' => ['required', 'string', 'max:20', Rule::unique('allowance_categories', 'code')->where('company_id', $company)->ignore($category?->id)],
-            /** month, day (working day), night (night shift), holiday (public holiday worked) or case (counted items). */
-            'unit' => ['required', Rule::in(array_keys(AllowanceCategory::UNITS))],
-            /** auto: worked out from the roster and working hours; claim: entered with a count and approved; assigned (monthly only): a fixed amount set per employee; activity (per case only): a daily count times the rate for everyone the rate covers. */
-            'generation' => ['required', 'in:auto,claim,assigned,activity'],
-            /** Activity allowances: manual (count entered by hand) or rest (fetched from another system). */
-            'activity_source' => ['nullable', 'in:manual,rest'],
-            'activity_config' => ['nullable', 'array'],
-            /** Address of the other system; parameter values may use {date} (YYYY-MM-DD). */
-            'activity_config.url' => ['required_if:activity_source,rest', 'nullable', 'url', 'max:500'],
-            'activity_config.params' => ['nullable', 'array'],
-            'activity_config.params.*' => ['nullable', 'string', 'max:200'],
-            /** Bearer token; leave empty to keep the saved one. */
-            'activity_config.token' => ['nullable', 'string', 'max:500'],
-            'activity_config.clear_token' => ['boolean'],
-            /** Where the number is in the answer, e.g. data.count. Or use list_path + count_field. */
-            'activity_config.count_path' => ['nullable', 'string', 'max:200'],
-            'activity_config.list_path' => ['nullable', 'string', 'max:200'],
-            'activity_config.count_field' => ['nullable', 'string', 'max:100'],
-            'activity_config.id_field' => ['nullable', 'string', 'max:100'],
-            /** Only items with these ids are counted (empty: all). */
-            'activity_config.ids' => ['nullable', 'array', 'max:5000'],
-            'activity_config.ids.*' => ['string', 'max:50'],
-            /** Not paid on absent days (when attendance is used). */
-            'other_absence' => ['boolean'],
-            'taxable' => ['boolean'],
-            'description' => ['nullable', 'string', 'max:500'],
-            'is_active' => ['boolean'],
-        ], ['name.unique' => 'Another category has this name.', 'code.unique' => 'Another category has this code.']);
+        $d = $request->validated();
         if ($d['generation'] === 'assigned' && $d['unit'] !== 'month') {
             throw \Illuminate\Validation\ValidationException::withMessages(['generation' => 'Only monthly allowances can be assigned to employees.']);
         }
@@ -219,15 +190,7 @@ class AllowanceSetupController extends Controller
     private function rateData(Request $request, ?DepartmentAllowance $rate = null): array
     {
         $company = app(CompanyContext::class)->id();
-        $d = $request->validate([
-            'category_id' => ['required', 'integer', Rule::exists('allowance_categories', 'id')->where('company_id', $company)],
-            /** Department, or a section (its department is found). */
-            'department_id' => ['required', 'integer', Rule::exists('departments', 'id')->where('company_id', $company)->whereNull('deleted_at')],
-            /** Empty: every position in the department or section. */
-            'job_position_id' => ['nullable', 'integer', Rule::exists('job_positions', 'id')->where('company_id', $company)],
-            'amount' => ['required', 'numeric', 'min:0', 'max:999999999'],
-            'is_active' => ['boolean'],
-        ]);
+        $d = $request->validated();
         $department = Department::findOrFail($d['department_id']);
         [$departmentId, $sectionId] = $department->parent_id ? [$department->parent_id, $department->id] : [$department->id, null];
         $duplicate = DepartmentAllowance::where('category_id', $d['category_id'])->where('department_id', $departmentId)

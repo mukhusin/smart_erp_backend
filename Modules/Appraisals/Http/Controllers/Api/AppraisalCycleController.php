@@ -7,6 +7,7 @@ use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Appraisals\Actions\ManageCycles;
+use Modules\Appraisals\Http\Requests\AppraisalCycleRequest;
 use Modules\Appraisals\Models\Appraisal;
 use Modules\Appraisals\Models\AppraisalCycle;
 use Modules\Appraisals\Support\AppraisalAccess;
@@ -33,17 +34,17 @@ class AppraisalCycleController extends Controller
     }
 
     /** @response array{data: array{id: int, name: string, start_date: string, end_date: string, mid_year_date: string|null, self_due: string|null, review_due: string|null, status: string, status_label: string, total: int, done: int, average: float|null}} */
-    public function store(Request $request): JsonResponse
+    public function store(AppraisalCycleRequest $request): JsonResponse
     {
-        $cycle = $this->cycles->create($this->validated($request), $request->user());
+        $cycle = $this->cycles->create($request->validated(), $request->user());
 
         return response()->json(['data' => $this->row($cycle)], 201);
     }
 
     /** @response array{data: array{id: int, name: string, start_date: string, end_date: string, mid_year_date: string|null, self_due: string|null, review_due: string|null, status: string, status_label: string, total: int, done: int, average: float|null}} */
-    public function update(Request $request, AppraisalCycle $cycle): JsonResponse
+    public function update(AppraisalCycleRequest $request, AppraisalCycle $cycle): JsonResponse
     {
-        return response()->json(['data' => $this->row($this->cycles->update($cycle, $this->validated($request)))]);
+        return response()->json(['data' => $this->row($this->cycles->update($cycle, $request->validated()))]);
     }
 
     /**
@@ -94,18 +95,6 @@ class AppraisalCycleController extends Controller
         $this->cycles->delete($cycle);
 
         return response()->json(['message' => 'Period deleted.']);
-    }
-
-    private function validated(Request $request): array
-    {
-        return $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after:start_date'],
-            'mid_year_date' => ['nullable', 'date', 'after:start_date', 'before:end_date'],
-            'self_due' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'review_due' => ['nullable', 'date', 'after_or_equal:start_date'],
-        ]);
     }
 
     private function row(AppraisalCycle $c): array

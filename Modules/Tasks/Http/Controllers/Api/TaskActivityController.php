@@ -5,16 +5,15 @@ namespace Modules\Tasks\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\User;
-use App\Services\CompanyContext;
 use App\Services\ModuleAccessService;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Modules\Core\Services\AccessService;
 use Modules\Hr\Support\EmployeeScope;
 use Modules\Planning\Models\AnnualPlan;
+use Modules\Tasks\Http\Requests\TaskActivityRequest;
 use Modules\Tasks\Models\TaskActivity;
 
 /**
@@ -54,9 +53,9 @@ class TaskActivityController extends Controller
     }
 
     /** @response array{data: array{id: int, title: string, description: string|null, year: int, is_active: bool, department_id: int, department: string|null, tasks: int, open_tasks: int, progress: int, code: string|null, target: string|null, kpi: string|null, planned: bool, can_manage: bool}} */
-    public function store(Request $request): JsonResponse
+    public function store(TaskActivityRequest $request): JsonResponse
     {
-        $data = $this->validated($request);
+        $data = $request->validated();
         $this->ensureManage($request->user(), (int) $data['department_id']);
         $this->ensureNotPlanned((int) $data['year']);
         $activity = TaskActivity::create($data + ['created_by' => $request->user()->id, 'is_active' => true]);
@@ -65,11 +64,11 @@ class TaskActivityController extends Controller
     }
 
     /** @response array{data: array{id: int, title: string, description: string|null, year: int, is_active: bool, department_id: int, department: string|null, tasks: int, open_tasks: int, progress: int, code: string|null, target: string|null, kpi: string|null, planned: bool, can_manage: bool}} */
-    public function update(Request $request, TaskActivity $activity): JsonResponse
+    public function update(TaskActivityRequest $request, TaskActivity $activity): JsonResponse
     {
         $this->ensureManage($request->user(), $activity->department_id);
         $this->ensureNotPlanned($activity->year, $activity);
-        $data = $this->validated($request, true);
+        $data = $request->validated();
         isset($data['year']) && $this->ensureNotPlanned((int) $data['year']);
         isset($data['department_id']) && $this->ensureManage($request->user(), (int) $data['department_id']);
         $activity->update($data);
@@ -88,19 +87,6 @@ class TaskActivityController extends Controller
         $activity->delete();
 
         return response()->json(['message' => 'Activity deleted.']);
-    }
-
-    private function validated(Request $request, bool $partial = false): array
-    {
-        $req = $partial ? 'sometimes' : 'required';
-
-        return $request->validate([
-            'title' => [$req, 'string', 'max:200'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'year' => [$req, 'integer', 'between:2000,2100'],
-            'department_id' => [$req, 'integer', Rule::exists('departments', 'id')->where('company_id', app(CompanyContext::class)->id())],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
     }
 
     private function ensureNotPlanned(int $year, ?TaskActivity $activity = null): void

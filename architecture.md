@@ -337,6 +337,20 @@ Professional and friendly by default. Built once in `shared/`, used by every pag
 Other rules: responsive down to phone width, keyboard-accessible forms, consistent page header (title, breadcrumbs, main action),
 dates and money formatted for the company (currency, fiscal year), and `*appCan="'hr.employees.create'"` to show actions by permission.
 
+**User manuals (2026-11-17): every module ships with one, inside the system.** One fixed pattern (frontend `src/app/help/`):
+a manual is data (`Manual`: summary, who uses it, how it flows, topics), rendered the same way for every module:
+
+- Topic = title, who it is for, intro, numbered steps (each can link to the page), status table with the real badges,
+  tips, warnings, questions. Topics carry permissions, so users see what applies to them ("Only what applies to me"
+  can be switched off); printable.
+- Help center `/help` (manuals of the user's modules, search across all steps); manual `/help/:key#topic`.
+- The top-bar **?** opens the current module's manual; each page header's **?** (`help="tasks#report-progress"`)
+  opens the topic for that page.
+- **Two languages: English and Kiswahili** (switch on the help pages, remembered per browser). Each manual has a
+  Kiswahili twin in `help/sw/` with the same topic ids; button and menu names stay in English so users find them on
+  screen. A manual without a translation is shown in English with a note.
+- All 16 modules have manuals in both languages (2026-11-17), and every page header links to its topic.
+
 ## 13. Company administration and approvals (decided 2026-11-10)
 
 **Company admin** (role `company-admin`, one or more per company; a company always keeps at least one active):

@@ -4001,6 +4001,16 @@
                     "Allowance: Setup",
                     "AllowanceSetup"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AllowanceCategoryRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -4151,6 +4161,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -4174,6 +4187,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AllowanceCategoryRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -4327,6 +4350,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -4606,6 +4632,16 @@
                     "Allowance: Setup",
                     "AllowanceSetup"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AllowanceRateRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -4726,6 +4762,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -4749,6 +4788,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AllowanceRateRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -4872,6 +4921,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -5190,6 +5242,16 @@
                     "Appraisals",
                     "AppraisalSettings"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppraisalCompetencyRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -5241,6 +5303,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -5324,6 +5389,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppraisalCompetencyRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -5378,6 +5453,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -5436,6 +5514,16 @@
                     "Appraisals",
                     "AppraisalCycle"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppraisalCycleRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -5524,6 +5612,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -5644,6 +5735,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AppraisalCycleRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -5735,6 +5836,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -7037,19 +7141,10 @@
                     }
                 ],
                 "requestBody": {
-                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "submit": {
-                                        "type": "boolean"
-                                    }
-                                },
-                                "required": [
-                                    "submit"
-                                ]
+                                "$ref": "#/components/schemas/AppraisalScoresRequest"
                             }
                         }
                     }
@@ -7088,11 +7183,11 @@
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -7117,23 +7212,10 @@
                     }
                 ],
                 "requestBody": {
-                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "decision": {
-                                        "type": "string",
-                                        "enum": [
-                                            "approve",
-                                            "return"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "decision"
-                                ]
+                                "$ref": "#/components/schemas/AppraisalScoresRequest"
                             }
                         }
                     }
@@ -7172,11 +7254,11 @@
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -10342,6 +10424,16 @@
                 "tags": [
                     "Attendance"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AttendanceSettingsRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -10477,6 +10569,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -10488,6 +10583,16 @@
                 "tags": [
                     "Attendance"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AttendanceSettingsRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -10524,6 +10629,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -12702,12 +12810,41 @@
         "/hr/employees/{employee}/deductions/{scheme}": {
             "put": {
                 "operationId": "hr.employees.deductions.update",
-                "description": "`value`: the employee's percent of basic salary (percent schemes) or the monthly amount (NIC, employee fund).\nFor NSSF and NHIF the employer pays the rest of the total.\u26a0\ufe0f Cannot generate request documentation: Cannot evaluate validation rules (1 evaluators failed):\n  [NodeRulesEvaluator] Undefined array key \"type\" (at /home/mukhusin-siraji/Dev/outside/smart_erp_backend/vendor/nikic/php-parser/lib/PhpParser/ConstExprEvaluator.php:141)",
+                "description": "`value`: the employee's percent of basic salary (percent schemes) or the monthly amount (NIC, employee fund).\nFor NSSF and NHIF the employer pays the rest of the total.",
                 "summary": "Add or update the employee's membership of a scheme",
                 "tags": [
                     "HR: Deductions",
                     "Deduction"
                 ],
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "description": "The employee ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "scheme",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DeductionMemberRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -12727,14 +12864,17 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -23562,6 +23702,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnnualLeavePlanRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -23621,6 +23771,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -23653,6 +23806,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnnualLeavePlanRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -23712,6 +23875,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -27165,6 +27331,16 @@
                     "Loans & advances",
                     "Loans"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoanProviderRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -27227,6 +27403,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -28303,6 +28482,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoanProviderRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -28368,6 +28557,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -30285,6 +30477,16 @@
                 "tags": [
                     "Overtime"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OvertimeRateRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -30386,6 +30588,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -30408,6 +30613,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OvertimeRateRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -30512,6 +30727,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -37830,6 +38048,16 @@
                     "Planning",
                     "StrategicPlan"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StrategicPlanRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -37898,6 +38126,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -38091,20 +38322,11 @@
                     }
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "draft",
-                                            "active",
-                                            "archived"
-                                        ]
-                                    }
-                                }
+                                "$ref": "#/components/schemas/StrategicPlanRequest"
                             }
                         }
                     }
@@ -38178,14 +38400,14 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -38252,6 +38474,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StrategicObjectiveRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -38314,6 +38546,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -38345,6 +38580,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StrategicObjectiveRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -38407,6 +38652,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -38621,6 +38869,16 @@
                     "Planning",
                     "AnnualPlan"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnnualPlanRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -38734,6 +38992,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -38951,6 +39212,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnnualPlanRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -39067,6 +39338,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -39687,6 +39961,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlanActivityRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -39741,6 +40025,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -39781,6 +40068,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlanActivityRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -39835,6 +40132,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -47293,6 +47593,16 @@
                     "Tasks",
                     "TaskActivity"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskActivityRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -47396,6 +47706,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -47418,6 +47731,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskActivityRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "",
@@ -47524,6 +47847,9 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             },
@@ -47761,6 +48087,408 @@
                 ],
                 "title": "AdminUserResource"
             },
+            "AllowanceCategoryRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "code": {
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "unit": {
+                        "type": "string",
+                        "description": "month, day (working day), night (night shift), holiday (public holiday worked) or case (counted items).",
+                        "enum": [
+                            "month",
+                            "day",
+                            "night",
+                            "holiday",
+                            "case"
+                        ]
+                    },
+                    "generation": {
+                        "type": "string",
+                        "description": "auto: worked out from the roster and working hours; claim: entered with a count and approved; assigned (monthly only): a fixed amount set per employee; activity (per case only): a daily count times the rate for everyone the rate covers.",
+                        "enum": [
+                            "auto",
+                            "claim",
+                            "assigned",
+                            "activity"
+                        ]
+                    },
+                    "activity_source": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Activity allowances: manual (count entered by hand) or rest (fetched from another system).",
+                        "enum": [
+                            "manual",
+                            "rest",
+                            null
+                        ]
+                    },
+                    "activity_config": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri",
+                                "description": "Address of the other system; parameter values may use {date} (YYYY-MM-DD).",
+                                "maxLength": 500
+                            },
+                            "params": {
+                                "type": [
+                                    "array",
+                                    "null"
+                                ],
+                                "items": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 200
+                                }
+                            },
+                            "token": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Bearer token; leave empty to keep the saved one.",
+                                "maxLength": 500
+                            },
+                            "clear_token": {
+                                "type": "boolean"
+                            },
+                            "count_path": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "Where the number is in the answer, e.g. data.count. Or use list_path + count_field.",
+                                "maxLength": 200
+                            },
+                            "list_path": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 200
+                            },
+                            "count_field": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 100
+                            },
+                            "id_field": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 100
+                            },
+                            "ids": {
+                                "type": [
+                                    "array",
+                                    "null"
+                                ],
+                                "description": "Only items with these ids are counted (empty: all).",
+                                "items": {
+                                    "type": "string",
+                                    "maxLength": 50
+                                },
+                                "maxItems": 5000
+                            }
+                        }
+                    },
+                    "other_absence": {
+                        "type": "boolean",
+                        "description": "Not paid on absent days (when attendance is used)."
+                    },
+                    "taxable": {
+                        "type": "boolean"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "name",
+                    "code",
+                    "unit",
+                    "generation"
+                ],
+                "title": "AllowanceCategoryRequest"
+            },
+            "AllowanceRateRequest": {
+                "type": "object",
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "department_id": {
+                        "type": "integer",
+                        "description": "Department, or a section (its department is found)."
+                    },
+                    "job_position_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Empty: every position in the department or section."
+                    },
+                    "amount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 999999999
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "category_id",
+                    "department_id",
+                    "amount"
+                ],
+                "title": "AllowanceRateRequest"
+            },
+            "AnnualLeavePlanRequest": {
+                "type": "object",
+                "properties": {
+                    "employee_id": {
+                        "type": "integer"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "days": {
+                        "type": "integer",
+                        "description": "Days of annual leave, counted by the annual leave rule.",
+                        "minimum": 1,
+                        "maximum": 366
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "employee_id",
+                    "start_date",
+                    "days"
+                ],
+                "title": "AnnualLeavePlanRequest"
+            },
+            "AnnualPlanRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "year": {
+                        "type": "integer",
+                        "minimum": 2000,
+                        "maximum": 2100
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "submission_due": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "strategic_plan_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "title",
+                    "year",
+                    "start_date",
+                    "end_date"
+                ],
+                "title": "AnnualPlanRequest"
+            },
+            "AppraisalCompetencyRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 999
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "title": "AppraisalCompetencyRequest"
+            },
+            "AppraisalCycleRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "mid_year_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "self_due": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "review_due": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "name",
+                    "start_date",
+                    "end_date"
+                ],
+                "title": "AppraisalCycleRequest"
+            },
+            "AppraisalScoresRequest": {
+                "type": "object",
+                "properties": {
+                    "scores": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "tasks": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ]
+                            },
+                            "attendance": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ]
+                            },
+                            "competencies": {
+                                "type": [
+                                    "array",
+                                    "null"
+                                ],
+                                "description": "Competency id => score.",
+                                "items": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "comments": {
+                                "type": [
+                                    "array",
+                                    "null"
+                                ],
+                                "description": "Part key (tasks, attendance) => comment.",
+                                "items": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 2000
+                                }
+                            }
+                        }
+                    },
+                    "comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 3000
+                    },
+                    "submit": {
+                        "type": "boolean",
+                        "description": "Self-assessment: send it for review."
+                    },
+                    "decision": {
+                        "type": "string",
+                        "description": "Review: approve or return to the employee.",
+                        "enum": [
+                            "approve",
+                            "return"
+                        ]
+                    }
+                },
+                "title": "AppraisalScoresRequest"
+            },
             "AssignedAllowanceRequest": {
                 "type": "object",
                 "properties": {
@@ -47800,6 +48528,78 @@
                     "start_date"
                 ],
                 "title": "AssignedAllowanceRequest"
+            },
+            "AttendanceSettingsRequest": {
+                "type": "object",
+                "properties": {
+                    "source": {
+                        "type": "string",
+                        "description": "none (attendance not used) or biotime (biometric).",
+                        "enum": [
+                            "none",
+                            "biotime"
+                        ]
+                    },
+                    "host": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 150
+                    },
+                    "port": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 65535
+                    },
+                    "database": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "username": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
+                    },
+                    "password": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Empty: keep the saved password.",
+                        "maxLength": 200
+                    },
+                    "grace_minutes": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Minutes late allowed before lateness counts.",
+                        "minimum": 0,
+                        "maximum": 120
+                    },
+                    "sync_days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "How many days back the sync checks for missing days.",
+                        "minimum": 1,
+                        "maximum": 120
+                    }
+                },
+                "required": [
+                    "source"
+                ],
+                "title": "AttendanceSettingsRequest"
             },
             "AuditLogResource": {
                 "type": "object",
@@ -48686,6 +49486,30 @@
                     }
                 },
                 "title": "CreateAccountRequest"
+            },
+            "DeductionMemberRequest": {
+                "type": "object",
+                "properties": {
+                    "contribution_no": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 50
+                    },
+                    "value": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 9999999999
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "value"
+                ],
+                "title": "DeductionMemberRequest"
             },
             "DepartmentRequest": {
                 "type": "object",
@@ -50781,6 +51605,36 @@
                 ],
                 "title": "LicenceTypeResource"
             },
+            "LoanProviderRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "short_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 30
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "title": "LoanProviderRequest"
+            },
             "LoanRequest": {
                 "type": "object",
                 "properties": {
@@ -51681,6 +52535,44 @@
                 ],
                 "title": "OvertimeClaimRequest"
             },
+            "OvertimeRateRequest": {
+                "type": "object",
+                "properties": {
+                    "department_id": {
+                        "type": "integer",
+                        "description": "Department, or a section (its department is found)."
+                    },
+                    "job_position_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Empty: every position."
+                    },
+                    "unit": {
+                        "type": "string",
+                        "description": "hour (paid by the minutes) or shift (one shift per claim).",
+                        "enum": [
+                            "hour",
+                            "shift"
+                        ]
+                    },
+                    "amount": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 999999999
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "department_id",
+                    "unit",
+                    "amount"
+                ],
+                "title": "OvertimeRateRequest"
+            },
             "PlacementRequest": {
                 "type": "object",
                 "properties": {
@@ -51826,6 +52718,68 @@
                     "comment"
                 ],
                 "title": "PlacementResource"
+            },
+            "PlanActivityRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 20
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
+                    "output": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "target": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "kpi": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "quarters": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Quarters the activity runs, e.g. 1,2,4.",
+                        "pattern": "^[1-4](,[1-4]){0,3}$"
+                    },
+                    "strategic_objective_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "title"
+                ],
+                "title": "PlanActivityRequest"
             },
             "PublicHolidayRequest": {
                 "type": "object",
@@ -53760,6 +54714,116 @@
                     "module_slug"
                 ],
                 "title": "StoreModuleLockRequest"
+            },
+            "StrategicObjectiveRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 20
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 3000
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 999
+                    }
+                },
+                "required": [
+                    "title"
+                ],
+                "title": "StrategicObjectiveRequest"
+            },
+            "StrategicPlanRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "start_year": {
+                        "type": "integer",
+                        "minimum": 2000,
+                        "maximum": 2100
+                    },
+                    "end_year": {
+                        "type": "integer"
+                    },
+                    "vision": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
+                    "mission": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "active",
+                            "archived"
+                        ]
+                    }
+                },
+                "required": [
+                    "title",
+                    "start_year",
+                    "end_year"
+                ],
+                "title": "StrategicPlanRequest"
+            },
+            "TaskActivityRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 2000
+                    },
+                    "year": {
+                        "type": "integer",
+                        "minimum": 2000,
+                        "maximum": 2100
+                    },
+                    "department_id": {
+                        "type": "integer"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "title",
+                    "year",
+                    "department_id"
+                ],
+                "title": "TaskActivityRequest"
             },
             "TaskRequest": {
                 "type": "object",

@@ -2,6 +2,7 @@
 
 namespace Modules\Hr\Http\Controllers\Api\Attendance;
 
+use Modules\Hr\Http\Requests\AttendanceSettingsRequest;
 use App\Http\Controllers\Controller;
 use App\Models\AdmittedEmployee;
 use App\Models\AttendanceClaim;
@@ -49,7 +50,7 @@ class AttendanceController extends Controller
      *
      * @response array{data: array{source: string, sources: array<string, string>, host: string|null, port: int|null, database: string|null, username: string|null, has_password: bool, grace_minutes: int, sync_days: int, last_synced_at: string|null, last_error: string|null, tracked_employees: int, unlinked_punches: int, days: list<array{date: string, status: string, punches: int, attempts: int, error: string|null}>}}
      */
-    public function updateSettings(Request $request): JsonResponse
+    public function updateSettings(AttendanceSettingsRequest $request): JsonResponse
     {
         $d = $this->settingsData($request);
         $s = AttendanceSetting::query()->first() ?? new AttendanceSetting;
@@ -66,7 +67,7 @@ class AttendanceController extends Controller
      *
      * @response array{data: array{ok: bool, message: string}}
      */
-    public function testConnection(Request $request): JsonResponse
+    public function testConnection(AttendanceSettingsRequest $request): JsonResponse
     {
         $d = $this->settingsData($request);
         $saved = AttendanceSetting::current()->connection ?? [];
@@ -484,20 +485,7 @@ class AttendanceController extends Controller
 
     private function settingsData(Request $request): array
     {
-        return $request->validate([
-            /** none (attendance not used) or biotime (biometric). */
-            'source' => ['required', 'in:none,biotime'],
-            'host' => ['required_if:source,biotime', 'nullable', 'string', 'max:150'],
-            'port' => ['nullable', 'integer', 'between:1,65535'],
-            'database' => ['required_if:source,biotime', 'nullable', 'string', 'max:100'],
-            'username' => ['required_if:source,biotime', 'nullable', 'string', 'max:100'],
-            /** Empty: keep the saved password. */
-            'password' => ['nullable', 'string', 'max:200'],
-            /** Minutes late allowed before lateness counts. */
-            'grace_minutes' => ['nullable', 'integer', 'between:0,120'],
-            /** How many days back the sync checks for missing days. */
-            'sync_days' => ['nullable', 'integer', 'between:1,120'],
-        ]);
+        return $request->validated();
     }
 
     private function ensureEnabled(): void

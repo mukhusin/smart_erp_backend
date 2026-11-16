@@ -7,9 +7,9 @@ use App\Services\CompanyContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Modules\Planning\Actions\ManagePlanning;
+use Modules\Planning\Http\Requests\AnnualPlanRequest;
 use Modules\Planning\Models\AnnualPlan;
 use Modules\Planning\Models\DepartmentPlan;
 use Modules\Planning\Support\PlanningAccess;
@@ -38,10 +38,10 @@ class AnnualPlanController extends Controller
     }
 
     /** @response array{data: array{id: int, title: string, year: int, start_date: string, end_date: string, submission_due: string|null, status: string, status_label: string, strategic_plan: array{id: int, title: string}|null, departments: int, approved: int, activities: int}} */
-    public function store(Request $request): JsonResponse
+    public function store(AnnualPlanRequest $request): JsonResponse
     {
         abort_unless($this->access->manages($request->user()), 403);
-        $data = $this->validated($request);
+        $data = $request->validated();
         if (AnnualPlan::where('year', $data['year'])->exists()) {
             throw ValidationException::withMessages(['year' => 'There is already an annual plan for this year.']);
         }
@@ -51,13 +51,13 @@ class AnnualPlanController extends Controller
     }
 
     /** @response array{data: array{id: int, title: string, year: int, start_date: string, end_date: string, submission_due: string|null, status: string, status_label: string, strategic_plan: array{id: int, title: string}|null, departments: int, approved: int, activities: int}} */
-    public function update(Request $request, AnnualPlan $plan): JsonResponse
+    public function update(AnnualPlanRequest $request, AnnualPlan $plan): JsonResponse
     {
         abort_unless($this->access->manages($request->user()), 403);
         if ($plan->status === 'closed') {
             throw ValidationException::withMessages(['plan' => 'This annual plan is closed.']);
         }
-        $data = $this->validated($request, $plan);
+        $data = $request->validated();
         if ($plan->activities()->whereNotNull('strategic_objective_id')->exists() && (int) ($data['strategic_plan_id'] ?? 0) !== (int) $plan->strategic_plan_id) {
             throw ValidationException::withMessages(['strategic_plan_id' => 'Activities are already linked to objectives of the current strategic plan.']);
         }
@@ -135,18 +135,6 @@ class AnnualPlanController extends Controller
         $label = $start->month === 1 && $start->day === 1 ? (string) $year : $year.'/'.substr((string) ($year + 1), -2);
 
         return ['year' => $year, 'title' => "Annual plan {$label}", 'start_date' => $start->toDateString(), 'end_date' => $start->copy()->addYear()->subDay()->toDateString()];
-    }
-
-    private function validated(Request $request, ?AnnualPlan $plan = null): array
-    {
-        return $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'year' => ['required', 'integer', 'between:2000,2100'],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after:start_date'],
-            'submission_due' => ['nullable', 'date'],
-            'strategic_plan_id' => ['nullable', 'integer', Rule::exists('strategic_plans', 'id')->where('company_id', app(CompanyContext::class)->id())],
-        ]);
     }
 
     private function row(AnnualPlan $p): array
