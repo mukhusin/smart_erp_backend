@@ -714,3 +714,22 @@ approved void. Imprest = payment to a staff advance account, retired later into 
 **External APIs (later):** each client registered to one company; signed request/response envelopes; caller reference
 for idempotency; fixed result codes; all field errors at once; same approvals unless pre-approved; callbacks with retry
 plus status enquiry; payload log; rate limits (API-01..14).
+
+### 18.4 Payments built; receivables and payables next (2026-11-16)
+
+**Built (module `Payments`, slug `payments`):** payment request → voucher → payment list, each through the dynamic
+workflow (`payment-request`, `payment-voucher`, `payment-list`; defaults: head of department then finance; chief
+accountant plus director general from 10,000,000; chief accountant). Budget effect, final: request **submitted** =
+held (refused in block mode, flagged “over budget” in warn mode); request **approved** = committed; voucher
+**approved** = journal Dr expense per budget line (dimensions + `budget_item_id`) / Cr payables / Cr withholding tax,
+so the commitment becomes spent (accrual: the expense is recognised at the voucher, not at payment); payment list
+**approved** = Dr payables / Cr bank, refused when the bank's ledger balance is lower. Void of an unpaid voucher
+reverses the journal and commits the money again on the request. Attachments required by setting. Numbers
+PR/PV/PL-YYYY-#####. Permissions `payments.request|view|vouchers|pay|manage`. Bank file CSV per list; bank references
+per payee. Not yet: void of a paid payment (needs approval), imprest and retirement, payroll posting.
+
+**Next — receivables (billing):** customers (patients, insurers such as NHIF, companies); invoices Dr receivable /
+Cr revenue (revenue budget line); receipts **against invoices** (full or part, allocated, Dr bank / Cr receivable)
+and receipts **without invoice** (cash sale, donation: Dr bank / Cr revenue); credit notes; customer statement and
+ageing. **Then payables:** supplier master and supplier invoices (bills) Dr expense / Cr supplier payable, paid
+through the same voucher → payment list, supplier ledger and ageing, debit notes.

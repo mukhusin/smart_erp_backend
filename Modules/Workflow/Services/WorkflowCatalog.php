@@ -26,6 +26,9 @@ use Modules\Budgeting\Workflow\BudgetApprovalProcess;
 use Modules\Budgeting\Workflow\BudgetReleaseProcess;
 use Modules\Budgeting\Workflow\BudgetTransferProcess;
 use Modules\Budgeting\Workflow\DepartmentBudgetProcess;
+use Modules\Payments\Workflow\PaymentListProcess;
+use Modules\Payments\Workflow\PaymentRequestProcess;
+use Modules\Payments\Workflow\PaymentVoucherProcess;
 use Modules\Planning\Workflow\DepartmentPlanProcess;
 use Modules\Tasks\Workflow\TaskProgressProcess;
 use Modules\Workflow\Contracts\WorkflowProcess;
@@ -63,6 +66,9 @@ final class WorkflowCatalog
         BudgetApprovalProcess::class,
         BudgetTransferProcess::class,
         BudgetReleaseProcess::class,
+        PaymentRequestProcess::class,
+        PaymentVoucherProcess::class,
+        PaymentListProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

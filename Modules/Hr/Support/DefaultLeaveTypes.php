@@ -53,6 +53,7 @@ final class DefaultLeaveTypes
         self::departmentPlan();
         self::manualJournal();
         self::budgeting();
+        self::payments();
     }
 
     public static function budgeting(): void
@@ -69,6 +70,30 @@ final class DefaultLeaveTypes
             }
             $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
             $template->steps()->create(['step_order' => 1, 'name' => $name, 'approver_type' => 'role', 'role_id' => $role->id, 'allow_send_back' => true]);
+        }
+    }
+
+    public static function payments(): void
+    {
+        $company = app(CompanyContext::class)->id();
+        $finance = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
+        $director = Role::where('name', 'director-general')->where('company_id', $company)->first();
+        if (! $finance) {
+            return;
+        }
+        $chains = [
+            'payment-request' => [['Head of department', 'department_head', null, null], ['Finance', 'role', $finance->id, null]],
+            'payment-voucher' => array_values(array_filter([['Chief accountant', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, 10000000] : null])),
+            'payment-list' => [['Chief accountant', 'role', $finance->id, null]],
+        ];
+        foreach ($chains as $process => $steps) {
+            if (WorkflowTemplate::where('process', $process)->exists()) {
+                continue;
+            }
+            $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+            foreach ($steps as $i => [$name, $type, $role, $min]) {
+                $template->steps()->create(['step_order' => $i + 1, 'name' => $name, 'approver_type' => $type, 'role_id' => $role, 'min_amount' => $min, 'allow_send_back' => true]);
+            }
         }
     }
 

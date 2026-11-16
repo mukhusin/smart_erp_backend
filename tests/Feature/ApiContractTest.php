@@ -15,9 +15,10 @@ class ApiContractTest extends TestCase
         'roster.rosters.withdraw', 'roster.rosters.changes.withdraw', 'self.renewals.withdraw', 'self.leave.withdraw', 'tasks.withdraw-update',
         'accounting.periods.close', 'accounting.periods.reopen', 'accounting.journals.submit', 'accounting.journals.withdraw',
         'budgeting.budgets.open', 'budgeting.budgets.submit', 'budgeting.budgets.close', 'budgeting.departments.action', 'budgeting.transfers.withdraw',
+        'payments.requests.submit', 'payments.requests.withdraw', 'payments.vouchers.withdraw', 'payments.lists.withdraw',
     ];
 
-    private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store'];
+    private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store', 'payments.requests.attach'];
 
     public function test_every_endpoint_that_takes_input_declares_its_request_body(): void
     {

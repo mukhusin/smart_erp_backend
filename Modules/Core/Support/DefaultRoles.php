@@ -30,18 +30,18 @@ final class DefaultRoles
             'hr.*', 'leave.*', 'roster.*', 'attendance.*', 'allowance.*', 'overtime.*', 'payroll.view',
             'payroll.create', 'payroll.edit', 'payroll.comment', 'payroll.deductions.manage', 'payroll.salary-adjustments.manage', 'loans.*', 'reports.*', 'admin.workflow.manage', 'self-service.use', 'tasks.*', 'appraisals.*',
         ],
-        'director' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'reports.view', 'reports.generate', 'self-service.use', 'appraisals.view', 'planning.view', 'accounting.view', 'budgeting.view'],
-        'director-general' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'payroll.approve', 'reports.view', 'reports.generate', 'self-service.use', 'appraisals.view', 'planning.view', 'accounting.view', 'budgeting.view'],
+        'director' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'reports.view', 'reports.generate', 'self-service.use', 'appraisals.view', 'planning.view', 'accounting.view', 'budgeting.view', 'payments.view'],
+        'director-general' => ['hr.employees.view', 'leave.view', 'roster.view', 'payroll.view', 'payroll.approve', 'reports.view', 'reports.generate', 'self-service.use', 'appraisals.view', 'planning.view', 'accounting.view', 'budgeting.view', 'payments.view'],
         'hod' => [
             'hr.employees.view-department', 'leave.department.view', 'leave.approve-hod', 'leave.annual-roster.manage', 'leave.absence.manage', 'roster.department.view', 'roster.manage',
             'attendance.working-hours.department', 'allowance.department.view', 'allowance.daily.manage', 'overtime.view', 'reports.view', 'self-service.use',
-            'tasks.use', 'tasks.assign', 'tasks.activities.manage', 'appraisals.use', 'appraisals.review', 'planning.department', 'budgeting.prepare',
+            'tasks.use', 'tasks.assign', 'tasks.activities.manage', 'appraisals.use', 'appraisals.review', 'planning.department', 'budgeting.prepare', 'payments.request',
         ],
         'section-head' => [
             'hr.employees.view-section', 'roster.section.view', 'roster.manage', 'attendance.working-hours.section', 'reports.view', 'self-service.use',
             'tasks.use', 'tasks.assign', 'appraisals.use', 'appraisals.review',
         ],
-        'accountant' => ['accounting.*', 'budgeting.*', 'self-service.use', 'tasks.use', 'appraisals.use'],
+        'accountant' => ['accounting.*', 'budgeting.*', 'payments.*', 'self-service.use', 'tasks.use', 'appraisals.use'],
         'employee' => ['self-service.use', 'tasks.use', 'appraisals.use'],
     ];
 

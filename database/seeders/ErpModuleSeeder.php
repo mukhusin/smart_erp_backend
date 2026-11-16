@@ -151,6 +151,17 @@ class ErpModuleSeeder extends Seeder
                 'is_core'     => false,
             ],
             [
+                'slug'        => 'payments',
+                'name'        => 'Payments',
+                'description' => 'Payment requests from the budget, vouchers, payment lists and bank references.',
+                'icon'        => 'bi-cash-coin',
+                'color'       => 'warning',
+                'route_name'  => 'payments.index',
+                'category'    => 'Finance',
+                'sort_order'  => 22,
+                'is_core'     => false,
+            ],
+            [
                 'slug'        => 'bills',
                 'name'        => 'Bills Management',
                 'description' => 'Manage supplier bills, payments and vendor accounts payable.',

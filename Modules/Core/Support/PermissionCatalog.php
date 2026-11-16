@@ -151,6 +151,13 @@ final class PermissionCatalog
             'accounting.journals' => 'Enter manual journals',
             'accounting.manage' => 'Manage chart of accounts, fiscal years, fund sources, bank accounts and settings',
         ],
+        'payments' => [
+            'payments.request' => 'Raise payment requests for own departments',
+            'payments.view' => 'View all payment requests, vouchers and payment lists',
+            'payments.vouchers' => 'Prepare and void payment vouchers, cancel approved requests',
+            'payments.pay' => 'Prepare payment lists and record bank references (cashier)',
+            'payments.manage' => 'Manage payment settings and act on any payment',
+        ],
         'bills' => [
             'bills.view' => 'View bills',
             'bills.manage' => 'Manage bills and payments',
