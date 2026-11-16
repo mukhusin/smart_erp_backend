@@ -74,7 +74,7 @@ class PaymentFlowTest extends TestCase
             app(BudgetService::class)->record($this->item, 'approved', 500000, $budget, 'Approved');
             $accountant = Role::where('name', 'accountant')->value('id');
             $director = Role::where('name', 'director-general')->value('id');
-            foreach (['payment-request' => [[$accountant, null]], 'payment-voucher' => [[$director, null], [$accountant, 1000000]], 'payment-list' => [[$director, null]]] as $process => $steps) {
+            foreach (['payment-request' => [[$accountant, null]], 'payment-voucher' => [[$director, null], [$accountant, 1000000]], 'payment-list' => [[$director, null]], 'payment-void' => [[$director, null]]] as $process => $steps) {
                 WorkflowTemplate::where('process', $process)->delete();
                 $t = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
                 foreach ($steps as $i => [$role, $min]) {
@@ -150,6 +150,23 @@ class PaymentFlowTest extends TestCase
         $this->putJson("/api/v1/payments/lists/{$list}/references", ['references' => [['id' => $items[0]['id'], 'reference' => 'FT2611-001']]])->assertOk();
         $this->getJson("/api/v1/payments/vouchers/{$v2}")->assertJsonPath('data.status', 'paid')->assertJsonPath('data.payees.0.reference', 'FT2611-001');
         $this->actingAs($this->head)->getJson("/api/v1/payments/requests/{$id}")->assertJsonPath('data.status', 'paid');
+
+        $this->actingAs($this->finance)->postJson("/api/v1/payments/lists/{$list}/items/{$items[0]['id']}/fail", ['status' => 'failed', 'reason' => 'Wrong account number'])->assertOk();
+        $this->getJson("/api/v1/payments/lists/{$list}")->assertJsonPath('data.items.0.status', 'failed')->assertJsonPath('data.bank_balance', 900000)->assertJsonPath('data.items.0.can_fail', false);
+        $this->getJson("/api/v1/payments/vouchers/{$v2}")->assertJsonPath('data.status', 'approved')->assertJsonPath('data.payees.0.payment_status', 'Failed');
+        $this->getJson('/api/v1/payments/vouchers?payable=1')->assertJsonCount(1, 'data');
+        $list2 = $this->postJson('/api/v1/payments/lists', ['cash_bank_account_id' => $this->bank, 'method' => 'bank', 'date' => '2026-11-18', 'voucher_ids' => [$v2]])->assertCreated()->json('data.id');
+        $this->getJson("/api/v1/payments/lists/{$list2}")->assertJsonCount(1, 'data.items')->assertJsonPath('data.total', 200000);
+        $this->approve('payment-list', $this->director);
+        $this->actingAs($this->finance)->getJson("/api/v1/payments/vouchers/{$v2}")->assertJsonPath('data.status', 'paid')->assertJsonPath('data.can.void', true);
+
+        $this->postJson("/api/v1/payments/vouchers/{$v2}/void", ['reason' => 'Duplicate payment, refunded'])->assertOk()->assertJsonPath('data.status', 'void_pending');
+        $this->approve('payment-void', $this->director);
+        $this->actingAs($this->finance)->getJson("/api/v1/payments/vouchers/{$v2}")->assertJsonPath('data.status', 'voided');
+        $this->getJson("/api/v1/payments/lists/{$list2}")->assertJsonPath('data.bank_balance', 1000000)->assertJsonPath('data.items.0.status', 'returned');
+        $item = $this->item();
+        $this->assertSame([0.0, 300000.0], [(float) $item['actual'], (float) $item['committed']]);
+        $this->getJson("/api/v1/payments/requests/{$id}")->assertJsonPath('data.status', 'approved');
         $this->actingAs($this->finance)->getJson('/api/v1/accounting/reports/trial-balance')->assertOk();
         $this->artisan('budget:check-balances')->assertSuccessful();
     }

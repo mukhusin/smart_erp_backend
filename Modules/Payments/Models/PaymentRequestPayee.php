@@ -20,6 +20,18 @@ class PaymentRequestPayee extends Model
         return $this->belongsTo(Employee::class);
     }
 
+    public function listItems()
+    {
+        return $this->hasMany(PaymentListItem::class, 'payment_request_payee_id');
+    }
+
+    /** Items that settle this payee: on a list waiting for approval, or paid on an approved list. */
+    public static function settling($q)
+    {
+        return $q->where(fn ($q) => $q->whereHas('list', fn ($l) => $l->where('status', 'pending'))
+            ->orWhere(fn ($q) => $q->where('status', 'paid')->whereHas('list', fn ($l) => $l->where('status', 'approved'))));
+    }
+
     public function net(): float
     {
         return round($this->amount - $this->withholding, 2);

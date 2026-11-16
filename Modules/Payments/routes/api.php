@@ -34,5 +34,6 @@ Route::prefix('payments')->middleware(['auth:sanctum', 'module:payments'])->name
     Route::post('lists', [PaymentListController::class, 'store'])->name('lists.store');
     Route::get('lists/{list}', [PaymentListController::class, 'show'])->name('lists.show');
     Route::post('lists/{list}/withdraw', [PaymentListController::class, 'withdraw'])->name('lists.withdraw');
+    Route::post('lists/{list}/items/{item}/fail', [PaymentListController::class, 'fail'])->name('lists.fail');
     Route::put('lists/{list}/references', [PaymentListController::class, 'references'])->name('lists.references');
 });

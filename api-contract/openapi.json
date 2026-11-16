@@ -1669,6 +1669,439 @@
                 }
             }
         },
+        "/accounting/payroll/{sheet}": {
+            "get": {
+                "operationId": "accounting.payroll.show",
+                "summary": "Ledger state of a payroll: its posting journal, net pay payment and any posting error",
+                "tags": [
+                    "Accounting: payroll",
+                    "PayrollPosting"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": {
+                                                    "type": "boolean"
+                                                },
+                                                "posted": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "reference_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "reference_no"
+                                                    ]
+                                                },
+                                                "paid": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "reference_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "reference_no"
+                                                    ]
+                                                },
+                                                "error": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                },
+                                                "can": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "post": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "pay": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "post",
+                                                        "pay"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "enabled",
+                                                "posted",
+                                                "paid",
+                                                "error",
+                                                "net",
+                                                "can"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/payroll/{sheet}/post": {
+            "post": {
+                "operationId": "accounting.payroll.post",
+                "tags": [
+                    "Accounting: payroll",
+                    "PayrollPosting"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "reference_no": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "reference_no"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/payroll/{sheet}/pay": {
+            "post": {
+                "operationId": "accounting.payroll.pay",
+                "tags": [
+                    "Accounting: payroll",
+                    "PayrollPosting"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PayrollPaymentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "reference_no": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "reference_no"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/accounting/payroll-posting": {
+            "get": {
+                "operationId": "accounting.payroll-posting.show",
+                "tags": [
+                    "Accounting: payroll",
+                    "PayrollPosting"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": [
+                                                    "integer",
+                                                    "boolean",
+                                                    "null"
+                                                ]
+                                            }
+                                        },
+                                        "labels": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "accounts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name",
+                                                    "type"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "labels",
+                                        "accounts"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "accounting.payroll-posting.update",
+                "tags": [
+                    "Accounting: payroll",
+                    "PayrollPosting"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PayrollPostingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": [
+                                                    "integer",
+                                                    "boolean",
+                                                    "null"
+                                                ]
+                                            }
+                                        },
+                                        "labels": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "accounts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name",
+                                                    "type"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "labels",
+                                        "accounts"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/accounting/reports/summary": {
             "get": {
                 "operationId": "accounting.reports.summary",
@@ -38872,6 +39305,21 @@
                                                                     "string",
                                                                     "null"
                                                                 ]
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "status_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "failure_reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "can_fail": {
+                                                                "type": "boolean"
                                                             }
                                                         },
                                                         "required": [
@@ -38886,7 +39334,11 @@
                                                             "account_number",
                                                             "mobile_number",
                                                             "amount",
-                                                            "reference"
+                                                            "reference",
+                                                            "status",
+                                                            "status_label",
+                                                            "failure_reason",
+                                                            "can_fail"
                                                         ]
                                                     }
                                                 },
@@ -39022,6 +39474,112 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payments/lists/{list}/items/{item}/fail": {
+            "post": {
+                "operationId": "payments.lists.fail",
+                "tags": [
+                    "Payments: lists",
+                    "PaymentList"
+                ],
+                "parameters": [
+                    {
+                        "name": "list",
+                        "in": "path",
+                        "required": true,
+                        "description": "The list ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "item",
+                        "in": "path",
+                        "required": true,
+                        "description": "The item ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FailItemRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -41365,6 +41923,18 @@
                                                                     "string",
                                                                     "null"
                                                                 ]
+                                                            },
+                                                            "payment_status": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "failure_reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
@@ -41376,7 +41946,9 @@
                                                             "withholding",
                                                             "net",
                                                             "reference",
-                                                            "list_number"
+                                                            "list_number",
+                                                            "payment_status",
+                                                            "failure_reason"
                                                         ]
                                                     }
                                                 },
@@ -65266,6 +65838,28 @@
                 ],
                 "title": "ExperienceResource"
             },
+            "FailItemRequest": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "failed (the bank did not pay) or returned (the payee sent the money back).",
+                        "enum": [
+                            "failed",
+                            "returned"
+                        ]
+                    },
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "status",
+                    "reason"
+                ],
+                "title": "FailItemRequest"
+            },
             "FiscalYearRequest": {
                 "type": "object",
                 "properties": {
@@ -67568,6 +68162,101 @@
                     "require_attachment"
                 ],
                 "title": "PaymentSettingsRequest"
+            },
+            "PayrollPaymentRequest": {
+                "type": "object",
+                "properties": {
+                    "cash_bank_account_id": {
+                        "type": "integer"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "cash_bank_account_id",
+                    "date"
+                ],
+                "title": "PayrollPaymentRequest"
+            },
+            "PayrollPostingRequest": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "salary_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "employer_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "net_pay_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "paye_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "nssf_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "nhif_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "heslb_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "wcf_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "sdl_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "loans_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "other_account_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "enabled"
+                ],
+                "title": "PayrollPostingRequest"
             },
             "PlacementRequest": {
                 "type": "object",

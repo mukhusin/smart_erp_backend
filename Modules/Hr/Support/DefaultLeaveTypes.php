@@ -86,6 +86,7 @@ final class DefaultLeaveTypes
             'payment-request' => [['Head of department', 'department_head', null, null], ['Finance', 'role', $finance->id, null]],
             'payment-voucher' => array_values(array_filter([['Chief accountant', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, 10000000] : null])),
             'payment-list' => [['Chief accountant', 'role', $finance->id, null]],
+            'payment-void' => array_values(array_filter([['Chief accountant', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, null] : null])),
         ];
         foreach ($chains as $process => $steps) {
             if (WorkflowTemplate::where('process', $process)->exists()) {

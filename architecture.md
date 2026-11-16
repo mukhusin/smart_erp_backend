@@ -765,3 +765,59 @@ department and by strategic objective. Missing choices (no budget, plan, payroll
 
 **Grouping:** Payments and Billing & Receipts stay separate modules (licensing, permissions, workflows) but open from
 inside Accounting (`ErpModuleSeeder::INSIDE_ACCOUNTING`, `parent_slug = accounting`), like the HR sub-modules.
+
+## 19. Procurement, stores and assets — plan from the requirements (2026-11-16)
+
+Source: "Procurement Requirements", "Asset and Store Management Requirements", "Procurement, Assets and Accounting:
+How They Connect" (16 Nov 2026). Adapted for private institutions and NGOs (§18.2): no national e-procurement
+portal, regulator returns or central asset register by default (optional adapters later); thresholds, methods and
+minimum quotes are configuration, and a fund source (donor) may carry its own procurement rules.
+
+**Money path (one purchase):** requisition approved = budget **held** (our `reserved`); contract/LPO signed = hold
+adjusted to the contract amount, surplus released (our `committed`); goods accepted (GRN) = Dr inventory or asset cost
+/ Cr **goods-received clearing** (budget line becomes spent through the journal's `budget_item_id`); supplier bill
+from the GRN = Dr clearing / Cr supplier payable → existing payment voucher → payment list (Dr payable / Cr bank).
+Store items become expense on issue (Dr department/activity expense / Cr inventory, no budget effect — already spent);
+assets through monthly depreciation. Clearing must be zero per completed GRN (reconciliation report).
+
+**Rules to keep:** one GRN = one stock entry or asset set = one payment request (idempotent by GRN); approved documents
+are never edited — reversal only; every cross-module step carries the source document number and links back
+(X-01..03); commitments change in the same transaction as their cause (INT-01); year cannot close with pending
+postings or unexplained reconciliation differences (X-17); one owner per master: item catalogue (stores), supplier
+register (procurement, also used by payables), budget lines (budgeting). Separation of duties: requester ≠ evaluator ≠
+approver, receiver ≠ inspector; conflict-of-interest declaration before seeing bids. All approvals through the workflow
+engine with amount steps; escalation after a configurable time and handovers (ROL-04/05) to be added to the engine.
+
+**Build order:**
+1. Finish payments: payment list item status (sent / paid / failed / returned, re-pay failed items), payroll posting
+   to the ledger, void of a paid payment with approval.
+2. Shared masters: supplier register (tax/registration numbers, bank accounts with second-person approval, documents
+   with expiry, blacklist, categories), item catalogue (units and conversions, categories carrying account codes,
+   store/asset/intangible/WIP type, reorder levels), stores (branch, bins, in-transit store).
+3. Procurement core: procurement plan (department needs → packages/lots, method suggested from thresholds, planned vs
+   actual dates), requisition with budget hold (normal, framework call-off, special/emergency), request for quotations
+   and direct purchase, purchase order (LPO) from an accepted quote or contract, delivery + inspection → GRN → stores/
+   assets + supplier bill (payment request from GRN, clearing account).
+4. Stores: store ledger (bin card), weighted average default with FIFO option, requisition → issue (expense to
+   department/activity), transfers with in-transit and shortages, stock take with frozen snapshot and approved
+   adjustments, reorder/expiry/slow-moving alerts, employee store requests (supervisor then store, confirm receipt).
+5. Assets: register (number pattern, type-specific fields, one record per unit, tags/QR), assign/return, HR leaver
+   clearance, transfers (temporary with reminders), improvements, useful-life review, straight-line daily
+   depreciation posted monthly per category (land and WIP never), impairment, revaluation, disposal by committee,
+   employee "my assets", fault reports, yearly confirmation.
+6. Procurement advanced: tenders (documents, sealed bids, opening record, evaluation with scores, negotiation, award,
+   standstill, complaints), contracts (types, milestones, retention, liquidated damages, securities, variations within
+   a limit, progress), supplier performance, special-group share; external APIs per API-01..07.
+
+**Default answers to the open questions (configurable, confirm with the user):** weighted average per organisation
+(FIFO optional); capitalisation threshold per category (below it the item is a store item/expense); depreciation from
+the date in use, daily rate; cost model, revaluation optional per category; commitment held at requisition and firmed
+at contract/LPO; supplier portal later; sales pricing stays in Billing & Receipts.
+
+**Step 1 done (2026-11-16):** payment list items have a status (paid / failed / returned with reason; a failed or
+returned line posts Dr bank / Cr payables and the payee can go on a new list — only unpaid payees are listed);
+voiding a paid voucher goes through the `payment-void` workflow (money recovered to the bank, expense reversed, budget
+committed again); approved payrolls post to the ledger through the `PayrollApproved` event (Accounting listens;
+expense per department on the department's salary budget line, deductions and net pay as payables; posting errors
+are kept on the sheet and can be retried) and net salaries are recorded as paid from a bank. Report menus split into
+Accounting, Payroll (finance + HR payroll reports), Loans, Budgeting and Planning.

@@ -10,6 +10,8 @@ use Modules\Payments\Actions\ManageLists;
 use Modules\Payments\Http\Requests\PaymentListRequest;
 use Modules\Payments\Http\Requests\ReferencesRequest;
 use Modules\Payments\Models\PaymentList;
+use Modules\Payments\Models\PaymentListItem;
+use Modules\Payments\Http\Requests\FailItemRequest;
 use Modules\Payments\Models\PaymentRequestPayee;
 use Modules\Payments\Support\PaymentAccess;
 use Modules\Workflow\Services\WorkflowEngine;
@@ -56,7 +58,7 @@ class PaymentListController extends Controller
     /**
      * A payment list with each payee to pay and the bank reference.
      *
-     * @response array{data: array{id: int, number: string, date: string, bank: array{id: int, name: string}|null, bank_balance: float, method: string, method_label: string, total: float, status: string, status_label: string, waiting_for: string|null, decision_comment: string|null, prepared_by: string|null, journal: array{id: int, reference_no: string|null}|null, items: list<array{id: int, voucher_id: int, voucher_number: string|null, request_number: string|null, payee: string|null, method_label: string, bank_name: string|null, account_name: string|null, account_number: string|null, mobile_number: string|null, amount: float, reference: string|null}>, can: array{withdraw: bool, references: bool}}}
+     * @response array{data: array{id: int, number: string, date: string, bank: array{id: int, name: string}|null, bank_balance: float, method: string, method_label: string, total: float, status: string, status_label: string, waiting_for: string|null, decision_comment: string|null, prepared_by: string|null, journal: array{id: int, reference_no: string|null}|null, items: list<array{id: int, voucher_id: int, voucher_number: string|null, request_number: string|null, payee: string|null, method_label: string, bank_name: string|null, account_name: string|null, account_number: string|null, mobile_number: string|null, amount: float, reference: string|null, status: string, status_label: string, failure_reason: string|null, can_fail: bool}>, can: array{withdraw: bool, references: bool}}}
      */
     public function show(Request $request, PaymentList $list): JsonResponse
     {
@@ -73,7 +75,8 @@ class PaymentListController extends Controller
             'items' => $l->items->map(fn ($i) => ['id' => $i->id, 'voucher_id' => $i->payment_voucher_id, 'voucher_number' => $i->voucher?->number, 'request_number' => $i->voucher?->request?->number,
                 'payee' => $i->payee?->name, 'method_label' => PaymentRequestPayee::METHODS[$i->payee?->method] ?? '—', 'bank_name' => $i->payee?->bank_name,
                 'account_name' => $i->payee?->account_name, 'account_number' => $i->payee?->account_number, 'mobile_number' => $i->payee?->mobile_number,
-                'amount' => $i->amount, 'reference' => $i->reference])->values(),
+                'amount' => $i->amount, 'reference' => $i->reference, 'status' => $i->status, 'status_label' => PaymentListItem::STATUS_LABELS[$i->status] ?? $i->status,
+                'failure_reason' => $i->failure_reason, 'can_fail' => $l->status === 'approved' && $i->status === 'paid' && $this->access->cashier($user)])->values(),
             'can' => ['withdraw' => $l->status === 'pending' && $l->prepared_by === $user->id, 'references' => $l->status === 'approved' && $this->access->cashier($user)],
         ]]);
     }
@@ -101,6 +104,15 @@ class PaymentListController extends Controller
         abort_unless($this->access->cashier($request->user()), 403);
         $refs = collect($request->validated('references'))->mapWithKeys(fn ($r) => [(int) $r['id'] => $r['reference'] ?? null])->all();
         $l = $this->lists->references($list->load('items'), $refs);
+
+        return response()->json(['data' => ['id' => $l->id, 'number' => $l->number, 'status' => $l->status]]);
+    }
+
+    /** @response array{data: array{id: int, number: string, status: string}} */
+    public function fail(FailItemRequest $request, PaymentList $list, PaymentListItem $item): JsonResponse
+    {
+        abort_unless($this->access->cashier($request->user()), 403);
+        $l = $this->lists->markFailed($list, $item, $request->validated('status'), $request->validated('reason'), $request->user());
 
         return response()->json(['data' => ['id' => $l->id, 'number' => $l->number, 'status' => $l->status]]);
     }

@@ -13,6 +13,7 @@ use Modules\Payments\Models\PaymentRequest;
 use Modules\Payments\Models\PaymentSetting;
 use Modules\Payments\Models\PaymentVoucher;
 use Modules\Core\Support\Numbering;
+use Modules\Payments\Workflow\PaymentVoidProcess;
 use Modules\Payments\Workflow\PaymentVoucherProcess;
 use Modules\Workflow\Models\WorkflowInstance;
 use Modules\Workflow\Services\WorkflowEngine;
@@ -110,9 +111,50 @@ class ManageVouchers
 
     public function void(PaymentVoucher $v, User $by, string $reason): PaymentVoucher
     {
-        if ($v->status !== 'approved' || $v->inOpenList()) {
-            throw ValidationException::withMessages(['voucher' => 'Only an approved voucher that is not on a payment list can be voided.']);
+        if (! in_array($v->status, ['approved', 'paid'], true) || $v->inOpenList()) {
+            throw ValidationException::withMessages(['voucher' => 'Only an approved or paid voucher that is not on a list waiting for approval can be voided.']);
         }
+        if (! $v->hasPaidItems()) {
+            $this->undo($v, $by, $reason);
+
+            return $v->refresh();
+        }
+
+        return DB::transaction(function () use ($v, $by, $reason) {
+            $v->update(['status' => 'void_pending', 'decision_comment' => $reason]);
+            if (! $this->workflow->start(PaymentVoidProcess::KEY, $v, $by)) {
+                $this->voidApproved($v, $by);
+            }
+
+            return $v->refresh();
+        });
+    }
+
+    public function voidApproved(PaymentVoucher $v, ?User $by = null): void
+    {
+        $by ??= $v->preparer;
+        DB::transaction(function () use ($v, $by) {
+            $payable = PaymentSetting::current()->payable_account_id;
+            $items = $v->listItems()->with(['list.bank', 'payee'])->where('status', 'paid')->whereHas('list', fn ($q) => $q->where('status', 'approved'))->get();
+            foreach ($items as $item) {
+                $journal = $this->posting->post(now()->toDateString(), "{$v->number} voided: money recovered from {$item->payee?->name}", [
+                    ['account_id' => $item->list->bank->account_id, 'debit' => $item->amount, 'description' => $item->list->number],
+                    ['account_id' => $payable, 'credit' => $item->amount, 'description' => $item->payee?->name],
+                ], $by, 'payment_list', $item->list);
+                $item->update(['status' => 'returned', 'failure_reason' => 'Voucher voided: '.$v->decision_comment, 'reversal_journal_id' => $journal->id]);
+            }
+            $this->undo($v, $by, (string) $v->decision_comment);
+        });
+    }
+
+    public function voidRejected(PaymentVoucher $v, ?string $comment): void
+    {
+        $v->update(['status' => $v->outstandingPayees()->isEmpty() ? 'paid' : 'approved']);
+        $v->preparer?->notify(new Notice('Void not approved', "Voiding {$v->number} was not approved".($comment ? ": {$comment}" : '.'), "/payments/vouchers/{$v->id}", 'receipt'));
+    }
+
+    private function undo(PaymentVoucher $v, User $by, string $reason): void
+    {
         DB::transaction(function () use ($v, $by, $reason) {
             $r = $v->request()->with('lines')->first();
             if ($v->journal) {
@@ -125,7 +167,5 @@ class ManageVouchers
             $r->update(['status' => 'approved']);
             $v->update(['status' => 'voided', 'decision_comment' => $reason, 'decided_at' => now()]);
         });
-
-        return $v->refresh();
     }
 }

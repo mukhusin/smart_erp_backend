@@ -18,7 +18,7 @@ class PayrollSheet extends Model
         'company_id', 'name', 'month', 'year', 'payroll_from_date', 'payroll_to_date', 'number_of_days', 'payroll_cost',
         'hr_approved', 'payroll_approved', 'director_approved', 'status', 'hr_officer', 'payroll_officer', 'director', 'approved_by',
         'created_by', 'generated_at', 'submitted_at', 'approved_at', 'decision_comment',
-        'employees_count', 'gross_total', 'deduction_total', 'net_total', 'employer_total',
+        'employees_count', 'gross_total', 'deduction_total', 'net_total', 'employer_total', 'journal_entry_id', 'payment_journal_id', 'posting_error',
     ];
 
     protected $casts = [

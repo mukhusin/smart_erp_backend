@@ -5,6 +5,7 @@ use Modules\Accounting\Http\Controllers\Api\AccountController;
 use Modules\Accounting\Http\Controllers\Api\FiscalYearController;
 use Modules\Accounting\Http\Controllers\Api\JournalController;
 use Modules\Accounting\Http\Controllers\Api\MasterDataController;
+use Modules\Accounting\Http\Controllers\Api\PayrollPostingController;
 use Modules\Accounting\Http\Controllers\Api\ReportController;
 use Modules\Accounting\Http\Controllers\Api\SettingsController;
 
@@ -18,6 +19,10 @@ Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'c
     Route::get('fiscal-years', [FiscalYearController::class, 'fiscalYears'])->name('fiscal-years.index');
     Route::get('journals', [JournalController::class, 'index'])->name('journals.index');
     Route::get('journals/{journal}', [JournalController::class, 'show'])->name('journals.show');
+    Route::get('payroll/{sheet}', [PayrollPostingController::class, 'show'])->name('payroll.show');
+    Route::post('payroll/{sheet}/post', [PayrollPostingController::class, 'post'])->name('payroll.post');
+    Route::post('payroll/{sheet}/pay', [PayrollPostingController::class, 'pay'])->name('payroll.pay');
+    Route::get('payroll-posting', [PayrollPostingController::class, 'settings'])->name('payroll-posting.show');
     Route::get('reports/summary', [ReportController::class, 'summary'])->name('reports.summary');
     Route::get('reports/trial-balance', [ReportController::class, 'trialBalance'])->name('reports.trial-balance');
     Route::get('reports/ledger', [ReportController::class, 'ledger'])->name('reports.ledger');
@@ -32,6 +37,7 @@ Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'c
 
     Route::middleware('can:accounting.manage')->group(function () {
         Route::put('settings', [SettingsController::class, 'updateSettings'])->name('settings.update');
+        Route::put('payroll-posting', [PayrollPostingController::class, 'updateSettings'])->name('payroll-posting.update');
         Route::post('accounts', [AccountController::class, 'storeAccount'])->name('accounts.store');
         Route::post('accounts/import', [AccountController::class, 'importAccounts'])->name('accounts.import');
         Route::put('accounts/{account}', [AccountController::class, 'updateAccount'])->name('accounts.update');

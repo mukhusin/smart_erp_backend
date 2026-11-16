@@ -2,6 +2,8 @@
 
 namespace Modules\Hr\Actions;
 
+use Modules\Hr\Events\PayrollApproved;
+
 use App\Models\DailyAllowance;
 use App\Models\Employee;
 use App\Models\EmployeeLoan;
@@ -155,6 +157,7 @@ class ManagePayroll
             EmployeeMonthlyAdvance::whereIn('payroll_sheet_detail_id', $detailIds)->update(['status' => 'deducted']);
             Overtime::whereIn('id', OvertimeSheet::whereIn('payroll_sheet_detail_id', $detailIds)->pluck('overtime_id'))->update(['is_paid' => true]);
         });
+        event(new PayrollApproved($sheet->refresh(), auth()->user()));
         $label = Carbon::create((int) $sheet->year, (int) $sheet->month, 1)->format('F Y');
         $sheet->details()->with('employee.user')->get()->each(fn ($d) => $d->employee?->user?->notify(
             new Notice('Payslip ready', "Your payslip for {$label} is ready. Net pay: ".number_format($d->net_salary, 2).'.', '/self-service/payslips', 'receipt')));

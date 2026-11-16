@@ -28,6 +28,7 @@ use Modules\Budgeting\Workflow\BudgetTransferProcess;
 use Modules\Budgeting\Workflow\DepartmentBudgetProcess;
 use Modules\Payments\Workflow\PaymentListProcess;
 use Modules\Payments\Workflow\PaymentRequestProcess;
+use Modules\Payments\Workflow\PaymentVoidProcess;
 use Modules\Payments\Workflow\PaymentVoucherProcess;
 use Modules\Planning\Workflow\DepartmentPlanProcess;
 use Modules\Receivables\Workflow\CreditNoteProcess;
@@ -72,6 +73,7 @@ final class WorkflowCatalog
         PaymentRequestProcess::class,
         PaymentVoucherProcess::class,
         PaymentListProcess::class,
+        PaymentVoidProcess::class,
         InvoiceProcess::class,
         CreditNoteProcess::class,
         ReceiptVoidProcess::class,

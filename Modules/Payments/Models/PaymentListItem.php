@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class PaymentListItem extends Model
 {
-    protected $fillable = ['payment_list_id', 'payment_voucher_id', 'payment_request_payee_id', 'amount', 'reference'];
+    public const STATUS_LABELS = ['paid' => 'Paid', 'failed' => 'Failed', 'returned' => 'Returned by payee'];
 
-    protected $casts = ['amount' => 'float'];
+    protected $fillable = ['payment_list_id', 'payment_voucher_id', 'payment_request_payee_id', 'amount', 'reference', 'status', 'failure_reason', 'reversal_journal_id', 'settled_at'];
+
+    protected $casts = ['amount' => 'float', 'settled_at' => 'datetime'];
 
     public function list()
     {

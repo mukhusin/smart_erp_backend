@@ -16,7 +16,7 @@ class PaymentVoucher extends Model
 
     public const STATUS_LABELS = [
         'pending' => 'Waiting for approval', 'approved' => 'Approved, not paid', 'rejected' => 'Not approved', 'cancelled' => 'Withdrawn',
-        'voided' => 'Voided', 'paid' => 'Paid',
+        'voided' => 'Voided', 'paid' => 'Paid', 'void_pending' => 'Void waiting for approval',
     ];
 
     protected $fillable = ['company_id', 'number', 'payment_request_id', 'cash_bank_account_id', 'date', 'description', 'gross', 'withholding', 'net', 'status',
@@ -56,6 +56,23 @@ class PaymentVoucher extends Model
 
     public function inOpenList(): bool
     {
-        return $this->listItems()->whereHas('list', fn ($q) => $q->whereIn('status', ['pending', 'approved']))->exists();
+        return $this->listItems()->whereHas('list', fn ($q) => $q->where('status', 'pending'))->exists();
+    }
+
+    public function hasPaidItems(): bool
+    {
+        return $this->listItems()->where('status', 'paid')->whereHas('list', fn ($q) => $q->where('status', 'approved'))->exists();
+    }
+
+    /** Payees with money still to pay: not on a waiting list and not paid. */
+    public function outstandingPayees()
+    {
+        return $this->request->payees()->whereRaw('amount - withholding > 0')
+            ->whereDoesntHave('listItems', fn ($i) => PaymentRequestPayee::settling($i))->get();
+    }
+
+    public function settledStatus(): string
+    {
+        return $this->outstandingPayees()->isEmpty() ? 'paid' : 'approved';
     }
 }

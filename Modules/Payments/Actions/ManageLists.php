@@ -10,6 +10,7 @@ use Modules\Accounting\Models\CashBankAccount;
 use Modules\Accounting\Services\PostingService;
 use Modules\Core\Notifications\Notice;
 use Modules\Payments\Models\PaymentList;
+use Modules\Payments\Models\PaymentListItem;
 use Modules\Payments\Models\PaymentSetting;
 use Modules\Payments\Models\PaymentVoucher;
 use Modules\Core\Support\Numbering;
@@ -40,22 +41,22 @@ class ManageLists
         if ($vouchers->count() !== count(array_unique($data['voucher_ids']))) {
             throw ValidationException::withMessages(['voucher_ids' => 'Some vouchers were not found.']);
         }
+        $payees = [];
         foreach ($vouchers as $v) {
-            if ($v->status !== 'approved' || $v->cash_bank_account_id !== $bank->id || $v->inOpenList()) {
-                throw ValidationException::withMessages(['voucher_ids' => "{$v->number} is not an approved, unpaid voucher of {$bank->name}."]);
+            $payees[$v->id] = $v->status === 'approved' && $v->cash_bank_account_id === $bank->id ? $v->outstandingPayees() : collect();
+            if ($payees[$v->id]->isEmpty()) {
+                throw ValidationException::withMessages(['voucher_ids' => "{$v->number} is not an approved voucher of {$bank->name} with payees still to pay."]);
             }
         }
-        $total = round($vouchers->sum('net'), 2);
+        $total = round(collect($payees)->flatten()->sum(fn ($p) => $p->net()), 2);
         $this->ensureFunds($bank, $total);
 
-        return DB::transaction(function () use ($data, $by, $bank, $vouchers, $total) {
+        return DB::transaction(function () use ($data, $by, $bank, $vouchers, $total, $payees) {
             $list = PaymentList::create(['number' => Numbering::next(PaymentList::class, 'PL', $data['date']), 'cash_bank_account_id' => $bank->id,
                 'method' => $data['method'], 'date' => $data['date'], 'total' => $total, 'status' => 'pending', 'prepared_by' => $by->id]);
             foreach ($vouchers as $v) {
-                foreach ($v->request->payees as $p) {
-                    if ($p->net() > 0) {
-                        $list->items()->create(['payment_voucher_id' => $v->id, 'payment_request_payee_id' => $p->id, 'amount' => $p->net()]);
-                    }
+                foreach ($payees[$v->id] as $p) {
+                    $list->items()->create(['payment_voucher_id' => $v->id, 'payment_request_payee_id' => $p->id, 'amount' => $p->net(), 'status' => 'paid']);
                 }
             }
             if (! $this->workflow->start(PaymentListProcess::KEY, $list, $by)) {
@@ -76,12 +77,14 @@ class ManageLists
                 ['account_id' => $payable, 'debit' => $list->total, 'description' => 'Payables settled: '.$list->items->pluck('voucher.number')->unique()->join(', ')],
                 ['account_id' => $list->bank->account_id, 'credit' => $list->total, 'description' => $list->number],
             ], $list->preparer, 'payment_list', $list);
-            foreach ($list->items->pluck('voucher')->unique('id') as $v) {
-                $v->update(['status' => 'paid']);
-                $v->request->update(['status' => 'paid']);
-                $v->request->requester?->notify(new Notice('Payment made', "{$v->request->number} {$v->request->title} is paid.", "/payments/requests/{$v->request->id}", 'cash-coin'));
-            }
             $list->update(['status' => 'approved', 'journal_entry_id' => $journal->id, 'decided_at' => now()]);
+            $list->items()->update(['settled_at' => now()]);
+            foreach ($list->items->pluck('voucher')->unique('id') as $v) {
+                $this->settle($v);
+                if ($v->status === 'paid') {
+                    $v->request->requester?->notify(new Notice('Payment made', "{$v->request->number} {$v->request->title} is paid.", "/payments/requests/{$v->request->id}", 'cash-coin'));
+                }
+            }
         });
     }
 
@@ -117,6 +120,36 @@ class ManageLists
         }
 
         return $list->refresh();
+    }
+
+    public function markFailed(PaymentList $list, PaymentListItem $item, string $status, string $reason, User $by): PaymentList
+    {
+        if ($list->status !== 'approved' || $item->payment_list_id !== $list->id || $item->status !== 'paid') {
+            throw ValidationException::withMessages(['item' => 'Only a paid line of an approved list can be marked failed or returned.']);
+        }
+        DB::transaction(function () use ($list, $item, $status, $reason, $by) {
+            $list->load('bank');
+            $payee = $item->payee;
+            $journal = $this->posting->post(now()->toDateString(), "{$list->number} payment to {$payee?->name} ".($status === 'failed' ? 'failed' : 'returned').": {$reason}", [
+                ['account_id' => $list->bank->account_id, 'debit' => $item->amount, 'description' => $list->number],
+                ['account_id' => PaymentSetting::current()->payable_account_id, 'credit' => $item->amount, 'description' => 'Payable again: '.$payee?->name],
+            ], $by, 'payment_list', $list);
+            $item->update(['status' => $status, 'failure_reason' => $reason, 'reversal_journal_id' => $journal->id]);
+            $this->settle($item->voucher);
+        });
+
+        return $list->refresh();
+    }
+
+    public function settle(PaymentVoucher $v): void
+    {
+        $v->refresh();
+        if (! in_array($v->status, ['approved', 'paid'], true)) {
+            return;
+        }
+        $status = $v->settledStatus();
+        $v->update(['status' => $status]);
+        $v->request->update(['status' => $status === 'paid' ? 'paid' : 'vouchered']);
     }
 
     private function ensureFunds(CashBankAccount $bank, float $total): void
