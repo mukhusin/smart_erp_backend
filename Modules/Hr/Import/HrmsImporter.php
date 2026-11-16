@@ -500,6 +500,7 @@ class HrmsImporter
 
     private function stepPay(): void
     {
+        $this->importPayrollSettings();
         $this->sync('loan_providers', 'loan_providers', fn ($r) => [
             'company_id' => $this->companyId, 'name' => $r->name, 'short_name' => $r->short_name, 'description' => $r->description,
             'is_active' => (bool) $r->isActive, 'deleted_at' => $r->deleted_at,
@@ -645,7 +646,7 @@ class HrmsImporter
                 'amount' => $r->amount ?? 0, 'start_date' => $this->date($r->start_date), 'end_date' => $this->date($r->end_date),
                 'hod_approved' => $this->ids->get('employees', $r->hod_approved), 'hr_approved' => $this->ids->get('employees', $r->hr_approved),
                 'is_hod_approved' => (bool) $r->is_hod_approved, 'is_hr_approved' => (bool) $r->is_hr_approved, 'hod_comment' => $r->hod_comment, 'hr_comment' => $r->hr_comment,
-                'is_active' => (bool) $r->isActive, 'description' => $r->description, 'deleted_at' => $r->deleted_at,
+                'is_active' => (bool) $r->isActive && ($r->duration !== 'month' || $r->department_allowance_id), 'description' => $r->description, 'deleted_at' => $r->deleted_at,
                 'status' => $r->status === 'approved' && $r->isActive ? 'approved' : ($r->status === 'pending' ? 'pending' : 'cancelled'),
             ];
         });
@@ -997,6 +998,34 @@ class HrmsImporter
                 'net_pay' => is_numeric($r->NET_PAY) ? $r->NET_PAY : null, 'data' => json_encode($data),
             ];
         });
+    }
+
+    /** HRMS payroll settings (period, rates, what payroll includes) replace the ERP defaults; PAYE bands stay the ERP's. */
+    private function importPayrollSettings(): void
+    {
+        $r = $this->src->table('payroll_date_settings')->where('isActive', true)->orderByDesc('id')->first() ?? $this->src->table('payroll_date_settings')->orderByDesc('id')->first();
+        $stats = &$this->stats('payroll_date_settings');
+        if (! $r) {
+            return;
+        }
+        $stats['read']++;
+        $month = fn ($v) => in_array($v, ['last', 'current', 'next'], true) ? $v : 'current';
+        $data = [
+            'from_day' => (int) $r->from_day ?: 1, 'from_month' => $month($r->from_month), 'to_day' => (int) $r->to_day, 'to_month' => $month($r->to_month),
+            'wcf' => $r->wcf, 'sdl' => $r->sdl, 'heslb' => $r->heslb, 'paye' => $r->paye, 'income_tax' => $r->income_tax, 'emergency_fund' => $r->emergency_fund,
+            'nhif_employee' => $r->nhif_employee, 'nhif_employer' => $r->nhif_employer, 'nssf_employee' => $r->nssf_employee, 'nssf_employer' => $r->nssf_employer,
+            'use_overtime' => (bool) $r->overtime, 'use_allowance' => (bool) $r->allowance, 'use_deduction' => true, 'use_loan' => (bool) $r->loan,
+            'use_leave_deduction' => (bool) $r->leave_deduction, 'use_attendance' => (bool) $r->attendance, 'is_active' => true, 'updated_at' => now(),
+        ];
+        $existing = DB::table('payroll_date_settings')->where('company_id', $this->companyId)->first();
+        if ($existing) {
+            DB::table('payroll_date_settings')->where('id', $existing->id)->update($data);
+            $stats['updated']++;
+        } else {
+            DB::table('payroll_date_settings')->insert($data + ['company_id' => $this->companyId, 'tax_bands' => json_encode(\App\Models\PayrollDateSetting::TAX_BANDS),
+                'use_saccos' => true, 'use_relief' => true, 'created_at' => now()]);
+            $stats['inserted']++;
+        }
     }
 
     /** HRMS assistant HODs (a role, not a head record) become deputy heads of their department. */

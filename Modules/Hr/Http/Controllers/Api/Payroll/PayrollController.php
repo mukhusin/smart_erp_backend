@@ -378,6 +378,57 @@ class PayrollController extends Controller
         ]]);
     }
 
+    /**
+     * Parallel run: this payroll beside the uploaded salary file of the same month (or `upload_id`), employee by employee.
+     *
+     * @response array{data: array{sheet: array{id: int, name: string, status: string}, upload: array{id: int, file_name: string|null}, counts: array{match: int, different: int, only_erp: int, only_file: int}, totals: list<array{key: string, label: string, erp: float, file: float, difference: float, employees_different: int}>, employees: list<array{employee_id: int, employee_no: string|null, name: string|null, department: string|null, status: string, erp_net: float|null, file_net: float|null, net_difference: float|null, differences: list<array{key: string, label: string, erp: float, file: float, difference: float}>, reason: string|null, erp: array<string, float>|null, file: array<string, float>|null}>, uploads: list<array{id: int, label: string}>}}
+     */
+    #[QueryParameter('upload_id', type: 'integer')]
+    public function checkFile(Request $request, PayrollSheet $sheet, \Modules\Hr\Support\PayrollFileCheck $check): JsonResponse
+    {
+        $upload = $this->fileFor($request, $sheet, $check);
+
+        return response()->json(['data' => $check->check($sheet, $upload) + ['uploads' => \App\Models\UploadedPayroll::orderByDesc('year')->orderByDesc('month')->get()
+            ->map(fn ($u) => ['id' => $u->id, 'label' => \Illuminate\Support\Carbon::create($u->year, $u->month, 1)->format('F Y')])->values()]]);
+    }
+
+    /** The parallel-run check as CSV: every employee with both amounts of every item. */
+    #[QueryParameter('upload_id', type: 'integer')]
+    public function checkFileCsv(Request $request, PayrollSheet $sheet, \Modules\Hr\Support\PayrollFileCheck $check): \Illuminate\Http\Response
+    {
+        $result = $check->check($sheet, $this->fileFor($request, $sheet, $check));
+        $out = fopen('php://temp', 'r+');
+        fwrite($out, "\xEF\xBB\xBF");
+        $head = ['No.', 'Name', 'Department', 'Result'];
+        foreach (\Modules\Hr\Support\PayrollFileCheck::FIELDS as $label) {
+            array_push($head, "{$label} ERP", "{$label} file", "{$label} difference");
+        }
+        fputcsv($out, $head);
+        $labels = ['match' => 'Same', 'different' => 'Different', 'only_erp' => 'Only in ERP', 'only_file' => 'Only in salary file'];
+        foreach ($result['employees'] as $e) {
+            $line = [$e['employee_no'], $e['name'], $e['department'], $labels[$e['status']]];
+            foreach (array_keys(\Modules\Hr\Support\PayrollFileCheck::FIELDS) as $k) {
+                $a = $e['erp'][$k] ?? null;
+                $b = $e['file'][$k] ?? null;
+                array_push($line, $a, $b, $a !== null && $b !== null ? round($a - $b, 2) : null);
+            }
+            fputcsv($out, $line);
+        }
+        rewind($out);
+        $csv = stream_get_contents($out);
+        fclose($out);
+
+        return response($csv, 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => 'attachment; filename="payroll-check-'.\Illuminate\Support\Str::slug($sheet->name).'.csv"']);
+    }
+
+    private function fileFor(Request $request, PayrollSheet $sheet, \Modules\Hr\Support\PayrollFileCheck $check): \App\Models\UploadedPayroll
+    {
+        $upload = $request->integer('upload_id') ? \App\Models\UploadedPayroll::find($request->integer('upload_id')) : $check->uploadFor($sheet);
+        abort_unless($upload, 422, 'There is no salary file for '.$sheet->name.'. Upload the month\'s salary file in Payroll → Salary files first.');
+
+        return $upload;
+    }
+
     /** The comparison as a PDF with the company header: totals and every employee whose pay differs (opens in the browser). */
     #[QueryParameter('with', type: 'integer')]
     public function comparePdf(Request $request, PayrollSheet $sheet, PayrollComparison $comparison, PdfDocument $pdf): \Symfony\Component\HttpFoundation\Response

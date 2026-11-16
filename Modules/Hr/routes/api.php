@@ -441,6 +441,8 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::get('sheets/{sheet}/history', [PayrollController::class, 'history'])->name('sheets.history');
         Route::post('sheets/{sheet}/comments', [PayrollController::class, 'comment'])->middleware('throttle:30,1')->name('sheets.comments.store');
         Route::get('sheets/{sheet}/compare/pdf', [PayrollController::class, 'comparePdf'])->name('sheets.compare.pdf');
+        Route::get('sheets/{sheet}/check-file', [PayrollController::class, 'checkFile'])->name('sheets.check-file');
+        Route::get('sheets/{sheet}/check-file/csv', [PayrollController::class, 'checkFileCsv'])->name('sheets.check-file.csv');
         Route::get('sheets/{sheet}/reports/{type}', [PayrollController::class, 'report'])->name('sheets.report');
         Route::get('sheets/{sheet}/reports/{type}/csv', [PayrollController::class, 'reportCsv'])->name('sheets.report.csv');
         Route::get('sheets/{sheet}/reports/{type}/pdf', [PayrollController::class, 'reportPdf'])->name('sheets.report.pdf');

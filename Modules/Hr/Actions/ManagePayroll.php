@@ -33,12 +33,15 @@ class ManagePayroll
 
     public function create(int $year, int $month, User $by): PayrollSheet
     {
-        if (PayrollSheet::where('year', (string) $year)->where('month', (string) $month)->exists()) {
+        $same = PayrollSheet::where('year', (string) $year)->where('month', (string) $month)->pluck('id');
+        $imported = DB::table('legacy_ids')->where('table_name', 'payroll_sheets')->whereIn('target_id', $same)->pluck('target_id');
+        if ($same->diff($imported)->isNotEmpty()) {
             throw ValidationException::withMessages(['month' => 'There is already a payroll for '.Carbon::create($year, $month, 1)->format('F Y').'.']);
         }
+        $parallel = $same->isNotEmpty();
         [$from, $to] = PayrollDateSetting::current()->period($year, $month);
         $sheet = PayrollSheet::create([
-            'name' => 'Payroll '.Carbon::create($year, $month, 1)->format('F Y'), 'year' => (string) $year, 'month' => (string) $month,
+            'name' => 'Payroll '.Carbon::create($year, $month, 1)->format('F Y').($parallel ? ' (ERP parallel run)' : ''), 'year' => (string) $year, 'month' => (string) $month,
             'payroll_from_date' => $from, 'payroll_to_date' => $to, 'number_of_days' => (int) $from->diffInDays($to) + 1,
             'status' => 'draft', 'created_by' => $by->id, 'hr_officer' => $by->employee?->id,
         ]);
@@ -121,6 +124,9 @@ class ManagePayroll
     {
         if (! $sheet->editable()) {
             throw ValidationException::withMessages(['payroll' => 'This payroll has already been submitted.']);
+        }
+        if (PayrollSheet::where('year', $sheet->year)->where('month', $sheet->month)->whereKeyNot($sheet->id)->exists()) {
+            throw ValidationException::withMessages(['payroll' => 'This is a parallel-run payroll: the month was paid in HRMS. Compare it with the HRMS payroll or the salary file; it cannot be submitted.']);
         }
         if (! $sheet->details()->exists()) {
             throw ValidationException::withMessages(['payroll' => 'Nobody is paid on this payroll.']);

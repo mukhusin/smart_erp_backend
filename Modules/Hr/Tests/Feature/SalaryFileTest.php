@@ -104,4 +104,29 @@ class SalaryFileTest extends TestCase
         $this->actingAs($this->admin)->deleteJson("/api/v1/payroll/salary-files/{$id}")->assertNoContent();
         $this->assertSame(0, UploadedPayrollRow::count());
     }
+
+    public function test_parallel_run_payroll_is_checked_against_the_salary_file(): void
+    {
+        $row = ['1741', 'Asha X', 'Officer', '910000', '910000', '82750', '91000', '27300', '5000', '298957.13', '404992.87', '404992.87', '182000'];
+        $this->actingAs($this->admin)->postJson('/api/v1/payroll/salary-files', ['year' => 2026, 'month' => 4, 'file' => $this->csv([$row])])->assertCreated();
+
+        $imported = app(CompanyContext::class)->run($this->company, fn () => PayrollSheet::create(['name' => 'Salary File April 2026', 'year' => '2026', 'month' => '4',
+            'payroll_from_date' => '2026-04-01', 'payroll_to_date' => '2026-04-30', 'status' => 'approved']));
+        \Illuminate\Support\Facades\DB::table('legacy_ids')->insert(['company_id' => $this->company->id, 'source' => 'hrms', 'table_name' => 'payroll_sheets', 'legacy_id' => 1, 'target_id' => $imported->id, 'created_at' => now(), 'updated_at' => now()]);
+
+        $id = $this->postJson('/api/v1/payroll/sheets', ['year' => 2026, 'month' => 4])->assertCreated()->assertJsonPath('data.name', 'Payroll April 2026 (ERP parallel run)')->json('data.id');
+        $this->postJson('/api/v1/payroll/sheets', ['year' => 2026, 'month' => 4])->assertUnprocessable()->assertJsonValidationErrors(['month']);
+        $this->postJson("/api/v1/payroll/sheets/{$id}/submit")->assertUnprocessable()->assertJsonValidationErrors(['payroll' => 'parallel-run']);
+
+        $check = $this->getJson("/api/v1/payroll/sheets/{$id}/check-file")->assertOk()->json('data');
+        $asha = collect($check['employees'])->firstWhere('employee_no', 'ST1741');
+        $this->assertSame('different', $asha['status']);
+        $this->assertEquals(404992.87, $asha['file_net']);
+        $this->assertContains('Loans', array_column($asha['differences'], 'label'));
+        $this->assertSame(2, $check['counts']['only_erp'], 'Juma and the admin are paid by the ERP but not in the file');
+        $this->assertEquals(298957.13, collect($check['totals'])->firstWhere('key', 'loans')['file']);
+        $this->get("/api/v1/payroll/sheets/{$id}/check-file/csv")->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+
+        $this->getJson("/api/v1/payroll/sheets/{$imported->id}/check-file?upload_id=999999")->assertUnprocessable();
+    }
 }

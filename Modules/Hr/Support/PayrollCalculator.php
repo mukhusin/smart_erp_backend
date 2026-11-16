@@ -49,8 +49,18 @@ class PayrollCalculator
     {
         return EmployeeContract::with('natureOfContract')->where('employee_id', $employee->id)->whereNotIn('status', ['cancelled', 'pending'])
             ->get()->filter(fn ($c) => $c->natureOfContract?->has_payroll && $c->start_date && $c->start_date->lte($to)
-                && (! $c->end_date || $c->end_date->gte($from)) && (! $c->date_of_change || $c->date_of_change->gte($from)))
-            ->sortBy('start_date')->values();
+                && (! $c->end_date || $c->end_date->gte($from)) && (! ($closed = self::closedOn($c)) || $closed->gte($from)))
+            ->sortBy([['start_date', 'asc'], ['id', 'asc']])->values();
+    }
+
+    /** The day a closed contract stopped; an active or waiting contract's change date (renewal, adjustment) does not end it. */
+    public static function closedOn(EmployeeContract $c): ?Carbon
+    {
+        if (in_array($c->status, ['active', 'waiting'], true) || ! $c->date_of_change || ($c->start_date && $c->date_of_change->lte($c->start_date))) {
+            return null;
+        }
+
+        return $c->date_of_change->copy();
     }
 
     public function pays(Employee $employee, Carbon $from, Carbon $to): bool
@@ -72,10 +82,14 @@ class PayrollCalculator
         $current = $contracts->last();
         $basic = 0.0;
         $paidDays = 0;
-        foreach ($contracts as $c) {
+        foreach ($contracts as $i => $c) {
             $start = $c->start_date->max($from);
-            $end = collect([$to, $c->end_date, $c->date_of_change])->filter()->min();
-            $covered = max(0, (int) $start->diffInDays($end) + 1);
+            $next = $contracts[$i + 1] ?? null;
+            $end = collect([$to, $c->end_date, self::closedOn($c), $next ? $next->start_date->copy()->subDay() : null])->filter()->min();
+            $covered = $end->lt($start) ? 0 : (int) $start->diffInDays($end) + 1;
+            if ($covered === 0) {
+                continue;
+            }
             $part = $covered >= $days ? (float) $c->basic_salary : $money($c->basic_salary * $covered / $days);
             $basic += $part;
             $paidDays += min($covered, $days);
@@ -136,13 +150,12 @@ class PayrollCalculator
         }
         $gross = $money($basic + $totalAllowance + $totalOvertime + $relief);
 
-        $use = (bool) $s->use_deduction;
-        $nssfM = $use ? Nssf::where('employee_id', $employee->id)->where('is_active', true)->first() : null;
-        $nhifM = $use ? Nhif::where('employee_id', $employee->id)->where('is_active', true)->first() : null;
-        $heslbM = $use ? Heslb::where('employee_id', $employee->id)->where('is_active', true)->first() : null;
-        $tugheM = $use ? Tughe::where('employee_id', $employee->id)->where('is_active', true)->first() : null;
-        $nicM = $use ? Nic::where('employee_id', $employee->id)->where('is_active', true)->first() : null;
-        $fundM = $use ? EmployeeFund::where('employee_id', $employee->id)->where('is_active', true)->first() : null;
+        $nssfM = Nssf::where('employee_id', $employee->id)->where('is_active', true)->first();
+        $nhifM = Nhif::where('employee_id', $employee->id)->where('is_active', true)->first();
+        $heslbM = Heslb::where('employee_id', $employee->id)->where('is_active', true)->first();
+        $tugheM = Tughe::where('employee_id', $employee->id)->where('is_active', true)->first();
+        $nicM = Nic::where('employee_id', $employee->id)->where('is_active', true)->first();
+        $fundM = EmployeeFund::where('employee_id', $employee->id)->where('is_active', true)->first();
         $nssf = $nssfM ? $money($nssfM->emp_rate * $gross / 100) : 0.0;
         $nssfEr = $nssfM ? $money($nssfM->employer_rate * $gross / 100) : 0.0;
         $nhif = $nhifM ? $money($nhifM->emp_rate * $basic / 100) : 0.0;
@@ -172,7 +185,7 @@ class PayrollCalculator
         $attendance = $s->use_attendance && $employee->has_attendance && ($this->attendanceOn ??= AttendanceSetting::current()->enabled())
             ? $money(AttendanceTransa::where('employee_id', $employee->id)->whereDate('transaction_date', '>=', $from)->whereDate('transaction_date', '<=', $to)->sum('lost_amount'))
             : 0.0;
-        $others = OtherDeduction::where('employee_id', $employee->id)->where('status', 'approved')->get()->filter(fn ($d) => $d->appliesTo((int) $sheet->year, (int) $sheet->month));
+        $others = $s->use_deduction ? OtherDeduction::where('employee_id', $employee->id)->where('status', 'approved')->get()->filter(fn ($d) => $d->appliesTo((int) $sheet->year, (int) $sheet->month)) : collect();
         foreach ($others as $o) {
             $lines[] = ['group' => 'deduction', 'code' => 'OTHER', 'label' => $o->name, 'amount' => $money($o->amount)];
         }
@@ -222,8 +235,9 @@ class PayrollCalculator
      */
     private function assignedAllowances(Employee $employee, Carbon $from, Carbon $to, int $days): array
     {
-        $rows = EmpAllowance::with('allowanceCategory')->where('employee_id', $employee->id)->where('status', 'approved')
-            ->whereDate('start_date', '<=', $to)->where(fn ($q) => $q->whereNull('end_date')->orWhereDate('end_date', '>=', $from))->get();
+        $rows = EmpAllowance::with('allowanceCategory')->where('employee_id', $employee->id)->where('status', 'approved')->whereDate('start_date', '<=', $to)
+            ->where(fn ($q) => $q->where(fn ($q) => $q->whereNull('stopped_at')->where('is_active', true))->orWhereDate('stopped_at', '>=', $from))
+            ->where(fn ($q) => $q->whereNull('department_allowance_id')->orWhereHas('departmentAllowance', fn ($r) => $r->where('is_active', true)))->get();
         if ($rows->isEmpty()) {
             return [];
         }
@@ -233,7 +247,7 @@ class PayrollCalculator
         foreach ($rows as $a) {
             $cat = $a->allowanceCategory;
             $start = $a->start_date->max($from);
-            $end = $a->end_date ? $a->end_date->min($to) : $to;
+            $end = $a->stopped_at ? $a->stopped_at->min($to) : $to;
             $covered = (int) $start->diffInDays($end) + 1;
             $off = 0;
             $notes = [];

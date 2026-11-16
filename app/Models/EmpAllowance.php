@@ -17,10 +17,10 @@ class EmpAllowance extends Model
         'company_id', 'employee_id', 'department_allowance_id', 'allowance_category_id',
         'hod_approved', 'hr_approved', 'is_hod_approved', 'is_hr_approved',
         'hod_comment', 'hr_comment', 'category', 'duration', 'items', 'amount',
-        'amount_per_item', 'start_date', 'end_date', 'is_active', 'description', 'status', 'decision_comment', 'requested_by',
+        'amount_per_item', 'start_date', 'end_date', 'stopped_at', 'is_active', 'description', 'status', 'decision_comment', 'requested_by',
     ];
 
-    protected $casts = ['is_hod_approved' => 'boolean', 'is_hr_approved' => 'boolean', 'is_active' => 'boolean', 'amount' => 'float', 'start_date' => 'date', 'end_date' => 'date'];
+    protected $casts = ['is_hod_approved' => 'boolean', 'is_hr_approved' => 'boolean', 'is_active' => 'boolean', 'amount' => 'float', 'start_date' => 'date', 'end_date' => 'date', 'stopped_at' => 'date'];
 
     public function employee()
     {
@@ -40,5 +40,11 @@ class EmpAllowance extends Model
     public function workflow()
     {
         return $this->morphOne(WorkflowInstance::class, 'subject')->latestOfMany();
+    }
+
+    /** Paid on payroll: approved and active, or stopped on a day not yet past. The end date does not stop it (as in HRMS). */
+    public function running(): bool
+    {
+        return $this->status === 'approved' && ($this->stopped_at ? ! $this->stopped_at->isPast() : (bool) $this->is_active);
     }
 }

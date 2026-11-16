@@ -31776,6 +31776,360 @@
                 }
             }
         },
+        "/payroll/sheets/{sheet}/check-file": {
+            "get": {
+                "operationId": "payroll.sheets.check-file",
+                "summary": "Parallel run: this payroll beside the uploaded salary file of the same month (or `upload_id`), employee by employee",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "upload_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sheet": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name",
+                                                        "status"
+                                                    ]
+                                                },
+                                                "upload": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "file_name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "file_name"
+                                                    ]
+                                                },
+                                                "counts": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "match": {
+                                                            "type": "integer"
+                                                        },
+                                                        "different": {
+                                                            "type": "integer"
+                                                        },
+                                                        "only_erp": {
+                                                            "type": "integer"
+                                                        },
+                                                        "only_file": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "match",
+                                                        "different",
+                                                        "only_erp",
+                                                        "only_file"
+                                                    ]
+                                                },
+                                                "totals": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "erp": {
+                                                                "type": "number"
+                                                            },
+                                                            "file": {
+                                                                "type": "number"
+                                                            },
+                                                            "difference": {
+                                                                "type": "number"
+                                                            },
+                                                            "employees_different": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label",
+                                                            "erp",
+                                                            "file",
+                                                            "difference",
+                                                            "employees_different"
+                                                        ]
+                                                    }
+                                                },
+                                                "employees": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "employee_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "employee_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "name": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "erp_net": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "file_net": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "net_difference": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "differences": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "key": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "label": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "erp": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "file": {
+                                                                            "type": "number"
+                                                                        },
+                                                                        "difference": {
+                                                                            "type": "number"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "key",
+                                                                        "label",
+                                                                        "erp",
+                                                                        "file",
+                                                                        "difference"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "erp": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "additionalProperties": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "file": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "additionalProperties": {
+                                                                    "type": "number"
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "employee_id",
+                                                            "employee_no",
+                                                            "name",
+                                                            "department",
+                                                            "status",
+                                                            "erp_net",
+                                                            "file_net",
+                                                            "net_difference",
+                                                            "differences",
+                                                            "reason",
+                                                            "erp",
+                                                            "file"
+                                                        ]
+                                                    }
+                                                },
+                                                "uploads": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "sheet",
+                                                "upload",
+                                                "counts",
+                                                "totals",
+                                                "employees",
+                                                "uploads"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/sheets/{sheet}/check-file/csv": {
+            "get": {
+                "operationId": "payroll.sheets.check-file.csv",
+                "summary": "The parallel-run check as CSV: every employee with both amounts of every item",
+                "tags": [
+                    "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet",
+                        "in": "path",
+                        "required": true,
+                        "description": "The sheet ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "upload_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv; charset=UTF-8": {
+                                "schema": {
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/payroll/sheets/{sheet}/reports/{type}": {
             "get": {
                 "operationId": "payroll.sheets.report",
@@ -32875,6 +33229,12 @@
                                                             "null"
                                                         ]
                                                     },
+                                                    "stopped_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
                                                     "description": {
                                                         "type": [
                                                             "string",
@@ -32908,6 +33268,7 @@
                                                     "amount",
                                                     "start_date",
                                                     "end_date",
+                                                    "stopped_at",
                                                     "description",
                                                     "status",
                                                     "running",
@@ -33057,6 +33418,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "stopped_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "description": {
                                                     "type": [
                                                         "string",
@@ -33090,6 +33457,7 @@
                                                 "amount",
                                                 "start_date",
                                                 "end_date",
+                                                "stopped_at",
                                                 "description",
                                                 "status",
                                                 "running",
@@ -33222,6 +33590,12 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "stopped_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "description": {
                                                     "type": [
                                                         "string",
@@ -33255,6 +33629,7 @@
                                                 "amount",
                                                 "start_date",
                                                 "end_date",
+                                                "stopped_at",
                                                 "description",
                                                 "status",
                                                 "running",

@@ -37,10 +37,11 @@ class ManagePayItems
         if (! app(ManageAllowances::class)->eligible($employee)) {
             throw ValidationException::withMessages(['employee_id' => "{$employee->full_name}'s contract does not give allowances."]);
         }
-        $overlap = EmpAllowance::where('employee_id', $employee->id)->where('allowance_category_id', $category->id)->whereIn('status', ['pending', 'approved'])
-            ->whereDate('start_date', '<=', $d['end_date'] ?? '9999-12-31')->where(fn ($q) => $q->whereNull('end_date')->orWhereDate('end_date', '>=', $d['start_date']))->exists();
+        $overlap = EmpAllowance::where('employee_id', $employee->id)->where('allowance_category_id', $category->id)
+            ->where(fn ($q) => $q->where('status', 'pending')->orWhere(fn ($q) => $q->where('status', 'approved')
+                ->where(fn ($q) => $q->where(fn ($q) => $q->whereNull('stopped_at')->where('is_active', true))->orWhereDate('stopped_at', '>=', $d['start_date']))))->exists();
         if ($overlap) {
-            throw ValidationException::withMessages(['allowance_category_id' => "{$employee->full_name} already has {$category->category} for these dates."]);
+            throw ValidationException::withMessages(['allowance_category_id' => "{$employee->full_name} already has {$category->category}. Stop it first to give a new amount."]);
         }
         $row = EmpAllowance::create([
             'employee_id' => $employee->id, 'allowance_category_id' => $category->id, 'category' => $category->category, 'duration' => 'month', 'items' => 1,
@@ -140,7 +141,7 @@ class ManagePayItems
             throw ValidationException::withMessages(['status' => 'Only approved items can be stopped.']);
         }
         $item instanceof EmpAllowance
-            ? $item->update(['end_date' => Carbon::parse($date)->max($item->start_date)->toDateString()])
+            ? $item->update(['stopped_at' => Carbon::parse($date)->max($item->start_date)->toDateString(), 'is_active' => false])
             : $item->update(['stopped_at' => Carbon::parse($date)->max($item->start_month)->toDateString()]);
     }
 

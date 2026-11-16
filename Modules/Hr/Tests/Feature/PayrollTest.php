@@ -167,4 +167,28 @@ class PayrollTest extends TestCase
         $body['tax_bands'] = [['up_to' => 300000, 'rate' => 0], ['up_to' => 500000, 'rate' => 20]];
         $this->putJson('/api/v1/payroll/settings', $body)->assertUnprocessable()->assertJsonValidationErrors(['tax_bands']);
     }
+
+    public function test_monthly_allowance_runs_until_hr_stops_it_not_until_its_end_date(): void
+    {
+        $id = $this->inCompany(function () {
+            $cat = \App\Models\AllowanceCategory::create(['category' => 'Responsibility', 'code' => 'RA', 'duration' => 'month', 'generation' => 'assigned', 'deduct_leave' => false, 'is_active' => true]);
+
+            return \App\Models\EmpAllowance::create(['employee_id' => $this->staff['C']->id, 'allowance_category_id' => $cat->id, 'category' => 'Responsibility', 'duration' => 'month',
+                'amount' => 310000, 'amount_per_item' => 310000, 'start_date' => '2024-01-01', 'end_date' => '2025-01-01', 'status' => 'approved', 'is_active' => true])->id;
+        });
+        $calc = fn () => $this->inCompany(function () {
+            $sheet = PayrollSheet::firstOrCreate(['year' => '2026', 'month' => '11'], ['name' => 'Payroll November 2026', 'payroll_from_date' => '2026-10-26', 'payroll_to_date' => '2026-11-25', 'status' => 'draft']);
+
+            return collect((new PayrollCalculator(PayrollDateSetting::current()))->calculate($this->staff['C'], $sheet)['detail']['lines'] ?? [])->where('code', 'ALLOWANCE')->values();
+        });
+        $this->assertEquals(310000, $calc()->first(fn ($a) => str_starts_with($a['label'], 'Responsibility'))['amount'] ?? null, 'the end date (2025) does not stop it');
+
+        $this->inCompany(fn () => app(\Modules\Hr\Actions\ManagePayItems::class)->stop(\App\Models\EmpAllowance::find($id), '2026-11-10'));
+        $stopped = $this->inCompany(fn () => \App\Models\EmpAllowance::find($id));
+        $this->assertSame(['2026-11-10', false], [$stopped->stopped_at->toDateString(), $stopped->is_active]);
+        $this->assertEquals(160000, $calc()->first(fn ($a) => str_starts_with($a['label'], 'Responsibility'))['amount'] ?? null, 'paid 16 of 31 days up to the stop day');
+
+        $this->inCompany(fn () => \App\Models\EmpAllowance::whereKey($id)->update(['stopped_at' => '2026-10-20']));
+        $this->assertNull($calc()->first(fn ($a) => str_starts_with($a['label'], 'Responsibility')), 'stopped before the period: not paid');
+    }
 }

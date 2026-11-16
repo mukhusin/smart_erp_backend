@@ -30,7 +30,7 @@ class PayItemsController extends Controller
     /**
      * Assigned monthly allowances, with the categories that can be assigned.
      *
-     * @response array{data: list<array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}, category: string, category_id: int|null, amount: float, start_date: string, end_date: string|null, description: string|null, status: string, running: bool, waiting_for: string|null, decision_comment: string|null}>, categories: list<array{id: int, name: string, deduct_leave: bool, other_absence: bool, taxable: bool}>}
+     * @response array{data: list<array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}, category: string, category_id: int|null, amount: float, start_date: string, end_date: string|null, stopped_at: string|null, description: string|null, status: string, running: bool, waiting_for: string|null, decision_comment: string|null}>, categories: list<array{id: int, name: string, deduct_leave: bool, other_absence: bool, taxable: bool}>}
      */
     #[QueryParameter('status', type: 'string', description: 'running (default), pending, ended, all')]
     #[QueryParameter('employee_id', type: 'integer')]
@@ -39,7 +39,7 @@ class PayItemsController extends Controller
         $f = $this->filters($request);
         $rows = EmpAllowance::with(['employee.department', 'workflow.steps'])->whereHas('employee', fn ($q) => app(EmployeeScope::class)->apply($q, $request->user()))
             ->when($f['employee_id'] ?? null, fn ($q, $e) => $q->where('employee_id', $e))->latest('start_date')->latest('id')->limit(500)->get()
-            ->filter(fn ($a) => $this->matches($f['status'] ?? 'running', $a->status, $a->status === 'approved' && (! $a->end_date || ! $a->end_date->isPast())));
+            ->filter(fn ($a) => $this->matches($f['status'] ?? 'running', $a->status, $a->running()));
 
         return response()->json([
             'data' => $rows->map(fn ($a) => $this->allowanceRow($a))->values(),
@@ -51,7 +51,7 @@ class PayItemsController extends Controller
     /**
      * Assign a monthly allowance to an employee.
      *
-     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}, category: string, category_id: int|null, amount: float, start_date: string, end_date: string|null, description: string|null, status: string, running: bool, waiting_for: string|null, decision_comment: string|null}}
+     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}, category: string, category_id: int|null, amount: float, start_date: string, end_date: string|null, stopped_at: string|null, description: string|null, status: string, running: bool, waiting_for: string|null, decision_comment: string|null}}
      */
     public function storeAllowance(AssignedAllowanceRequest $request, Employee $employee): JsonResponse
     {
@@ -63,7 +63,7 @@ class PayItemsController extends Controller
     /**
      * Stop an assigned allowance from a date (the last day it is paid).
      *
-     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}, category: string, category_id: int|null, amount: float, start_date: string, end_date: string|null, description: string|null, status: string, running: bool, waiting_for: string|null, decision_comment: string|null}}
+     * @response array{data: array{id: int, employee: array{id: int, name: string, employee_no: string|null, department: string|null}, category: string, category_id: int|null, amount: float, start_date: string, end_date: string|null, stopped_at: string|null, description: string|null, status: string, running: bool, waiting_for: string|null, decision_comment: string|null}}
      */
     public function stopAllowance(Request $request, EmpAllowance $allowance): JsonResponse
     {
@@ -208,7 +208,7 @@ class PayItemsController extends Controller
         return [
             'id' => $a->id, 'employee' => $this->employee($a->employee), 'category' => $a->category, 'category_id' => $a->allowance_category_id, 'amount' => (float) $a->amount,
             'start_date' => $a->start_date->toDateString(), 'end_date' => $a->end_date?->toDateString(), 'description' => $a->description, 'status' => $a->status,
-            'running' => $a->status === 'approved' && (! $a->end_date || ! $a->end_date->isPast()), 'waiting_for' => $this->waiting($a), 'decision_comment' => $a->decision_comment,
+            'stopped_at' => $a->stopped_at?->toDateString(), 'running' => $a->running(), 'waiting_for' => $this->waiting($a), 'decision_comment' => $a->decision_comment,
         ];
     }
 
