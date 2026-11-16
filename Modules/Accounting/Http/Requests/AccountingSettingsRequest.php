@@ -17,6 +17,8 @@ class AccountingSettingsRequest extends FormRequest
             'budget_phasing' => ['required', Rule::in(array_keys(AccountingSetting::PHASING))],
             /** When a request needs more than the budget left: off, warn (extra approval) or block. */
             'budget_control' => ['required', Rule::in(array_keys(AccountingSetting::CONTROL))],
+            /** period: money becomes spendable when finance opens each quarter/month; none: the whole approved budget at once. */
+            'budget_release' => ['sometimes', Rule::in(array_keys(AccountingSetting::RELEASE))],
         ];
     }
 }

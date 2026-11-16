@@ -8,8 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Modules\Budgeting\Actions\ManageBudgets;
 use Modules\Budgeting\Http\Requests\BudgetRequest;
+use Modules\Budgeting\Http\Requests\ReleaseRequest;
 use Modules\Budgeting\Models\Budget;
+use Modules\Budgeting\Models\BudgetRelease;
 use Modules\Budgeting\Models\DepartmentBudget;
+use Modules\Budgeting\Services\BudgetService;
 use Modules\Budgeting\Support\BudgetAccess;
 use Modules\Budgeting\Support\BudgetFigures;
 
@@ -52,7 +55,7 @@ class BudgetController extends Controller
     /**
      * A budget with its department budgets and totals (original, revised, actual, committed, available).
      *
-     * @response array{data: array{id: int, title: string, fiscal_year: string|null, phasing: string, status: string, status_label: string, annual_plan: string|null, total: float, submission_due: string|null, decision_comment: string|null, waiting_for: string|null, period_labels: list<string>}, departments: list<array{id: int, department_id: int, name: string, status: string, status_label: string, ceiling: float|null, items: int, original: float, revised: float, actual: float, committed: float, available: float, waiting_for: string|null, can_prepare: bool}>, totals: array{original: float, revised: float, actual: float, committed: float, available: float}, can: array{manage: bool, open: bool, submit: bool, close: bool}}
+     * @response array{data: array{id: int, title: string, fiscal_year: string|null, phasing: string, status: string, status_label: string, annual_plan: string|null, total: float, submission_due: string|null, decision_comment: string|null, waiting_for: string|null, period_labels: list<string>}, departments: list<array{id: int, department_id: int, name: string, status: string, status_label: string, ceiling: float|null, items: int, original: float, revised: float, released: float, reserved: float, actual: float, committed: float, available: float, waiting_for: string|null, can_prepare: bool}>, totals: array{original: float, revised: float, released: float, reserved: float, actual: float, committed: float, available: float}, periods: list<array{period: int, label: string, amount: float, status: string, status_label: string, waiting_for: string|null}>, release_mode: string, can: array{manage: bool, open: bool, submit: bool, close: bool, release: bool}}
      */
     public function show(Request $request, Budget $budget): JsonResponse
     {
@@ -70,13 +73,26 @@ class BudgetController extends Controller
                     'can_prepare' => $budget->editable() && in_array($d->status, ['draft', 'rejected'], true) && $this->access->canPrepare($user, $d->department_id)];
         })->values();
         $manage = $this->access->manages($user);
+        $releases = $budget->releases()->with('workflow.steps')->latest('id')->get()->groupBy('period');
+        $labels = $budget->periodLabels();
+        $items = $budget->items()->with('periods')->get();
+        $periods = collect(range(1, $budget->periods()))->map(function ($n) use ($releases, $labels, $items) {
+            $r = ($releases[$n] ?? collect())->first();
+
+            return ['period' => $n, 'label' => $labels[$n - 1] ?? 'Period '.$n, 'amount' => round((float) $items->sum(fn ($i) => $this->budgets->periodShare($i, $n)), 2),
+                'status' => $r?->status ?? 'closed', 'status_label' => $r ? (BudgetRelease::STATUS_LABELS[$r->status] ?? $r->status) : 'Not open',
+                'waiting_for' => $r?->status === 'pending' ? $r->workflow?->steps->firstWhere('status', 'pending')?->name : null];
+        })->values();
 
         return response()->json([
             'data' => $this->row($budget) + ['submission_due' => $budget->submission_due?->toDateString(), 'decision_comment' => $budget->decision_comment,
                 'waiting_for' => $budget->status === 'pending' ? $budget->workflow?->steps->firstWhere('status', 'pending')?->name : null, 'period_labels' => $budget->periodLabels()],
             'departments' => $departments,
             'totals' => $this->figures->totals($departments->map(fn ($d) => $d)),
-            'can' => ['manage' => $manage, 'open' => $manage && in_array($budget->status, ['draft', 'open'], true), 'submit' => $manage && $budget->editable(), 'close' => $manage && $budget->status === 'approved'],
+            'periods' => $periods,
+            'release_mode' => app(BudgetService::class)->releases() ? 'period' : 'none',
+            'can' => ['manage' => $manage, 'open' => $manage && in_array($budget->status, ['draft', 'open'], true), 'submit' => $manage && $budget->editable(), 'close' => $manage && $budget->status === 'approved',
+                'release' => $manage && $budget->status === 'approved' && app(BudgetService::class)->releases()],
         ]);
     }
 
@@ -95,6 +111,19 @@ class BudgetController extends Controller
         $b = $this->budgets->submitFinal($budget, $request->user());
 
         return response()->json(['data' => ['id' => $b->id, 'status' => $b->status]]);
+    }
+
+    /**
+     * Open a quarter or month of the approved budget (through approval), making its money available to spend.
+     *
+     * @response array{data: array{id: int, status: string}}
+     */
+    public function release(ReleaseRequest $request, Budget $budget): JsonResponse
+    {
+        abort_unless($this->access->manages($request->user()), 403);
+        $r = $this->budgets->requestRelease($budget, (int) $request->validated()['period'], $request->user());
+
+        return response()->json(['data' => ['id' => $r->id, 'status' => $r->status]], 201);
     }
 
     /** @response array{data: array{id: int, status: string}} */

@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\User;
 use App\Services\CompanyContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Modules\Accounting\Models\Account;
 use Modules\Accounting\Services\FiscalCalendar;
 use Modules\Accounting\Services\PostingService;
@@ -127,32 +128,54 @@ class BudgetCycleTest extends TestCase
         $this->actingAs($this->finance)->getJson("/api/v1/budgeting/budgets/{$budget}")->assertJsonPath('data.status', 'approved')
             ->assertJsonPath('totals.revised', 600000)->assertJsonPath('departments.2.name', 'Pharmacy');
 
+        WorkflowTemplate::where('process', 'budget-release')->delete();
+        $this->getJson("/api/v1/budgeting/items/{$a}")->assertJsonPath('data.available', 0)->assertJsonPath('data.unreleased', 500000);
+        $this->postJson("/api/v1/budgeting/budgets/{$budget}/releases", ['period' => 1])->assertCreated()->assertJsonPath('data.status', 'opened');
+        $this->postJson("/api/v1/budgeting/budgets/{$budget}/releases", ['period' => 1])->assertUnprocessable();
+        $this->postJson("/api/v1/budgeting/budgets/{$budget}/releases", ['period' => 2])->assertCreated();
+        $this->getJson("/api/v1/budgeting/budgets/{$budget}")->assertJsonPath('periods.0.status', 'opened')->assertJsonPath('periods.2.status', 'closed')
+            ->assertJsonPath('periods.1.amount', 175000)->assertJsonPath('totals.released', 300000);
+
         app(CompanyContext::class)->run($this->company, function () use ($a) {
             app(PostingService::class)->post('2026-11-10', 'Medicines bought', [
                 ['account_id' => $this->acc['5100'], 'debit' => 120000, 'department_id' => $this->pharmacy->id, 'budget_item_id' => $a],
                 ['account_id' => $this->acc['1100'], 'credit' => 120000],
             ], $this->finance, 'manual');
             $svc = app(BudgetService::class);
-            $svc->reserve($this->finance, [$a => 30000]);
-            $this->assertSame(350000.0, $svc->available(BudgetItem::find($a)));
+            $this->assertSame(130000.0, $svc->available(BudgetItem::find($a)));
+            $short = $svc->reserve($this->director, [$a => 200000], true);
+            $this->assertSame(130000.0, $short[0]['available']);
+            $svc->release($this->director);
+            try {
+                $svc->reserve($this->director, [$a => 200000]);
+                $this->fail('An over-budget hold must be refused.');
+            } catch (ValidationException $e) {
+                $this->assertStringContainsString('available 130,000.00', $e->getMessage());
+            }
+            $svc->reserve($this->director, [$a => 30000]);
+            $this->assertSame(100000.0, $svc->available(BudgetItem::find($a)));
             $this->assertTrue($svc->check(BudgetItem::find($a), 400000)['over']);
         });
 
-        $this->getJson("/api/v1/budgeting/budgets/{$budget}/vs-actual?group=item")->assertOk()->assertJsonPath('totals.actual', 120000)->assertJsonPath('totals.committed', 30000)
-            ->assertJsonPath('totals.available', 450000);
+        $this->getJson("/api/v1/budgeting/budgets/{$budget}/vs-actual?group=item")->assertOk()->assertJsonPath('totals.actual', 120000)->assertJsonPath('totals.reserved', 30000)
+            ->assertJsonPath('totals.available', 150000);
         $this->getJson("/api/v1/budgeting/budgets/{$budget}/vs-actual?group=sub_activity")->assertJsonPath('data.0.label', '1.1.1 Buy essential medicines')->assertJsonPath('data.0.used_percent', 30);
-        $this->getJson("/api/v1/budgeting/items/{$a}")->assertJsonCount(1, 'lines')->assertJsonPath('data.available', 350000);
+        $this->getJson("/api/v1/budgeting/items/{$a}")->assertJsonCount(1, 'lines')->assertJsonPath('data.available', 100000)->assertJsonPath('entries.0.balance', 'reserved');
         $this->actingAs($this->heads['lab'])->getJson("/api/v1/budgeting/budgets/{$budget}/vs-actual")->assertJsonCount(0, 'data');
 
         $this->actingAs($this->heads['pharm'])->postJson("/api/v1/budgeting/budgets/{$budget}/transfers", ['kind' => 'transfer', 'from_item_id' => $a, 'to_item_id' => $b, 'amount' => 400000, 'reason' => 'Fuel'])
             ->assertUnprocessable()->assertJsonValidationErrors(['amount' => 'Only 350,000.00']);
         $this->postJson("/api/v1/budgeting/budgets/{$budget}/transfers", ['kind' => 'supplementary', 'to_item_id' => $b, 'amount' => 1000, 'reason' => 'More'])->assertForbidden();
         $this->postJson("/api/v1/budgeting/budgets/{$budget}/transfers", ['kind' => 'transfer', 'from_item_id' => $a, 'to_item_id' => $b, 'amount' => 50000, 'reason' => 'Outreach trips'])->assertCreated();
-        $this->getJson("/api/v1/budgeting/items/{$a}")->assertJsonPath('data.available', 300000);
+        $this->getJson("/api/v1/budgeting/items/{$a}")->assertJsonPath('data.available', 50000);
         $this->approve('budget-transfer', $this->finance);
-        $this->getJson("/api/v1/budgeting/items/{$a}")->assertJsonPath('data.revised', 450000)->assertJsonPath('data.original', 500000)->assertJsonPath('data.available', 300000);
-        $this->getJson("/api/v1/budgeting/items/{$b}")->assertJsonPath('data.revised', 150000);
+        $this->getJson("/api/v1/budgeting/items/{$a}")->assertJsonPath('data.revised', 450000)->assertJsonPath('data.original', 500000)->assertJsonPath('data.available', 100000);
+        $this->getJson("/api/v1/budgeting/items/{$b}")->assertJsonPath('data.revised', 150000)->assertJsonPath('data.released', 100000);
         $this->getJson("/api/v1/budgeting/budgets/{$budget}/transfers")->assertJsonPath('data.0.status', 'approved');
-        $this->getJson('/api/v1/budgeting/items?department_id='.$this->pharmacy->id)->assertJsonCount(2, 'data')->assertJsonPath('budget.title', 'Budget 2026');
+        $this->artisan('budget:check-balances')->assertSuccessful();
+
+        $this->actingAs($this->finance)->putJson('/api/v1/accounting/settings', ['use_gfs' => false, 'budget_phasing' => 'quarter', 'budget_control' => 'warn', 'budget_release' => 'none'])->assertOk();
+        $this->getJson("/api/v1/budgeting/items/{$b}")->assertJsonPath('data.available', 150000);
+        $this->actingAs($this->heads['pharm'])->getJson('/api/v1/budgeting/items?department_id='.$this->pharmacy->id)->assertJsonCount(2, 'data')->assertJsonPath('budget.title', 'Budget 2026');
     }
 }

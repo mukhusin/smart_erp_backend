@@ -10,8 +10,11 @@ use Modules\Accounting\Models\Account;
 use Modules\Accounting\Models\AccountingSetting;
 use Modules\Budgeting\Models\Budget;
 use Modules\Budgeting\Models\BudgetItem;
+use Modules\Budgeting\Models\BudgetRelease;
 use Modules\Budgeting\Models\DepartmentBudget;
+use Modules\Budgeting\Services\BudgetService;
 use Modules\Budgeting\Workflow\BudgetApprovalProcess;
+use Modules\Budgeting\Workflow\BudgetReleaseProcess;
 use Modules\Budgeting\Workflow\DepartmentBudgetProcess;
 use Modules\Core\Notifications\Notice;
 use Modules\Planning\Models\SubActivity;
@@ -21,7 +24,7 @@ use Modules\Workflow\Services\WorkflowEngine;
 
 class ManageBudgets
 {
-    public function __construct(private readonly WorkflowEngine $workflow) {}
+    public function __construct(private readonly WorkflowEngine $workflow, private readonly BudgetService $budgets) {}
 
     public function create(array $data, User $by): Budget
     {
@@ -177,8 +180,60 @@ class ManageBudgets
     {
         DB::transaction(function () use ($budget) {
             $budget->items()->update(['revised_amount' => DB::raw('original_amount')]);
+            foreach ($budget->items()->get() as $item) {
+                $this->budgets->record($item->id, 'approved', (float) $item->original_amount, $budget, 'Budget approved');
+            }
             $budget->update(['status' => 'approved', 'approved_at' => now()]);
         });
+    }
+
+    public function requestRelease(Budget $budget, int $period, User $by): BudgetRelease
+    {
+        if ($budget->status !== 'approved') {
+            throw ValidationException::withMessages(['period' => 'Periods are opened on an approved budget.']);
+        }
+        if ($period < 1 || $period > $budget->periods()) {
+            throw ValidationException::withMessages(['period' => 'This budget has '.$budget->periods().' periods.']);
+        }
+        if ($budget->releases()->where('period', $period)->whereIn('status', ['pending', 'opened'])->exists()) {
+            throw ValidationException::withMessages(['period' => 'This period is already open or waiting for approval.']);
+        }
+
+        return DB::transaction(function () use ($budget, $period, $by) {
+            $release = BudgetRelease::create(['budget_id' => $budget->id, 'period' => $period, 'status' => 'pending', 'requested_by' => $by->id]);
+            if (! $this->workflow->start(BudgetReleaseProcess::KEY, $release, $by)) {
+                $this->released($release);
+            }
+
+            return $release->refresh();
+        });
+    }
+
+    public function released(BudgetRelease $release): void
+    {
+        DB::transaction(function () use ($release) {
+            $budget = $release->budget;
+            foreach ($budget->items()->with('periods')->get() as $item) {
+                $this->budgets->record($item->id, 'released', $this->periodShare($item, $release->period), $release, 'Period '.$release->period.' opened');
+            }
+            $release->update(['status' => 'opened', 'opened_at' => now()]);
+        });
+    }
+
+    public function releaseRejected(BudgetRelease $release, ?string $comment, bool $withdrawn): void
+    {
+        $release->update(['status' => $withdrawn ? 'cancelled' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment]);
+    }
+
+    public function periodShare(BudgetItem $item, int $period): float
+    {
+        $original = (float) $item->original_amount;
+        $planned = (float) ($item->periods->firstWhere('period', $period)?->amount ?? 0);
+        if ($original <= 0) {
+            return 0.0;
+        }
+
+        return round($planned / $original * (float) $item->revised_amount, 2);
     }
 
     public function rejected(Budget $budget, ?string $comment, bool $withdrawn): void

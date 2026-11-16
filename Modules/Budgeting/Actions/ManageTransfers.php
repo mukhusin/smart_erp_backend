@@ -29,7 +29,9 @@ class ManageTransfers
             if (! $from || $from->id === $to->id) {
                 throw ValidationException::withMessages(['from_item_id' => 'Choose a different budget item to take the money from.']);
             }
-            $check = $this->budgets->check($from->load('account'), (float) $data['amount']);
+            $f = $this->budgets->figures(collect([$from]))[$from->id];
+            $check = ['available' => round($f['revised'] - $f['reserved'] - $f['committed'] - $f['actual'], 2)];
+            $check['over'] = round((float) $data['amount'], 2) > $check['available'];
             if ($check['over']) {
                 throw ValidationException::withMessages(['amount' => 'Only '.number_format($check['available'], 2).' is left on the item you take from.']);
             }
@@ -39,7 +41,7 @@ class ManageTransfers
             $t = BudgetTransfer::create(['budget_id' => $budget->id, 'kind' => $data['kind'], 'from_item_id' => $from?->id, 'to_item_id' => $to->id,
                 'amount' => round((float) $data['amount'], 2), 'reason' => $data['reason'], 'status' => 'pending', 'requested_by' => $by->id]);
             if ($from) {
-                $this->budgets->reserve($t, [$from->id => (float) $data['amount']]);
+                $this->budgets->reserve($t, [$from->id => (float) $data['amount']], false, $by);
             }
             if (! $this->workflow->start(BudgetTransferProcess::KEY, $t, $by)) {
                 $this->apply($t);
@@ -53,10 +55,20 @@ class ManageTransfers
     {
         DB::transaction(function () use ($t) {
             $this->budgets->release($t);
+            $opened = $t->budget->releases()->where('status', 'opened')->exists();
             if ($t->fromItem) {
                 $t->fromItem->decrement('revised_amount', $t->amount);
+                $this->budgets->record($t->from_item_id, 'approved', -$t->amount, $t, 'Transferred out');
+                $released = $this->budgets->figures(collect([$t->fromItem]))[$t->from_item_id];
+                if ($this->budgets->releases() && $released['released'] > $released['revised']) {
+                    $this->budgets->record($t->from_item_id, 'released', $released['revised'] - $released['released'], $t, 'Transferred out');
+                }
             }
             $t->toItem->increment('revised_amount', $t->amount);
+            $this->budgets->record($t->to_item_id, 'approved', $t->amount, $t, $t->kind === 'supplementary' ? 'Supplementary budget' : 'Transferred in');
+            if ($opened) {
+                $this->budgets->record($t->to_item_id, 'released', $t->amount, $t, $t->kind === 'supplementary' ? 'Supplementary budget' : 'Transferred in');
+            }
             $t->update(['status' => 'approved', 'decided_at' => now()]);
         });
         $t->requester?->notify(new Notice('Budget transfer approved', number_format($t->amount, 2).' moved to '.$t->toItem->label().'.', "/budgeting/budgets/{$t->budget_id}/transfers", 'wallet2'));

@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\Budgeting\Models\Budget;
-use Modules\Budgeting\Models\BudgetCommitment;
+use Modules\Budgeting\Models\BudgetEntry;
 use Modules\Budgeting\Models\BudgetItem;
 use Modules\Budgeting\Support\BudgetAccess;
 use Modules\Budgeting\Support\BudgetFigures;
@@ -27,7 +27,7 @@ class BudgetReportController extends Controller
     /**
      * Budget vs actual: original, revised, committed, actual, available and use per group.
      *
-     * @response array{data: list<array{key: string, label: string, original: float, revised: float, actual: float, committed: float, available: float, variance: float, used_percent: float|null, items: int}>, totals: array{original: float, revised: float, actual: float, committed: float, available: float}, group: string}
+     * @response array{data: list<array{key: string, label: string, original: float, revised: float, released: float, reserved: float, actual: float, committed: float, available: float, variance: float, used_percent: float|null, items: int}>, totals: array{original: float, revised: float, released: float, reserved: float, actual: float, committed: float, available: float}, group: string}
      */
     #[QueryParameter('group', description: '`department`, `activity`, `sub_activity`, `account`, `fund` or `item`.', type: 'string', default: 'department')]
     #[QueryParameter('department_id', type: 'integer')]
@@ -54,7 +54,7 @@ class BudgetReportController extends Controller
             $t = $this->figures->totals($g);
 
             return ['key' => (string) $key, 'label' => $labelFn($g->first())] + $t + ['variance' => round($t['revised'] - $t['actual'], 2),
-                'used_percent' => $t['revised'] > 0 ? round(($t['actual'] + $t['committed']) / $t['revised'] * 100, 1) : null, 'items' => $g->count()];
+                'used_percent' => $t['revised'] > 0 ? round(($t['actual'] + $t['committed'] + $t['reserved']) / $t['revised'] * 100, 1) : null, 'items' => $g->count()];
         })->sortBy('label')->values();
 
         return response()->json(['data' => $out, 'totals' => $this->figures->totals($rows), 'group' => $group]);
@@ -63,7 +63,7 @@ class BudgetReportController extends Controller
     /**
      * Budget items with what is left, for choosing an item to spend against.
      *
-     * @response array{data: list<array{id: int, label: string, department_id: int, department: string|null, activity: array{id: int, code: string|null, title: string}|null, sub_activity: array{id: int, code: string|null, title: string}|null, account: array{id: int, code: string, gfs_code: string|null, name: string, type: string}|null, fund_source: array{id: int, code: string}|null, description: string|null, quantity: float, unit: string|null, unit_cost: float, frequency: float, periods: list<float>, original: float, revised: float, actual: float, committed: float, available: float, used_percent: float|null}>, budget: array{id: int, title: string}|null}
+     * @response array{data: list<array{id: int, label: string, department_id: int, department: string|null, activity: array{id: int, code: string|null, title: string}|null, sub_activity: array{id: int, code: string|null, title: string}|null, account: array{id: int, code: string, gfs_code: string|null, name: string, type: string}|null, fund_source: array{id: int, code: string}|null, description: string|null, quantity: float, unit: string|null, unit_cost: float, frequency: float, periods: list<float>, original: float, revised: float, released: float, unreleased: float, reserved: float, actual: float, committed: float, available: float, used_percent: float|null}>, budget: array{id: int, title: string}|null}
      */
     #[QueryParameter('department_id', type: 'integer')]
     public function items(Request $request): JsonResponse
@@ -78,9 +78,9 @@ class BudgetReportController extends Controller
     }
 
     /**
-     * What a budget item was spent on: posted ledger lines and open commitments.
+     * A budget item's statement: every balance change with its document, and the ledger lines posted against it.
      *
-     * @response array{data: array{id: int, label: string, department_id: int, department: string|null, activity: array{id: int, code: string|null, title: string}|null, sub_activity: array{id: int, code: string|null, title: string}|null, account: array{id: int, code: string, gfs_code: string|null, name: string, type: string}|null, fund_source: array{id: int, code: string}|null, description: string|null, quantity: float, unit: string|null, unit_cost: float, frequency: float, periods: list<float>, original: float, revised: float, actual: float, committed: float, available: float, used_percent: float|null}, lines: list<array{journal_id: int, reference_no: string|null, date: string, description: string|null, debit: float, credit: float}>, commitments: list<array{id: int, source: string, source_id: int, amount: float, status: string, created_at: string}>}
+     * @response array{data: array{id: int, label: string, department_id: int, department: string|null, activity: array{id: int, code: string|null, title: string}|null, sub_activity: array{id: int, code: string|null, title: string}|null, account: array{id: int, code: string, gfs_code: string|null, name: string, type: string}|null, fund_source: array{id: int, code: string}|null, description: string|null, quantity: float, unit: string|null, unit_cost: float, frequency: float, periods: list<float>, original: float, revised: float, released: float, unreleased: float, reserved: float, actual: float, committed: float, available: float, used_percent: float|null}, lines: list<array{journal_id: int, reference_no: string|null, date: string, description: string|null, debit: float, credit: float}>, entries: list<array{id: int, balance: string, balance_label: string, amount: float, source: string|null, source_id: int|null, note: string|null, by: string|null, created_at: string}>}
      */
     public function item(Request $request, BudgetItem $item): JsonResponse
     {
@@ -93,8 +93,10 @@ class BudgetReportController extends Controller
         return response()->json([
             'data' => $this->figures->items(collect([$item]))->first(),
             'lines' => $lines->map(fn ($l) => ['journal_id' => (int) $l->id, 'reference_no' => $l->reference_no, 'date' => Carbon::parse($l->date)->toDateString(), 'description' => $l->description, 'debit' => (float) $l->debit, 'credit' => (float) $l->credit])->values(),
-            'commitments' => BudgetCommitment::where('budget_item_id', $item->id)->latest('id')->limit(200)->get()
-                ->map(fn ($c) => ['id' => $c->id, 'source' => class_basename($c->source_type), 'source_id' => (int) $c->source_id, 'amount' => (float) $c->amount, 'status' => $c->status, 'created_at' => $c->created_at->toIso8601String()])->values(),
+            'entries' => BudgetEntry::with('user')->where('budget_item_id', $item->id)->latest('id')->limit(500)->get()
+                ->map(fn ($e) => ['id' => $e->id, 'balance' => $e->balance, 'balance_label' => BudgetEntry::BALANCES[$e->balance] ?? $e->balance, 'amount' => (float) $e->amount,
+                    'source' => $e->source_type ? class_basename($e->source_type) : null, 'source_id' => $e->source_id ? (int) $e->source_id : null, 'note' => $e->note,
+                    'by' => $e->user?->display_name, 'created_at' => $e->created_at->toIso8601String()])->values(),
         ]);
     }
 }

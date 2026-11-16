@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Modules\Accounting\Events\JournalPosted;
 use Modules\Accounting\Models\Account;
 use Modules\Accounting\Models\JournalEntry;
 
@@ -67,7 +68,9 @@ class PostingService
                 ]);
             }
 
-            return $entry->load('lines');
+            event(new JournalPosted($entry->load('lines'), $by));
+
+            return $entry;
         });
     }
 

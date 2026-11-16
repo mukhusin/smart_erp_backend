@@ -24,7 +24,7 @@ class SettingsController extends Controller
     {
         $s = AccountingSetting::current();
 
-        return response()->json(['data' => ['use_gfs' => (bool) $s->use_gfs, 'budget_phasing' => (string) $s->budget_phasing, 'budget_control' => (string) $s->budget_control]]);
+        return response()->json(['data' => ['use_gfs' => (bool) $s->use_gfs, 'budget_phasing' => (string) $s->budget_phasing, 'budget_control' => (string) $s->budget_control, 'budget_release' => (string) ($s->budget_release ?: 'period')]]);
     }
 
     public function updateSettings(AccountingSettingsRequest $request): JsonResponse

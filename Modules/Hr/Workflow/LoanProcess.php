@@ -5,9 +5,10 @@ namespace Modules\Hr\Workflow;
 use App\Models\EmployeeLoan;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Hr\Actions\ManageLoans;
+use Modules\Workflow\Contracts\HasAmount;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
-class LoanProcess implements WorkflowProcess
+class LoanProcess implements HasAmount, WorkflowProcess
 {
     public const KEY = 'employee-loan';
 
@@ -70,5 +71,10 @@ class LoanProcess implements WorkflowProcess
     public function onRejected(Model $subject, ?string $comment): void
     {
         app(ManageLoans::class)->rejectLoan($subject, $comment);
+    }
+
+    public function amount(Model $subject): ?float
+    {
+        return (float) $subject->amount;
     }
 }

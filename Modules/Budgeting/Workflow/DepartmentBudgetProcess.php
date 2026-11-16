@@ -5,9 +5,10 @@ namespace Modules\Budgeting\Workflow;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Budgeting\Actions\ManageBudgets;
 use Modules\Budgeting\Models\DepartmentBudget;
+use Modules\Workflow\Contracts\HasAmount;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
-class DepartmentBudgetProcess implements WorkflowProcess
+class DepartmentBudgetProcess implements HasAmount, WorkflowProcess
 {
     public const KEY = 'department-budget';
 
@@ -70,5 +71,10 @@ class DepartmentBudgetProcess implements WorkflowProcess
     public function onRejected(Model $subject, ?string $comment): void
     {
         app(ManageBudgets::class)->departmentRejected($subject, $comment, $comment === 'Withdrawn by the requester.');
+    }
+
+    public function amount(Model $subject): ?float
+    {
+        return (float) $subject->items()->sum('original_amount');
     }
 }

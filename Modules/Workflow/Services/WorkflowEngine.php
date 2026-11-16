@@ -2,6 +2,7 @@
 
 namespace Modules\Workflow\Services;
 
+use Modules\Workflow\Contracts\HasAmount;
 use App\Models\Employee;
 use App\Models\HeadOfDepartment;
 use App\Models\User;
@@ -49,7 +50,13 @@ class WorkflowEngine
             return null;
         }
 
-        return DB::transaction(function () use ($process, $processKey, $subject, $initiator, $template, $branchId) {
+        $amount = $process instanceof HasAmount ? $process->amount($subject) : null;
+        $steps = $template->steps->filter(fn (WorkflowStep $s) => $s->min_amount === null || $amount === null || $amount >= (float) $s->min_amount)->values();
+        if ($steps->isEmpty()) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($process, $processKey, $subject, $initiator, $template, $branchId, $steps, $amount) {
             $instance = WorkflowInstance::create([
                 'process' => $processKey,
                 'workflow_template_id' => $template->id,
@@ -58,11 +65,12 @@ class WorkflowEngine
                 'company_branch_id' => $branchId,
                 'department_id' => $process->departmentId($subject),
                 'employee_id' => $process->employeeId($subject),
+                'amount' => $amount,
                 'status' => WorkflowInstance::PENDING,
-                'current_step_order' => $template->steps->first()->step_order,
+                'current_step_order' => $steps->first()->step_order,
                 'initiated_by' => $initiator->id,
             ]);
-            foreach ($template->steps as $i => $step) {
+            foreach ($steps as $i => $step) {
                 $instance->steps()->create($this->copy($step) + ['status' => $i === 0 ? WorkflowInstanceStep::PENDING : WorkflowInstanceStep::WAITING]);
             }
 
@@ -201,6 +209,6 @@ class WorkflowEngine
 
     private function copy(WorkflowStep $step): array
     {
-        return $step->only(['step_order', 'name', 'approver_type', 'role_id', 'user_id', 'same_branch', 'allow_send_back', 'approve_label', 'reject_label']);
+        return $step->only(['step_order', 'name', 'approver_type', 'role_id', 'user_id', 'same_branch', 'allow_send_back', 'min_amount', 'approve_label', 'reject_label']);
     }
 }

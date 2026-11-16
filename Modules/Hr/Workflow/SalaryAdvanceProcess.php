@@ -5,9 +5,10 @@ namespace Modules\Hr\Workflow;
 use App\Models\EmployeeMonthlyAdvance;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Hr\Actions\ManageLoans;
+use Modules\Workflow\Contracts\HasAmount;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
-class SalaryAdvanceProcess implements WorkflowProcess
+class SalaryAdvanceProcess implements HasAmount, WorkflowProcess
 {
     public const KEY = 'salary-advance';
 
@@ -71,5 +72,10 @@ class SalaryAdvanceProcess implements WorkflowProcess
     public function onRejected(Model $subject, ?string $comment): void
     {
         app(ManageLoans::class)->rejectAdvance($subject, $comment);
+    }
+
+    public function amount(Model $subject): ?float
+    {
+        return (float) $subject->amount;
     }
 }

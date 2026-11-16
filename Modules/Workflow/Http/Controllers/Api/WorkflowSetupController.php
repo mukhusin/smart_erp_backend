@@ -11,6 +11,7 @@ use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Workflow\Contracts\HasAmount;
 use Modules\Workflow\Contracts\WorkflowProcess;
 use Modules\Workflow\Http\Requests\SaveWorkflowRequest;
 use Modules\Workflow\Http\Resources\WorkflowTemplateResource;
@@ -66,7 +67,7 @@ class WorkflowSetupController extends Controller
      * Ordered by module (as in the module list), so the screen can group them; `module_name` and `module_icon`
      * (Bootstrap icon name) describe the module.
      *
-     * @response array{data: list<array{process: string, name: string, description: string, module: string, module_name: string, module_icon: string, workflows: list<WorkflowTemplateResource>}>}
+     * @response array{data: list<array{process: string, name: string, description: string, module: string, has_amount: bool, module_name: string, module_icon: string, workflows: list<WorkflowTemplateResource>}>}
      */
     public function index(WorkflowCatalog $catalog): JsonResponse
     {
@@ -80,6 +81,7 @@ class WorkflowSetupController extends Controller
                 'name' => $p->name(),
                 'description' => $p->description(),
                 'module' => $p->module(),
+                'has_amount' => $p instanceof HasAmount,
                 'module_name' => $modules[$p->module()]?->name ?? ucfirst($p->module()),
                 'module_icon' => preg_replace('/^bi-/', '', (string) ($modules[$p->module()]?->icon ?: 'grid')),
                 'workflows' => WorkflowTemplateResource::collection(($templates[$p->key()] ?? collect())->sortBy(fn ($t) => $t->company_branch_id ?? 0)->values())->resolve(),
@@ -119,6 +121,7 @@ class WorkflowSetupController extends Controller
                     'user_id' => $step['approver_type'] === 'user' ? $step['user_id'] : null,
                     'same_branch' => $step['approver_type'] === 'role' && ($step['same_branch'] ?? false),
                     'allow_send_back' => $step['allow_send_back'] ?? true,
+                    'min_amount' => $step['min_amount'] ?? null,
                     'approve_label' => $step['approve_label'] ?? null,
                     'reject_label' => $step['reject_label'] ?? null,
                 ]);

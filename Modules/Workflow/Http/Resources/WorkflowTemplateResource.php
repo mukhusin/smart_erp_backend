@@ -31,6 +31,7 @@ class WorkflowTemplateResource extends JsonResource
                 'user_name' => $s->user?->display_name,
                 'same_branch' => (bool) $s->same_branch,
                 'allow_send_back' => (bool) $s->allow_send_back,
+                'min_amount' => $s->min_amount !== null ? (float) $s->min_amount : null,
                 'approve_label' => $s->approve_label,
                 'reject_label' => $s->reject_label,
             ])->values()->all(),

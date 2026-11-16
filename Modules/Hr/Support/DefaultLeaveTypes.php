@@ -63,7 +63,7 @@ final class DefaultLeaveTypes
         if (! $finance) {
             return;
         }
-        foreach (['department-budget' => ['Finance', $finance], 'budget-approval' => ['Director general', $director], 'budget-transfer' => ['Finance', $finance]] as $process => [$name, $role]) {
+        foreach (['department-budget' => ['Finance', $finance], 'budget-approval' => ['Director general', $director], 'budget-transfer' => ['Finance', $finance], 'budget-release' => ['Finance', $finance]] as $process => [$name, $role]) {
             if (WorkflowTemplate::where('process', $process)->exists()) {
                 continue;
             }

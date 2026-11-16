@@ -13,6 +13,7 @@ Route::prefix('budgeting')->middleware(['auth:sanctum', 'module:budgeting'])->na
     Route::put('budgets/{budget}', [BudgetController::class, 'update'])->name('budgets.update');
     Route::post('budgets/{budget}/open', [BudgetController::class, 'open'])->name('budgets.open');
     Route::post('budgets/{budget}/submit', [BudgetController::class, 'submit'])->name('budgets.submit');
+    Route::post('budgets/{budget}/releases', [BudgetController::class, 'release'])->name('budgets.release');
     Route::post('budgets/{budget}/close', [BudgetController::class, 'close'])->name('budgets.close');
 
     Route::get('budgets/{budget}/departments/{department}', [DepartmentBudgetController::class, 'show'])->name('departments.show');

@@ -32,6 +32,8 @@ class SaveWorkflowRequest extends FormRequest
             /** Role approvers: only people from the request's branch. */
             'steps.*.same_branch' => ['sometimes', 'boolean'],
             'steps.*.allow_send_back' => ['sometimes', 'boolean'],
+            /** Step applies only when the request's amount is at least this (processes with an amount). Empty = always. */
+            'steps.*.min_amount' => ['nullable', 'numeric', 'min:0', 'max:999999999999'],
             /** Button text, e.g. "Recommend" / "Decline". */
             'steps.*.approve_label' => ['nullable', 'string', 'max:40'],
             'steps.*.reject_label' => ['nullable', 'string', 'max:40'],

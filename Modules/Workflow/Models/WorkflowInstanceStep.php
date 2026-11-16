@@ -17,9 +17,9 @@ class WorkflowInstanceStep extends Model
     public const REJECTED = 'rejected';
     public const SENT_BACK = 'sent_back';
 
-    protected $fillable = ['workflow_instance_id', 'step_order', 'name', 'approver_type', 'role_id', 'user_id', 'same_branch', 'allow_send_back', 'approve_label', 'reject_label', 'status', 'acted_by', 'acted_at', 'comment'];
+    protected $fillable = ['workflow_instance_id', 'step_order', 'name', 'approver_type', 'role_id', 'user_id', 'same_branch', 'allow_send_back', 'min_amount', 'approve_label', 'reject_label', 'status', 'acted_by', 'acted_at', 'comment'];
 
-    protected $casts = ['same_branch' => 'boolean', 'allow_send_back' => 'boolean', 'acted_at' => 'datetime'];
+    protected $casts = ['same_branch' => 'boolean', 'allow_send_back' => 'boolean', 'min_amount' => 'float', 'acted_at' => 'datetime'];
 
     protected array $auditEvents = ['updated'];
 

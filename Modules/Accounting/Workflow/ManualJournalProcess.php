@@ -5,9 +5,10 @@ namespace Modules\Accounting\Workflow;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Accounting\Actions\ManageJournals;
 use Modules\Accounting\Models\JournalEntry;
+use Modules\Workflow\Contracts\HasAmount;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
-class ManualJournalProcess implements WorkflowProcess
+class ManualJournalProcess implements HasAmount, WorkflowProcess
 {
     public const KEY = 'manual-journal';
 
@@ -70,5 +71,10 @@ class ManualJournalProcess implements WorkflowProcess
     public function onRejected(Model $subject, ?string $comment): void
     {
         app(ManageJournals::class)->rejected($subject, $comment, $comment === 'Withdrawn by the requester.');
+    }
+
+    public function amount(Model $subject): ?float
+    {
+        return (float) $subject->lines()->sum('debit');
     }
 }

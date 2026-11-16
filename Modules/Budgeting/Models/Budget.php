@@ -39,6 +39,11 @@ class Budget extends Model
         return $this->hasMany(BudgetItem::class);
     }
 
+    public function releases()
+    {
+        return $this->hasMany(BudgetRelease::class);
+    }
+
     public function workflow()
     {
         return $this->morphOne(WorkflowInstance::class, 'subject')->latestOfMany();

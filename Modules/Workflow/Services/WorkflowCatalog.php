@@ -23,6 +23,7 @@ use Modules\Hr\Workflow\SalaryAdvanceProcess;
 use Modules\Accounting\Workflow\ManualJournalProcess;
 use Modules\Appraisals\Workflow\AppraisalProcess;
 use Modules\Budgeting\Workflow\BudgetApprovalProcess;
+use Modules\Budgeting\Workflow\BudgetReleaseProcess;
 use Modules\Budgeting\Workflow\BudgetTransferProcess;
 use Modules\Budgeting\Workflow\DepartmentBudgetProcess;
 use Modules\Planning\Workflow\DepartmentPlanProcess;
@@ -61,6 +62,7 @@ final class WorkflowCatalog
         DepartmentBudgetProcess::class,
         BudgetApprovalProcess::class,
         BudgetTransferProcess::class,
+        BudgetReleaseProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

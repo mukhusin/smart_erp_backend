@@ -2202,12 +2202,16 @@
                                                 },
                                                 "budget_control": {
                                                     "type": "string"
+                                                },
+                                                "budget_release": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "use_gfs",
                                                 "budget_phasing",
-                                                "budget_control"
+                                                "budget_control",
+                                                "budget_release"
                                             ]
                                         }
                                     },
@@ -2261,12 +2265,16 @@
                                                 },
                                                 "budget_control": {
                                                     "type": "string"
+                                                },
+                                                "budget_release": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "use_gfs",
                                                 "budget_phasing",
-                                                "budget_control"
+                                                "budget_control",
+                                                "budget_release"
                                             ]
                                         }
                                     },
@@ -3101,6 +3109,9 @@
                                                     "module": {
                                                         "type": "string"
                                                     },
+                                                    "has_amount": {
+                                                        "type": "boolean"
+                                                    },
                                                     "module_name": {
                                                         "type": "string"
                                                     },
@@ -3119,6 +3130,7 @@
                                                     "name",
                                                     "description",
                                                     "module",
+                                                    "has_amount",
                                                     "module_name",
                                                     "module_icon",
                                                     "workflows"
@@ -14377,6 +14389,12 @@
                                                     "revised": {
                                                         "type": "number"
                                                     },
+                                                    "released": {
+                                                        "type": "number"
+                                                    },
+                                                    "reserved": {
+                                                        "type": "number"
+                                                    },
                                                     "actual": {
                                                         "type": "number"
                                                     },
@@ -14406,6 +14424,8 @@
                                                     "items",
                                                     "original",
                                                     "revised",
+                                                    "released",
+                                                    "reserved",
                                                     "actual",
                                                     "committed",
                                                     "available",
@@ -14423,6 +14443,12 @@
                                                 "revised": {
                                                     "type": "number"
                                                 },
+                                                "released": {
+                                                    "type": "number"
+                                                },
+                                                "reserved": {
+                                                    "type": "number"
+                                                },
                                                 "actual": {
                                                     "type": "number"
                                                 },
@@ -14436,10 +14462,52 @@
                                             "required": [
                                                 "original",
                                                 "revised",
+                                                "released",
+                                                "reserved",
                                                 "actual",
                                                 "committed",
                                                 "available"
                                             ]
+                                        },
+                                        "periods": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "period": {
+                                                        "type": "integer"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "period",
+                                                    "label",
+                                                    "amount",
+                                                    "status",
+                                                    "status_label",
+                                                    "waiting_for"
+                                                ]
+                                            }
+                                        },
+                                        "release_mode": {
+                                            "type": "string"
                                         },
                                         "can": {
                                             "type": "object",
@@ -14455,13 +14523,17 @@
                                                 },
                                                 "close": {
                                                     "type": "boolean"
+                                                },
+                                                "release": {
+                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
                                                 "manage",
                                                 "open",
                                                 "submit",
-                                                "close"
+                                                "close",
+                                                "release"
                                             ]
                                         }
                                     },
@@ -14469,6 +14541,8 @@
                                         "data",
                                         "departments",
                                         "totals",
+                                        "periods",
+                                        "release_mode",
                                         "can"
                                     ]
                                 }
@@ -14779,6 +14853,100 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/budgeting/budgets/{budget}/releases": {
+            "post": {
+                "operationId": "budgeting.budgets.release",
+                "summary": "Open a quarter or month of the approved budget (through approval), making its money available to spend",
+                "tags": [
+                    "Budgeting",
+                    "Budget"
+                ],
+                "parameters": [
+                    {
+                        "name": "budget",
+                        "in": "path",
+                        "required": true,
+                        "description": "The budget ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReleaseRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -15145,6 +15313,15 @@
                                                     "revised": {
                                                         "type": "number"
                                                     },
+                                                    "released": {
+                                                        "type": "number"
+                                                    },
+                                                    "unreleased": {
+                                                        "type": "number"
+                                                    },
+                                                    "reserved": {
+                                                        "type": "number"
+                                                    },
                                                     "actual": {
                                                         "type": "number"
                                                     },
@@ -15178,6 +15355,9 @@
                                                     "periods",
                                                     "original",
                                                     "revised",
+                                                    "released",
+                                                    "unreleased",
+                                                    "reserved",
                                                     "actual",
                                                     "committed",
                                                     "available",
@@ -15194,6 +15374,12 @@
                                                 "revised": {
                                                     "type": "number"
                                                 },
+                                                "released": {
+                                                    "type": "number"
+                                                },
+                                                "reserved": {
+                                                    "type": "number"
+                                                },
                                                 "actual": {
                                                     "type": "number"
                                                 },
@@ -15207,6 +15393,8 @@
                                             "required": [
                                                 "original",
                                                 "revised",
+                                                "released",
+                                                "reserved",
                                                 "actual",
                                                 "committed",
                                                 "available"
@@ -16285,6 +16473,12 @@
                                                     "revised": {
                                                         "type": "number"
                                                     },
+                                                    "released": {
+                                                        "type": "number"
+                                                    },
+                                                    "reserved": {
+                                                        "type": "number"
+                                                    },
                                                     "actual": {
                                                         "type": "number"
                                                     },
@@ -16312,6 +16506,8 @@
                                                     "label",
                                                     "original",
                                                     "revised",
+                                                    "released",
+                                                    "reserved",
                                                     "actual",
                                                     "committed",
                                                     "available",
@@ -16330,6 +16526,12 @@
                                                 "revised": {
                                                     "type": "number"
                                                 },
+                                                "released": {
+                                                    "type": "number"
+                                                },
+                                                "reserved": {
+                                                    "type": "number"
+                                                },
                                                 "actual": {
                                                     "type": "number"
                                                 },
@@ -16343,6 +16545,8 @@
                                             "required": [
                                                 "original",
                                                 "revised",
+                                                "released",
+                                                "reserved",
                                                 "actual",
                                                 "committed",
                                                 "available"
@@ -16571,6 +16775,15 @@
                                                     "revised": {
                                                         "type": "number"
                                                     },
+                                                    "released": {
+                                                        "type": "number"
+                                                    },
+                                                    "unreleased": {
+                                                        "type": "number"
+                                                    },
+                                                    "reserved": {
+                                                        "type": "number"
+                                                    },
                                                     "actual": {
                                                         "type": "number"
                                                     },
@@ -16604,6 +16817,9 @@
                                                     "periods",
                                                     "original",
                                                     "revised",
+                                                    "released",
+                                                    "unreleased",
+                                                    "reserved",
                                                     "actual",
                                                     "committed",
                                                     "available",
@@ -16647,7 +16863,7 @@
         "/budgeting/items/{item}": {
             "get": {
                 "operationId": "budgeting.items.show",
-                "summary": "What a budget item was spent on: posted ledger lines and open commitments",
+                "summary": "A budget item's statement: every balance change with its document, and the ledger lines posted against it",
                 "tags": [
                     "Budgeting",
                     "BudgetReport"
@@ -16823,6 +17039,15 @@
                                                 "revised": {
                                                     "type": "number"
                                                 },
+                                                "released": {
+                                                    "type": "number"
+                                                },
+                                                "unreleased": {
+                                                    "type": "number"
+                                                },
+                                                "reserved": {
+                                                    "type": "number"
+                                                },
                                                 "actual": {
                                                     "type": "number"
                                                 },
@@ -16856,6 +17081,9 @@
                                                 "periods",
                                                 "original",
                                                 "revised",
+                                                "released",
+                                                "unreleased",
+                                                "reserved",
                                                 "actual",
                                                 "committed",
                                                 "available",
@@ -16902,7 +17130,7 @@
                                                 ]
                                             }
                                         },
-                                        "commitments": {
+                                        "entries": {
                                             "type": "array",
                                             "items": {
                                                 "type": "object",
@@ -16910,17 +17138,38 @@
                                                     "id": {
                                                         "type": "integer"
                                                     },
-                                                    "source": {
+                                                    "balance": {
                                                         "type": "string"
                                                     },
-                                                    "source_id": {
-                                                        "type": "integer"
+                                                    "balance_label": {
+                                                        "type": "string"
                                                     },
                                                     "amount": {
                                                         "type": "number"
                                                     },
-                                                    "status": {
-                                                        "type": "string"
+                                                    "source": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "source_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "note": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "created_at": {
                                                         "type": "string"
@@ -16928,10 +17177,13 @@
                                                 },
                                                 "required": [
                                                     "id",
+                                                    "balance",
+                                                    "balance_label",
+                                                    "amount",
                                                     "source",
                                                     "source_id",
-                                                    "amount",
-                                                    "status",
+                                                    "note",
+                                                    "by",
                                                     "created_at"
                                                 ]
                                             }
@@ -16940,7 +17192,7 @@
                                     "required": [
                                         "data",
                                         "lines",
-                                        "commitments"
+                                        "entries"
                                     ]
                                 }
                             }
@@ -54403,6 +54655,14 @@
                             "warn",
                             "block"
                         ]
+                    },
+                    "budget_release": {
+                        "type": "string",
+                        "description": "period: money becomes spendable when finance opens each quarter/month; none: the whole approved budget at once.",
+                        "enum": [
+                            "period",
+                            "none"
+                        ]
                     }
                 },
                 "required": [
@@ -60008,6 +60268,21 @@
                 ],
                 "title": "RegisterCompanyRequest"
             },
+            "ReleaseRequest": {
+                "type": "object",
+                "properties": {
+                    "period": {
+                        "type": "integer",
+                        "description": "Period number: 1\u20134 (quarters), 1\u201312 (months) or 1 (year).",
+                        "minimum": 1,
+                        "maximum": 12
+                    }
+                },
+                "required": [
+                    "period"
+                ],
+                "title": "ReleaseRequest"
+            },
             "RenewalResource": {
                 "type": "object",
                 "properties": {
@@ -60770,6 +61045,15 @@
                                 },
                                 "allow_send_back": {
                                     "type": "boolean"
+                                },
+                                "min_amount": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "description": "Step applies only when the request's amount is at least this (processes with an amount). Empty = always.",
+                                    "minimum": 0,
+                                    "maximum": 999999999999
                                 },
                                 "approve_label": {
                                     "type": [

@@ -5,9 +5,10 @@ namespace Modules\Hr\Workflow;
 use App\Models\PayrollSheet;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Hr\Actions\ManagePayroll;
+use Modules\Workflow\Contracts\HasAmount;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
-class PayrollSheetProcess implements WorkflowProcess
+class PayrollSheetProcess implements HasAmount, WorkflowProcess
 {
     public const KEY = 'payroll-sheet';
 
@@ -71,5 +72,10 @@ class PayrollSheetProcess implements WorkflowProcess
     public function onRejected(Model $subject, ?string $comment): void
     {
         app(ManagePayroll::class)->reject($subject, $comment);
+    }
+
+    public function amount(Model $subject): ?float
+    {
+        return (float) ($subject->gross_total ?? $subject->payroll_cost ?? 0);
     }
 }

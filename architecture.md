@@ -687,3 +687,30 @@ came from a government ERP; we take its control ideas, not its government proces
   unrestricted funds; budget lines per grant (and donor budget line codes); spending checked against the grant as well
   as the budget line; multi-currency (donor currency vs local); indirect cost / overhead rate; donor reports (budget vs
   actual per grant, in the grant's currency and periods).
+
+### 18.3 Control layer built and payment flow refined (2026-11-17)
+
+**Built:** amount-based workflow steps (`min_amount` per step, processes implement `HasAmount`; GEN-31); budget balance
+ledger `budget_entries` with five balances per item — approved, released, reserved (held by a request), committed,
+spent — every change an entry with its document and user, balances = sum of entries (BUD-40, 44, 56 line statement);
+row locking when holding money (BUD-45); over-budget holds refused or flagged per the control setting (BUD-42); quarter
+release through approval, or no release step (BUD-30, 35; fund requests not built — government only); transfers hold
+money on the giving item until approved and may not exceed revised − held − committed − spent (BUD-52, 53); spending
+recorded from posted journals through a `JournalPosted` event (lower layer publishes, Budgeting listens); daily
+`budget:check-balances` (BUD-48). Demo data: `php artisan erp:demo-finance --company=1` (refused in production).
+
+**Payment flow (next, ACC-10..18):** three approved documents.
+1. Payment request (one department; budget lines and amount per line; payees with bank/mobile details split across
+   lines; attachment required) → on submit money is **held** on each line.
+2. Payment voucher, created from the approved request (paying bank account, withholding tax/deductions, journal lines;
+   total must equal the request) → on final approval the hold becomes **committed** and the journal posts
+   Dr expense (line dimensions + budget item) / Cr payee payable (and Cr withholding tax payable).
+3. Payment list (cashier groups approved vouchers of one bank account; transfer, cheque or mobile money; refused if the
+   bank balance is lower than the list) → on approval each voucher is settled: Dr payee payable / Cr bank, and the
+   commitment becomes **spent**; bank reference stored per payment.
+Cancelling at any stage releases the money and reverses anything posted; a paid payment is undone only by a separate,
+approved void. Imprest = payment to a staff advance account, retired later into expense.
+
+**External APIs (later):** each client registered to one company; signed request/response envelopes; caller reference
+for idempotency; fixed result codes; all field errors at once; same approvals unless pre-approved; callbacks with retry
+plus status enquiry; payload log; rate limits (API-01..14).

@@ -57,9 +57,9 @@ class BudgetItem extends Model
         return $this->hasMany(BudgetItemPeriod::class)->orderBy('period');
     }
 
-    public function commitments()
+    public function entries()
     {
-        return $this->hasMany(BudgetCommitment::class);
+        return $this->hasMany(BudgetEntry::class);
     }
 
     public function label(): string

@@ -5,9 +5,10 @@ namespace Modules\Budgeting\Workflow;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Budgeting\Actions\ManageTransfers;
 use Modules\Budgeting\Models\BudgetTransfer;
+use Modules\Workflow\Contracts\HasAmount;
 use Modules\Workflow\Contracts\WorkflowProcess;
 
-class BudgetTransferProcess implements WorkflowProcess
+class BudgetTransferProcess implements HasAmount, WorkflowProcess
 {
     public const KEY = 'budget-transfer';
 
@@ -68,5 +69,10 @@ class BudgetTransferProcess implements WorkflowProcess
     public function onRejected(Model $subject, ?string $comment): void
     {
         app(ManageTransfers::class)->rejected($subject, $comment, $comment === 'Withdrawn by the requester.');
+    }
+
+    public function amount(Model $subject): ?float
+    {
+        return (float) $subject->amount;
     }
 }
