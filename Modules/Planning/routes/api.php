@@ -3,10 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Planning\Http\Controllers\Api\AnnualPlanController;
 use Modules\Planning\Http\Controllers\Api\DepartmentPlanController;
+use Modules\Planning\Http\Controllers\Api\PlanningDashboardController;
 use Modules\Planning\Http\Controllers\Api\StrategicPlanController;
 use Modules\Planning\Http\Controllers\Api\SubActivityController;
 
 Route::prefix('planning')->middleware(['auth:sanctum', 'module:planning'])->name('planning.')->group(function () {
+    Route::get('dashboard', PlanningDashboardController::class)->name('dashboard');
     Route::get('strategic-plans', [StrategicPlanController::class, 'index'])->name('strategic.index');
     Route::post('strategic-plans', [StrategicPlanController::class, 'store'])->name('strategic.store');
     Route::get('strategic-plans/{plan}', [StrategicPlanController::class, 'show'])->name('strategic.show');

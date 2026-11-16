@@ -162,6 +162,17 @@ class ErpModuleSeeder extends Seeder
                 'is_core'     => false,
             ],
             [
+                'slug'        => 'receivables',
+                'name'        => 'Billing & Receipts',
+                'description' => 'Customers, invoices, money received with or without an invoice, credit notes and ageing.',
+                'icon'        => 'bi-receipt',
+                'color'       => 'success',
+                'route_name'  => 'receivables.index',
+                'category'    => 'Finance',
+                'sort_order'  => 23,
+                'is_core'     => false,
+            ],
+            [
                 'slug'        => 'bills',
                 'name'        => 'Bills Management',
                 'description' => 'Manage supplier bills, payments and vendor accounts payable.',

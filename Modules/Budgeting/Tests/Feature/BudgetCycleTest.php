@@ -173,6 +173,10 @@ class BudgetCycleTest extends TestCase
         $this->getJson("/api/v1/budgeting/items/{$b}")->assertJsonPath('data.revised', 150000)->assertJsonPath('data.released', 100000);
         $this->getJson("/api/v1/budgeting/budgets/{$budget}/transfers")->assertJsonPath('data.0.status', 'approved');
         $this->artisan('budget:check-balances')->assertSuccessful();
+        $this->actingAs($this->finance)->getJson('/api/v1/budgeting/dashboard')->assertOk()->assertJsonPath('budget.title', 'Budget 2026')->assertJsonPath('totals.revised', 600000)
+            ->assertJsonPath('totals.actual', 120000)->assertJsonCount(12, 'months')->assertJsonPath('months.10.actual', 120000)->assertJsonPath('departments.0.name', 'Pharmacy')
+            ->assertJsonPath('accounts.0.actual', 120000);
+        $this->actingAs($this->heads['lab'])->getJson('/api/v1/budgeting/dashboard')->assertOk()->assertJsonPath('totals.items', 0);
 
         $this->actingAs($this->finance)->putJson('/api/v1/accounting/settings', ['use_gfs' => false, 'budget_phasing' => 'quarter', 'budget_control' => 'warn', 'budget_release' => 'none'])->assertOk();
         $this->getJson("/api/v1/budgeting/items/{$b}")->assertJsonPath('data.available', 150000);

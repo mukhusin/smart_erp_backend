@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Payments\Support;
+namespace Modules\Core\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;

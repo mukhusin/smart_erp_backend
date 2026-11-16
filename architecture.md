@@ -733,3 +733,22 @@ Cr revenue (revenue budget line); receipts **against invoices** (full or part, a
 and receipts **without invoice** (cash sale, donation: Dr bank / Cr revenue); credit notes; customer statement and
 ageing. **Then payables:** supplier master and supplier invoices (bills) Dr expense / Cr supplier payable, paid
 through the same voucher → payment list, supplier ledger and ageing, debit notes.
+
+### 18.5 Dashboards and receivables built (2026-11-16)
+
+**Dashboards:** `GET budgeting/dashboard` (totals, plan vs actual by month from journal dates, departments, spending by
+account, lines ≥ 90 % used, pending approvals; scoped to the user's departments) and `GET planning/dashboard`
+(department plan status, activities per objective and quarter, task status and progress by department). Both are the
+start pages of their modules, with charts from `shared/charts`.
+
+**Receivables (module `Receivables`, slug `receivables`, "Billing & Receipts"):** customers (patient, insurer, company,
+donor…; terms, credit limit); invoices INV-YYYY-##### Dr receivables / Cr revenue lines (department + revenue budget
+line), optional approval `customer-invoice` (no default steps = issue at once); receipts RCT-YYYY-##### **against
+invoices** (allocations, part payment, Dr bank / Cr receivables) or **without invoice** (Dr bank / Cr chosen accounts);
+credit notes CN-YYYY-##### through `credit-note` approval, reversing revenue in proportion to the invoice lines;
+receipt void through `receipt-void` approval (journal reversed, invoices owed again); invoice void only with no
+receipts or credit notes. Statement with running balance, ageing (not due, 1–30, 31–60, 61–90, 90+), dashboard.
+Permissions `receivables.view|bill|receipts|manage`. Document numbers shared via `Modules\Core\Support\Numbering`.
+
+**Next:** payment list item status (sent/paid/failed, re-pay failed items), supplier bills (payables), imprest,
+payroll posting, paid-payment void with approval.

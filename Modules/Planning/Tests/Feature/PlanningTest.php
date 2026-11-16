@@ -96,6 +96,10 @@ class PlanningTest extends TestCase
 
         $this->actingAs($this->admin)->getJson("/api/v1/planning/strategic-plans/{$sp}")->assertJsonPath('objectives.0.activities', 1)->assertJsonPath('years.0.year', 2026);
         $this->getJson("/api/v1/planning/annual-plans/{$plan}")->assertJsonCount(3, 'departments')->assertJsonPath('data.approved', 1);
+        $this->getJson("/api/v1/planning/dashboard?plan_id={$plan}")->assertOk()->assertJsonPath('totals.departments', 3)->assertJsonPath('totals.approved', 1)
+            ->assertJsonPath('totals.activities', 1)->assertJsonPath('totals.tasks', 1)->assertJsonPath('task_status.0.status', 'todo')->assertJsonPath('quarters.0.label', 'Q1');
+        $this->actingAs($this->users['matron'])->getJson("/api/v1/planning/dashboard?plan_id={$plan}")->assertOk()->assertJsonPath('totals.departments', 1);
+        $this->actingAs($this->admin);
         $this->postJson("{$base}/reopen")->assertOk()->assertJsonPath('data.status', 'draft');
         $this->actingAs($this->users['matron'])->deleteJson("{$base}/activities/{$activity}")->assertUnprocessable()->assertJsonValidationErrors(['activity' => 'has tasks']);
     }

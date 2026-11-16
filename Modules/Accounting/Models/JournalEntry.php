@@ -14,7 +14,7 @@ class JournalEntry extends Model
 
     public const STATUS_LABELS = ['draft' => 'Draft', 'pending' => 'Waiting for approval', 'posted' => 'Posted', 'rejected' => 'Returned', 'reversed' => 'Reversed'];
 
-    public const TYPES = ['manual' => 'Manual journal', 'payment' => 'Payment voucher', 'payment_list' => 'Payment list', 'payroll' => 'Payroll', 'reversal' => 'Reversal', 'opening' => 'Opening balance'];
+    public const TYPES = ['manual' => 'Manual journal', 'payment' => 'Payment voucher', 'payment_list' => 'Payment list', 'invoice' => 'Customer invoice', 'receipt' => 'Receipt', 'credit_note' => 'Credit note', 'payroll' => 'Payroll', 'reversal' => 'Reversal', 'opening' => 'Opening balance'];
 
     protected $fillable = [
         'company_id', 'reference_no', 'date', 'fiscal_period_id', 'entry_type', 'source_type', 'source_id', 'description', 'total', 'status',

@@ -158,6 +158,12 @@ final class PermissionCatalog
             'payments.pay' => 'Prepare payment lists and record bank references (cashier)',
             'payments.manage' => 'Manage payment settings and act on any payment',
         ],
+        'receivables' => [
+            'receivables.view' => 'View customers, invoices, receipts and ageing',
+            'receivables.bill' => 'Manage customers, prepare and issue invoices, request credit notes',
+            'receivables.receipts' => 'Record money received and request receipt voids (cashier)',
+            'receivables.manage' => 'Billing settings, void invoices and act on any billing record',
+        ],
         'bills' => [
             'bills.view' => 'View bills',
             'bills.manage' => 'Manage bills and payments',

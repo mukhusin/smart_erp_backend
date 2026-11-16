@@ -54,6 +54,7 @@ final class DefaultLeaveTypes
         self::manualJournal();
         self::budgeting();
         self::payments();
+        self::receivables();
     }
 
     public static function budgeting(): void
@@ -94,6 +95,22 @@ final class DefaultLeaveTypes
             foreach ($steps as $i => [$name, $type, $role, $min]) {
                 $template->steps()->create(['step_order' => $i + 1, 'name' => $name, 'approver_type' => $type, 'role_id' => $role, 'min_amount' => $min, 'allow_send_back' => true]);
             }
+        }
+    }
+
+    public static function receivables(): void
+    {
+        $company = app(CompanyContext::class)->id();
+        $finance = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
+        if (! $finance) {
+            return;
+        }
+        foreach (['credit-note' => 'Chief accountant', 'receipt-void' => 'Chief accountant'] as $process => $name) {
+            if (WorkflowTemplate::where('process', $process)->exists()) {
+                continue;
+            }
+            $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+            $template->steps()->create(['step_order' => 1, 'name' => $name, 'approver_type' => 'role', 'role_id' => $finance->id, 'allow_send_back' => false]);
         }
     }
 

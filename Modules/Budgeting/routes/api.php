@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Budgeting\Http\Controllers\Api\BudgetController;
+use Modules\Budgeting\Http\Controllers\Api\BudgetDashboardController;
 use Modules\Budgeting\Http\Controllers\Api\BudgetReportController;
 use Modules\Budgeting\Http\Controllers\Api\DepartmentBudgetController;
 use Modules\Budgeting\Http\Controllers\Api\TransferController;
@@ -28,6 +29,7 @@ Route::prefix('budgeting')->middleware(['auth:sanctum', 'module:budgeting'])->na
     Route::post('budgets/{budget}/transfers/{transfer}/withdraw', [TransferController::class, 'withdraw'])->name('transfers.withdraw');
 
     Route::get('budgets/{budget}/vs-actual', [BudgetReportController::class, 'vsActual'])->name('vs-actual');
+    Route::get('dashboard', BudgetDashboardController::class)->name('dashboard');
     Route::get('items', [BudgetReportController::class, 'items'])->name('items.index');
     Route::get('items/{item}', [BudgetReportController::class, 'item'])->name('items.show');
 });

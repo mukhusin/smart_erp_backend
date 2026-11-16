@@ -12,7 +12,7 @@ use Modules\Core\Notifications\Notice;
 use Modules\Payments\Models\PaymentList;
 use Modules\Payments\Models\PaymentSetting;
 use Modules\Payments\Models\PaymentVoucher;
-use Modules\Payments\Support\Numbering;
+use Modules\Core\Support\Numbering;
 use Modules\Payments\Workflow\PaymentListProcess;
 use Modules\Workflow\Models\WorkflowInstance;
 use Modules\Workflow\Services\WorkflowEngine;
