@@ -129,6 +129,9 @@ final class DefaultLeaveTypes
             'quotation-award' => [[$director ? 'Director general' : 'Chief accountant', 'role', ($director ?? $finance)->id, null]],
             'purchase-order' => array_values(array_filter([['Chief accountant', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, 10000000] : null])),
             'goods-receipt' => [['Head of department (inspection)', 'department_head', null, null]],
+            'store-requisition' => [['Head of department', 'department_head', null, null]],
+            'stock-receipt' => [['Chief accountant', 'role', $finance->id, null]],
+            'stock-adjustment' => [['Chief accountant', 'role', $finance->id, null]],
         ];
         foreach ($chains as $process => $steps) {
             if (WorkflowTemplate::where('process', $process)->exists()) {

@@ -146,6 +146,8 @@ class PurchaseFlowTest extends TestCase
             ->assertJsonPath('data.can.invoice', true)->json('data.payment_request');
         $this->assertNotNull($bill);
         $this->getJson("/api/v1/procurement/orders/{$po}")->assertJsonPath('data.status', 'partial')->assertJsonPath('data.lines.0.due', 10);
+        $stock = app(CompanyContext::class)->run($this->company, fn () => \Modules\Inventory\Models\StockBalance::where('store_id', $this->ids['store'])->where('item_id', $this->ids['paper'])->first());
+        $this->assertSame([50.0, 600000.0], [$stock->quantity, $stock->value]);
 
         $this->postJson("/api/v1/payments/requests/{$bill['id']}/voucher", ['cash_bank_account_id' => $this->ids['bank'], 'date' => '2026-11-18'])->assertUnprocessable()->assertJsonValidationErrors(['request']);
         $this->putJson("/api/v1/procurement/receipts/{$grn}/invoice", ['supplier_invoice' => 'INV-889', 'invoice_date' => '2026-11-18', 'invoice_amount' => 650000])->assertOk()->assertJsonPath('data.matched', false);

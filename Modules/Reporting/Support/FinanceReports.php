@@ -44,6 +44,14 @@ class FinanceReports
         'journal-register' => ['title' => 'Journal register', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'payments-register' => ['title' => 'Payments register', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage']],
         'receipts-register' => ['title' => 'Receipts register', 'group' => 'Accounting', 'module' => 'receivables', 'permissions' => ['receivables.view', 'receivables.bill', 'receivables.receipts', 'receivables.manage']],
+        'stock-balance' => ['title' => 'Store balances (quantity and value)', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
+        'stock-movements' => ['title' => 'Receipts and issues', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
+        'stock-consumption' => ['title' => 'Consumption by department', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
+        'stock-expiry' => ['title' => 'Expiring and expired stock', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
+        'stock-reorder' => ['title' => 'Items at or below reorder level', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
+        'stock-slow' => ['title' => 'Slow-moving and dead stock', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
+        'stock-transit' => ['title' => 'Goods in transit and shortages', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
+        'stock-count-variance' => ['title' => 'Stock count variances', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
         'payroll-year' => ['title' => 'Employee earnings for the year', 'group' => 'Payroll', 'module' => 'payroll', 'permissions' => ['payroll.view']],
         'payroll-changes' => ['title' => 'Payroll changes from last month', 'group' => 'Payroll', 'module' => 'payroll', 'permissions' => ['payroll.view']],
         'loans-outstanding' => ['title' => 'Outstanding loans', 'group' => 'Loans', 'module' => 'loans', 'permissions' => ['loans.view', 'loans.manage']],
@@ -72,7 +80,8 @@ class FinanceReports
         'from' => 'From', 'to' => 'To', 'reason' => 'Reason', 'requested_by' => 'Requested by', 'activity' => 'Activity', 'objective' => 'Objective', 'output' => 'Output',
         'target' => 'Target', 'kpi' => 'KPI', 'quarters' => 'Quarters', 'subs' => 'Sub-activities', 'budget' => 'Budget', 'spent' => 'Spent', 'tasks' => 'Tasks',
         'done' => 'Done', 'overdue' => 'Overdue', 'progress' => 'Progress %', 'activities' => 'Activities', 'plan_status' => 'Plan', 'period' => 'Period',
-        'planned' => 'Planned', 'variance' => 'Variance', 'final' => 'Final budget', 'difference' => 'Difference', 'opening' => 'Opening', 'in' => 'Money in', 'out' => 'Money out', 'documents' => 'Documents',
+        'planned' => 'Planned', 'variance' => 'Variance', 'store' => 'Store', 'item' => 'Item', 'unit' => 'Unit', 'quantity' => 'Quantity', 'value' => 'Value', 'avg_cost' => 'Average cost',
+        'batch' => 'Batch', 'expiry' => 'Expiry', 'days' => 'Days left', 'reorder' => 'Reorder level', 'last_issue' => 'Last issued', 'counted' => 'Counted', 'system' => 'Ledger', 'final' => 'Final budget', 'difference' => 'Difference', 'opening' => 'Opening', 'in' => 'Money in', 'out' => 'Money out', 'documents' => 'Documents',
     ];
 
     public function __construct(private readonly AccessService $access, private readonly BudgetFigures $figures) {}
@@ -127,6 +136,7 @@ class FinanceReports
         $years = PayrollSheet::query()->select('year')->distinct()->orderByDesc('year')->pluck('year')->map(fn ($y) => ['value' => (string) $y, 'label' => (string) $y])->values()->all();
         $payrollYear = ['key' => 'year', 'label' => 'Year', 'type' => 'select', 'default' => (string) $today->year, 'options' => $years ?: [['value' => (string) $today->year, 'label' => (string) $today->year]]];
         $sheets = $key === 'payroll-changes' ? PayrollSheet::get()->sortByDesc(fn ($s) => $s->year * 100 + (int) $s->month)->values() : collect();
+        $storesF = ['key' => 'store_id', 'label' => 'Store', 'type' => 'select', 'options' => class_exists(\Modules\Inventory\Models\Store::class) ? $opt(\Modules\Inventory\Models\Store::where('kind', '!=', 'transit')->orderBy('name')->get()) : []];
         $providers = ['key' => 'provider_id', 'label' => 'Provider', 'type' => 'select', 'options' => $opt(LoanProvider::orderBy('name')->get())];
 
         return match ($key) {
@@ -138,6 +148,11 @@ class FinanceReports
             'journal-register' => [$from, $to, ['key' => 'type', 'label' => 'Type', 'type' => 'select', 'options' => collect(JournalEntry::TYPES)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values()->all()]],
             'payments-register' => [$from, $to, ['key' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => collect(PaymentVoucher::STATUS_LABELS)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values()->all()]],
             'receipts-register' => [$from, $to, ['key' => 'kind', 'label' => 'Kind', 'type' => 'select', 'options' => collect(Receipt::KINDS)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values()->all()]],
+            'stock-balance', 'stock-reorder', 'stock-expiry', 'stock-slow' => [$storesF],
+            'stock-movements' => [$storesF, $from, $to, ['key' => 'type', 'label' => 'Type', 'type' => 'select', 'options' => collect(\Modules\Inventory\Models\StockMovement::TYPES)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values()->all()]],
+            'stock-consumption' => [$from, $to, $storesF],
+            'stock-transit' => [],
+            'stock-count-variance' => [$from, $to, $storesF],
             'payroll-year' => [$payrollYear, $departments],
             'payroll-changes' => [['key' => 'sheet_id', 'label' => 'Payroll', 'type' => 'select', 'default' => (string) ($sheets->first()?->id ?? ''), 'options' => $opt($sheets, 'name')]],
             'loans-outstanding' => [$providers, $departments],
@@ -416,6 +431,92 @@ class FinanceReports
         }
 
         return ["Salary advances of {$v['year']}", ['date', 'month', 'employee_no', 'name', 'department', 'amount', 'status'], $rows->all()];
+    }
+
+    private function stockRows(array $v)
+    {
+        return \Modules\Inventory\Models\StockBalance::with(['store', 'item.unit', 'item.category', 'item.levels'])->whereHas('store', fn ($s) => $s->where('kind', '!=', 'transit'))
+            ->when($v['store_id'] ?? null, fn ($q, $s) => $q->where('store_id', $s))->get();
+    }
+
+    private function reportStockBalance(array $v): array
+    {
+        $rows = $this->stockRows($v)->filter(fn ($b) => $b->quantity != 0)->sortBy(fn ($b) => [$b->store?->name, $b->item?->name])
+            ->map(fn ($b) => ['store' => $b->store?->name, 'code' => $b->item?->code, 'item' => $b->item?->name, 'unit' => $b->item?->unit?->code, 'quantity' => $b->quantity, 'avg_cost' => $b->averageCost(), 'value' => $b->value])->values();
+        $rows->push(['store' => 'Total', 'value' => round($rows->sum('value'), 2)]);
+
+        return ['On hand now', ['store', 'code', 'item', 'unit', 'quantity', 'avg_cost', 'value'], $rows->all()];
+    }
+
+    private function reportStockMovements(array $v): array
+    {
+        $rows = \Modules\Inventory\Models\StockMovement::with(['store', 'item', 'department', 'layer'])->whereDate('date', '>=', $v['from'])->whereDate('date', '<=', $v['to'])
+            ->when($v['store_id'] ?? null, fn ($q, $s) => $q->where('store_id', $s))->when($v['type'] ?? null, fn ($q, $t) => $q->where('type', $t))->orderBy('date')->orderBy('id')->limit(5000)->get()
+            ->map(fn ($m) => ['date' => $m->date->format('j M Y'), 'store' => $m->store?->name, 'reference' => $m->reference, 'type' => \Modules\Inventory\Models\StockMovement::TYPES[$m->type] ?? $m->type,
+                'item' => $m->item?->name, 'batch' => $m->layer?->batch_number, 'department' => $m->department?->name, 'quantity' => $m->quantity, 'value' => $m->value]);
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])}", ['date', 'store', 'reference', 'type', 'item', 'batch', 'department', 'quantity', 'value'], $rows->all()];
+    }
+
+    private function reportStockConsumption(array $v): array
+    {
+        $rows = \Modules\Inventory\Models\StockMovement::with(['department', 'item'])->where('type', 'issue')->whereDate('date', '>=', $v['from'])->whereDate('date', '<=', $v['to'])
+            ->when($v['store_id'] ?? null, fn ($q, $s) => $q->where('store_id', $s))->get()->groupBy(fn ($m) => ($m->department?->name ?? 'No department').'|'.$m->item_id)
+            ->map(fn ($g) => ['department' => $g->first()->department?->name ?? 'No department', 'item' => $g->first()->item?->name, 'quantity' => round(-$g->sum('quantity'), 4), 'value' => round(-$g->sum('value'), 2)])
+            ->sortBy([['department', 'asc'], ['value', 'desc']])->values();
+        $rows->push(['department' => 'Total', 'value' => round($rows->sum('value'), 2)]);
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])} · issues at cost", ['department', 'item', 'quantity', 'value'], $rows->all()];
+    }
+
+    private function reportStockExpiry(array $v): array
+    {
+        $days = \Modules\Inventory\Models\InventorySetting::current()->expiry_warning_days;
+        $rows = \Modules\Inventory\Models\StockLayer::with(['store', 'item'])->where('quantity_left', '>', 0)->whereNotNull('expiry_date')->whereDate('expiry_date', '<=', today()->addDays($days))
+            ->when($v['store_id'] ?? null, fn ($q, $s) => $q->where('store_id', $s))->orderBy('expiry_date')->get()
+            ->map(fn ($l) => ['store' => $l->store?->name, 'item' => $l->item?->name, 'batch' => $l->batch_number, 'expiry' => $l->expiry_date->format('j M Y'),
+                'days' => (int) today()->diffInDays($l->expiry_date, false), 'quantity' => $l->quantity_left, 'value' => round($l->quantity_left * $l->unit_cost, 2)]);
+
+        return ["Expiring within {$days} days, and expired (negative days)", ['store', 'item', 'batch', 'expiry', 'days', 'quantity', 'value'], $rows->all()];
+    }
+
+    private function reportStockReorder(array $v): array
+    {
+        $rows = $this->stockRows($v)->map(function ($b) {
+            $level = $b->item?->levels->firstWhere('store_id', $b->store_id)?->reorder_level ?? $b->item?->reorder_level;
+
+            return $level !== null && $b->item?->is_active && $b->quantity <= $level ? ['store' => $b->store?->name, 'code' => $b->item?->code, 'item' => $b->item?->name, 'unit' => $b->item?->unit?->code, 'quantity' => $b->quantity, 'reorder' => $level] : null;
+        })->filter()->values();
+
+        return ['Raise a purchase requisition for these', ['store', 'code', 'item', 'unit', 'quantity', 'reorder'], $rows->all()];
+    }
+
+    private function reportStockSlow(array $v): array
+    {
+        $days = \Modules\Inventory\Models\InventorySetting::current()->slow_moving_days;
+        $rows = $this->stockRows($v)->filter(fn ($b) => $b->quantity > 0 && (! $b->last_issue_on || $b->last_issue_on->lt(today()->subDays($days))))
+            ->map(fn ($b) => ['store' => $b->store?->name, 'item' => $b->item?->name, 'quantity' => $b->quantity, 'value' => $b->value, 'last_issue' => $b->last_issue_on?->format('j M Y') ?? 'Never'])
+            ->sortByDesc('value')->values();
+
+        return ["No issues in the last {$days} days", ['store', 'item', 'quantity', 'value', 'last_issue'], $rows->all()];
+    }
+
+    private function reportStockTransit(array $v): array
+    {
+        $rows = \Modules\Inventory\Models\StockBalance::with(['item', 'store'])->whereHas('store', fn ($s) => $s->where('kind', 'transit'))->where('quantity', '!=', 0)->get()
+            ->map(fn ($b) => ['item' => $b->item?->name, 'quantity' => $b->quantity, 'value' => $b->value]);
+
+        return ['Dispatched and not yet received, including shortages to resolve', ['item', 'quantity', 'value'], $rows->all()];
+    }
+
+    private function reportStockCountVariance(array $v): array
+    {
+        $rows = \Modules\Inventory\Models\StockDocumentLine::with(['item'])->whereHas('document', fn ($d) => $d->where('kind', 'count')->where('status', 'posted')->whereDate('date', '>=', $v['from'])->whereDate('date', '<=', $v['to'])
+            ->when($v['store_id'] ?? null, fn ($q, $s) => $q->where('store_id', $s)))->where('base_quantity', '!=', 0)->with('document.store')->get()
+            ->map(fn ($l) => ['date' => $l->document->date->format('j M Y'), 'reference' => $l->document->number, 'store' => $l->document->store?->name, 'item' => $l->item?->name, 'system' => $l->system_quantity,
+                'counted' => $l->quantity, 'variance' => $l->base_quantity, 'value' => $l->value, 'reason' => $l->reason]);
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])}", ['date', 'reference', 'store', 'item', 'system', 'counted', 'variance', 'value', 'reason'], $rows->all()];
     }
 
     private function budget(array $v): Budget

@@ -30,6 +30,11 @@ use Modules\Payments\Workflow\PaymentListProcess;
 use Modules\Payments\Workflow\PaymentRequestProcess;
 use Modules\Payments\Workflow\PaymentVoidProcess;
 use Modules\Payments\Workflow\PaymentVoucherProcess;
+use Modules\Inventory\Workflow\StockAdjustmentProcess;
+use Modules\Inventory\Workflow\StockIssueProcess;
+use Modules\Inventory\Workflow\StockReceiptProcess;
+use Modules\Inventory\Workflow\StockTransferProcess;
+use Modules\Inventory\Workflow\StoreRequisitionProcess;
 use Modules\Planning\Workflow\DepartmentPlanProcess;
 use Modules\Procurement\Workflow\GoodsReceiptProcess;
 use Modules\Procurement\Workflow\PurchaseOrderProcess;
@@ -87,6 +92,11 @@ final class WorkflowCatalog
         QuotationAwardProcess::class,
         PurchaseOrderProcess::class,
         GoodsReceiptProcess::class,
+        StoreRequisitionProcess::class,
+        StockIssueProcess::class,
+        StockTransferProcess::class,
+        StockReceiptProcess::class,
+        StockAdjustmentProcess::class,
     ];
 
     /** @return array<string, WorkflowProcess> key => process */

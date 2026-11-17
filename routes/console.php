@@ -35,5 +35,7 @@ Schedule::command('tasks:daily')->dailyAt('06:00')
 Schedule::command('budget:check-balances')->dailyAt('05:30')
     ->appendOutputTo(storage_path('logs/budget-check.log'));
 
+Schedule::command('inventory:alerts')->dailyAt('06:30');
+
 Schedule::command('hr:send-messages')->everyMinute()->withoutOverlapping();
 // Cron entry: * * * * * php /path/to/smart-erp/artisan schedule:run >> /dev/null 2>&1

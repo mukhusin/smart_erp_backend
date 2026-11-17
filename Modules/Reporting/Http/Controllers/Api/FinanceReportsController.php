@@ -46,6 +46,7 @@ class FinanceReportsController extends Controller
     #[QueryParameter('status', type: 'string')]
     #[QueryParameter('kind', type: 'string')]
     #[QueryParameter('type', type: 'string')]
+    #[QueryParameter('store_id', type: 'integer')]
     public function show(Request $request, string $report, FinanceReports $reports): JsonResponse
     {
         return response()->json(['data' => $reports->run($report, $this->filters($request), $request->user())]);
@@ -74,7 +75,7 @@ class FinanceReportsController extends Controller
             'from' => ['nullable', 'date'], 'to' => ['nullable', 'date'], 'date' => ['nullable', 'date'], 'year' => ['nullable', 'integer', 'between:2000,2100'],
             'bank_id' => ['nullable', 'integer'], 'budget_id' => ['nullable', 'integer'], 'plan_id' => ['nullable', 'integer'], 'sheet_id' => ['nullable', 'integer'],
             'provider_id' => ['nullable', 'integer'], 'department_id' => ['nullable', 'integer'], 'group' => ['nullable', 'in:department,account,activity,fund,item'],
-            'status' => ['nullable', 'string', 'max:30'], 'kind' => ['nullable', 'string', 'max:30'], 'type' => ['nullable', 'string', 'max:30'],
+            'status' => ['nullable', 'string', 'max:30'], 'kind' => ['nullable', 'string', 'max:30'], 'type' => ['nullable', 'string', 'max:30'], 'store_id' => ['nullable', 'integer'],
         ]);
     }
 }

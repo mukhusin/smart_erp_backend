@@ -189,6 +189,7 @@ final class PermissionCatalog
         ],
         'inventory' => [
             'inventory.view' => 'View the catalogue, stores and stock of all stores',
+            'inventory.request' => 'Request store items for departments in own scope (staff always may for their own department)',
             'inventory.catalogue' => 'Maintain the item catalogue, categories and units',
             'inventory.stores' => 'Set up stores, locations and store staff',
             'inventory.manage' => 'Manage items, stores and stock movements',

@@ -832,6 +832,17 @@ migration only when empty. Permissions `procurement.view|suppliers|manage|approv
 manage`. Next: step 3 procurement core (plan, requisition with budget hold, quotations, purchase order, GRN with the
 clearing account) and step 4 store ledger.
 
+**Step 4 done (2026-11-17):** store ledger in `Inventory`: `StockService` is the only writer of stock (balance row
+locked, one movement per layer, costing from the accounting policy at the movement date: FIFO, weighted average,
+specific batch, LIFO only where the framework allows; expiry-tracked items go out expiring first). Accepted GRNs
+bring store items in at PO price (`GoodsAccepted` listener). Store requests (`store-requisition` workflow, head of
+department) → partial issues → employee confirms receipt; also in Self Service. Stock documents: issue (Dr category
+expense per department/activity), transfer (via the transit store, shortages stay in transit), receipt without an
+order (opening / donation / found / return, `stock-receipt` workflow), count (frozen snapshot, `stock-adjustment`
+workflow, gains/losses at average cost); posted documents can be reversed. Daily `inventory:alerts` (reorder and
+expiry) to store managers. Reports: stock balance, movements, consumption, expiry, reorder, slow moving, in transit,
+count variance. Settings: opening and donation accounts, expiry warning and slow-moving days. Next: step 5 assets.
+
 ## 20. Kairuki Hospital accounting requirements — coverage (2026-11-16)
 
 Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ part · ✗ not yet.
@@ -849,7 +860,7 @@ Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ pa
 | Bank: several accounts, cash book | ✓ | |
 | Bank reconciliation, cash flow forecast, petty cash / imprest, cashier-system link | ✗ | |
 | Fixed assets: categories with depreciation rules | ◐ | register, tags, depreciation, transfer, disposal, revaluation, maintenance ✗ (step 5) |
-| Inventory & pharmacy: catalogue, stores, batch/expiry flags | ◐ | ledger, FIFO/weighted average, consumption, auto-reorder ✗ (step 4); LIFO not allowed under IFRS |
+| Inventory & pharmacy: catalogue, stores, batch/expiry, ledger, FIFO/weighted average, consumption, reorder alerts | ✓ | automatic purchase requisition from reorder ✗; LIFO not allowed under IFRS |
 | Payroll: attendance link, allowances, cost per department, posting to GL, statutory reports | ✓ | gratuity / benefit accruals ✗ |
 | Reports: income statement, financial position, cash book, fund statement, budget vs actual, dashboards, PDF/CSV | ✓ | cash flow statement ✗, departmental profitability ◐, service line and insurance-vs-cash trends ✗, custom dashboards ✗ |
 | Tax: payroll statutory (PAYE, NSSF, NHIF, WCF, SDL), WHT | ✓ | VAT input/output and returns ✗ |
