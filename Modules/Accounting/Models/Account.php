@@ -14,7 +14,9 @@ class Account extends Model
 
     public const DEBIT_NORMAL = ['asset', 'expense'];
 
-    protected $fillable = ['company_id', 'parent_id', 'code', 'gfs_code', 'name', 'type', 'is_postable', 'is_budgetable', 'description', 'is_active'];
+    public const CASH_FLOW = ['operating' => 'Operating activities', 'investing' => 'Investing activities', 'financing' => 'Financing activities'];
+
+    protected $fillable = ['company_id', 'parent_id', 'code', 'gfs_code', 'name', 'type', 'is_postable', 'is_budgetable', 'cash_flow', 'description', 'is_active'];
 
     protected $casts = ['is_active' => 'boolean', 'is_postable' => 'boolean', 'is_budgetable' => 'boolean'];
 
@@ -36,6 +38,12 @@ class Account extends Model
     public function label(): string
     {
         return "{$this->code} {$this->name}";
+    }
+
+    /** Cash flow section of money moving through this account; equity defaults to financing, everything else to operating. */
+    public function cashFlow(): string
+    {
+        return $this->cash_flow ?: ($this->type === 'equity' ? 'financing' : 'operating');
     }
 
     public function balance(float $debit, float $credit): float

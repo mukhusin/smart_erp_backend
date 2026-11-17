@@ -29,6 +29,11 @@ class PaymentRequest extends Model
         return $this->belongsTo(Budget::class);
     }
 
+    public function supplier()
+    {
+        return $this->belongsTo(\Modules\Procurement\Models\Supplier::class);
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class);

@@ -41,6 +41,16 @@ class FinanceReports
         'budget-comparison' => ['title' => 'Statement of comparison of budget and actual amounts', 'group' => 'Accounting', 'module' => 'budgeting', 'permissions' => ['accounting.view', 'budgeting.view', 'budgeting.manage']],
         'trial-balance' => ['title' => 'Trial balance', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'fund-statement' => ['title' => 'Income and expenditure by fund source', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
+        'equity-changes' => ['title' => 'Statement of changes in equity', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
+        'cash-flow' => ['title' => 'Cash flow statement', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
+        'income-monthly' => ['title' => 'Income and expenditure by month', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
+        'ledger-check' => ['title' => 'Ledger integrity check', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
+        'payables-ageing' => ['title' => 'Aged payables (suppliers)', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
+        'supplier-statement' => ['title' => 'Supplier statement', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
+        'supplier-list' => ['title' => 'Suppliers with balances', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
+        'unpaid-requests' => ['title' => 'Approved payment requests not yet vouchered', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
+        'unpaid-vouchers' => ['title' => 'Approved vouchers not yet paid', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
+        'collections-summary' => ['title' => 'Collections summary', 'group' => 'Accounting', 'module' => 'receivables', 'permissions' => ['receivables.view', 'receivables.receipts', 'receivables.manage', 'accounting.view']],
         'journal-register' => ['title' => 'Journal register', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'payments-register' => ['title' => 'Payments register', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage']],
         'receipts-register' => ['title' => 'Receipts register', 'group' => 'Accounting', 'module' => 'receivables', 'permissions' => ['receivables.view', 'receivables.bill', 'receivables.receipts', 'receivables.manage']],
@@ -82,6 +92,9 @@ class FinanceReports
         'done' => 'Done', 'overdue' => 'Overdue', 'progress' => 'Progress %', 'activities' => 'Activities', 'plan_status' => 'Plan', 'period' => 'Period',
         'planned' => 'Planned', 'variance' => 'Variance', 'store' => 'Store', 'item' => 'Item', 'unit' => 'Unit', 'quantity' => 'Quantity', 'value' => 'Value', 'avg_cost' => 'Average cost',
         'batch' => 'Batch', 'expiry' => 'Expiry', 'days' => 'Days left', 'reorder' => 'Reorder level', 'last_issue' => 'Last issued', 'counted' => 'Counted', 'system' => 'Ledger', 'final' => 'Final budget', 'difference' => 'Difference', 'opening' => 'Opening', 'in' => 'Money in', 'out' => 'Money out', 'documents' => 'Documents',
+        'movement' => 'Movements', 'result' => 'Result', 'closing' => 'Closing', 'supplier' => 'Supplier', 'tin' => 'TIN', 'phone' => 'Phone', 'bills' => 'Open bills',
+        'not_due' => 'Not yet due', 'd30' => '1–30 days', 'd60' => '31–60 days', 'd90' => '61–90 days', 'over90' => 'Over 90 days', 'total' => 'Total', 'billed' => 'Billed',
+        'paid' => 'Paid', 'age' => 'Days waiting', 'due' => 'Due', 'count' => 'Count', 'issue' => 'Issue', 'line' => 'Line',
     ];
 
     public function __construct(private readonly AccessService $access, private readonly BudgetFigures $figures) {}
@@ -115,16 +128,16 @@ class FinanceReports
     {
         $values = collect($this->filters($key))->mapWithKeys(fn ($f) => [$f['key'] => ($input[$f['key']] ?? '') !== '' ? (string) $input[$f['key']] : ($f['default'] ?? null)])->all();
         try {
-            [$subtitle, $columns, $rows] = $this->{'report'.str_replace('-', '', ucwords($key, '-'))}($values);
+            [$subtitle, $columns, $rows, $labels] = array_pad($this->{'report'.str_replace('-', '', ucwords($key, '-'))}($values), 4, []);
         } catch (MissingChoice $e) {
-            [$subtitle, $columns, $rows] = [$e->getMessage(), ['description'], []];
+            [$subtitle, $columns, $rows, $labels] = [$e->getMessage(), ['description'], [], []];
         }
 
         $w = app(\Modules\Accounting\Services\AccountingPolicies::class)->wording();
         $title = match ($key) { 'income-statement' => $w['performance'], 'financial-position' => $w['position'], default => self::REPORTS[$key]['title'] };
 
         return ['key' => $key, 'title' => $title, 'subtitle' => $subtitle,
-            'columns' => array_map(fn ($c) => ['key' => $c, 'label' => self::LABELS[$c] ?? ucfirst(str_replace('_', ' ', $c))], $columns), 'rows' => array_values($rows), 'total' => count($rows)];
+            'columns' => array_map(fn ($c) => ['key' => $c, 'label' => $labels[$c] ?? self::LABELS[$c] ?? ucfirst(str_replace('_', ' ', $c))], $columns), 'rows' => array_values($rows), 'total' => count($rows)];
     }
 
     /** @return list<array<string, mixed>> */
@@ -152,6 +165,14 @@ class FinanceReports
             'cash-book' => [['key' => 'bank_id', 'label' => 'Bank or cash', 'type' => 'select', 'default' => (string) (CashBankAccount::where('is_active', true)->orderBy('name')->value('id') ?? ''),
                 'options' => $opt(CashBankAccount::orderBy('name')->get())], $from, $to],
             'trial-balance' => [$from, $to],
+            'equity-changes', 'cash-flow', 'ledger-check' => [$from, $to],
+            'income-monthly' => [$from, $to, $departments],
+            'payables-ageing', 'supplier-list', 'unpaid-requests', 'unpaid-vouchers' => [],
+            'supplier-statement' => [['key' => 'supplier_id', 'label' => 'Supplier', 'type' => 'select', 'options' => class_exists(\Modules\Procurement\Models\Supplier::class)
+                ? $opt(\Modules\Procurement\Models\Supplier::orderBy('name')->get()) : []], $from, $to],
+            'collections-summary' => [$from, $to, ['key' => 'group', 'label' => 'Group by', 'type' => 'select', 'default' => 'month', 'options' => [
+                ['value' => 'month', 'label' => 'Month'], ['value' => 'method', 'label' => 'Payment method'], ['value' => 'bank', 'label' => 'Bank or cash account'],
+                ['value' => 'cashier', 'label' => 'Received by'], ['value' => 'kind', 'label' => 'Kind of receipt']]]],
             'journal-register' => [$from, $to, ['key' => 'type', 'label' => 'Type', 'type' => 'select', 'options' => collect(JournalEntry::TYPES)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values()->all()]],
             'payments-register' => [$from, $to, ['key' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => collect(PaymentVoucher::STATUS_LABELS)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values()->all()]],
             'receipts-register' => [$from, $to, ['key' => 'kind', 'label' => 'Kind', 'type' => 'select', 'options' => collect(Receipt::KINDS)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values()->all()]],
@@ -300,6 +321,269 @@ class FinanceReports
         $out->push(['fund' => 'Total', 'revenue' => round($out->sum('revenue'), 2), 'expense' => round($out->sum('expense'), 2), 'surplus' => round($out->sum('surplus'), 2)]);
 
         return ["{$this->d($v['from'])} to {$this->d($v['to'])} · for donors and restricted funds", ['fund', 'revenue', 'expense', 'surplus'], $out->all()];
+    }
+
+    private function balances(?string $from, ?string $to, bool $withClosing = true): Collection
+    {
+        return $this->lines($from, $to)->when(! $withClosing, fn ($q) => $q->where('e.entry_type', '!=', 'closing'))
+            ->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
+    }
+
+    private function reportEquityChanges(array $v): array
+    {
+        $before = CarbonImmutable::parse($v['from'])->subDay()->toDateString();
+        $accounts = Account::where('is_postable', true)->orderBy('code')->get();
+        $open = $this->balances(null, $before);
+        $moves = $this->balances($v['from'], $v['to'], false);
+        $closing = $this->lines($v['from'], $v['to'])->where('e.entry_type', 'closing')->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
+        $bal = fn (Collection $set, Account $a) => isset($set[$a->id]) ? $a->balance((float) $set[$a->id]->d, (float) $set[$a->id]->c) : 0.0;
+        $pnl = fn (Collection $set) => round($accounts->where('type', 'revenue')->sum(fn ($a) => $bal($set, $a)) - $accounts->where('type', 'expense')->sum(fn ($a) => $bal($set, $a)), 2);
+        $rows = [];
+        foreach ($accounts->where('type', 'equity') as $a) {
+            $o = $bal($open, $a);
+            $m = $bal($moves, $a);
+            $r = $bal($closing, $a);
+            if (round($o, 2) != 0 || round($m, 2) != 0 || round($r, 2) != 0) {
+                $rows[] = ['account' => $a->label(), 'opening' => $o, 'movement' => $m, 'result' => $r, 'closing' => round($o + $m + $r, 2)];
+            }
+        }
+        $w = app(\Modules\Accounting\Services\AccountingPolicies::class)->wording($v['to']);
+        $unclosedOpen = $pnl($open);
+        $periodResult = $pnl($moves);
+        $closedInPeriod = round(collect($rows)->sum('result'), 2);
+        $rows[] = ['account' => $w['accumulated'].' (not yet closed)', 'opening' => $unclosedOpen, 'movement' => 0.0, 'result' => round($periodResult - $closedInPeriod, 2), 'closing' => round($unclosedOpen + $periodResult - $closedInPeriod, 2)];
+        $rows[] = ['account' => 'Total', 'opening' => round(collect($rows)->sum('opening'), 2), 'movement' => round(collect($rows)->sum('movement'), 2), 'result' => round(collect($rows)->sum('result'), 2), 'closing' => round(collect($rows)->sum('closing'), 2)];
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])} · {$w['result']} for the period ".number_format($periodResult, 2), ['account', 'opening', 'movement', 'result', 'closing'], $rows];
+    }
+
+    private function reportCashFlow(array $v): array
+    {
+        $cash = CashBankAccount::whereNotNull('account_id')->pluck('account_id')->unique()->all();
+        if (! $cash) {
+            throw new MissingChoice('Add your bank and cash accounts in Accounting → Bank and cash first.');
+        }
+        $before = CarbonImmutable::parse($v['from'])->subDay()->toDateString();
+        $opening = round((float) $this->lines(null, $before)->whereIn('l.account_id', $cash)->selectRaw('COALESCE(SUM(l.debit) - SUM(l.credit), 0) as b')->value('b'), 2);
+        $entries = $this->lines($v['from'], $v['to'])->whereExists(fn ($q) => $q->selectRaw('1')->from('journal_entry_lines as x')->whereColumn('x.journal_entry_id', 'e.id')->whereIn('x.account_id', $cash))
+            ->select('l.journal_entry_id', 'l.account_id', 'l.debit', 'l.credit')->get()->groupBy('journal_entry_id');
+        $accounts = Account::get()->keyBy('id');
+        $by = [];
+        foreach ($entries as $lines) {
+            $delta = round($lines->whereIn('account_id', $cash)->sum(fn ($l) => $l->debit - $l->credit), 2);
+            $others = $lines->reject(fn ($l) => in_array($l->account_id, $cash));
+            $weight = round($others->sum(fn ($l) => $l->credit - $l->debit), 2);
+            if ($delta == 0 || $weight == 0) {
+                continue;
+            }
+            foreach ($others as $l) {
+                $share = round($delta * ($l->credit - $l->debit) / $weight, 2);
+                $by[$l->account_id] = round(($by[$l->account_id] ?? 0) + $share, 2);
+            }
+        }
+        $rows = [['section' => 'Cash and bank at '.$this->d($v['from']), 'account' => '', 'amount' => $opening]];
+        $net = 0.0;
+        foreach (Account::CASH_FLOW as $key => $label) {
+            $lines = collect($by)->filter(fn ($amt, $id) => isset($accounts[$id]) && $accounts[$id]->cashFlow() === $key && round($amt, 2) != 0)
+                ->sortBy(fn ($amt, $id) => $accounts[$id]->code);
+            $rows[] = ['section' => strtoupper($label), 'account' => '', 'amount' => null];
+            foreach ($lines as $id => $amt) {
+                $rows[] = ['section' => '', 'account' => $accounts[$id]->label(), 'amount' => $amt];
+            }
+            $total = round($lines->sum(), 2);
+            $net += $total;
+            $rows[] = ['section' => "Net cash from {$label}", 'account' => '', 'amount' => $total];
+        }
+        $rows[] = ['section' => 'Net change in cash', 'account' => '', 'amount' => round($net, 2)];
+        $rows[] = ['section' => 'Cash and bank at '.$this->d($v['to']), 'account' => '', 'amount' => round($opening + $net, 2)];
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])} · direct method; set investing and financing accounts in the chart of accounts", ['section', 'account', 'amount'], $rows];
+    }
+
+    private function reportIncomeMonthly(array $v): array
+    {
+        $start = CarbonImmutable::parse($v['from'])->startOfMonth();
+        $end = CarbonImmutable::parse($v['to']);
+        $months = [];
+        for ($m = $start; $m->lte($end) && count($months) < 12; $m = $m->addMonth()) {
+            $months[$m->format('Y-m')] = $m->format('M y');
+        }
+        $sums = $this->lines($v['from'], $v['to'])->where('e.entry_type', '!=', 'closing')->when($v['department_id'], fn ($q, $d) => $q->where('l.department_id', $d))
+            ->groupBy('l.account_id', 'e.date')->selectRaw('l.account_id, e.date, SUM(l.debit) as d, SUM(l.credit) as c')->get()
+            ->groupBy(fn ($r) => $r->account_id.'|'.substr((string) $r->date, 0, 7));
+        $w = app(\Modules\Accounting\Services\AccountingPolicies::class)->wording($v['to']);
+        $keys = array_map(fn ($k) => 'm'.str_replace('-', '', $k), array_keys($months));
+        $rows = [];
+        $totals = [];
+        foreach (['revenue' => $w['revenue'], 'expense' => $w['expense']] as $type => $label) {
+            $rows[] = ['account' => strtoupper($label)];
+            $sum = array_fill_keys($keys, 0.0) + ['total' => 0.0];
+            foreach (Account::where('type', $type)->where('is_postable', true)->orderBy('code')->get() as $a) {
+                $row = ['account' => $a->label()];
+                $any = false;
+                foreach (array_keys($months) as $i => $ym) {
+                    $g = $sums[$a->id.'|'.$ym] ?? collect();
+                    $amt = $a->balance((float) $g->sum('d'), (float) $g->sum('c'));
+                    $row[$keys[$i]] = $amt;
+                    $sum[$keys[$i]] = round($sum[$keys[$i]] + $amt, 2);
+                    $any = $any || round($amt, 2) != 0;
+                }
+                $row['total'] = round(array_sum(array_intersect_key($row, array_flip($keys))), 2);
+                if ($any) {
+                    $sum['total'] = round($sum['total'] + $row['total'], 2);
+                    $rows[] = $row;
+                }
+            }
+            $totals[$type] = $sum;
+            $rows[] = ['account' => "Total {$label}"] + $sum;
+        }
+        $rows[] = ['account' => $w['result']] + array_map(fn ($k) => round($totals['revenue'][$k] - $totals['expense'][$k], 2), array_combine([...$keys, 'total'], [...$keys, 'total']));
+        $dept = $v['department_id'] ? ' · '.Department::find($v['department_id'])?->name : '';
+        $columns = array_merge(['account'], $keys, ['total']);
+        $labels = array_combine($keys, array_values($months));
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])}{$dept}", $columns, $rows, $labels];
+    }
+
+    private function reportLedgerCheck(array $v): array
+    {
+        $rows = [];
+        $unbalanced = $this->lines($v['from'], $v['to'])->groupBy('e.id', 'e.reference_no', 'e.date')->selectRaw('e.id, e.reference_no, e.date, SUM(l.debit) as d, SUM(l.credit) as c')
+            ->havingRaw('ROUND(SUM(l.debit) - SUM(l.credit), 2) <> 0')->get();
+        foreach ($unbalanced as $e) {
+            $rows[] = ['date' => $this->d($e->date), 'number' => $e->reference_no, 'issue' => 'Debits and credits differ', 'debit' => (float) $e->d, 'credit' => (float) $e->c, 'difference' => round($e->d - $e->c, 2)];
+        }
+        $headings = $this->lines($v['from'], $v['to'])->join('accounts as a', 'a.id', '=', 'l.account_id')->where('a.is_postable', false)->select('e.reference_no', 'e.date', 'a.code', 'l.debit', 'l.credit')->get();
+        foreach ($headings as $h) {
+            $rows[] = ['date' => $this->d($h->date), 'number' => $h->reference_no, 'issue' => "Posted to heading account {$h->code}", 'debit' => (float) $h->debit, 'credit' => (float) $h->credit, 'difference' => null];
+        }
+        $noPeriod = JournalEntry::whereIn('status', ['posted', 'reversed'])->whereNull('fiscal_period_id')->whereBetween('date', [$v['from'], $v['to']])->get();
+        foreach ($noPeriod as $e) {
+            $rows[] = ['date' => $e->date->format('j M Y'), 'number' => $e->reference_no, 'issue' => 'Not in a fiscal period', 'debit' => (float) $e->total, 'credit' => (float) $e->total, 'difference' => null];
+        }
+        $totals = $this->lines($v['from'], $v['to'])->selectRaw('COALESCE(SUM(l.debit), 0) as d, COALESCE(SUM(l.credit), 0) as c')->first();
+        $subtitle = $rows ? count($rows).' issue(s) found' : 'No issues: every posted journal balances';
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])} · {$subtitle} · ledger debits ".number_format((float) $totals->d, 2).' / credits '.number_format((float) $totals->c, 2),
+            ['date', 'number', 'issue', 'debit', 'credit', 'difference'], $rows];
+    }
+
+    private function openBills(): Collection
+    {
+        return \Modules\Payments\Models\PaymentRequest::with(['supplier', 'vouchers.listItems'])->whereNotNull('supplier_id')->whereIn('status', ['approved', 'vouchered'])->get()
+            ->map(function ($r) {
+                $paid = $r->vouchers->flatMap->listItems->where('status', 'paid')->sum('amount');
+                $r->setAttribute('balance', round($r->total - $paid, 2));
+
+                return $r;
+            })->filter(fn ($r) => $r->balance > 0);
+    }
+
+    private function bucket(?CarbonImmutable $due): string
+    {
+        $days = $due ? (int) $due->diffInDays(CarbonImmutable::today(), false) : 0;
+
+        return match (true) { $days <= 0 => 'not_due', $days <= 30 => 'd30', $days <= 60 => 'd60', $days <= 90 => 'd90', default => 'over90' };
+    }
+
+    private function reportPayablesAgeing(array $v): array
+    {
+        $buckets = ['not_due', 'd30', 'd60', 'd90', 'over90'];
+        $rows = $this->openBills()->groupBy('supplier_id')->map(function ($bills) use ($buckets) {
+            $row = ['supplier' => $bills->first()->supplier?->name] + array_fill_keys($buckets, 0.0);
+            foreach ($bills as $b) {
+                $due = $b->needed_by ? CarbonImmutable::parse($b->needed_by) : ($b->decided_at ? CarbonImmutable::parse($b->decided_at) : null);
+                $row[$this->bucket($due)] = round($row[$this->bucket($due)] + $b->balance, 2);
+            }
+            $row['total'] = round(array_sum(array_intersect_key($row, array_flip($buckets))), 2);
+
+            return $row;
+        })->sortByDesc('total')->values();
+        $total = ['supplier' => 'Total'];
+        foreach ([...$buckets, 'total'] as $k) {
+            $total[$k] = round($rows->sum($k), 2);
+        }
+        $rows->push($total);
+
+        return ['As at '.$this->d(CarbonImmutable::today()->toDateString()).' · approved supplier bills not yet paid, by due date', ['supplier', ...$buckets, 'total'], $rows->all()];
+    }
+
+    private function reportSupplierStatement(array $v): array
+    {
+        $supplier = $v['supplier_id'] ? \Modules\Procurement\Models\Supplier::find((int) $v['supplier_id']) : null;
+        if (! $supplier) {
+            throw new MissingChoice('Choose a supplier.');
+        }
+        $bills = \Modules\Payments\Models\PaymentRequest::with('vouchers.listItems.list')->where('supplier_id', $supplier->id)->whereIn('status', ['approved', 'vouchered', 'paid'])->get();
+        $events = collect();
+        foreach ($bills as $b) {
+            $events->push(['date' => CarbonImmutable::parse($b->decided_at ?? $b->created_at)->toDateString(), 'number' => $b->number, 'description' => $b->title, 'billed' => (float) $b->total, 'paid' => 0.0]);
+            foreach ($b->vouchers->flatMap->listItems->where('status', 'paid') as $item) {
+                $events->push(['date' => ($item->list?->date ?? $item->settled_at ?? $item->created_at)->toDateString(), 'number' => $item->list?->number, 'description' => 'Paid'.($item->reference ? " ({$item->reference})" : ''), 'billed' => 0.0, 'paid' => (float) $item->amount]);
+            }
+        }
+        $events = $events->sortBy('date')->values();
+        $balance = round($events->filter(fn ($e) => $e['date'] < $v['from'])->sum(fn ($e) => $e['billed'] - $e['paid']), 2);
+        $rows = [['date' => $this->d($v['from']), 'number' => '', 'description' => 'Balance brought forward', 'billed' => null, 'paid' => null, 'balance' => $balance]];
+        foreach ($events->filter(fn ($e) => $e['date'] >= $v['from'] && $e['date'] <= $v['to']) as $e) {
+            $balance = round($balance + $e['billed'] - $e['paid'], 2);
+            $rows[] = ['date' => $this->d($e['date']), 'number' => $e['number'], 'description' => $e['description'], 'billed' => $e['billed'] ?: null, 'paid' => $e['paid'] ?: null, 'balance' => $balance];
+        }
+
+        return ["{$supplier->name} · {$this->d($v['from'])} to {$this->d($v['to'])}", ['date', 'number', 'description', 'billed', 'paid', 'balance'], $rows];
+    }
+
+    private function reportSupplierList(array $v): array
+    {
+        $open = $this->openBills()->groupBy('supplier_id');
+        $rows = \Modules\Procurement\Models\Supplier::orderBy('name')->get()->map(fn ($s) => ['code' => $s->code, 'supplier' => $s->name, 'tin' => $s->tin, 'phone' => $s->phone,
+            'status' => $s->is_active ? 'Active' : 'Inactive', 'bills' => isset($open[$s->id]) ? $open[$s->id]->count() : 0, 'balance' => isset($open[$s->id]) ? round($open[$s->id]->sum('balance'), 2) : 0.0])->values();
+        $rows->push(['code' => '', 'supplier' => 'Total', 'bills' => $rows->sum('bills'), 'balance' => round($rows->sum('balance'), 2)]);
+
+        return ['Every supplier with what is owed to them', ['code', 'supplier', 'tin', 'phone', 'status', 'bills', 'balance'], $rows->all()];
+    }
+
+    private function reportUnpaidRequests(array $v): array
+    {
+        $rows = \Modules\Payments\Models\PaymentRequest::with(['department', 'payees'])->where('status', 'approved')->orderBy('decided_at')->get()
+            ->map(fn ($r) => ['date' => $r->decided_at ? $this->d($r->decided_at->toDateString()) : '', 'number' => $r->number, 'payee' => $r->payees->pluck('name')->join(', '),
+                'department' => $r->department?->name, 'description' => $r->title, 'due' => $r->needed_by ? $this->d($r->needed_by->toDateString()) : '',
+                'age' => $r->decided_at ? (int) $r->decided_at->startOfDay()->diffInDays(today()) : null, 'amount' => (float) $r->total])->values();
+        $rows->push(['date' => 'Total', 'amount' => round($rows->sum('amount'), 2)]);
+
+        return ['Approved, waiting for a payment voucher', ['date', 'number', 'payee', 'department', 'description', 'due', 'age', 'amount'], $rows->all()];
+    }
+
+    private function reportUnpaidVouchers(array $v): array
+    {
+        $rows = PaymentVoucher::with(['request.payees', 'request.department', 'bank', 'listItems'])->where('status', 'approved')->orderBy('date')->get()
+            ->map(function ($p) {
+                $paid = $p->listItems->where('status', 'paid')->sum('amount');
+
+                return ['date' => $p->date->format('j M Y'), 'number' => $p->number, 'reference' => $p->request?->number, 'payee' => $p->request?->payees->pluck('name')->join(', '),
+                    'department' => $p->request?->department?->name, 'bank' => $p->bank?->name, 'age' => (int) $p->date->diffInDays(today()), 'net' => round($p->net - $paid, 2)];
+            })->filter(fn ($r) => $r['net'] > 0)->values();
+        $rows->push(['date' => 'Total', 'net' => round($rows->sum('net'), 2)]);
+
+        return ['Approved vouchers waiting for a payment list', ['date', 'number', 'reference', 'payee', 'department', 'bank', 'age', 'net'], $rows->all()];
+    }
+
+    private function reportCollectionsSummary(array $v): array
+    {
+        $group = $v['group'] ?: 'month';
+        $receipts = Receipt::with(['bank', 'creator'])->where('status', '!=', 'voided')->whereDate('date', '>=', $v['from'])->whereDate('date', '<=', $v['to'])->get();
+        $key = fn ($r) => match ($group) {
+            'method' => Receipt::METHODS[$r->method] ?? $r->method,
+            'bank' => $r->bank?->name ?? '—',
+            'cashier' => $r->creator?->display_name ?? '—',
+            'kind' => Receipt::KINDS[$r->kind] ?? $r->kind,
+            default => $r->date->format('Y-m'),
+        };
+        $rows = $receipts->groupBy($key)->map(fn ($g, $k) => ['group' => $group === 'month' ? CarbonImmutable::parse($k.'-01')->format('F Y') : $k, 'sort' => $k, 'count' => $g->count(), 'amount' => round($g->sum('amount'), 2)])
+            ->sortBy($group === 'month' ? 'sort' : fn ($r) => -$r['amount'])->map(fn ($r) => collect($r)->except('sort')->all())->values();
+        $rows->push(['group' => 'Total', 'count' => $rows->sum('count'), 'amount' => round($rows->sum('amount'), 2)]);
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])} · voided receipts left out", ['group', 'count', 'amount'], $rows->all()];
     }
 
     private function reportJournalRegister(array $v): array

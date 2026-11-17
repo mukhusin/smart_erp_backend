@@ -101,7 +101,7 @@ class AccountController extends Controller
         return [
             'id' => $a->id, 'code' => $a->code, 'gfs_code' => $a->gfs_code, 'name' => $a->name, 'type' => $a->type, 'type_label' => Account::TYPES[$a->type] ?? $a->type,
             'parent_id' => $a->parent_id, 'parent' => $a->parent_id && isset($byId[$a->parent_id]) ? $byId[$a->parent_id]->label() : null,
-            'is_postable' => (bool) $a->is_postable, 'is_budgetable' => (bool) $a->is_budgetable, 'is_active' => (bool) $a->is_active, 'description' => $a->description,
+            'is_postable' => (bool) $a->is_postable, 'is_budgetable' => (bool) $a->is_budgetable, 'cash_flow' => $a->cash_flow, 'is_active' => (bool) $a->is_active, 'description' => $a->description,
             'balance' => $t ? $a->balance((float) $t->d, (float) $t->c) : 0.0, 'has_entries' => (bool) $t,
         ];
     }

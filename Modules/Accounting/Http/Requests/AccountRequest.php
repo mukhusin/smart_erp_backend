@@ -24,6 +24,8 @@ class AccountRequest extends FormRequest
             'is_postable' => ['sometimes', 'boolean'],
             /** Budgets can be set on it (usually expense and revenue accounts). */
             'is_budgetable' => ['sometimes', 'boolean'],
+            /** Cash flow statement section: operating, investing (fixed assets, investments) or financing (loans, capital). Empty = by type. */
+            'cash_flow' => ['nullable', Rule::in(array_keys(Account::CASH_FLOW))],
             'description' => ['nullable', 'string', 'max:500'],
             'is_active' => ['sometimes', 'boolean'],
         ];

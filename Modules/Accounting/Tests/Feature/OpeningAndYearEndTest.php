@@ -97,6 +97,7 @@ class OpeningAndYearEndTest extends TestCase
             app(PostingService::class)->post('2026-06-01', 'Fees', [['account_id' => $a['bank'], 'debit' => 500000], ['account_id' => $a['revenue'], 'credit' => 500000]], $user);
             app(PostingService::class)->post('2026-06-02', 'Supplies', [['account_id' => $a['expense'], 'debit' => 200000], ['account_id' => $a['bank'], 'credit' => 200000]], $user);
         });
+        $this->assertReports($company, $user, $a);
         $this->travelTo('2027-01-10 09:00:00');
 
         $year = $this->getJson('/api/v1/accounting/year-end')->assertOk()->json('next');
@@ -136,6 +137,42 @@ class OpeningAndYearEndTest extends TestCase
             $position = collect($reports->build('financial-position', ['date' => '2026-12-31'])['rows'])->keyBy('code');
             $this->assertEquals(1100000, $position['3100']['amount']);
             $this->assertSame('open', FiscalYear::where('name', '2026')->value('status'));
+        });
+    }
+
+    private function assertReports($company, User $user, array $a): void
+    {
+        app(CompanyContext::class)->run($company, function () use ($user, $a) {
+            $bank = \Modules\Accounting\Models\CashBankAccount::create(['name' => 'CRDB', 'kind' => 'bank', 'account_id' => $a['bank'], 'is_active' => true]);
+            Account::find($a['creditors'])->update(['cash_flow' => 'operating']);
+            \Modules\Receivables\Models\Receipt::create(['number' => 'RCT-1', 'kind' => 'direct', 'payer_name' => 'Walk in', 'date' => '2026-06-03', 'cash_bank_account_id' => $bank->id,
+                'method' => 'mobile', 'amount' => 25000, 'status' => 'posted', 'created_by' => $user->id]);
+            $r = app(FinanceReports::class);
+            $rows = fn ($key, $in) => collect($r->build($key, $in)['rows']);
+
+            $cash = $rows('cash-flow', ['from' => '2026-02-01', 'to' => '2026-12-31']);
+            $this->assertEquals(1000000, $cash->first()['amount']);
+            $this->assertEquals(300000, $cash->firstWhere('section', 'Net cash from Operating activities')['amount']);
+            $this->assertEquals(1300000, $cash->last()['amount']);
+
+            $equity = $rows('equity-changes', ['from' => '2026-02-01', 'to' => '2026-12-31']);
+            $this->assertEquals(1100000, $equity->first()['opening']);
+            $this->assertEquals(1400000, $equity->last()['closing']);
+
+            $monthly = $r->build('income-monthly', ['from' => '2026-06-01', 'to' => '2026-06-30', 'department_id' => null]);
+            $this->assertSame('Jun 26', collect($monthly['columns'])->firstWhere('key', 'm202606')['label']);
+            $this->assertEquals(300000, collect($monthly['rows'])->last()['total']);
+
+            $this->assertCount(0, $rows('ledger-check', ['from' => '2026-01-01', 'to' => '2026-12-31']));
+            $this->assertEquals(150000, $rows('payables-ageing', [])->last()['total']);
+            $this->assertEquals(150000, $rows('supplier-list', [])->firstWhere('supplier', 'Office World Ltd')['balance']);
+            $this->assertEquals(150000, $rows('unpaid-requests', [])->last()['amount']);
+            $this->assertCount(1, $rows('unpaid-vouchers', []));
+            $supplier = \Modules\Procurement\Models\Supplier::where('name', 'Office World Ltd')->value('id');
+            $this->assertEquals(150000, $rows('supplier-statement', ['supplier_id' => $supplier, 'from' => '2025-01-01', 'to' => '2027-12-31'])->last()['balance']);
+            $collections = $rows('collections-summary', ['from' => '2026-01-01', 'to' => '2026-12-31', 'group' => 'method']);
+            $this->assertSame('Mobile money', $collections->first()['group']);
+            $this->assertEquals(25000, $collections->last()['amount']);
         });
     }
 

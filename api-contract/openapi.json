@@ -70,6 +70,12 @@
                                                     "is_budgetable": {
                                                         "type": "boolean"
                                                     },
+                                                    "cash_flow": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
                                                     "is_active": {
                                                         "type": "boolean"
                                                     },
@@ -97,6 +103,7 @@
                                                     "parent",
                                                     "is_postable",
                                                     "is_budgetable",
+                                                    "cash_flow",
                                                     "is_active",
                                                     "description",
                                                     "balance",
@@ -75964,6 +75971,19 @@
                     "is_budgetable": {
                         "type": "boolean",
                         "description": "Budgets can be set on it (usually expense and revenue accounts)."
+                    },
+                    "cash_flow": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Cash flow statement section: operating, investing (fixed assets, investments) or financing (loans, capital). Empty = by type.",
+                        "enum": [
+                            "operating",
+                            "investing",
+                            "financing",
+                            null
+                        ]
                     },
                     "description": {
                         "type": [

@@ -861,6 +861,13 @@ position / trial balance kept as approved and reprintable; reopen reverses the c
 left out of income statements, fund statements, dashboards and the year's trial balance (option to include them).
 Next: step 6 assets.
 
+**Reports batch (2026-11-17):** statement of changes in equity, cash flow statement (direct method; accounts carry a
+cash flow section: operating, investing or financing, defaulting by type), income and expenditure by month, ledger
+integrity check, aged payables, supplier statement, suppliers with balances, approved requests not yet vouchered,
+approved vouchers not yet paid, collections summary (by month, method, bank, cashier or kind). Left for their steps:
+asset reports and PPE note (step 6), imprest, bank reconciliation, net realisable value, multi-currency statements.
+Not planned: government formats (GBT, Treasury Registrar), group consolidation/elimination, IFRS 17.
+
 ## 20. Kairuki Hospital accounting requirements — coverage (2026-11-16)
 
 Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ part · ✗ not yet.
