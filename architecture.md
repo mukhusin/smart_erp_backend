@@ -868,6 +868,22 @@ approved vouchers not yet paid, collections summary (by month, method, bank, cas
 asset reports and PPE note (step 6), imprest, bank reconciliation, net realisable value, multi-currency statements.
 Not planned: government formats (GBT, Treasury Registrar), group consolidation/elimination, IFRS 17.
 
+**Step 6 done (2026-11-17):** module `Assets` (replaces the unused legacy asset tables and permissions; `assets.view`,
+`assets.manage`). Register with numbering pattern, one record per unit, type fields (vehicle, land, building, road,
+software), acquisition by GRN (automatic, `GoodsAccepted`), donation, transfer in or opening balance (CSV upload of
+drafts); `asset-register` workflow posts donations/opening values. Value history in `asset_entries` gives cost,
+accumulated depreciation and book value at any date. Assign/return with holder history; transfers internal (permanent
+or temporary with reminders) or external (derecognised), `asset-transfer` workflow. Changes (improvement, life review,
+revaluation only under the revaluation policy, impairment), `asset-change` workflow, each restarting the depreciation
+basis. Straight-line daily depreciation from in-use (or acquisition) date, monthly runs in order (automatic on the 1st,
+failed runs kept with the reason), journal per category/department/fund; land, WIP and no-life assets never
+depreciated. Disposal (sale, auction, donation, write-off, retirement) with board minutes, `asset-disposal` workflow,
+catch-up depreciation and gain/loss. Self service My assets: fault reports with photo, hand back, yearly confirmation;
+officers answer in Faults and returns; weekly alert for assets held by leavers. Reports: register at a date, PPE
+movement note, depreciation schedule, by holder/location, due for disposal, disposals, transfers. Not yet: QR tag
+printing and phone scan, WIP project capitalisation, foreign-currency cost, HR exit clearance blocking (alerts only).
+Next: step 7 procurement advanced.
+
 ## 20. Kairuki Hospital accounting requirements — coverage (2026-11-16)
 
 Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ part · ✗ not yet.
@@ -884,7 +900,7 @@ Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ pa
 | AR: credit control (limit blocking), payment plans, co-payment, insurance claim lifecycle, Afyabox patient billing | ✗ | credit limit stored, not enforced |
 | Bank: several accounts, cash book | ✓ | |
 | Bank reconciliation, cash flow forecast, petty cash / imprest, cashier-system link | ✗ | |
-| Fixed assets: categories with depreciation rules | ◐ | register, tags, depreciation, transfer, disposal, revaluation, maintenance ✗ (step 5) |
+| Fixed assets: register, depreciation, transfer, disposal, revaluation, impairment | ✓ | maintenance schedule, QR scan ✗ |
 | Inventory & pharmacy: catalogue, stores, batch/expiry, ledger, FIFO/weighted average, consumption, reorder alerts | ✓ | automatic purchase requisition from reorder ✗; LIFO not allowed under IFRS |
 | Payroll: attendance link, allowances, cost per department, posting to GL, statutory reports | ✓ | gratuity / benefit accruals ✗ |
 | Reports: income statement, financial position, cash book, fund statement, budget vs actual, dashboards, PDF/CSV | ✓ | cash flow statement ✗, departmental profitability ◐, service line and insurance-vs-cash trends ✗, custom dashboards ✗ |

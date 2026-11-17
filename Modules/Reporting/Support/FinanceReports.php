@@ -62,6 +62,13 @@ class FinanceReports
         'stock-slow' => ['title' => 'Slow-moving and dead stock', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
         'stock-transit' => ['title' => 'Goods in transit and shortages', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
         'stock-count-variance' => ['title' => 'Stock count variances', 'group' => 'Inventory', 'module' => 'inventory', 'permissions' => ['inventory.view', 'inventory.manage', 'inventory.stores', 'accounting.view']],
+        'asset-register' => ['title' => 'Fixed asset register', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
+        'asset-movements' => ['title' => 'Property, plant and equipment movements (note)', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
+        'depreciation-schedule' => ['title' => 'Depreciation schedule', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
+        'assets-by-holder' => ['title' => 'Assets by holder and location', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
+        'assets-due-disposal' => ['title' => 'Assets due for disposal or fully depreciated', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
+        'asset-disposals' => ['title' => 'Disposal register', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
+        'asset-transfers' => ['title' => 'Transfers register', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
         'payroll-year' => ['title' => 'Employee earnings for the year', 'group' => 'Payroll', 'module' => 'payroll', 'permissions' => ['payroll.view']],
         'payroll-changes' => ['title' => 'Payroll changes from last month', 'group' => 'Payroll', 'module' => 'payroll', 'permissions' => ['payroll.view']],
         'loans-outstanding' => ['title' => 'Outstanding loans', 'group' => 'Loans', 'module' => 'loans', 'permissions' => ['loans.view', 'loans.manage']],
@@ -94,7 +101,10 @@ class FinanceReports
         'batch' => 'Batch', 'expiry' => 'Expiry', 'days' => 'Days left', 'reorder' => 'Reorder level', 'last_issue' => 'Last issued', 'counted' => 'Counted', 'system' => 'Ledger', 'final' => 'Final budget', 'difference' => 'Difference', 'opening' => 'Opening', 'in' => 'Money in', 'out' => 'Money out', 'documents' => 'Documents',
         'movement' => 'Movements', 'result' => 'Result', 'closing' => 'Closing', 'supplier' => 'Supplier', 'tin' => 'TIN', 'phone' => 'Phone', 'bills' => 'Open bills',
         'not_due' => 'Not yet due', 'd30' => '1–30 days', 'd60' => '31–60 days', 'd90' => '61–90 days', 'over90' => 'Over 90 days', 'total' => 'Total', 'billed' => 'Billed',
-        'paid' => 'Paid', 'age' => 'Days waiting', 'due' => 'Due', 'count' => 'Count', 'issue' => 'Issue', 'line' => 'Line',
+        'paid' => 'Paid', 'age' => 'Days waiting', 'category' => 'Category', 'holder' => 'Held by', 'location' => 'Location', 'acquired' => 'Acquired', 'cost' => 'Cost',
+        'depreciation' => 'Depreciation', 'accumulated' => 'Accumulated depreciation', 'book_value' => 'Book value', 'additions' => 'Additions', 'revaluation' => 'Revaluation',
+        'disposals' => 'Disposals', 'condition' => 'Condition', 'since' => 'Since', 'asset' => 'Asset', 'proceeds' => 'Proceeds', 'gain_loss' => 'Gain / loss',
+        'destination' => 'To', 'return_date' => 'Return by', 'serial' => 'Serial', 'opening_cost' => 'Opening cost', 'closing_cost' => 'Closing cost', 'due' => 'Due', 'count' => 'Count', 'issue' => 'Issue', 'line' => 'Line',
     ];
 
     public function __construct(private readonly AccessService $access, private readonly BudgetFigures $figures) {}
@@ -157,6 +167,8 @@ class FinanceReports
         $payrollYear = ['key' => 'year', 'label' => 'Year', 'type' => 'select', 'default' => (string) $today->year, 'options' => $years ?: [['value' => (string) $today->year, 'label' => (string) $today->year]]];
         $sheets = $key === 'payroll-changes' ? PayrollSheet::get()->sortByDesc(fn ($s) => $s->year * 100 + (int) $s->month)->values() : collect();
         $storesF = ['key' => 'store_id', 'label' => 'Store', 'type' => 'select', 'options' => class_exists(\Modules\Inventory\Models\Store::class) ? $opt(\Modules\Inventory\Models\Store::where('kind', '!=', 'transit')->orderBy('name')->get()) : []];
+        $assetCats = ['key' => 'category_id', 'label' => 'Category', 'type' => 'select', 'options' => class_exists(\Modules\Inventory\Models\ItemCategory::class)
+            ? $opt(\Modules\Inventory\Models\ItemCategory::whereIn('type', ['asset', 'intangible', 'wip'])->orderBy('name')->get()) : []];
         $providers = ['key' => 'provider_id', 'label' => 'Provider', 'type' => 'select', 'options' => $opt(LoanProvider::orderBy('name')->get())];
 
         return match ($key) {
@@ -166,6 +178,12 @@ class FinanceReports
                 'options' => $opt(CashBankAccount::orderBy('name')->get())], $from, $to],
             'trial-balance' => [$from, $to],
             'equity-changes', 'cash-flow', 'ledger-check' => [$from, $to],
+            'asset-register' => [['key' => 'date', 'label' => 'As at', 'type' => 'date', 'default' => $today->toDateString()], $assetCats, $departments],
+            'asset-movements' => [$from, $to],
+            'depreciation-schedule' => [$from, $to, $assetCats],
+            'assets-by-holder' => [$departments, $assetCats],
+            'assets-due-disposal' => [$assetCats],
+            'asset-disposals', 'asset-transfers' => [$from, $to],
             'income-monthly' => [$from, $to, $departments],
             'payables-ageing', 'supplier-list', 'unpaid-requests', 'unpaid-vouchers' => [],
             'supplier-statement' => [['key' => 'supplier_id', 'label' => 'Supplier', 'type' => 'select', 'options' => class_exists(\Modules\Procurement\Models\Supplier::class)
@@ -584,6 +602,119 @@ class FinanceReports
         $rows->push(['group' => 'Total', 'count' => $rows->sum('count'), 'amount' => round($rows->sum('amount'), 2)]);
 
         return ["{$this->d($v['from'])} to {$this->d($v['to'])} · voided receipts left out", ['group', 'count', 'amount'], $rows->all()];
+    }
+
+    private function assetEntries(?string $from, ?string $to): Builder
+    {
+        return DB::table('asset_entries as x')->join('assets as a', 'a.id', '=', 'x.asset_id')->where('a.company_id', app(CompanyContext::class)->id())
+            ->when($from, fn ($q) => $q->whereDate('x.date', '>=', $from))->when($to, fn ($q) => $q->whereDate('x.date', '<=', $to));
+    }
+
+    private function holder($a): string
+    {
+        return collect([$a->employee ? trim($a->employee->fname.' '.$a->employee->lname) : null, $a->department?->name])->filter()->join(' · ');
+    }
+
+    private function reportAssetRegister(array $v): array
+    {
+        $sums = $this->assetEntries(null, $v['date'])->groupBy('x.asset_id')->selectRaw('x.asset_id, SUM(x.cost) as c, SUM(x.depreciation) as d')->get()->keyBy('asset_id');
+        $rows = \Modules\Assets\Models\Asset::with(['category', 'department', 'employee'])->whereIn('id', $sums->keys())
+            ->when($v['category_id'], fn ($q, $c) => $q->where('item_category_id', $c))->when($v['department_id'], fn ($q, $d) => $q->where('department_id', $d))->orderBy('number')->get()
+            ->map(fn ($a) => ['number' => $a->number, 'asset' => $a->name, 'category' => $a->category?->name, 'serial' => $a->serial_number, 'holder' => $this->holder($a), 'location' => $a->location,
+                'acquired' => $this->d($a->acquisition_date->toDateString()), 'cost' => round((float) $sums[$a->id]->c, 2), 'accumulated' => round((float) $sums[$a->id]->d, 2),
+                'book_value' => round((float) $sums[$a->id]->c - (float) $sums[$a->id]->d, 2)])->filter(fn ($r) => $r['cost'] != 0 || $r['accumulated'] != 0)->values();
+        $rows->push(['number' => 'Total', 'cost' => round($rows->sum('cost'), 2), 'accumulated' => round($rows->sum('accumulated'), 2), 'book_value' => round($rows->sum('book_value'), 2)]);
+
+        return ['As at '.$this->d($v['date']), ['number', 'asset', 'category', 'serial', 'holder', 'location', 'acquired', 'cost', 'accumulated', 'book_value'], $rows->all()];
+    }
+
+    private function reportAssetMovements(array $v): array
+    {
+        $before = CarbonImmutable::parse($v['from'])->subDay()->toDateString();
+        $open = $this->assetEntries(null, $before)->groupBy('a.item_category_id')->selectRaw('a.item_category_id as cat, SUM(x.cost) as c, SUM(x.depreciation) as d')->get()->keyBy('cat');
+        $moves = $this->assetEntries($v['from'], $v['to'])->groupBy('a.item_category_id', 'x.kind')->selectRaw('a.item_category_id as cat, x.kind, SUM(x.cost) as c, SUM(x.depreciation) as d')->get()->groupBy('cat');
+        $cats = \Modules\Inventory\Models\ItemCategory::whereIn('id', $open->keys()->merge($moves->keys())->unique())->orderBy('name')->get();
+        $rows = $cats->map(function ($c) use ($open, $moves) {
+            $m = $moves[$c->id] ?? collect();
+            $sum = fn ($kinds, $field) => round((float) $m->whereIn('kind', $kinds)->sum($field), 2);
+            $opening = isset($open[$c->id]) ? round((float) $open[$c->id]->c - (float) $open[$c->id]->d, 2) : 0.0;
+            $additions = $sum(['acquisition', 'improvement'], 'c');
+            $reval = $sum(['revaluation'], 'c');
+            $disposals = round($sum(['disposal', 'transfer_out'], 'c') - $sum(['disposal', 'transfer_out'], 'd'), 2);
+            $dep = $sum(['depreciation', 'impairment', 'opening'], 'd');
+
+            return ['category' => $c->name, 'opening' => $opening, 'additions' => $additions, 'revaluation' => $reval, 'disposals' => $disposals, 'depreciation' => -$dep,
+                'closing' => round($opening + $additions + $reval + $disposals - $dep, 2)];
+        })->values();
+        $total = ['category' => 'Total'];
+        foreach (['opening', 'additions', 'revaluation', 'disposals', 'depreciation', 'closing'] as $k) {
+            $total[$k] = round($rows->sum($k), 2);
+        }
+        $rows->push($total);
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])} · net book value: opening + additions + revaluation − disposals − depreciation = closing", ['category', 'opening', 'additions', 'revaluation', 'disposals', 'depreciation', 'closing'], $rows->all()];
+    }
+
+    private function reportDepreciationSchedule(array $v): array
+    {
+        $period = $this->assetEntries($v['from'], $v['to'])->whereIn('x.kind', ['depreciation', 'impairment'])->groupBy('x.asset_id')->selectRaw('x.asset_id, SUM(x.depreciation) as d')->pluck('d', 'asset_id');
+        $end = $this->assetEntries(null, $v['to'])->groupBy('x.asset_id')->selectRaw('x.asset_id, SUM(x.cost) as c, SUM(x.depreciation) as d')->get()->keyBy('asset_id');
+        $rows = \Modules\Assets\Models\Asset::with('category')->whereIn('id', $period->keys())->when($v['category_id'], fn ($q, $c) => $q->where('item_category_id', $c))->orderBy('number')->get()
+            ->map(fn ($a) => ['number' => $a->number, 'asset' => $a->name, 'category' => $a->category?->name, 'cost' => round((float) ($end[$a->id]->c ?? 0), 2), 'depreciation' => round((float) $period[$a->id], 2),
+                'accumulated' => round((float) ($end[$a->id]->d ?? 0), 2), 'book_value' => round((float) ($end[$a->id]->c ?? 0) - (float) ($end[$a->id]->d ?? 0), 2)])->values();
+        $rows->push(['number' => 'Total', 'cost' => round($rows->sum('cost'), 2), 'depreciation' => round($rows->sum('depreciation'), 2), 'accumulated' => round($rows->sum('accumulated'), 2), 'book_value' => round($rows->sum('book_value'), 2)]);
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])} · includes impairment", ['number', 'asset', 'category', 'cost', 'depreciation', 'accumulated', 'book_value'], $rows->all()];
+    }
+
+    private function reportAssetsByHolder(array $v): array
+    {
+        $rows = \Modules\Assets\Models\Asset::with(['category', 'department', 'employee', 'assignments'])->whereIn('status', \Modules\Assets\Models\Asset::ON_BOOKS)
+            ->when($v['department_id'], fn ($q, $d) => $q->where('department_id', $d))->when($v['category_id'], fn ($q, $c) => $q->where('item_category_id', $c))->get()
+            ->sortBy(fn ($a) => [$a->department?->name ?? 'zz', $this->holder($a), $a->number])
+            ->map(fn ($a) => ['holder' => $this->holder($a) ?: 'Not assigned', 'location' => $a->location, 'number' => $a->number, 'asset' => $a->name, 'category' => $a->category?->name,
+                'serial' => $a->serial_number, 'condition' => \Modules\Assets\Models\Asset::CONDITIONS[$a->condition] ?? $a->condition,
+                'since' => ($s = $a->assignments->firstWhere('to_date', null)?->from_date) ? $this->d($s->toDateString()) : ''])->values();
+
+        return ['Who holds what, and where it is', ['holder', 'location', 'number', 'asset', 'category', 'serial', 'condition', 'since'], $rows->all()];
+    }
+
+    private function reportAssetsDueDisposal(array $v): array
+    {
+        $rows = \Modules\Assets\Models\Asset::with(['category', 'department', 'employee'])->whereIn('status', ['registered', 'active', 'stored', 'suspended'])
+            ->when($v['category_id'], fn ($q, $c) => $q->where('item_category_id', $c))->get()
+            ->map(function ($a) {
+                $value = $a->valueAt();
+                $reasons = array_filter([$a->dep_until && $a->dep_charged_to && $a->dep_charged_to->gte($a->dep_until) ? 'Fully depreciated' : null,
+                    in_array($a->condition, ['poor', 'very_poor'], true) ? 'Condition '.\Modules\Assets\Models\Asset::CONDITIONS[$a->condition] : null, $a->status === 'suspended' ? 'Suspended' : null]);
+
+                return $reasons ? ['number' => $a->number, 'asset' => $a->name, 'category' => $a->category?->name, 'holder' => $this->holder($a), 'reason' => implode(', ', $reasons),
+                    'cost' => $value['cost'], 'book_value' => $value['book_value']] : null;
+            })->filter()->sortBy('number')->values();
+
+        return ['Candidates for the disposal board', ['number', 'asset', 'category', 'holder', 'reason', 'cost', 'book_value'], $rows->all()];
+    }
+
+    private function reportAssetDisposals(array $v): array
+    {
+        $rows = \Modules\Assets\Models\AssetDisposal::with('asset')->where('status', 'approved')->whereDate('date', '>=', $v['from'])->whereDate('date', '<=', $v['to'])->orderBy('date')->get()
+            ->map(fn ($d) => ['date' => $this->d($d->date->toDateString()), 'number' => $d->number, 'asset' => "{$d->asset->number} {$d->asset->name}", 'method' => \Modules\Assets\Models\AssetDisposal::METHODS[$d->method],
+                'reason' => $d->reason, 'book_value' => (float) $d->book_value, 'proceeds' => $d->proceeds, 'gain_loss' => (float) $d->gain_loss])->values();
+        $rows->push(['date' => 'Total', 'book_value' => round($rows->sum('book_value'), 2), 'proceeds' => round($rows->sum('proceeds'), 2), 'gain_loss' => round($rows->sum('gain_loss'), 2)]);
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])}", ['date', 'number', 'asset', 'method', 'reason', 'book_value', 'proceeds', 'gain_loss'], $rows->all()];
+    }
+
+    private function reportAssetTransfers(array $v): array
+    {
+        $rows = \Modules\Assets\Models\AssetTransfer::with(['asset', 'toBranch', 'toDepartment', 'toEmployee'])->whereIn('status', ['approved', 'returned'])
+            ->whereDate('date', '>=', $v['from'])->whereDate('date', '<=', $v['to'])->orderBy('date')->get()
+            ->map(fn ($t) => ['date' => $this->d($t->date->toDateString()), 'number' => $t->number, 'asset' => "{$t->asset->number} {$t->asset->name}",
+                'kind' => \Modules\Assets\Models\AssetTransfer::KINDS[$t->kind].($t->permanent ? '' : ' (temporary)'), 'destination' => $t->destination(),
+                'return_date' => $t->return_date ? $this->d($t->return_date->toDateString()) : '',
+                'status' => $t->status === 'returned' ? 'Returned' : ((! $t->permanent && $t->return_date?->lt(today())) ? 'Overdue for return' : 'Done'), 'reason' => $t->reason])->values();
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])}", ['date', 'number', 'asset', 'kind', 'destination', 'return_date', 'status', 'reason'], $rows->all()];
     }
 
     private function reportJournalRegister(array $v): array

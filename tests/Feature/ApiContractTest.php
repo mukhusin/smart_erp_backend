@@ -18,9 +18,10 @@ class ApiContractTest extends TestCase
         'payments.requests.submit', 'payments.requests.withdraw', 'payments.vouchers.withdraw', 'payments.lists.withdraw',
         'receivables.invoices.issue', 'procurement.suppliers.banks.withdraw', 'procurement.suppliers.banks.disable', 'procurement.requisitions.submit', 'procurement.requisitions.withdraw', 'procurement.orders.submit', 'procurement.orders.withdraw', 'procurement.orders.acknowledge', 'procurement.receipts.submit', 'procurement.receipts.withdraw', 'procurement.receipts.cancel', 'inventory.requests.submit', 'inventory.requests.withdraw', 'inventory.requests.cancel', 'inventory.documents.submit', 'inventory.documents.withdraw', 'inventory.documents.cancel', 'inventory.documents.confirm', 'accounting.payroll.post', 'receivables.invoices.withdraw', 'receivables.credit-notes.withdraw',
         'accounting.opening.submit', 'accounting.opening.withdraw', 'accounting.year-end.close', 'accounting.year-end.withdraw',
+        'assets.withdraw', 'assets.submit', 'assets.submit-drafts', 'assets.changes.withdraw', 'assets.transfers.withdraw', 'assets.disposals.withdraw', 'assets.transfers.return', 'self.assets.confirm',
     ];
 
-    private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store', 'payments.requests.attach', 'procurement.suppliers.documents.store', 'inventory.items.import', 'procurement.rfqs.record', 'accounting.opening.import'];
+    private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store', 'payments.requests.attach', 'procurement.suppliers.documents.store', 'inventory.items.import', 'procurement.rfqs.record', 'accounting.opening.import', 'assets.import', 'assets.disposals.store', 'self.assets.report'];
 
     public function test_every_endpoint_that_takes_input_declares_its_request_body(): void
     {

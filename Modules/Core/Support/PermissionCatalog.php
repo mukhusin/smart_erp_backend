@@ -179,10 +179,8 @@ final class PermissionCatalog
             'procurement.approve' => 'Approve purchase requests',
         ],
         'assets' => [
-            'assets.view' => 'View assets',
-            'assets.create' => 'Add assets',
-            'assets.edit' => 'Edit assets',
-            'assets.delete' => 'Delete assets',
+            'assets.view' => 'View the asset register, holders, values and reports',
+            'assets.manage' => 'Register, assign, transfer, revalue and dispose of assets; run depreciation; handle fault and return reports',
         ],
         'fleet' => [
             'fleet.view' => 'View vehicles',

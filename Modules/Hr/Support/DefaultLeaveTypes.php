@@ -56,6 +56,7 @@ final class DefaultLeaveTypes
         self::payments();
         self::receivables();
         self::procurement();
+        self::assets();
     }
 
     public static function budgeting(): void
@@ -140,6 +141,31 @@ final class DefaultLeaveTypes
             $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
             foreach ($steps as $i => [$name, $type, $role, $min]) {
                 $template->steps()->create(['step_order' => $i + 1, 'name' => $name, 'approver_type' => $type, 'role_id' => $role, 'min_amount' => $min, 'allow_send_back' => true]);
+            }
+        }
+    }
+
+    public static function assets(): void
+    {
+        $company = app(CompanyContext::class)->id();
+        $finance = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
+        $director = Role::where('name', 'director-general')->where('company_id', $company)->first();
+        if (! $finance) {
+            return;
+        }
+        $chains = [
+            'asset-register' => [['Chief accountant', 'role', $finance->id]],
+            'asset-change' => [['Chief accountant', 'role', $finance->id]],
+            'asset-transfer' => [['Head of department', 'department_head', null]],
+            'asset-disposal' => array_values(array_filter([['Chief accountant', 'role', $finance->id], $director ? ['Director general (disposal board)', 'role', $director->id] : null])),
+        ];
+        foreach ($chains as $process => $steps) {
+            if (WorkflowTemplate::where('process', $process)->exists()) {
+                continue;
+            }
+            $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+            foreach ($steps as $i => [$name, $type, $role]) {
+                $template->steps()->create(['step_order' => $i + 1, 'name' => $name, 'approver_type' => $type, 'role_id' => $role, 'allow_send_back' => true]);
             }
         }
     }

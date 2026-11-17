@@ -201,8 +201,8 @@ class ErpModuleSeeder extends Seeder
             // ── Assets ─────────────────────────────────────────────────
             [
                 'slug'        => 'assets',
-                'name'        => 'Asset Management',
-                'description' => 'Track company assets, categories, locations, assignments and disposals.',
+                'name'        => 'Fixed Assets',
+                'description' => 'Asset register, holders, depreciation, transfers, revaluation and disposal.',
                 'icon'        => 'bi-laptop',
                 'color'       => 'secondary',
                 'route_name'  => 'assets.dashboard',
