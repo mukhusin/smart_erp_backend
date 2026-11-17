@@ -87,7 +87,7 @@ class PayrollController extends Controller
     /**
      * Payroll sheets, newest first.
      *
-     * @response array{data: list<array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null}>}
+     * @response array{data: list<array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null, processing: bool, processing_error: string|null}>}
      */
     public function index(): JsonResponse
     {
@@ -97,7 +97,7 @@ class PayrollController extends Controller
     /**
      * Create the payroll of a month and work it out.
      *
-     * @response array{data: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null}}
+     * @response array{data: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null, processing: bool, processing_error: string|null}}
      */
     public function store(Request $request): JsonResponse
     {
@@ -109,7 +109,7 @@ class PayrollController extends Controller
     /**
      * A payroll sheet with each employee's pay.
      *
-     * @response array{data: array{sheet: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null}, rows: list<array{id: int, employee_id: int, name: string, employee_no: string|null, position: string|null, department: string|null, days_paid: float|null, unpaid_days: float, basic: float, allowances: float, overtime: float, relief: float, gross: float, nssf: float, nhif: float, heslb: float, paye: float, loans: float, other_deductions: float, deductions: float, net: float, bank: string|null, account: string|null}>, totals: array<string, float>, can_edit: bool}}
+     * @response array{data: array{sheet: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null, processing: bool, processing_error: string|null}, rows: list<array{id: int, employee_id: int, name: string, employee_no: string|null, position: string|null, department: string|null, days_paid: float|null, unpaid_days: float, basic: float, allowances: float, overtime: float, relief: float, gross: float, nssf: float, nhif: float, heslb: float, paye: float, loans: float, other_deductions: float, deductions: float, net: float, bank: string|null, account: string|null}>, totals: array<string, float>, can_edit: bool}}
      */
     public function show(PayrollSheet $sheet): JsonResponse
     {
@@ -129,19 +129,19 @@ class PayrollController extends Controller
     }
 
     /**
-     * Work a draft payroll out again (after changes to contracts, allowances, overtime, leave or deductions).
+     * Work a draft payroll out again (after changes to contracts, allowances, overtime, leave or deductions). It runs in the background; the user is notified when it is ready.
      *
-     * @response array{data: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null}}
+     * @response array{data: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null, processing: bool, processing_error: string|null}}
      */
-    public function regenerate(PayrollSheet $sheet): JsonResponse
+    public function regenerate(Request $request, PayrollSheet $sheet): JsonResponse
     {
-        return response()->json(['data' => $this->sheetRow($this->payroll->generate($sheet))]);
+        return response()->json(['data' => $this->sheetRow($this->payroll->queue($sheet, $request->user())->refresh())]);
     }
 
     /**
      * Submit for approval (the "Payroll sheet" workflow; approved at once without one).
      *
-     * @response array{data: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null}}
+     * @response array{data: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null, processing: bool, processing_error: string|null}}
      */
     public function submit(Request $request, PayrollSheet $sheet): JsonResponse
     {
@@ -151,7 +151,7 @@ class PayrollController extends Controller
     /**
      * Withdraw a payroll waiting for approval, back to draft.
      *
-     * @response array{data: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null}}
+     * @response array{data: array{id: int, name: string, year: int, month: int, from: string, to: string, days: int, status: string, status_label: string, employees: int, gross: float, deductions: float, net: float, employer: float, cost: float, waiting_for: string|null, decision_comment: string|null, generated_at: string|null, processing: bool, processing_error: string|null}}
      */
     public function withdraw(Request $request, PayrollSheet $sheet): JsonResponse
     {
@@ -182,16 +182,25 @@ class PayrollController extends Controller
      * Payroll dashboard: the last approved payrolls (up to 12) with cost, statutory amounts, what makes up the latest payroll
      * and its cost by department.
      *
-     * @response array{data: array{months: list<array{id: int, name: string, label: string, staff: int, gross: float, net: float, deductions: float, employer: float, cost: float, paye: float, nssf: float, nhif: float, heslb: float, wcf: float, sdl: float}>, latest: array<string, mixed>|null, previous: array<string, mixed>|null, highest: array<string, mixed>|null, year: array{year: int, cost: float, gross: float, net: float, statutory: float}|null, earnings: list<array{label: string, value: float}>, deductions: list<array{label: string, value: float}>, employer: list<array{label: string, value: float}>, departments: list<array{label: string, staff: int, gross: float, cost: float}>}}
+     * With `sheet_id` the dashboard is shown as at that approved payroll: it becomes the latest, compared with the one before
+     * it, and the trend and the year total stop there.
+     *
+     * @response array{data: array{months: list<array{id: int, name: string, label: string, staff: int, gross: float, net: float, deductions: float, employer: float, cost: float, paye: float, nssf: float, nhif: float, heslb: float, wcf: float, sdl: float}>, latest: array<string, mixed>|null, previous: array<string, mixed>|null, highest: array<string, mixed>|null, year: array{year: int, cost: float, gross: float, net: float, statutory: float}|null, earnings: list<array{label: string, value: float}>, deductions: list<array{label: string, value: float}>, employer: list<array{label: string, value: float}>, departments: list<array{label: string, staff: int, gross: float, cost: float}>, sheets: list<array{id: int, name: string, label: string}>, focus_id: int|null}}
      */
-    public function dashboard(): JsonResponse
+    #[\Dedoc\Scramble\Attributes\QueryParameter('sheet_id', description: 'An approved payroll to show the dashboard for (default: the latest).', type: 'integer')]
+    public function dashboard(Request $request): JsonResponse
     {
-        $sheets = PayrollSheet::where('status', 'approved')->get()->sortByDesc(fn ($s) => sprintf('%04d%02d', $s->year, $s->month))->take(12)->reverse()->values();
-        $sums = PayrollSheetDetail::whereIn('payroll_sheet_id', $sheets->pluck('id'))->groupBy('payroll_sheet_id')
+        $ym = fn ($s) => sprintf('%04d%02d', $s->year, $s->month);
+        $all = PayrollSheet::where('status', 'approved')->get()->sortBy($ym)->values();
+        $focus = $all->firstWhere('id', (int) $request->query('sheet_id')) ?? $all->last();
+        $upTo = $focus ? $all->filter(fn ($s) => $ym($s) <= $ym($focus))->values() : collect();
+        $sheets = $upTo->slice(-12)->values();
+        $yearSheets = $focus ? $upTo->filter(fn ($s) => (int) $s->year === (int) $focus->year)->values() : collect();
+        $sums = PayrollSheetDetail::whereIn('payroll_sheet_id', $sheets->pluck('id')->merge($yearSheets->pluck('id'))->unique())->groupBy('payroll_sheet_id')
             ->selectRaw('payroll_sheet_id, count(*) as staff, sum(gross_salary) as gross, sum(net_salary) as net, sum(total_deduction) as deductions, sum(paye) as paye')
             ->selectRaw('sum(nssf) as nssf, sum(nssf_employer) as nssf_er, sum(nhif) as nhif, sum(nhif_employer) as nhif_er, sum(heslb) as heslb, sum(wcf) as wcf, sum(sdl) as sdl')
             ->get()->keyBy('payroll_sheet_id');
-        $months = $sheets->map(function ($s) use ($sums) {
+        $row = function ($s) use ($sums) {
             $t = $sums->get($s->id);
             $v = fn (string $k) => round((float) ($t?->{$k} ?? 0), 2);
             $employer = round($v('nssf_er') + $v('nhif_er') + $v('wcf') + $v('sdl'), 2);
@@ -199,14 +208,15 @@ class PayrollController extends Controller
             return ['id' => $s->id, 'name' => $s->name, 'label' => \Illuminate\Support\Carbon::create((int) $s->year, (int) $s->month, 1)->format('M y'), 'staff' => (int) ($t?->staff ?? 0),
                 'gross' => $v('gross'), 'net' => $v('net'), 'deductions' => $v('deductions'), 'employer' => $employer, 'cost' => round($v('gross') + $employer, 2),
                 'paye' => $v('paye'), 'nssf' => round($v('nssf') + $v('nssf_er'), 2), 'nhif' => round($v('nhif') + $v('nhif_er'), 2), 'heslb' => $v('heslb'), 'wcf' => $v('wcf'), 'sdl' => $v('sdl')];
-        })->values();
+        };
+        $months = $sheets->map($row)->values();
         $latest = $months->last();
         $previous = $months->count() > 1 ? $months[$months->count() - 2] : null;
         $year = null;
         $earnings = $deductions = $employer = $departments = [];
         if ($latest) {
             $sheet = $sheets->last();
-            $sameYear = $months->filter(fn ($m) => $sheets->firstWhere('id', $m['id'])?->year === $sheet->year);
+            $sameYear = $yearSheets->map($row);
             $year = ['year' => (int) $sheet->year, 'cost' => round($sameYear->sum('cost'), 2), 'gross' => round($sameYear->sum('gross'), 2), 'net' => round($sameYear->sum('net'), 2),
                 'statutory' => round($sameYear->sum(fn ($m) => $m['paye'] + $m['nssf'] + $m['nhif'] + $m['heslb'] + $m['wcf'] + $m['sdl']), 2)];
             $d = PayrollSheetDetail::where('payroll_sheet_id', $sheet->id);
@@ -240,6 +250,8 @@ class PayrollController extends Controller
         return response()->json(['data' => [
             'months' => $months->all(), 'latest' => $latest, 'previous' => $previous, 'highest' => $months->sortByDesc('cost')->first(), 'year' => $year,
             'earnings' => $earnings, 'deductions' => $deductions, 'employer' => $employer, 'departments' => $departments,
+            'sheets' => $all->reverse()->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'label' => \Illuminate\Support\Carbon::create((int) $s->year, (int) $s->month, 1)->format('F Y')])->values(),
+            'focus_id' => $focus?->id,
         ]]);
     }
 
@@ -562,6 +574,7 @@ class PayrollController extends Controller
             'gross' => (float) $s->gross_total, 'deductions' => (float) $s->deduction_total, 'net' => (float) $s->net_total, 'employer' => (float) $s->employer_total,
             'cost' => (float) $s->payroll_cost, 'waiting_for' => $s->status === 'pending' ? $s->workflow?->steps?->firstWhere('status', 'pending')?->name : null,
             'decision_comment' => $s->decision_comment, 'generated_at' => $s->generated_at?->toIso8601String(),
+            'processing' => $s->processing(), 'processing_error' => $s->processing_error,
         ];
     }
 

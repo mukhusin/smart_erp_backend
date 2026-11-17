@@ -62,6 +62,9 @@ class PayrollReportsTest extends TestCase
         $this->assertEquals([1660000, 160000, 200000], [$dash['latest']['cost'], $dash['latest']['employer'], $dash['latest']['nssf']]);
         $this->assertSame(['Ward', 'Lab'], array_column($dash['departments'], 'label'));
         $this->assertCount(1, $dash['months'], 'only approved payrolls');
+        $this->assertSame([[$sheet->id, 'March 2026'], $sheet->id], [[$dash['sheets'][0]['id'], $dash['sheets'][0]['label']], $dash['focus_id']]);
+        $this->assertSame($sheet->id, $this->getJson("/api/v1/payroll/dashboard?sheet_id={$sheet->id}")->assertOk()->json('data.latest.id'));
+        $this->assertSame($sheet->id, $this->getJson('/api/v1/payroll/dashboard?sheet_id=999999')->assertOk()->json('data.focus_id'));
 
         $hod = User::factory()->create(['company_id' => $company->id]);
         $hod->assignRole('hod');

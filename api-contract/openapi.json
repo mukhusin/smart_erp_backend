@@ -55824,9 +55824,20 @@
         "/payroll/dashboard": {
             "get": {
                 "operationId": "payroll.dashboard",
+                "description": "With `sheet_id` the dashboard is shown as at that approved payroll: it becomes the latest, compared with the one before\nit, and the trend and the year total stop there.",
                 "summary": "Payroll dashboard: the last approved payrolls (up to 12) with cost, statutory amounts, what makes up the latest payroll\nand its cost by department",
                 "tags": [
                     "Payroll"
+                ],
+                "parameters": [
+                    {
+                        "name": "sheet_id",
+                        "in": "query",
+                        "description": "An approved payroll to show the dashboard for (default: the latest).",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -56039,6 +56050,34 @@
                                                             "cost"
                                                         ]
                                                     }
+                                                },
+                                                "sheets": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "focus_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -56050,7 +56089,9 @@
                                                 "earnings",
                                                 "deductions",
                                                 "employer",
-                                                "departments"
+                                                "departments",
+                                                "sheets",
+                                                "focus_id"
                                             ]
                                         }
                                     },
@@ -56152,6 +56193,15 @@
                                                             "string",
                                                             "null"
                                                         ]
+                                                    },
+                                                    "processing": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "processing_error": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -56172,7 +56222,9 @@
                                                     "cost",
                                                     "waiting_for",
                                                     "decision_comment",
-                                                    "generated_at"
+                                                    "generated_at",
+                                                    "processing",
+                                                    "processing_error"
                                                 ]
                                             }
                                         }
@@ -56297,6 +56349,15 @@
                                                         "string",
                                                         "null"
                                                     ]
+                                                },
+                                                "processing": {
+                                                    "type": "boolean"
+                                                },
+                                                "processing_error": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -56317,7 +56378,9 @@
                                                 "cost",
                                                 "waiting_for",
                                                 "decision_comment",
-                                                "generated_at"
+                                                "generated_at",
+                                                "processing",
+                                                "processing_error"
                                             ]
                                         }
                                     },
@@ -56434,6 +56497,15 @@
                                                                 "string",
                                                                 "null"
                                                             ]
+                                                        },
+                                                        "processing": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "processing_error": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         }
                                                     },
                                                     "required": [
@@ -56454,7 +56526,9 @@
                                                         "cost",
                                                         "waiting_for",
                                                         "decision_comment",
-                                                        "generated_at"
+                                                        "generated_at",
+                                                        "processing",
+                                                        "processing_error"
                                                     ]
                                                 },
                                                 "rows": {
@@ -58120,7 +58194,7 @@
         "/payroll/sheets/{sheet}/generate": {
             "post": {
                 "operationId": "payroll.sheets.generate",
-                "summary": "Work a draft payroll out again (after changes to contracts, allowances, overtime, leave or deductions)",
+                "summary": "Work a draft payroll out again (after changes to contracts, allowances, overtime, leave or deductions). It runs in the background; the user is notified when it is ready",
                 "tags": [
                     "Payroll"
                 ],
@@ -58208,6 +58282,15 @@
                                                         "string",
                                                         "null"
                                                     ]
+                                                },
+                                                "processing": {
+                                                    "type": "boolean"
+                                                },
+                                                "processing_error": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -58228,7 +58311,9 @@
                                                 "cost",
                                                 "waiting_for",
                                                 "decision_comment",
-                                                "generated_at"
+                                                "generated_at",
+                                                "processing",
+                                                "processing_error"
                                             ]
                                         }
                                     },
@@ -58342,6 +58427,15 @@
                                                         "string",
                                                         "null"
                                                     ]
+                                                },
+                                                "processing": {
+                                                    "type": "boolean"
+                                                },
+                                                "processing_error": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -58362,7 +58456,9 @@
                                                 "cost",
                                                 "waiting_for",
                                                 "decision_comment",
-                                                "generated_at"
+                                                "generated_at",
+                                                "processing",
+                                                "processing_error"
                                             ]
                                         }
                                     },
@@ -58476,6 +58572,15 @@
                                                         "string",
                                                         "null"
                                                     ]
+                                                },
+                                                "processing": {
+                                                    "type": "boolean"
+                                                },
+                                                "processing_error": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -58496,7 +58601,9 @@
                                                 "cost",
                                                 "waiting_for",
                                                 "decision_comment",
-                                                "generated_at"
+                                                "generated_at",
+                                                "processing",
+                                                "processing_error"
                                             ]
                                         }
                                     },

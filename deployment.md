@@ -137,3 +137,10 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    ```cron
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
+
+## Payroll worked out in the background (2026-11-17)
+
+New and "work out again" payrolls are calculated by a queued job (`GeneratePayrollJob`, default queue). After
+`php artisan migrate` (adds `payroll_sheets.processing_started_at` and `processing_error`), make sure the queue worker
+processes the default queue, for example `php artisan queue:work --queue=default,attendance --timeout=1800`. Without a
+running worker, payrolls stay "Working out…" (after an hour they can be worked out again).

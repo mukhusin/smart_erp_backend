@@ -19,10 +19,11 @@ class PayrollSheet extends Model
         'hr_approved', 'payroll_approved', 'director_approved', 'status', 'hr_officer', 'payroll_officer', 'director', 'approved_by',
         'created_by', 'generated_at', 'submitted_at', 'approved_at', 'decision_comment',
         'employees_count', 'gross_total', 'deduction_total', 'net_total', 'employer_total', 'journal_entry_id', 'payment_journal_id', 'posting_error',
+        'processing_started_at', 'processing_error',
     ];
 
     protected $casts = [
-        'payroll_from_date' => 'date', 'payroll_to_date' => 'date', 'generated_at' => 'datetime', 'submitted_at' => 'datetime', 'approved_at' => 'datetime',
+        'payroll_from_date' => 'date', 'payroll_to_date' => 'date', 'generated_at' => 'datetime', 'processing_started_at' => 'datetime', 'submitted_at' => 'datetime', 'approved_at' => 'datetime',
         'gross_total' => 'float', 'deduction_total' => 'float', 'net_total' => 'float', 'employer_total' => 'float', 'payroll_cost' => 'float',
     ];
 
@@ -48,6 +49,12 @@ class PayrollSheet extends Model
 
     public function editable(): bool
     {
-        return in_array($this->status, ['draft', 'rejected'], true);
+        return in_array($this->status, ['draft', 'rejected'], true) && ! $this->processing();
+    }
+
+    /** Being worked out in the background (a job stuck for over an hour no longer counts). */
+    public function processing(): bool
+    {
+        return $this->processing_started_at !== null && $this->processing_started_at->gt(now()->subHour());
     }
 }

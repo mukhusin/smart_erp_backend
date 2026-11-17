@@ -48,7 +48,19 @@ class ManagePayroll
             'status' => 'draft', 'created_by' => $by->id, 'hr_officer' => $by->employee?->id,
         ]);
 
-        return $this->generate($sheet);
+        return $this->queue($sheet, $by);
+    }
+
+    /** Works the sheet out in the background; the user is notified when it is ready. */
+    public function queue(PayrollSheet $sheet, User $by): PayrollSheet
+    {
+        if (! $sheet->editable()) {
+            throw ValidationException::withMessages(['payroll' => $sheet->processing() ? 'This payroll is already being worked out.' : 'This payroll is '.strtolower(PayrollSheet::STATUS_LABELS[$sheet->status]).' and cannot change.']);
+        }
+        $sheet->forceFill(['processing_started_at' => now(), 'processing_error' => null])->save();
+        \Modules\Hr\Jobs\GeneratePayrollJob::dispatch($sheet->id, $by->id);
+
+        return $sheet->refresh();
     }
 
     /** Works the sheet out again for everyone paid in the period. */
