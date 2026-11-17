@@ -20,7 +20,7 @@ class RoleResource extends JsonResource
             'description' => $this->description,
             /** Created with the company. */
             'is_system' => (bool) $this->is_system,
-            /** company-admin: always every permission, cannot be edited or deleted. */
+            /** company-admin: fixed administration permissions, cannot be edited or deleted. */
             'is_locked' => $this->name === DefaultRoles::COMPANY_ADMIN,
             'users_count' => $this->whenCounted('users'),
             /** @var list<string> */

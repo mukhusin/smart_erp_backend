@@ -1084,3 +1084,25 @@ geofence and route editors. Tracker models are decided with the customer (open q
 **Open questions (to confirm with each customer):** tracker models at go-live; fuel via national supplier, cards, own
 tanks or a mix; whether private trips are charged to the employee (and how: payroll deduction or receipt); who may
 send an immobilise command and when.
+
+## 22. Auditors and the company admin (2026-11-17)
+
+**Company admin** (`company-admin`, fixed system role) administers only: users, roles and their assignment, handovers,
+module locks, branches, company settings, approval workflows and external auditor access (`audit.engagements`), plus
+own self service. It sees no business data (HR, payroll, finance, procurement, stores, assets); anyone who needs that
+is given a business role explicitly, through the access change workflow and the audit trail. Existing companies are
+updated by migration `2026_12_01_110000`.
+
+**Auditors** (module `audit`): built-in roles `internal-auditor` and `external-auditor`, read-only everywhere —
+`AuditorGuard` (api middleware) refuses every write except own self service, audit queries and the account, hides
+staff documents and dependants, logs every page opened to `audit_logs` (action `viewed`), and stops external accounts
+after their access date (also `AuditorLoginCheck` and daily `audit:daily`). Internal: all business modules read-only,
+audit log, payroll. External: finance, budgets, payments, receivables, procurement, stores, assets and planning,
+limited to the audited period (`Auditors::clamp` in finance reports, trial balance, ledger and journals); payroll
+totals only (`/audit/payroll`) unless the engagement allows payslips (`payroll.view` given to that user). External
+access is an `audit_engagements` record approved through `audit-engagement`; approval creates the account (no
+employee record) and emails the set-password link. Audit start page: checks in seven groups (ledger health,
+separation of duties, payment risks, procurement, stores and assets, system access, year end), each opening its
+records. Audit queries: raised by auditors, answered by the addressee (also in self service), sent back or closed.
+Not yet: year clamp on every module list (HR lists, procurement and stores pages show all years to external
+auditors who have those permissions), audit sampling tools.

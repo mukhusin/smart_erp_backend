@@ -17,7 +17,7 @@ class AuthTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        [, $this->user] = $this->createCompany('Test Co');
+        [, $this->user] = $this->createCompany('Test Co', ['full_access' => false]);
 
         // Requests from the SPA origin are stateful (session + CSRF) through Sanctum.
         $this->withHeader('Referer', 'http://localhost:4200');

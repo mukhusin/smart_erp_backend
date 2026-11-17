@@ -24,10 +24,18 @@ trait CreatesCompanies
             'branches' => [['name' => 'Head Office', 'is_headquarters' => true]],
             'modules' => [],
             'admin' => ['fname' => 'Admin', 'lname' => $name, 'gender' => 'Female', 'email' => "hr@{$slug}.test", 'username' => "hr_{$slug}"],
-        ], $overrides));
+        ], collect($overrides)->except('full_access')->all()));
 
         $admin = app(SendCompanyInvite::class)->companyAdmin($company);
         $admin->forceFill(['password' => Hash::make('password'), 'email_verified_at' => now()])->save();
+        if ($overrides['full_access'] ?? true) {
+            app(\App\Services\CompanyContext::class)->run($company, function () use ($company, $admin) {
+                setPermissionsTeamId($company->id);
+                $role = \Spatie\Permission\Models\Role::findOrCreate('test-full-access', 'web');
+                $role->syncPermissions(\Modules\Core\Support\PermissionCatalog::names());
+                $admin->assignRole($role);
+            });
+        }
 
         return [$company, $admin];
     }

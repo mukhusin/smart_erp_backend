@@ -21,7 +21,12 @@ final class DefaultRoles
 
     /** Role name => permission names ('*' = all), or module wildcards like 'leave.*'. */
     public const ROLES = [
-        self::COMPANY_ADMIN => ['*'],
+        self::COMPANY_ADMIN => ['admin.users.view', 'admin.users.manage', 'admin.roles.manage', 'admin.roles.assign', 'admin.handovers.manage', 'admin.module-locks.manage',
+            'admin.branches.manage', 'admin.settings.manage', 'admin.workflow.manage', 'audit.engagements', 'self-service.use', 'tasks.use', 'appraisals.use'],
+        'internal-auditor' => ['audit.view', 'audit.queries', 'admin.audit.view', 'hr.employees.view', 'leave.view', 'roster.view', 'attendance.view', 'allowance.view', 'overtime.view',
+            'payroll.view', 'loans.view', 'planning.view', 'budgeting.view', 'accounting.view', 'payments.view', 'receivables.view', 'procurement.view', 'inventory.view', 'assets.view',
+            'appraisals.view', 'tasks.view-all', 'reports.view', 'reports.generate', 'self-service.use'],
+        'external-auditor' => ['audit.view', 'audit.queries', 'accounting.view', 'budgeting.view', 'payments.view', 'receivables.view', 'procurement.view', 'inventory.view', 'assets.view', 'planning.view'],
         'hr-officer' => [
             'hr.*', 'leave.*', 'roster.*', 'attendance.*', 'allowance.*', 'overtime.*', 'payroll.view',
             'payroll.create', 'payroll.edit', 'payroll.comment', 'payroll.deductions.manage', 'payroll.salary-adjustments.manage', 'loans.*', 'reports.*', 'self-service.use', 'tasks.*', 'appraisals.*',

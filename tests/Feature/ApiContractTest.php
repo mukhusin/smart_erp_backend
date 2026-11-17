@@ -20,6 +20,7 @@ class ApiContractTest extends TestCase
         'accounting.opening.submit', 'accounting.opening.withdraw', 'accounting.year-end.close', 'accounting.year-end.withdraw',
         'assets.withdraw', 'assets.submit', 'assets.submit-drafts', 'assets.changes.withdraw', 'assets.transfers.withdraw', 'assets.disposals.withdraw', 'assets.transfers.return', 'self.assets.confirm',
         'procurement.tenders.submit', 'procurement.tenders.end-standstill', 'procurement.contracts.submit', 'procurement.contracts.withdraw', 'procurement.certificates.withdraw', 'procurement.variations.withdraw', 'procurement.contracts.milestones.pay',
+        'audit.engagements.withdraw', 'audit.engagements.end',
     ];
 
     private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store', 'payments.requests.attach', 'procurement.suppliers.documents.store', 'inventory.items.import', 'procurement.rfqs.record', 'accounting.opening.import', 'assets.import', 'assets.disposals.store', 'self.assets.report'];

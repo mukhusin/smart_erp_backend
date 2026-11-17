@@ -87,6 +87,7 @@ final class WorkflowCatalog
         \Modules\Procurement\Workflow\ContractVariationProcess::class,
         \Modules\Procurement\Workflow\ContractCertificateProcess::class,
         \Modules\Assets\Workflow\AssetRegisterProcess::class,
+        \Modules\Audit\Workflow\AuditEngagementProcess::class,
         \Modules\Assets\Workflow\AssetChangeProcess::class,
         \Modules\Assets\Workflow\AssetTransferProcess::class,
         \Modules\Assets\Workflow\AssetDisposalProcess::class,

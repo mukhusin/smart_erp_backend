@@ -10,7 +10,7 @@ use Modules\Core\Support\DefaultRoles;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
-/** Create or update a company role and its permissions. company-admin is fixed (always all permissions). */
+/** Create or update a company role and its permissions. company-admin is fixed (administration only, no business data). */
 class SaveRole
 {
     public function __construct(private readonly AccessService $access) {}
@@ -19,7 +19,7 @@ class SaveRole
     public function handle(?Role $role, array $data): Role
     {
         if ($role?->name === DefaultRoles::COMPANY_ADMIN) {
-            throw ValidationException::withMessages(['role' => 'The company-admin role always has every permission and cannot be changed.']);
+            throw ValidationException::withMessages(['role' => 'The company-admin role is fixed: it administers users, roles, workflows and settings, and sees no business data. Give business roles separately.']);
         }
 
         return DB::transaction(function () use ($role, $data) {

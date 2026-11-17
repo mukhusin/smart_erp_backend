@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [
             SetCompanyContext::class,
             EnsureSessionTimeout::class,
+            \Modules\Audit\Http\Middleware\AuditorGuard::class,
         ]);
 
         // No login page in the backend: unauthenticated requests get 401 JSON.

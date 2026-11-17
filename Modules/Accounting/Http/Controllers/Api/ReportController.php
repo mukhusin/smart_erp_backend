@@ -80,6 +80,7 @@ class ReportController extends Controller
     {
         $to = $request->query('to', today()->toDateString());
         $from = $request->query('from', $this->yearStart($to));
+        [$from, $to] = \Modules\Audit\Support\Auditors::clamp($request->user(), $from, $to);
         $yearStart = $this->yearStart($from);
         $filter = fn (Builder $q) => $q->when(! $request->boolean('include_closing'), fn ($q) => $q->where(fn ($w) => $w->where('e.entry_type', '!=', 'closing')->orWhere('e.date', '<', $yearStart)))->when($request->query('department_id'), fn ($q, $d) => $q->where('l.department_id', $d))
             ->when($request->query('fund_source_id'), fn ($q, $f) => $q->where('l.fund_source_id', $f));
@@ -121,6 +122,7 @@ class ReportController extends Controller
         $account = Account::findOrFail((int) $request->query('account_id'));
         $to = $request->query('to', today()->toDateString());
         $from = $request->query('from', $this->yearStart($to));
+        [$from, $to] = \Modules\Audit\Support\Auditors::clamp($request->user(), $from, $to);
         $pnl = in_array($account->type, ['revenue', 'expense'], true);
         $base = fn () => $this->lines()->where('l.account_id', $account->id)
             ->when($request->query('department_id'), fn ($q, $d) => $q->where('l.department_id', $d))

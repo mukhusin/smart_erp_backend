@@ -286,6 +286,9 @@ class ErpModuleSeeder extends Seeder
             ],
         ];
 
+        $modules[] = ['slug' => 'audit', 'name' => 'Audit', 'description' => 'Read-only access for internal and external auditors, audit checks and audit queries.',
+            'icon' => 'bi-shield-check', 'color' => 'dark', 'route_name' => 'audit.dashboard', 'category' => 'Admin', 'sort_order' => 95, 'is_core' => false];
+
         foreach ($modules as $data) {
             $data['parent_slug'] = match (true) {
                 in_array($data['slug'], self::INSIDE_HR, true) => 'hr',

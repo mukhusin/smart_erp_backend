@@ -32,7 +32,7 @@ class EmployeeLoginCheck implements LoginCheck
             return null;
         }
         setPermissionsTeamId($user->company_id);
-        if ($user->hasRole(DefaultRoles::COMPANY_ADMIN)) {
+        if ($user->hasRole(DefaultRoles::COMPANY_ADMIN) || $user->hasRole(\Modules\Audit\Support\Auditors::EXTERNAL)) {
             return null;
         }
 

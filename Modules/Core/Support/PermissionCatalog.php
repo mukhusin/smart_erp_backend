@@ -28,6 +28,11 @@ final class PermissionCatalog
             'admin.workflow.manage' => 'Manage approval workflows',
             'admin.audit.view' => 'View audit log',
         ],
+        'audit' => [
+            'audit.view' => 'Audit start page, audit checks and payroll totals (auditors)',
+            'audit.queries' => 'Raise, send back and close audit queries (auditors)',
+            'audit.engagements' => 'Give and end access for external audit firms',
+        ],
         'self-service' => [
             'self-service.use' => 'Use employee self-service',
         ],

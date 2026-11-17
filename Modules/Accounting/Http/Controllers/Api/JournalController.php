@@ -42,8 +42,8 @@ class JournalController extends Controller
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('reference_no', 'like', "%{$s}%")->orWhere('description', 'like', "%{$s}%")))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
             ->when($request->query('entry_type'), fn ($q, $t) => $q->where('entry_type', $t))
-            ->when($request->query('from'), fn ($q, $d) => $q->whereDate('date', '>=', $d))
-            ->when($request->query('to'), fn ($q, $d) => $q->whereDate('date', '<=', $d))
+            ->when(\Modules\Audit\Support\Auditors::clamp($request->user(), $request->query('from'), $request->query('to'))[0], fn ($q, $d) => $q->whereDate('date', '>=', $d))
+            ->when(\Modules\Audit\Support\Auditors::clamp($request->user(), $request->query('from'), $request->query('to'))[1], fn ($q, $d) => $q->whereDate('date', '<=', $d))
             ->orderBy($sort, str_starts_with((string) $request->query('sort', '-date'), '-') ? 'desc' : 'asc')->orderByDesc('id')
             ->paginate(min((int) $request->query('per_page', 10), 100));
 
@@ -64,6 +64,8 @@ class JournalController extends Controller
      */
     public function show(Request $request, JournalEntry $journal): JsonResponse
     {
+        $period = \Modules\Audit\Support\Auditors::period($request->user());
+        abort_if($period && ($journal->date->toDateString() < $period[0] || $journal->date->toDateString() > $period[1]), 404);
         $journal->load(['lines.account', 'lines.department', 'lines.fundSource', 'lines.activity', 'period', 'creator', 'poster', 'reversalOf', 'reversedBy', 'workflow.steps']);
         $user = $request->user();
         $mine = $journal->created_by === $user->id;

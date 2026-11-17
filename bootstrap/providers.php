@@ -14,4 +14,5 @@ return [
     InventoryServiceProvider::class,
     AssetsServiceProvider::class,
     ProcurementServiceProvider::class,
+    \Modules\Audit\AuditServiceProvider::class,
 ];

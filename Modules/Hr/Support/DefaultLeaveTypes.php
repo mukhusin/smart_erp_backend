@@ -163,6 +163,7 @@ final class DefaultLeaveTypes
             'asset-register' => [['Chief accountant', 'role', $finance->id]],
             'asset-change' => [['Chief accountant', 'role', $finance->id]],
             'asset-transfer' => [['Head of department', 'department_head', null]],
+            'audit-engagement' => [[$director ? 'Director general' : 'Chief accountant', 'role', ($director ?? $finance)->id]],
             'asset-disposal' => array_values(array_filter([['Chief accountant', 'role', $finance->id], $director ? ['Director general (disposal board)', 'role', $director->id] : null])),
         ];
         foreach ($chains as $process => $steps) {

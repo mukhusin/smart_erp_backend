@@ -143,6 +143,14 @@ class FinanceReports
     public function run(string $key, array $input, User $user): array
     {
         abort_unless($this->available($key, $user), 404, 'This report is not available.');
+        $period = \Modules\Audit\Support\Auditors::period($user);
+        if ($period) {
+            $filters = collect($this->filters($key))->keyBy('key');
+            [$input['from'], $input['to']] = \Modules\Audit\Support\Auditors::clamp($user, ($input['from'] ?? '') ?: ($filters['from']['default'] ?? null), ($input['to'] ?? '') ?: ($filters['to']['default'] ?? null));
+            if ($filters->has('date')) {
+                $input['date'] = min(($input['date'] ?? '') ?: $period[1], $period[1]);
+            }
+        }
 
         return $this->build($key, $input);
     }

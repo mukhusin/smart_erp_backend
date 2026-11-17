@@ -25,6 +25,8 @@ class User extends Authenticatable
         'username',
         'role_as',
         'is_active',
+        'access_expires_at',
+        'full_name',
         'is_platform_admin',
         'otp',
         'otp_expiry',
@@ -38,6 +40,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'access_expires_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
             'is_platform_admin' => 'boolean',
@@ -71,7 +74,7 @@ class User extends Authenticatable
         $employee = $this->employee;
         $name = $employee ? trim(preg_replace('/\s+/', ' ', "{$employee->fname} {$employee->mname} {$employee->lname}")) : '';
 
-        return $name !== '' ? $name : $this->username;
+        return $name !== '' ? $name : ($this->full_name ?: $this->username);
     }
 
     /** Uploaded avatar, or null so the frontend shows initials (no external avatar service). */
