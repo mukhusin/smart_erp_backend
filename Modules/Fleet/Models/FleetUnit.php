@@ -76,6 +76,11 @@ class FleetUnit extends Model
         return $this->hasMany(StatusChange::class)->orderByDesc('id');
     }
 
+    public function trips()
+    {
+        return $this->hasMany(Trip::class, 'fleet_unit_id')->orderByDesc('departs_at');
+    }
+
     public function unit(): string
     {
         return $this->kind === 'generator' ? 'hours' : 'km';

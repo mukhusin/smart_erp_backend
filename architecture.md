@@ -1131,6 +1131,20 @@ after expiry (driving licences too). Child records bind through their unit/drive
 them. Screens: dashboard, register, unit page, drivers, driver page, compliance calendar, vehicle types, Self Service
 → My vehicles. Permissions `fleet.view`, `fleet.manage` (internal auditors get view).
 
+**Phase 2 built (2026-11-18): transport.** `fleet_transport_requests` (TR-, by any HR employee, workflow
+`transport-request`, default head of department; approved → transport officers notified; statuses pending, approved,
+allocated, completed, rejected, returned "cannot serve", cancelled). `fleet_trips` (TRP-, with or without a request,
+own vehicle + driver or a transport company contract; cargo and passengers). Allocation check: hard stops (vehicle not
+operational, driver ineligible, vehicle or driver already on an overlapping scheduled/started trip, contract not valid)
+and warnings needing a reason (insurance/licence expiring before return, no insurance, driver on leave, seats fewer
+than passengers); availability endpoint lists free vehicles, drivers and valid contracts. Logbook: start (odometer ≥
+current) and close (odometer ≥ start, reading posted to the vehicle as `logbook`) by the driver or office, not ahead
+of time; confirm by the office, never by the driver; request completed when its trips are confirmed. Move and cancel
+before start. `fleet_agency_contracts` (supplier, per trip / km / day, rate, validity) and `fleet_agency_batches`
+(TB-): confirmed unpaid trips of a period → one draft payment request to the supplier (approved bank account if any)
+on a chosen department budget line, source = the batch. Self Service: My transport requests, driver's trips in My
+vehicles. Not yet: fuel for the trip, tracked-trip logbook fill, private-trip charging.
+
 **Open questions (to confirm with each customer):** tracker models at go-live; fuel via national supplier, cards, own
 tanks or a mix; whether private trips are charged to the employee (and how: payroll deduction or receipt); who may
 send an immobilise command and when.

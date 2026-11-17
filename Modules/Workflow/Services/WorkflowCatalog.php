@@ -93,6 +93,7 @@ final class WorkflowCatalog
         \Modules\Assets\Workflow\AssetTransferProcess::class,
         \Modules\Assets\Workflow\AssetDisposalProcess::class,
         \Modules\Fleet\Workflow\ReadingCorrectionProcess::class,
+        \Modules\Fleet\Workflow\TransportRequestProcess::class,
         DepartmentBudgetProcess::class,
         BudgetApprovalProcess::class,
         BudgetTransferProcess::class,

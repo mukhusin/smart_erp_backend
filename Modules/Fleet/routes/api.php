@@ -1,13 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Fleet\Http\Controllers\Api\AgencyController;
 use Modules\Fleet\Http\Controllers\Api\DriverController;
 use Modules\Fleet\Http\Controllers\Api\FleetSetupController;
 use Modules\Fleet\Http\Controllers\Api\MyFleetController;
+use Modules\Fleet\Http\Controllers\Api\TransportController;
 use Modules\Fleet\Http\Controllers\Api\UnitController;
 
 Route::middleware(['auth:sanctum', 'module:fleet'])->group(function () {
     Route::get('self/fleet', [MyFleetController::class, 'index'])->name('self.fleet');
+    Route::get('self/fleet/trips', [TransportController::class, 'myTrips'])->name('self.fleet.trips');
 
     Route::prefix('fleet')->name('fleet.')->group(function () {
         Route::get('dashboard', [FleetSetupController::class, 'dashboard'])->name('dashboard');
@@ -30,6 +33,28 @@ Route::middleware(['auth:sanctum', 'module:fleet'])->group(function () {
         Route::post('assignments/{assignment}/end', [UnitController::class, 'endAssignment'])->name('assignments.end');
         Route::get('compliance/{compliance}/document', [UnitController::class, 'complianceFile'])->name('compliance.document');
         Route::delete('costs/{cost}', [UnitController::class, 'destroyCost'])->name('costs.destroy');
+
+        Route::get('requests', [TransportController::class, 'requests'])->name('requests.index');
+        Route::post('requests', [TransportController::class, 'storeRequest'])->name('requests.store');
+        Route::get('requests/{transportRequest}', [TransportController::class, 'showRequest'])->name('requests.show');
+        Route::post('requests/{transportRequest}/withdraw', [TransportController::class, 'withdrawRequest'])->name('requests.withdraw');
+        Route::post('requests/{transportRequest}/cancel', [TransportController::class, 'cancelRequest'])->name('requests.cancel');
+        Route::post('requests/{transportRequest}/give-back', [TransportController::class, 'giveBack'])->name('requests.give-back');
+        Route::get('availability', [TransportController::class, 'availability'])->name('availability');
+        Route::get('trips', [TransportController::class, 'trips'])->name('trips.index');
+        Route::post('trips/check', [TransportController::class, 'check'])->name('trips.check');
+        Route::post('trips', [TransportController::class, 'dispatchTrip'])->name('trips.store');
+        Route::get('trips/{trip}', [TransportController::class, 'showTrip'])->name('trips.show');
+        Route::post('trips/{trip}/reschedule', [TransportController::class, 'reschedule'])->name('trips.reschedule');
+        Route::post('trips/{trip}/cancel', [TransportController::class, 'cancelTrip'])->name('trips.cancel');
+        Route::post('trips/{trip}/start', [TransportController::class, 'start'])->name('trips.start');
+        Route::post('trips/{trip}/finish', [TransportController::class, 'finish'])->name('trips.finish');
+        Route::post('trips/{trip}/confirm', [TransportController::class, 'confirm'])->name('trips.confirm');
+        Route::get('contracts', [AgencyController::class, 'index'])->name('contracts.index');
+        Route::post('contracts', [AgencyController::class, 'store'])->name('contracts.store');
+        Route::put('contracts/{contract}', [AgencyController::class, 'update'])->name('contracts.update');
+        Route::get('contracts/{contract}/unbatched', [AgencyController::class, 'unbatched'])->name('contracts.unbatched');
+        Route::post('contracts/{contract}/batch', [AgencyController::class, 'batch'])->name('contracts.batch');
 
         Route::get('drivers', [DriverController::class, 'index'])->name('drivers.index');
         Route::get('drivers/employees', [DriverController::class, 'employees'])->name('drivers.employees');

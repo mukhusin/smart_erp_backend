@@ -138,6 +138,12 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Fleet phase 2: transport (2026-11-18)
+
+1. `php artisan migrate`: transport requests, trips, transport company contracts and payment batches; adds the
+   "Transport request" approval (head of department) to companies that have none.
+2. The transport officer needs `fleet.manage`, and `payments.request` to prepare payment requests for transport companies.
+
 ## Fleet phase 1 (2026-11-18)
 
 1. `php artisan migrate`: drops the old empty `vehicles`, `fuel_records` and `vehicle_maintenance_logs` tables (it

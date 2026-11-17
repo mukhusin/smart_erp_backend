@@ -109,11 +109,20 @@ final class DefaultLeaveTypes
     {
         $company = app(CompanyContext::class)->id();
         $role = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
-        if (! $role || WorkflowTemplate::where('process', \Modules\Fleet\Workflow\ReadingCorrectionProcess::KEY)->exists()) {
+        if (! $role) {
             return;
         }
-        $template = WorkflowTemplate::create(['process' => \Modules\Fleet\Workflow\ReadingCorrectionProcess::KEY, 'company_branch_id' => null, 'is_active' => true]);
-        $template->steps()->create(['step_order' => 1, 'name' => 'Chief accountant', 'approver_type' => 'role', 'role_id' => $role->id, 'allow_send_back' => false]);
+        $chains = [
+            \Modules\Fleet\Workflow\ReadingCorrectionProcess::KEY => ['Chief accountant', 'role', $role->id],
+            \Modules\Fleet\Workflow\TransportRequestProcess::KEY => ['Head of department', 'department_head', null],
+        ];
+        foreach ($chains as $process => [$name, $type, $roleId]) {
+            if (WorkflowTemplate::where('process', $process)->exists()) {
+                continue;
+            }
+            $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+            $template->steps()->create(['step_order' => 1, 'name' => $name, 'approver_type' => $type, 'role_id' => $roleId, 'allow_send_back' => true]);
+        }
     }
 
     public static function receivables(): void
