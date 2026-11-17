@@ -5716,6 +5716,385 @@
                 }
             }
         },
+        "/admin/workflows/export": {
+            "get": {
+                "operationId": "admin.workflows.export",
+                "description": "Roles, users and branches are written by name (users by email or username), not by id, so they match on the other side.",
+                "summary": "Export every workflow of the company to move it to another environment (e.g. test \u2192 production)",
+                "tags": [
+                    "Admin: Approval workflows",
+                    "WorkflowSetup"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "format": {
+                                            "type": "string"
+                                        },
+                                        "version": {
+                                            "type": "integer"
+                                        },
+                                        "exported_at": {
+                                            "type": "string"
+                                        },
+                                        "company": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "workflows": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "process": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "branch": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "steps": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "name": {
+                                                                    "type": "string"
+                                                                },
+                                                                "approver_type": {
+                                                                    "type": "string"
+                                                                },
+                                                                "role": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "user": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "same_branch": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "allow_send_back": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "min_amount": {
+                                                                    "type": [
+                                                                        "number",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "approve_label": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "reject_label": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "name",
+                                                                "approver_type",
+                                                                "role",
+                                                                "user",
+                                                                "same_branch",
+                                                                "allow_send_back",
+                                                                "min_amount",
+                                                                "approve_label",
+                                                                "reject_label"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "process",
+                                                    "name",
+                                                    "branch",
+                                                    "is_active",
+                                                    "steps"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "format",
+                                        "version",
+                                        "exported_at",
+                                        "company",
+                                        "workflows"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/workflows/import": {
+            "post": {
+                "operationId": "admin.workflows.import",
+                "description": "Each workflow replaces the one for the same process and branch. Roles, users and branches are matched by name;\na workflow with anything that cannot be matched is skipped and reported. With `dry_run` nothing is saved and the\nresult shows what would happen.",
+                "summary": "Import workflows exported from another environment",
+                "tags": [
+                    "Admin: Approval workflows",
+                    "WorkflowSetup"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "format": {
+                                        "type": "string",
+                                        "description": "Must be smart-erp-workflows.",
+                                        "enum": [
+                                            "smart-erp-workflows"
+                                        ]
+                                    },
+                                    "version": {
+                                        "type": "integer",
+                                        "enum": [
+                                            "1"
+                                        ]
+                                    },
+                                    "dry_run": {
+                                        "type": [
+                                            "boolean",
+                                            "null"
+                                        ],
+                                        "description": "True to check the file without saving."
+                                    },
+                                    "workflows": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "process": {
+                                                    "type": "string",
+                                                    "maxLength": 60
+                                                },
+                                                "branch": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "maxLength": 150
+                                                },
+                                                "is_active": {
+                                                    "type": [
+                                                        "boolean",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "steps": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "name": {
+                                                                "type": "string",
+                                                                "maxLength": 100
+                                                            },
+                                                            "approver_type": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "role",
+                                                                    "user",
+                                                                    "department_head",
+                                                                    "section_head",
+                                                                    "supervisor"
+                                                                ]
+                                                            },
+                                                            "role": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "maxLength": 150
+                                                            },
+                                                            "user": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "maxLength": 150
+                                                            },
+                                                            "same_branch": {
+                                                                "type": [
+                                                                    "boolean",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "allow_send_back": {
+                                                                "type": [
+                                                                    "boolean",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "min_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ],
+                                                                "minimum": 0
+                                                            },
+                                                            "approve_label": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "maxLength": 40
+                                                            },
+                                                            "reject_label": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "maxLength": 40
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "name",
+                                                            "approver_type"
+                                                        ]
+                                                    },
+                                                    "maxItems": 20
+                                                }
+                                            },
+                                            "required": [
+                                                "process",
+                                                "steps"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 500
+                                    }
+                                },
+                                "required": [
+                                    "format",
+                                    "version",
+                                    "workflows"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "applied": {
+                                                    "type": "integer"
+                                                },
+                                                "skipped": {
+                                                    "type": "integer"
+                                                },
+                                                "dry_run": {
+                                                    "type": "boolean"
+                                                },
+                                                "results": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "process": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "branch": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "action": {
+                                                                "type": "string"
+                                                            },
+                                                            "problems": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "process",
+                                                            "name",
+                                                            "branch",
+                                                            "action",
+                                                            "problems"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "applied",
+                                                "skipped",
+                                                "dry_run",
+                                                "results"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/admin/workflows/{process}": {
             "put": {
                 "operationId": "admin.workflows.save",

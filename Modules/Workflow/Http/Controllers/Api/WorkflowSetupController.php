@@ -132,4 +132,126 @@ class WorkflowSetupController extends Controller
 
         return response()->json(['data' => $template ? (new WorkflowTemplateResource($template))->resolve() : null]);
     }
+
+    /**
+     * Export every workflow of the company to move it to another environment (e.g. test → production).
+     *
+     * Roles, users and branches are written by name (users by email or username), not by id, so they match on the other side.
+     *
+     * @response array{format: string, version: int, exported_at: string, company: string|null, workflows: list<array{process: string, name: string, branch: string|null, is_active: bool, steps: list<array{name: string, approver_type: string, role: string|null, user: string|null, same_branch: bool, allow_send_back: bool, min_amount: float|null, approve_label: string|null, reject_label: string|null}>}>}
+     */
+    public function export(WorkflowCatalog $catalog, CompanyContext $context): JsonResponse
+    {
+        $processes = $catalog->forCurrentCompany();
+        $templates = WorkflowTemplate::with(['steps.role', 'steps.user', 'branch'])->orderBy('process')->orderBy('company_branch_id')->get()
+            ->filter(fn ($t) => isset($processes[$t->process]));
+
+        return response()->json([
+            'format' => 'smart-erp-workflows', 'version' => 1, 'exported_at' => now()->toIso8601String(), 'company' => $context->get()?->name,
+            'workflows' => $templates->map(fn (WorkflowTemplate $t) => ['process' => $t->process, 'name' => $processes[$t->process]->name(), 'branch' => $t->branch?->name, 'is_active' => (bool) $t->is_active,
+                'steps' => $t->steps->sortBy('step_order')->map(fn ($s) => ['name' => $s->name, 'approver_type' => $s->approver_type, 'role' => $s->role?->name,
+                    'user' => $s->user ? ($s->user->email ?: $s->user->username) : null, 'same_branch' => (bool) $s->same_branch, 'allow_send_back' => (bool) $s->allow_send_back,
+                    'min_amount' => $s->min_amount, 'approve_label' => $s->approve_label, 'reject_label' => $s->reject_label])->values()])->values(),
+        ]);
+    }
+
+    /**
+     * Import workflows exported from another environment.
+     *
+     * Each workflow replaces the one for the same process and branch. Roles, users and branches are matched by name;
+     * a workflow with anything that cannot be matched is skipped and reported. With `dry_run` nothing is saved and the
+     * result shows what would happen.
+     *
+     * @response array{data: array{applied: int, skipped: int, dry_run: bool, results: list<array{process: string, name: string, branch: string|null, action: string, problems: list<string>}>}}
+     */
+    public function import(Request $request, WorkflowCatalog $catalog, CompanyContext $context): JsonResponse
+    {
+        $data = $request->validate([
+            /** Must be smart-erp-workflows. */
+            'format' => ['required', 'in:smart-erp-workflows'],
+            'version' => ['required', 'integer', 'in:1'],
+            /** True to check the file without saving. */
+            'dry_run' => ['nullable', 'boolean'],
+            'workflows' => ['required', 'array', 'max:500'],
+            'workflows.*.process' => ['required', 'string', 'max:60'],
+            'workflows.*.branch' => ['nullable', 'string', 'max:150'],
+            'workflows.*.is_active' => ['nullable', 'boolean'],
+            'workflows.*.steps' => ['present', 'array', 'max:20'],
+            'workflows.*.steps.*.name' => ['required', 'string', 'max:100'],
+            'workflows.*.steps.*.approver_type' => ['required', 'in:role,user,department_head,section_head,supervisor'],
+            'workflows.*.steps.*.role' => ['nullable', 'string', 'max:150'],
+            'workflows.*.steps.*.user' => ['nullable', 'string', 'max:150'],
+            'workflows.*.steps.*.same_branch' => ['nullable', 'boolean'],
+            'workflows.*.steps.*.allow_send_back' => ['nullable', 'boolean'],
+            'workflows.*.steps.*.min_amount' => ['nullable', 'numeric', 'min:0'],
+            'workflows.*.steps.*.approve_label' => ['nullable', 'string', 'max:40'],
+            'workflows.*.steps.*.reject_label' => ['nullable', 'string', 'max:40'],
+        ]);
+        $dry = (bool) ($data['dry_run'] ?? false);
+        $processes = $catalog->forCurrentCompany();
+        $roles = Role::where('company_id', $context->id())->pluck('id', 'name');
+        $branches = CompanyBranch::query()->pluck('id', 'name');
+        $users = User::where('company_id', $context->id())->where('is_active', true)->get(['id', 'email', 'username']);
+        $results = [];
+        $applied = 0;
+        foreach ($data['workflows'] as $w) {
+            $problems = [];
+            $process = $processes[$w['process']] ?? null;
+            if (! $process) {
+                $problems[] = "Process {$w['process']} is not used by this company (its module may be off).";
+            }
+            $branchId = null;
+            if (! empty($w['branch'])) {
+                $branchId = $branches[$w['branch']] ?? null;
+                if (! $branchId) {
+                    $problems[] = "Branch {$w['branch']} not found.";
+                }
+            }
+            $steps = [];
+            foreach ($w['steps'] as $i => $st) {
+                $roleId = null;
+                $userId = null;
+                if ($st['approver_type'] === 'role') {
+                    $roleId = $roles[$st['role'] ?? ''] ?? null;
+                    if (! $roleId) {
+                        $problems[] = 'Step '.($i + 1).': role '.($st['role'] ?? '(none)').' not found.';
+                    }
+                }
+                if ($st['approver_type'] === 'user') {
+                    $u = $users->first(fn ($u) => $st['user'] !== null && ($u->email === $st['user'] || $u->username === $st['user']));
+                    $userId = $u?->id;
+                    if (! $userId) {
+                        $problems[] = 'Step '.($i + 1).': user '.($st['user'] ?? '(none)').' not found or inactive.';
+                    }
+                }
+                $steps[] = ['step_order' => $i + 1, 'name' => $st['name'], 'approver_type' => $st['approver_type'], 'role_id' => $roleId, 'user_id' => $userId,
+                    'same_branch' => $st['approver_type'] === 'role' && ($st['same_branch'] ?? false), 'allow_send_back' => $st['allow_send_back'] ?? true,
+                    'min_amount' => $st['min_amount'] ?? null, 'approve_label' => $st['approve_label'] ?? null, 'reject_label' => $st['reject_label'] ?? null];
+            }
+            $existing = $process ? WorkflowTemplate::where('process', $w['process'])->where('company_branch_id', $branchId)->exists() : false;
+            $action = $problems ? 'skipped' : (empty($steps) ? ($existing ? 'removed' : 'unchanged') : ($existing ? 'replaced' : 'created'));
+            if (! $problems && ! $dry) {
+                DB::transaction(function () use ($w, $branchId, $steps, $request) {
+                    $template = WorkflowTemplate::where('process', $w['process'])->where('company_branch_id', $branchId)->first();
+                    if (empty($steps)) {
+                        $template?->delete();
+
+                        return;
+                    }
+                    $template ??= new WorkflowTemplate(['process' => $w['process'], 'company_branch_id' => $branchId]);
+                    $template->fill(['is_active' => $w['is_active'] ?? true, 'updated_by' => $request->user()->id])->save();
+                    $template->steps()->delete();
+                    foreach ($steps as $st) {
+                        $template->steps()->create($st);
+                    }
+                });
+            }
+            if (! $problems) {
+                $applied++;
+            }
+            $results[] = ['process' => $w['process'], 'name' => $process?->name() ?? $w['process'], 'branch' => $w['branch'] ?? null, 'action' => $action, 'problems' => $problems];
+        }
+
+        return response()->json(['data' => ['applied' => $applied, 'skipped' => count($results) - $applied, 'dry_run' => $dry, 'results' => $results]]);
+    }
 }

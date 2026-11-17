@@ -9,6 +9,8 @@ Route::prefix('admin/workflows')->middleware(['auth:sanctum', 'module:admin', 'c
     Route::get('/', [WorkflowSetupController::class, 'index'])->name('index');
     Route::get('options', [WorkflowSetupController::class, 'options'])->name('options');
     Route::get('users', [WorkflowSetupController::class, 'users'])->name('users');
+    Route::get('export', [WorkflowSetupController::class, 'export'])->name('export');
+    Route::post('import', [WorkflowSetupController::class, 'import'])->name('import');
     Route::put('{process}', [WorkflowSetupController::class, 'save'])->name('save');
 });
 
