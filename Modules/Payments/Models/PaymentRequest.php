@@ -16,13 +16,15 @@ class PaymentRequest extends Model
 
     public const STATUS_LABELS = [
         'draft' => 'Draft', 'pending' => 'Waiting for approval', 'approved' => 'Approved', 'rejected' => 'Returned',
-        'cancelled' => 'Cancelled', 'vouchered' => 'Voucher prepared', 'paid' => 'Paid',
+        'cancelled' => 'Cancelled', 'vouchered' => 'Voucher prepared', 'paid' => 'Paid', 'retired' => 'Retired', 'recovering' => 'Being recovered from salary', 'recovered' => 'Recovered from salary',
     ];
 
-    protected $fillable = ['company_id', 'number', 'budget_id', 'department_id', 'title', 'purpose', 'needed_by', 'total', 'status', 'over_budget', 'source_type', 'source_id', 'supplier_id',
+    public const KINDS = ['payment' => 'Payment', 'imprest' => 'Imprest (staff advance)'];
+
+    protected $fillable = ['company_id', 'number', 'kind', 'holder_employee_id', 'retire_by', 'budget_id', 'department_id', 'title', 'purpose', 'needed_by', 'total', 'status', 'over_budget', 'source_type', 'source_id', 'supplier_id',
         'requested_by', 'submitted_at', 'decision_comment', 'decided_at'];
 
-    protected $casts = ['needed_by' => 'date', 'total' => 'float', 'over_budget' => 'boolean', 'submitted_at' => 'datetime', 'decided_at' => 'datetime'];
+    protected $casts = ['needed_by' => 'date', 'retire_by' => 'date', 'total' => 'float', 'over_budget' => 'boolean', 'submitted_at' => 'datetime', 'decided_at' => 'datetime'];
 
     public function budget()
     {
@@ -51,7 +53,32 @@ class PaymentRequest extends Model
 
     public function attachments()
     {
-        return $this->hasMany(PaymentAttachment::class)->orderBy('id');
+        return $this->hasMany(PaymentAttachment::class)->whereNull('imprest_retirement_id')->orderBy('id');
+    }
+
+    public function holder()
+    {
+        return $this->belongsTo(\App\Models\Employee::class, 'holder_employee_id');
+    }
+
+    public function retirements()
+    {
+        return $this->hasMany(ImprestRetirement::class)->orderBy('id');
+    }
+
+    public function recoveries()
+    {
+        return $this->hasMany(ImprestRecovery::class)->orderBy('id');
+    }
+
+    public function isImprest(): bool
+    {
+        return $this->kind === 'imprest';
+    }
+
+    public function overdue(): bool
+    {
+        return $this->isImprest() && $this->status === 'paid' && $this->retire_by && $this->retire_by->lt(today());
     }
 
     public function vouchers()

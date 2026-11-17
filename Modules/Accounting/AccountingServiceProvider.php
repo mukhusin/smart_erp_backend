@@ -12,5 +12,8 @@ class AccountingServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(PayrollApproved::class, PostPayroll::class);
+        if ($this->app->runningInConsole()) {
+            $this->commands([\Modules\Accounting\Console\BankFeeds::class]);
+        }
     }
 }

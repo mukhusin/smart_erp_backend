@@ -2,12 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Accounting\Http\Controllers\Api\AccountController;
+use Modules\Accounting\Http\Controllers\Api\BankFeedController;
 use Modules\Accounting\Http\Controllers\Api\FiscalYearController;
 use Modules\Accounting\Http\Controllers\Api\FrameworkController;
 use Modules\Accounting\Http\Controllers\Api\JournalController;
 use Modules\Accounting\Http\Controllers\Api\MasterDataController;
 use Modules\Accounting\Http\Controllers\Api\OpeningBalanceController;
 use Modules\Accounting\Http\Controllers\Api\PayrollPostingController;
+use Modules\Accounting\Http\Controllers\Api\ReconciliationController;
 use Modules\Accounting\Http\Controllers\Api\ReportController;
 use Modules\Accounting\Http\Controllers\Api\SettingsController;
 use Modules\Accounting\Http\Controllers\Api\YearEndController;
@@ -38,6 +40,29 @@ Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'c
     Route::get('year-end', [YearEndController::class, 'index'])->name('year-end.index');
     Route::get('year-end/{fiscalYear}/statements/{report}', [YearEndController::class, 'statement'])->name('year-end.statement');
     Route::post('year-end/{fiscalYear}/withdraw', [YearEndController::class, 'withdraw'])->name('year-end.withdraw');
+    Route::get('reconciliations', [ReconciliationController::class, 'index'])->name('reconciliations.index');
+    Route::get('reconciliations/template', [ReconciliationController::class, 'template'])->name('reconciliations.template');
+    Route::get('reconciliations/{reconciliation}', [ReconciliationController::class, 'show'])->name('reconciliations.show');
+    Route::post('reconciliations/{reconciliation}/withdraw', [ReconciliationController::class, 'withdraw'])->name('reconciliations.withdraw');
+
+    Route::middleware('can:accounting.reconcile')->group(function () {
+        Route::post('reconciliations', [ReconciliationController::class, 'store'])->name('reconciliations.store');
+        Route::put('reconciliations/{reconciliation}', [ReconciliationController::class, 'update'])->name('reconciliations.update');
+        Route::delete('reconciliations/{reconciliation}', [ReconciliationController::class, 'destroy'])->name('reconciliations.destroy');
+        Route::put('reconciliations/{reconciliation}/cleared', [ReconciliationController::class, 'clear'])->name('reconciliations.clear');
+        Route::post('reconciliations/{reconciliation}/statement', [ReconciliationController::class, 'import'])->name('reconciliations.import');
+        Route::delete('reconciliations/{reconciliation}/statement/{line}', [ReconciliationController::class, 'destroyStatementLine'])->name('reconciliations.statement.destroy');
+        Route::post('reconciliations/{reconciliation}/auto-match', [ReconciliationController::class, 'autoMatch'])->name('reconciliations.auto-match');
+        Route::post('reconciliations/{reconciliation}/statement/{line}/match', [ReconciliationController::class, 'match'])->name('reconciliations.match');
+        Route::post('reconciliations/{reconciliation}/statement/{line}/adjust', [ReconciliationController::class, 'adjust'])->name('reconciliations.adjust');
+        Route::post('reconciliations/{reconciliation}/pull-feed', [BankFeedController::class, 'pull'])->name('reconciliations.pull-feed');
+        Route::post('reconciliations/{reconciliation}/submit', [ReconciliationController::class, 'submit'])->name('reconciliations.submit');
+    });
+    Route::get('cash-bank/{cashBank}/feed', [BankFeedController::class, 'show'])->name('cash-bank.feed.show');
+    Route::post('cash-bank/{cashBank}/feed/sync', [BankFeedController::class, 'sync'])->name('cash-bank.feed.sync');
+    Route::put('cash-bank/{cashBank}/feed', [BankFeedController::class, 'update'])->middleware('can:accounting.manage')->name('cash-bank.feed.update');
+    Route::post('cash-bank/{cashBank}/feed/test', [BankFeedController::class, 'test'])->middleware('can:accounting.manage')->name('cash-bank.feed.test');
+    Route::post('reconciliations/{reconciliation}/reopen', [ReconciliationController::class, 'reopen'])->middleware('can:accounting.manage')->name('reconciliations.reopen');
 
     Route::middleware('can:accounting.opening')->group(function () {
         Route::post('opening-balances', [OpeningBalanceController::class, 'store'])->name('opening.store');

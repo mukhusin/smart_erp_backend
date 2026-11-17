@@ -45,3 +45,7 @@ Schedule::command('audit:daily')->dailyAt('00:15');
 
 Schedule::command('hr:send-messages')->everyMinute()->withoutOverlapping();
 // Cron entry: * * * * * php /path/to/smart-erp/artisan schedule:run >> /dev/null 2>&1
+
+Schedule::command('payments:imprest-reminders')->dailyAt('07:00');
+
+Schedule::command('accounting:bank-feeds')->hourly()->withoutOverlapping();

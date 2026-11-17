@@ -902,6 +902,39 @@ security expiry. Reports: tender register, bid opening record, evaluation summar
 register, expiring contracts and securities, outstanding orders, supplier performance, spend by method, special-group
 share. Not yet: annual procurement plan and packages, e-bidding by suppliers, escalation and handovers in the engine.
 
+**Step 8 built (2026-11-17): imprest and bank reconciliation.**
+Imprest is a payment request of kind `imprest` with a holder (an HR employee, the only payee) and a retire-by date
+(within `imprest_retire_days` of the date needed). Approved, vouchered and paid as any request, but the voucher debits
+the staff advances account (`payment_settings.imprest_account_id`) and the budget stays committed. Retirement
+(`imprest_retirements`, IR-YYYY-#####, workflow `imprest-retirement`, receipts required): spent per budget line of the
+imprest, the rest returned to a bank or cash account; spent more than given is refused (new payment request for the
+extra). On approval one journal (type `imprest`, source = the request) Dr expense lines with budget dimensions + Dr bank
+(returned) / Cr staff advances, spending recorded against the commitment, the rest released; request → `retired`.
+One open imprest per holder (setting). `payments:imprest-reminders` (07:00) reminds holder and requester the day after
+the date and weekly. Staff without `payments.request` may ask for an imprest only for themselves. Report: imprest not
+yet retired.
+Bank reconciliation (`bank_reconciliations` BR-YYYY-#####, `bank_statement_lines`, `journal_entry_lines.bank_reconciliation_id`,
+permission `accounting.reconcile`, workflow `bank-reconciliation`): one open per bank, statement date after the last
+completed. Ledger lines up to the statement date not cleared earlier are listed; ticking clears them. Statement CSV
+import (date, description, reference, amount or money in/out; several date formats); auto-match pairs same amount within
+7 days (reference preferred) and clears reversed journals with their reversal; manual match; "book it" posts a statement
+item missing from the ledger (type `bank`, source = the reconciliation) and matches it. Statement: statement balance −
+outstanding payments + outstanding receipts = adjusted bank vs ledger balance; submit only at difference 0. The latest
+completed one can be opened again (`accounting.manage`). Report: bank reconciliation status.
+Also built (2026-11-17): **salary recovery** of an unretired imprest (finance, "Recover from salary": months and first
+month; equal `other_deductions` for the holder, the last one taking the rounding, through the HR deduction workflow;
+`imprest_recoveries` + entries; on `PayrollApproved` each recovery records what the payroll took and posts Dr the
+payroll "other deductions" account (or net pay) / Cr staff advances; when all is recovered the budget commitment is
+released and the request becomes `recovered`; cancel only before anything is deducted). **Petty cash** on the imprest
+system (`petty_cash_floats` per cash account with custodian, float, most per voucher and top-up bank; vouchers PCV- with
+receipt, budget line held on submit, workflow `petty-cash-voucher`, approval posts Dr expense / Cr petty cash; top-ups
+PCR- through `petty-cash-replenishment`, never above the float, Dr petty cash / Cr bank, marking the vouchers covered;
+permission `payments.petty-cash`). **Bank feeds** (`cash_bank_accounts.feed_config` encrypted: url, token and header,
+params with {from}/{to}, list path and field names, signed amount or money in/out, days back; `bank_feed_transactions`
+deduplicated by the bank's id; `accounting:bank-feeds` hourly; test call; a new reconciliation takes unused transactions
+up to its date, "From bank feed" on an open one; deleting a statement line frees the transaction). Bank-specific
+adapters (e.g. CRDB, NMB host-to-host) can be added later behind the same `BankFeed` service.
+
 ## 20. Kairuki Hospital accounting requirements — coverage (2026-11-16)
 
 Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ part · ✗ not yet.
@@ -1029,8 +1062,9 @@ is approved). Procurement buys repairs and fuel; accounting pays; budgets are ch
 - Odometer/hours only move forward through logbooks, fuel issues, maintenance or tracking; corrections need approval
   and every reading is kept with its source (`fleet_readings`).
 - Running cost ledger per unit (fuel, maintenance, hire, other) with the source document, for cost per km.
-- Drivers: employee (HR link, leave status) or hired (supplier, contract dates); licences with classes and expiry
-  (history kept); licence-class eligibility per vehicle type; one active driver per vehicle; assignments and hires
+- Drivers are always HR-registered employees (decided 2026-11-17): a driver record links one employee and reads name,
+  department, contact and leave status from HR, never copied; no hired or outside drivers (a hired vehicle comes with
+  an employee assigned as its driver). Licences with classes and expiry (history kept); licence-class eligibility per vehicle type; one active driver per vehicle; assignments and hires
   close automatically on their end date.
 - Transport requests and dispatch (with or without a request, cargo details), availability check that blocks
   double-booking of a vehicle or driver, postpone/return/reject, agency trips (contracts with modes and validity)

@@ -138,6 +138,19 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Imprest, petty cash, bank reconciliation and bank feeds (2026-11-17)
+
+1. `php artisan migrate`: imprest columns and tables, bank reconciliation tables, and default approvals for every company
+   ("Imprest retirement" and "Bank reconciliation": chief accountant) where none exist.
+2. `php artisan erp:sync-permissions --roles` adds `accounting.reconcile` (accountants get it through `accounting.*`).
+3. Payments → Settings: choose the staff advances account (an asset account) before staff ask for imprests.
+4. The cron entry already runs `payments:imprest-reminders` daily at 07:00 and `accounting:bank-feeds` hourly.
+5. Second migration (`2026_12_04_*`): imprest recovery, petty cash and bank feed tables; default approvals "Petty cash
+   voucher" and "Petty cash top-up" (chief accountant). Run `php artisan erp:sync-permissions --roles` again for
+   `payments.petty-cash` and give it to the petty cash custodians' role.
+6. Salary recovery posts to the payroll posting "Other deductions payable" account (or net pay): set it in Accounting →
+   Payroll posting. Bank feed tokens are encrypted with `APP_KEY`; keep the same key when moving the database.
+
 ## Payroll worked out in the background (2026-11-17)
 
 New and "work out again" payrolls are calculated by a queued job (`GeneratePayrollJob`, default queue). After

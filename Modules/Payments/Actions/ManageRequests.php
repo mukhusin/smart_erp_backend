@@ -27,6 +27,10 @@ class ManageRequests
         if ($r && ! $r->editable()) {
             throw ValidationException::withMessages(['request' => 'Only a draft or returned request can be changed.']);
         }
+        $imprest = ($data['kind'] ?? 'payment') === 'imprest';
+        if ($imprest) {
+            $data = $this->imprestPayee($data);
+        }
         $items = BudgetItem::with('budget')->whereIn('id', array_column($data['lines'], 'budget_item_id'))->get()->keyBy('id');
         $budgetIds = $items->pluck('budget_id')->unique();
         if ($items->count() !== count(array_unique(array_column($data['lines'], 'budget_item_id')))) {
@@ -54,8 +58,10 @@ class ManageRequests
 
         return DB::transaction(function () use ($r, $data, $by, $total, $budgetIds) {
             $r ??= new PaymentRequest(['number' => Numbering::next(PaymentRequest::class, 'PR'), 'requested_by' => $by->id, 'status' => 'draft']);
+            $imprest = ($data['kind'] ?? 'payment') === 'imprest';
             $r->fill(['budget_id' => $budgetIds->first(), 'department_id' => $data['department_id'], 'title' => $data['title'], 'purpose' => $data['purpose'] ?? null,
-                'needed_by' => $data['needed_by'] ?? null, 'total' => $total])->save();
+                'needed_by' => $data['needed_by'] ?? null, 'total' => $total, 'kind' => $imprest ? 'imprest' : 'payment',
+                'holder_employee_id' => $imprest ? $data['holder_employee_id'] : null, 'retire_by' => $imprest ? $data['retire_by'] : null])->save();
             $r->lines()->delete();
             foreach ($data['lines'] as $l) {
                 $r->lines()->create(['budget_item_id' => $l['budget_item_id'], 'description' => $l['description'] ?? null, 'amount' => round((float) $l['amount'], 2)]);
@@ -82,6 +88,9 @@ class ManageRequests
         if (PaymentSetting::current()->require_attachment && ! $r->attachments()->exists()) {
             throw ValidationException::withMessages(['attachments' => 'Attach the supporting document (invoice, quotation or memo) before you submit.']);
         }
+        if ($r->isImprest()) {
+            $this->checkImprest($r);
+        }
         $amounts = $r->lines->mapWithKeys(fn ($l) => [$l->budget_item_id => $l->amount])->all();
         $mode = $this->budgets->mode();
 
@@ -94,6 +103,45 @@ class ManageRequests
 
             return $r->refresh();
         });
+    }
+
+    /** An imprest is paid to one payee: the staff member who holds and later retires it. */
+    private function imprestPayee(array $data): array
+    {
+        $holder = \App\Models\Employee::find($data['holder_employee_id'] ?? null);
+        if (! $holder || $holder->employment_status === 'terminated') {
+            throw ValidationException::withMessages(['holder_employee_id' => 'Choose the staff member who receives and retires the imprest.']);
+        }
+        if (empty($data['retire_by'])) {
+            throw ValidationException::withMessages(['retire_by' => 'Enter the date by which the imprest must be retired.']);
+        }
+        $days = PaymentSetting::current()->imprest_retire_days ?: 14;
+        $from = \Illuminate\Support\Carbon::parse($data['needed_by'] ?? today());
+        $by = \Illuminate\Support\Carbon::parse($data['retire_by']);
+        if ($by->lt($from) || $by->gt($from->copy()->addDays($days))) {
+            throw ValidationException::withMessages(['retire_by' => "Retire within {$days} days of the date the money is needed (".$from->format('d M Y').').']);
+        }
+        $p = $data['payees'][0] ?? [];
+        $data['payees'] = [array_merge($p, ['name' => $holder->full_name, 'kind' => 'staff', 'employee_id' => $holder->id,
+            'amount' => round(array_sum(array_map(fn ($l) => (float) $l['amount'], $data['lines'])), 2), 'method' => $p['method'] ?? 'bank'])];
+
+        return $data;
+    }
+
+    private function checkImprest(PaymentRequest $r): void
+    {
+        $settings = PaymentSetting::current();
+        if (! $settings->imprest_account_id) {
+            throw ValidationException::withMessages(['request' => 'Finance has not chosen the staff advances (imprest) account in payment settings yet.']);
+        }
+        if (! $settings->imprest_one_open) {
+            return;
+        }
+        $open = PaymentRequest::where('kind', 'imprest')->where('holder_employee_id', $r->holder_employee_id)->where('id', '!=', $r->id)
+            ->whereIn('status', ['pending', 'approved', 'vouchered', 'paid'])->value('number');
+        if ($open) {
+            throw ValidationException::withMessages(['request' => "{$r->holder?->full_name} still holds imprest {$open}. It must be retired before a new one is given."]);
+        }
     }
 
     public function approved(PaymentRequest $r): void

@@ -49,6 +49,8 @@ class FinanceReports
         'supplier-statement' => ['title' => 'Supplier statement', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
         'supplier-list' => ['title' => 'Suppliers with balances', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
         'unpaid-requests' => ['title' => 'Approved payment requests not yet vouchered', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
+        'imprest-outstanding' => ['title' => 'Imprest not yet retired', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
+        'reconciliation-status' => ['title' => 'Bank reconciliation status', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'unpaid-vouchers' => ['title' => 'Approved vouchers not yet paid', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
         'collections-summary' => ['title' => 'Collections summary', 'group' => 'Accounting', 'module' => 'receivables', 'permissions' => ['receivables.view', 'receivables.receipts', 'receivables.manage', 'accounting.view']],
         'journal-register' => ['title' => 'Journal register', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
@@ -213,7 +215,7 @@ class FinanceReports
             'assets-due-disposal' => [$assetCats],
             'asset-disposals', 'asset-transfers' => [$from, $to],
             'income-monthly' => [$from, $to, $departments],
-            'payables-ageing', 'supplier-list', 'unpaid-requests', 'unpaid-vouchers' => [],
+            'payables-ageing', 'supplier-list', 'unpaid-requests', 'unpaid-vouchers', 'imprest-outstanding', 'reconciliation-status' => [],
             'supplier-statement' => [['key' => 'supplier_id', 'label' => 'Supplier', 'type' => 'select', 'options' => class_exists(\Modules\Procurement\Models\Supplier::class)
                 ? $opt(\Modules\Procurement\Models\Supplier::orderBy('name')->get()) : []], $from, $to],
             'collections-summary' => [$from, $to, ['key' => 'group', 'label' => 'Group by', 'type' => 'select', 'default' => 'month', 'options' => [
@@ -612,6 +614,44 @@ class FinanceReports
         $rows->push(['date' => 'Total', 'net' => round($rows->sum('net'), 2)]);
 
         return ['Approved vouchers waiting for a payment list', ['date', 'number', 'reference', 'payee', 'department', 'bank', 'age', 'net'], $rows->all()];
+    }
+
+    private function reportImprestOutstanding(array $v): array
+    {
+        $rows = \Modules\Payments\Models\PaymentRequest::with(['holder', 'department', 'payees', 'retirements', 'recoveries'])->where('kind', 'imprest')->whereIn('status', ['vouchered', 'paid', 'recovering'])
+            ->orderBy('retire_by')->get()->map(function ($r) {
+                $pending = $r->retirements->firstWhere('status', 'pending');
+
+                return ['number' => $r->number, 'holder' => $r->holder?->full_name ?? $r->payees->first()?->name, 'department' => $r->department?->name, 'description' => $r->title,
+                    'retire_by' => $r->retire_by?->format('j M Y'), 'days_late' => $r->retire_by && $r->retire_by->lt(today()) ? (int) $r->retire_by->diffInDays(today()) : 0,
+                    'state' => match (true) {
+                        $r->status === 'vouchered' => 'Not yet paid',
+                        $r->status === 'recovering' => 'From salary: '.number_format((float) $r->recoveries->firstWhere('status', 'active')?->recovered, 2).' recovered',
+                        (bool) $pending => "Retirement {$pending->number} waiting for approval",
+                        default => 'Paid, not retired',
+                    }, 'amount' => round((float) $r->total - (float) $r->recoveries->firstWhere('status', 'active')?->recovered, 2)];
+            });
+        $rows->push(['number' => 'Total', 'amount' => round($rows->sum('amount'), 2)]);
+
+        return ['Imprests given to staff and not yet accounted for', ['number', 'holder', 'department', 'description', 'retire_by', 'days_late', 'state', 'amount'], $rows->all(),
+            ['holder' => 'Holder', 'retire_by' => 'Retire by', 'days_late' => 'Days late', 'state' => 'Status']];
+    }
+
+    private function reportReconciliationStatus(array $v): array
+    {
+        $recs = \Modules\Accounting\Models\BankReconciliation::get();
+        $actions = app(\Modules\Accounting\Actions\ManageReconciliations::class);
+        $rows = CashBankAccount::where('is_active', true)->whereNotNull('account_id')->orderBy('name')->get()->map(function ($b) use ($recs, $actions) {
+            $last = $recs->where('cash_bank_account_id', $b->id)->where('status', 'completed')->sortByDesc(fn ($r) => $r->statement_date->format('Ymd').str_pad((string) $r->id, 10, '0', STR_PAD_LEFT))->first();
+            $open = $recs->where('cash_bank_account_id', $b->id)->where('status', '!=', 'completed')->first();
+
+            return ['bank' => $b->name, 'last_date' => $last?->statement_date->format('j M Y') ?? 'Never', 'days_since' => $last ? (int) $last->statement_date->diffInDays(today()) : null,
+                'statement_balance' => $last?->statement_balance, 'ledger_balance' => $actions->bookBalance($b, today()->toDateString()),
+                'state' => $open ? "{$open->number}: ".(\Modules\Accounting\Models\BankReconciliation::STATUS_LABELS[$open->status] ?? $open->status) : '—'];
+        });
+
+        return ['When each bank and cash account was last agreed with its statement', ['bank', 'last_date', 'days_since', 'statement_balance', 'ledger_balance', 'state'], $rows->all(),
+            ['last_date' => 'Last reconciled to', 'days_since' => 'Days since', 'statement_balance' => 'Statement balance then', 'ledger_balance' => 'Ledger balance today', 'state' => 'Open reconciliation']];
     }
 
     private function reportCollectionsSummary(array $v): array

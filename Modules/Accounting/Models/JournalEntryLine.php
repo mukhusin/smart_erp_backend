@@ -8,7 +8,7 @@ use Modules\Tasks\Models\TaskActivity;
 
 class JournalEntryLine extends Model
 {
-    protected $fillable = ['journal_entry_id', 'line_no', 'account_id', 'department_id', 'fund_source_id', 'task_activity_id', 'project_id', 'budget_item_id', 'description', 'debit', 'credit'];
+    protected $fillable = ['journal_entry_id', 'line_no', 'account_id', 'department_id', 'fund_source_id', 'task_activity_id', 'project_id', 'budget_item_id', 'bank_reconciliation_id', 'description', 'debit', 'credit'];
 
     protected $casts = ['debit' => 'float', 'credit' => 'float', 'line_no' => 'integer'];
 

@@ -49,6 +49,12 @@ class ManageVouchers
             }
         }
         $wht = round($withholding->sum(), 2);
+        if ($wht > 0 && $r->isImprest()) {
+            throw ValidationException::withMessages(['withholding' => 'No withholding tax on an imprest: it is an advance to staff, not a payment for a service.']);
+        }
+        if ($r->isImprest() && ! $settings->imprest_account_id) {
+            throw ValidationException::withMessages(['settings' => 'Choose the staff advances (imprest) account in payment settings first.']);
+        }
         if ($wht > 0 && ! $settings->withholding_account_id) {
             throw ValidationException::withMessages(['settings' => 'Choose the withholding tax account in payment settings first.']);
         }
@@ -77,7 +83,10 @@ class ManageVouchers
             $r = $v->request()->with(['lines.item', 'payees'])->first();
             $settings = PaymentSetting::current();
             $by = $v->preparer;
-            $lines = $r->lines->map(fn ($l) => $l->account_id
+            $lines = $r->isImprest()
+                ? $r->lines->map(fn ($l) => ['account_id' => $settings->imprest_account_id, 'debit' => $l->amount, 'description' => 'Imprest: '.$r->payees->first()?->name.' — '.($l->description ?: $r->title),
+                    'department_id' => $l->item?->department_id ?? $r->department_id])->all()
+                : $r->lines->map(fn ($l) => $l->account_id
                 ? ['account_id' => $l->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item?->department_id ?? $r->department_id]
                 : ['account_id' => $l->item->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item->department_id,
                     'fund_source_id' => $l->item->fund_source_id, 'task_activity_id' => $l->item->task_activity_id, 'budget_item_id' => $l->budget_item_id])->all();
@@ -85,7 +94,9 @@ class ManageVouchers
             if ($v->withholding > 0) {
                 $lines[] = ['account_id' => $settings->withholding_account_id, 'credit' => $v->withholding, 'description' => 'Withholding tax'];
             }
-            $this->budgets->release($r, $by);
+            if (! $r->isImprest()) {
+                $this->budgets->release($r, $by);
+            }
             $journal = $this->posting->post($v->date->toDateString(), "{$v->number} {$r->number} {$r->title}", $lines, $by, 'payment', $v);
             $v->update(['status' => 'approved', 'journal_entry_id' => $journal->id, 'decided_at' => now()]);
         });
@@ -166,7 +177,7 @@ class ManageVouchers
             if ($v->journal) {
                 $this->posting->reverse($v->journal, now()->toDateString(), $by, "{$v->number} voided: {$reason}");
             }
-            foreach ($r->lines->whereNull('account_id') as $l) {
+            foreach ($r->isImprest() ? [] : $r->lines->whereNull('account_id') as $l) {
                 $this->budgets->record($l->budget_item_id, 'committed', $l->amount, $r, 'Voucher voided', $by);
             }
             $r->payees()->update(['withholding' => 0]);

@@ -154,6 +154,7 @@ final class PermissionCatalog
         'accounting' => [
             'accounting.view' => 'View accounts, journals, ledger and financial reports',
             'accounting.journals' => 'Enter manual journals',
+            'accounting.reconcile' => 'Reconcile bank accounts with bank statements',
             'accounting.opening' => 'Load opening balances at go-live (account balances, creditors, debtors, breakdowns)',
             'accounting.manage' => 'Manage chart of accounts, fiscal years, fund sources, bank accounts and settings',
         ],
@@ -162,6 +163,7 @@ final class PermissionCatalog
             'payments.view' => 'View all payment requests, vouchers and payment lists',
             'payments.vouchers' => 'Prepare and void payment vouchers, cancel approved requests',
             'payments.pay' => 'Prepare payment lists and record bank references (cashier)',
+            'payments.petty-cash' => 'Keep a petty cash float: record petty cash vouchers and ask for top-ups',
             'payments.manage' => 'Manage payment settings and act on any payment',
         ],
         'receivables' => [

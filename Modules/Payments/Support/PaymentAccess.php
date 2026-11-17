@@ -71,4 +71,14 @@ class PaymentAccess
 
         return $departments === null || ($departmentId !== null && in_array($departmentId, $departments, true));
     }
+
+    /** The imprest holder, the person who asked for it, or finance. */
+    public function canRetire(User $user, \Modules\Payments\Models\PaymentRequest $r): bool
+    {
+        if (! $r->isImprest()) {
+            return false;
+        }
+
+        return $r->requested_by === $user->id || ($r->holder_employee_id && (int) $user->employee?->id === (int) $r->holder_employee_id) || $this->finance($user);
+    }
 }

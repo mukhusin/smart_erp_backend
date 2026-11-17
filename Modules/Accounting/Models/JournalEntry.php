@@ -14,7 +14,7 @@ class JournalEntry extends Model
 
     public const STATUS_LABELS = ['draft' => 'Draft', 'pending' => 'Waiting for approval', 'posted' => 'Posted', 'rejected' => 'Returned', 'reversed' => 'Reversed'];
 
-    public const TYPES = ['manual' => 'Manual journal', 'payment' => 'Payment voucher', 'payment_list' => 'Payment list', 'invoice' => 'Customer invoice', 'receipt' => 'Receipt', 'credit_note' => 'Credit note', 'goods_receipt' => 'Goods received', 'stock_issue' => 'Stock issued', 'stock_receipt' => 'Stock received', 'stock_adjustment' => 'Stock count adjustment', 'payroll' => 'Payroll', 'reversal' => 'Reversal', 'opening' => 'Opening balance', 'closing' => 'Year-end closing', 'asset' => 'Fixed asset', 'depreciation' => 'Depreciation'];
+    public const TYPES = ['manual' => 'Manual journal', 'payment' => 'Payment voucher', 'payment_list' => 'Payment list', 'invoice' => 'Customer invoice', 'receipt' => 'Receipt', 'credit_note' => 'Credit note', 'goods_receipt' => 'Goods received', 'stock_issue' => 'Stock issued', 'stock_receipt' => 'Stock received', 'stock_adjustment' => 'Stock count adjustment', 'payroll' => 'Payroll', 'reversal' => 'Reversal', 'opening' => 'Opening balance', 'closing' => 'Year-end closing', 'asset' => 'Fixed asset', 'depreciation' => 'Depreciation', 'bank' => 'Bank statement item', 'imprest' => 'Imprest', 'petty_cash' => 'Petty cash'];
 
     protected $fillable = [
         'company_id', 'reference_no', 'date', 'fiscal_period_id', 'entry_type', 'source_type', 'source_id', 'description', 'total', 'status',

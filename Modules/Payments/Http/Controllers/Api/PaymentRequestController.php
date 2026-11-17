@@ -30,11 +30,13 @@ class PaymentRequestController extends Controller
     /**
      * Payment requests the user can see, newest first.
      *
-     * @response array{data: list<array{id: int, number: string, title: string, department: string|null, total: float, status: string, status_label: string, over_budget: bool, requested_by: string|null, needed_by: string|null, submitted_at: string|null, waiting_for: string|null, created_at: string}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
+     * @response array{data: list<array{id: int, number: string, kind: string, holder: string|null, retire_by: string|null, overdue: bool, title: string, department: string|null, total: float, status: string, status_label: string, over_budget: bool, requested_by: string|null, needed_by: string|null, submitted_at: string|null, waiting_for: string|null, created_at: string}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
      */
     #[QueryParameter('search', description: 'Number or title.', type: 'string')]
     #[QueryParameter('status', type: 'string')]
     #[QueryParameter('department_id', type: 'integer')]
+    #[QueryParameter('kind', description: '`payment` or `imprest`.', type: 'string')]
+    #[QueryParameter('overdue', description: 'Only paid imprests past their retire-by date.', type: 'boolean')]
     #[QueryParameter('mine', description: 'Only requests I raised.', type: 'boolean')]
     #[QueryParameter('sort', description: '`created_at`, `total`, `number`; prefix `-` for descending.', type: 'string', default: '-created_at')]
     #[QueryParameter('page', type: 'integer', default: 1)]
@@ -45,18 +47,21 @@ class PaymentRequestController extends Controller
         $departments = $this->access->departments($user);
         $sortParam = (string) $request->query('sort', '-created_at');
         $sort = in_array(ltrim($sortParam, '-'), ['created_at', 'total', 'number'], true) ? ltrim($sortParam, '-') : 'created_at';
-        $page = PaymentRequest::with(['department', 'requester', 'workflow.steps'])
-            ->where(fn ($q) => $q->where('requested_by', $user->id)->when($departments !== null, fn ($q) => $q->orWhereIn('department_id', $departments)->where('status', '!=', 'draft'), fn ($q) => $q->orWhere('status', '!=', 'draft')))
-            ->when($request->boolean('mine'), fn ($q) => $q->where('requested_by', $user->id))
+        $page = PaymentRequest::with(['department', 'requester', 'workflow.steps', 'holder'])
+            ->where(fn ($q) => $q->where('requested_by', $user->id)->when($user->employee, fn ($q, $e) => $q->orWhere(fn ($q) => $q->where('holder_employee_id', $e->id)->where('status', '!=', 'draft')))->when($departments !== null, fn ($q) => $q->orWhereIn('department_id', $departments)->where('status', '!=', 'draft'), fn ($q) => $q->orWhere('status', '!=', 'draft')))
+            ->when($request->boolean('mine'), fn ($q) => $q->where(fn ($q) => $q->where('requested_by', $user->id)->when($user->employee, fn ($q, $e) => $q->orWhere('holder_employee_id', $e->id))))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('title', 'like', "%{$s}%")))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
             ->when($request->query('department_id'), fn ($q, $d) => $q->where('department_id', $d))
+            ->when($request->query('kind'), fn ($q, $k) => $q->where('kind', $k))
+            ->when($request->boolean('overdue'), fn ($q) => $q->where('kind', 'imprest')->where('status', 'paid')->whereDate('retire_by', '<', today()))
             ->orderBy($sort, str_starts_with($sortParam, '-') ? 'desc' : 'asc')->orderByDesc('id')
             ->paginate(min((int) $request->query('per_page', 10), 100));
 
         return response()->json([
             'data' => collect($page->items())->map(fn (PaymentRequest $r) => [
-                'id' => $r->id, 'number' => $r->number, 'title' => $r->title, 'department' => $r->department?->name, 'total' => (float) $r->total,
+                'id' => $r->id, 'number' => $r->number, 'kind' => (string) $r->kind, 'holder' => $r->holder?->full_name, 'retire_by' => $r->retire_by?->toDateString(), 'overdue' => $r->overdue(),
+                'title' => $r->title, 'department' => $r->department?->name, 'total' => (float) $r->total,
                 'status' => $r->status, 'status_label' => PaymentRequest::STATUS_LABELS[$r->status] ?? $r->status, 'over_budget' => (bool) $r->over_budget,
                 'requested_by' => $r->requester?->display_name, 'needed_by' => $r->needed_by?->toDateString(), 'submitted_at' => $r->submitted_at?->toIso8601String(),
                 'waiting_for' => $r->status === 'pending' ? $r->workflow?->steps->firstWhere('status', 'pending')?->name : null, 'created_at' => $r->created_at->toIso8601String(),
@@ -68,11 +73,11 @@ class PaymentRequestController extends Controller
     /**
      * A payment request with its budget lines, payees, documents, vouchers and what the user can do.
      *
-     * @response array{data: array{id: int, number: string, title: string, purpose: string|null, department_id: int|null, department: string|null, budget: string|null, needed_by: string|null, total: float, status: string, status_label: string, over_budget: bool, requested_by: string|null, submitted_at: string|null, decision_comment: string|null, waiting_for: string|null, lines: list<array{id: int, budget_item_id: int|null, label: string, description: string|null, amount: float, available: float}>, payees: list<array{id: int, name: string, kind: string, kind_label: string, employee_id: int|null, method: string, method_label: string, bank_name: string|null, account_name: string|null, account_number: string|null, mobile_number: string|null, destination: string, amount: float, withholding: float, net: float}>, attachments: list<array{id: int, name: string, size: int, uploaded_by: string|null, created_at: string}>, vouchers: list<array{id: int, number: string, date: string, status: string, status_label: string, net: float}>, can: array{edit: bool, submit: bool, withdraw: bool, cancel: bool, delete: bool, voucher: bool}}}
+     * @response array{data: array{id: int, number: string, kind: string, holder_employee_id: int|null, holder: string|null, retire_by: string|null, overdue: bool, retirements: list<array{id: int, number: string, date: string, status: string, status_label: string, spent: float, returned: float}>, recoveries: list<array{id: int, amount: float, months: int, start_month: string, recovered: float, status: string, status_label: string, reason: string|null, created_by: string|null, entries: list<array{payroll: string|null, amount: float}>, can_cancel: bool}>, title: string, purpose: string|null, department_id: int|null, department: string|null, budget: string|null, needed_by: string|null, total: float, status: string, status_label: string, over_budget: bool, requested_by: string|null, submitted_at: string|null, decision_comment: string|null, waiting_for: string|null, lines: list<array{id: int, budget_item_id: int|null, label: string, description: string|null, amount: float, available: float}>, payees: list<array{id: int, name: string, kind: string, kind_label: string, employee_id: int|null, method: string, method_label: string, bank_name: string|null, account_name: string|null, account_number: string|null, mobile_number: string|null, destination: string, amount: float, withholding: float, net: float}>, attachments: list<array{id: int, name: string, size: int, uploaded_by: string|null, created_at: string}>, vouchers: list<array{id: int, number: string, date: string, status: string, status_label: string, net: float}>, can: array{edit: bool, submit: bool, withdraw: bool, cancel: bool, delete: bool, voucher: bool, recover: bool, retire: bool}}}
      */
     public function show(Request $request, PaymentRequest $paymentRequest, BudgetService $budgets): JsonResponse
     {
-        $r = $paymentRequest->load(['lines.item.account', 'lines.item.subActivity', 'lines.item.activity', 'payees', 'attachments.uploader', 'vouchers', 'department', 'budget', 'requester', 'workflow.steps']);
+        $r = $paymentRequest->load(['lines.item.account', 'lines.item.subActivity', 'lines.item.activity', 'payees', 'attachments.uploader', 'vouchers', 'department', 'budget', 'requester', 'workflow.steps', 'holder', 'retirements', 'recoveries.entries.sheet', 'recoveries.creator']);
         $user = $request->user();
         $this->authorizeView($user, $r);
         $mine = $r->requested_by === $user->id;
@@ -80,7 +85,15 @@ class PaymentRequestController extends Controller
         $figures = $budgets->figures($r->lines->pluck('item')->filter());
 
         return response()->json(['data' => [
-            'id' => $r->id, 'number' => $r->number, 'title' => $r->title, 'purpose' => $r->purpose, 'department_id' => $r->department_id, 'department' => $r->department?->name,
+            'id' => $r->id, 'number' => $r->number, 'kind' => (string) $r->kind, 'holder_employee_id' => $r->holder_employee_id, 'holder' => $r->holder?->full_name,
+            'retire_by' => $r->retire_by?->toDateString(), 'overdue' => $r->overdue(),
+            'retirements' => $r->retirements->map(fn ($x) => ['id' => $x->id, 'number' => $x->number, 'date' => $x->date->toDateString(), 'status' => $x->status,
+                'status_label' => \Modules\Payments\Models\ImprestRetirement::STATUS_LABELS[$x->status] ?? $x->status, 'spent' => $x->spent, 'returned' => $x->returned])->values(),
+            'recoveries' => $r->recoveries->map(fn ($x) => ['id' => $x->id, 'amount' => $x->amount, 'months' => $x->months, 'start_month' => $x->start_month->format('Y-m'),
+                'recovered' => $x->recovered, 'status' => $x->status, 'status_label' => \Modules\Payments\Models\ImprestRecovery::STATUS_LABELS[$x->status] ?? $x->status, 'reason' => $x->reason,
+                'created_by' => $x->creator?->display_name, 'entries' => $x->entries->map(fn ($e) => ['payroll' => $e->sheet?->name, 'amount' => $e->amount])->values(),
+                'can_cancel' => $finance && $x->status === 'active' && $x->recovered == 0])->values(),
+            'title' => $r->title, 'purpose' => $r->purpose, 'department_id' => $r->department_id, 'department' => $r->department?->name,
             'budget' => $r->budget?->title, 'needed_by' => $r->needed_by?->toDateString(), 'total' => (float) $r->total, 'status' => $r->status,
             'status_label' => PaymentRequest::STATUS_LABELS[$r->status] ?? $r->status, 'over_budget' => (bool) $r->over_budget, 'requested_by' => $r->requester?->display_name,
             'submitted_at' => $r->submitted_at?->toIso8601String(), 'decision_comment' => $r->decision_comment,
@@ -99,6 +112,8 @@ class PaymentRequestController extends Controller
                 'edit' => $r->editable() && $mine, 'submit' => $r->editable() && $mine, 'withdraw' => $r->status === 'pending' && $mine,
                 'cancel' => ($r->editable() && ($mine || $finance)) || ($r->status === 'approved' && $finance), 'delete' => $r->status === 'draft' && $mine,
                 'voucher' => $r->status === 'approved' && $finance,
+                'recover' => $r->isImprest() && $r->status === 'paid' && $finance,
+                'retire' => $r->isImprest() && $r->status === 'paid' && $this->access->canRetire($user, $r) && ! $r->retirements->whereIn('status', ['draft', 'rejected', 'pending'])->count(),
             ],
         ]]);
     }
@@ -108,6 +123,7 @@ class PaymentRequestController extends Controller
     {
         $data = $request->validated();
         abort_unless($this->access->canRequest($request->user(), (int) $data['department_id']), 403, 'You can only raise payment requests for your departments.');
+        $this->checkHolder($request->user(), $data);
         $r = $this->requests->save(null, $data, $request->user());
 
         return response()->json(['data' => ['id' => $r->id, 'number' => $r->number, 'status' => $r->status]], 201);
@@ -118,6 +134,7 @@ class PaymentRequestController extends Controller
     {
         $data = $request->validated();
         abort_unless($paymentRequest->requested_by === $request->user()->id && $this->access->canRequest($request->user(), (int) $data['department_id']), 403);
+        $this->checkHolder($request->user(), $data);
         $r = $this->requests->save($paymentRequest, $data, $request->user());
 
         return response()->json(['data' => ['id' => $r->id, 'number' => $r->number, 'status' => $r->status]]);
@@ -182,9 +199,18 @@ class PaymentRequestController extends Controller
         return response()->json(['message' => 'Document removed.']);
     }
 
+    /** Staff without the request permission may ask for an imprest only for themselves. */
+    private function checkHolder($user, array $data): void
+    {
+        if (($data['kind'] ?? 'payment') !== 'imprest' || $this->access->can($user, 'request') || $this->access->can($user, 'manage')) {
+            return;
+        }
+        abort_unless((int) ($data['holder_employee_id'] ?? 0) === (int) $user->employee?->id, 403, 'You can ask for an imprest only for yourself.');
+    }
+
     private function authorizeView($user, PaymentRequest $r): void
     {
-        abort_unless($r->requested_by === $user->id || ($r->status !== 'draft' && ($this->access->canView($user, $r->department_id) || $this->approver($user, $r))), 403);
+        abort_unless($r->requested_by === $user->id || ($r->status !== 'draft' && ($this->access->canRetire($user, $r) || $this->access->canView($user, $r->department_id) || $this->approver($user, $r))), 403);
     }
 
     private function approver($user, PaymentRequest $r): bool

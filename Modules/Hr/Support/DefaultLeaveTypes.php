@@ -89,6 +89,9 @@ final class DefaultLeaveTypes
             'payment-voucher' => array_values(array_filter([['Chief accountant', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, 10000000] : null])),
             'payment-list' => [['Chief accountant', 'role', $finance->id, null]],
             'payment-void' => array_values(array_filter([['Chief accountant', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, null] : null])),
+            'imprest-retirement' => [['Chief accountant', 'role', $finance->id, null]],
+            'petty-cash-voucher' => [['Chief accountant', 'role', $finance->id, null]],
+            'petty-cash-replenishment' => [['Chief accountant', 'role', $finance->id, null]],
         ];
         foreach ($chains as $process => $steps) {
             if (WorkflowTemplate::where('process', $process)->exists()) {
@@ -184,7 +187,7 @@ final class DefaultLeaveTypes
         if (! $role) {
             return;
         }
-        foreach ([\Modules\Accounting\Workflow\ManualJournalProcess::KEY, \Modules\Accounting\Workflow\OpeningBalanceProcess::KEY, \Modules\Accounting\Workflow\YearEndCloseProcess::KEY] as $process) {
+        foreach ([\Modules\Accounting\Workflow\ManualJournalProcess::KEY, \Modules\Accounting\Workflow\OpeningBalanceProcess::KEY, \Modules\Accounting\Workflow\YearEndCloseProcess::KEY, \Modules\Accounting\Workflow\BankReconciliationProcess::KEY] as $process) {
             if (WorkflowTemplate::where('process', $process)->exists()) {
                 continue;
             }
