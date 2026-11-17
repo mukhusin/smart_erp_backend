@@ -882,7 +882,7 @@ catch-up depreciation and gain/loss. Self service My assets: fault reports with 
 officers answer in Faults and returns; weekly alert for assets held by leavers. Reports: register at a date, PPE
 movement note, depreciation schedule, by holder/location, due for disposal, disposals, transfers. Not yet: QR tag
 printing and phone scan, WIP project capitalisation, foreign-currency cost, HR exit clearance blocking (alerts only).
-Next: step 7 procurement advanced.
+Next: step 7 procurement advanced; fleet plan in §21.
 
 ## 20. Kairuki Hospital accounting requirements — coverage (2026-11-16)
 
@@ -989,3 +989,80 @@ Kept from the user's note; not built yet.
 posting a change starts only at an open fiscal year), `accounting_settings.framework|framework_name|policies`, endpoint
 `GET/PUT accounting/framework`, statements titled by the framework wording, report "Statement of comparison of budget and
 actual amounts" (IPSAS 24 style), and `journal_entries.book` (default `primary`) ready for the multi-book ledger.
+
+## 21. Fleet management — plan from the requirements (2026-11-17)
+
+Source: "Fleet Management Requirements" (FLT, DRV, TRN, FUE, MNT, CMP, HIR, TRK, SS, INT). Adapted for private
+institutions and NGOs: no government fleet formats; a national or contracted fuel supplier is one generic
+external-system adapter (§18), not a built-in vendor. The legacy Blade-era `vehicles`, `fuel_records` and
+`vehicle_maintenance_logs` tables (unused in production) are replaced, like the asset tables in step 6; module slug
+`fleet` and permissions are reworked (view, manage, dispatch, fuel, maintenance, tracking, commands).
+
+**Ownership:** fleet owns day-to-day use (vehicles, generators, drivers, trips, fuel, maintenance, compliance,
+tracking). The asset register keeps cost, depreciation and disposal (a bought/donated vehicle links to its `assets`
+record; borrowed and hired vehicles have none; disposing starts an asset disposal and the fleet record closes when it
+is approved). Procurement buys repairs and fuel; accounting pays; budgets are checked and committed through
+`BudgetService`; employees, departments and suppliers are read from HR and the supplier register, never copied.
+
+**Design decisions:**
+- Vehicles and generators share one register (`fleet_units`, kind vehicle | generator); generators use running hours
+  in place of the odometer. Status operational | non_operational | off_limit | lent | disposed; only operational
+  units can be dispatched or fuelled.
+- Odometer/hours only move forward through logbooks, fuel issues, maintenance or tracking; corrections need approval
+  and every reading is kept with its source (`fleet_readings`).
+- Running cost ledger per unit (fuel, maintenance, hire, other) with the source document, for cost per km.
+- Drivers: employee (HR link, leave status) or hired (supplier, contract dates); licences with classes and expiry
+  (history kept); licence-class eligibility per vehicle type; one active driver per vehicle; assignments and hires
+  close automatically on their end date.
+- Transport requests and dispatch (with or without a request, cargo details), availability check that blocks
+  double-booking of a vehicle or driver, postpone/return/reject, agency trips (contracts with modes and validity)
+  gathered into payment batches that create one payment request each; logbook per journey confirmed by a supervisor,
+  filled from the tracked trip when a device is fitted.
+- Fuel: requisition checked against tank size, distance since last fill and average use (outliers flagged); fuel
+  stores in litres or money with committed/available (approve = commit, issue = used, short supply returned); recharge
+  = purchase creating a supplier payment request; issue from own store (linked to the Inventory store ledger), depot or
+  card; external supplier adapter with queued retries, status on the request and wallet reconciliation.
+- Maintenance: preventive schedules per vehicle type / generator model (km, hours or months, whichever first) with
+  service-due warnings and automatic requests; corrective requests; inspection with priced lines; the approved
+  inspection creates a procurement requisition and follows the order back; post-inspection returns the unit to
+  operational and adds the cost. In repair = non_operational.
+- Compliance: accidents (photos, police report, repairable → corrective maintenance, not → disposal), insurance (one
+  current policy), compliance calendar for road licence, insurance, inspection certificate and driving licence with
+  reminders (e.g. 30/14/7 days, overdue) and renewal; dispatch blocked on expired items unless overridden with a reason.
+  Insurers, workshops and inspectors live in the supplier register.
+- Hire in: supplier, vehicle type, count, seats, driver included, dates, rate, currency, contract; usable in dispatch
+  and tracking while active; early end with date and note.
+- Every approval through the workflow engine (transport request, dispatch, fuel request, maintenance request,
+  inspection, accident, hire, odometer correction); requester ≠ approver for fuel and maintenance; handovers move
+  pending tasks (engine feature also needed by procurement).
+- Self service: employees request transport (and fuel for the trip) and follow it; assigned-vehicle holders see
+  status, service due and compliance; driver views (assigned vehicles and trips, start/end logbook, request fuel,
+  report fault or accident) on the same API so a later phone app reuses it.
+
+**GPS tracking (separate service):** a tracking gateway outside Laravel (TCP/UDP and MQTT listeners, decoders per
+device model configured as profiles and parameter dictionaries, acknowledge only after storing) writes positions and
+events to a time-series store and pushes live updates over WebSocket (Laravel Reverb or the gateway's own socket).
+Laravel keeps devices, models, geofences, routes, commands (risk level, confirmation and reason for high-risk ones,
+every command and reply logged), trips (built from positions), alerts, offline list (heartbeat) and reports (distance,
+speeding, engine time, behaviour score, power and signal, time offline); logbook vs tracked distance difference above
+a set percentage is flagged. Position history kept for a configurable period (e.g. 2 years), trips longer. Times
+stored in UTC. Map on the frontend with street/satellite/terrain basemaps, live map coloured by state, trip replay,
+geofence and route editors. Tracker models are decided with the customer (open question).
+
+**Build order:**
+1. Register and drivers: vehicles and generators (asset link), odometer/hours history, statuses, drivers and licences,
+   eligibility, assignments with auto-close, insurance and compliance calendar with reminders, cost ledger.
+2. Transport: requests, availability and allocation, dispatch (cargo), logbooks, agency contracts and payment batches,
+   self-service transport requests.
+3. Fuel: requisitions with checks, fuel stores and recharges, issue/confirm/return, budget commitment, consumption
+   reports; external supplier adapter and wallet reconciliation when a customer needs it.
+4. Maintenance: schedules and service-due, requests, inspections → procurement requisition → post-inspection,
+   accidents, generator maintenance.
+5. Hire in, fleet dashboard and reports (register, cost per vehicle and per km, fuel consumption and outliers, fuel
+   store movement, transport requests, utilisation, maintenance history, accidents, compliance).
+6. Tracking: gateway service, live map, trips, geofences, routes, events, commands, tracking reports, logbook fill.
+7. Driver phone app on the same API (later), with push notifications.
+
+**Open questions (to confirm with each customer):** tracker models at go-live; fuel via national supplier, cards, own
+tanks or a mix; whether private trips are charged to the employee (and how: payroll deduction or receipt); who may
+send an immobilise command and when.
