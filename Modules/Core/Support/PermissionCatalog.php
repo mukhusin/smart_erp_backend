@@ -149,6 +149,7 @@ final class PermissionCatalog
         'accounting' => [
             'accounting.view' => 'View accounts, journals, ledger and financial reports',
             'accounting.journals' => 'Enter manual journals',
+            'accounting.opening' => 'Load opening balances at go-live (account balances, creditors, debtors, breakdowns)',
             'accounting.manage' => 'Manage chart of accounts, fiscal years, fund sources, bank accounts and settings',
         ],
         'payments' => [

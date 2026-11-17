@@ -148,11 +148,16 @@ final class DefaultLeaveTypes
     {
         $company = app(CompanyContext::class)->id();
         $role = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
-        if (! $role || WorkflowTemplate::where('process', \Modules\Accounting\Workflow\ManualJournalProcess::KEY)->exists()) {
+        if (! $role) {
             return;
         }
-        $template = WorkflowTemplate::create(['process' => \Modules\Accounting\Workflow\ManualJournalProcess::KEY, 'company_branch_id' => null, 'is_active' => true]);
-        $template->steps()->create(['step_order' => 1, 'name' => 'Chief accountant', 'approver_type' => 'role', 'role_id' => $role->id, 'allow_send_back' => true]);
+        foreach ([\Modules\Accounting\Workflow\ManualJournalProcess::KEY, \Modules\Accounting\Workflow\OpeningBalanceProcess::KEY, \Modules\Accounting\Workflow\YearEndCloseProcess::KEY] as $process) {
+            if (WorkflowTemplate::where('process', $process)->exists()) {
+                continue;
+            }
+            $template = WorkflowTemplate::create(['process' => $process, 'company_branch_id' => null, 'is_active' => true]);
+            $template->steps()->create(['step_order' => 1, 'name' => 'Chief accountant', 'approver_type' => 'role', 'role_id' => $role->id, 'allow_send_back' => true]);
+        }
     }
 
     public static function departmentPlan(): void

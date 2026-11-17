@@ -6,9 +6,11 @@ use Modules\Accounting\Http\Controllers\Api\FiscalYearController;
 use Modules\Accounting\Http\Controllers\Api\FrameworkController;
 use Modules\Accounting\Http\Controllers\Api\JournalController;
 use Modules\Accounting\Http\Controllers\Api\MasterDataController;
+use Modules\Accounting\Http\Controllers\Api\OpeningBalanceController;
 use Modules\Accounting\Http\Controllers\Api\PayrollPostingController;
 use Modules\Accounting\Http\Controllers\Api\ReportController;
 use Modules\Accounting\Http\Controllers\Api\SettingsController;
+use Modules\Accounting\Http\Controllers\Api\YearEndController;
 
 Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'can:accounting.view'])->name('accounting.')->group(function () {
     Route::get('settings', [SettingsController::class, 'settings'])->name('settings.show');
@@ -28,6 +30,24 @@ Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'c
     Route::get('reports/summary', [ReportController::class, 'summary'])->name('reports.summary');
     Route::get('reports/trial-balance', [ReportController::class, 'trialBalance'])->name('reports.trial-balance');
     Route::get('reports/ledger', [ReportController::class, 'ledger'])->name('reports.ledger');
+    Route::get('opening-balances', [OpeningBalanceController::class, 'index'])->name('opening.index');
+    Route::get('opening-balances/template', [OpeningBalanceController::class, 'template'])->name('opening.template');
+    Route::get('opening-balances/reconciliation', [OpeningBalanceController::class, 'reconciliation'])->name('opening.reconciliation');
+    Route::get('opening-balances/{opening}', [OpeningBalanceController::class, 'show'])->name('opening.show');
+    Route::post('opening-balances/{opening}/withdraw', [OpeningBalanceController::class, 'withdraw'])->name('opening.withdraw');
+    Route::get('year-end', [YearEndController::class, 'index'])->name('year-end.index');
+    Route::get('year-end/{fiscalYear}/statements/{report}', [YearEndController::class, 'statement'])->name('year-end.statement');
+    Route::post('year-end/{fiscalYear}/withdraw', [YearEndController::class, 'withdraw'])->name('year-end.withdraw');
+
+    Route::middleware('can:accounting.opening')->group(function () {
+        Route::post('opening-balances', [OpeningBalanceController::class, 'store'])->name('opening.store');
+        Route::put('opening-balances/{opening}', [OpeningBalanceController::class, 'update'])->name('opening.update');
+        Route::delete('opening-balances/{opening}', [OpeningBalanceController::class, 'destroy'])->name('opening.destroy');
+        Route::post('opening-balances/{opening}/rows', [OpeningBalanceController::class, 'rows'])->name('opening.rows');
+        Route::post('opening-balances/{opening}/import', [OpeningBalanceController::class, 'import'])->name('opening.import');
+        Route::delete('opening-balances/{opening}/rows/{line}', [OpeningBalanceController::class, 'destroyRow'])->name('opening.rows.destroy');
+        Route::post('opening-balances/{opening}/submit', [OpeningBalanceController::class, 'submit'])->name('opening.submit');
+    });
 
     Route::middleware('can:accounting.journals')->group(function () {
         Route::post('journals', [JournalController::class, 'store'])->name('journals.store');
@@ -52,6 +72,9 @@ Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'c
         Route::post('fiscal-years', [FiscalYearController::class, 'storeFiscalYear'])->name('fiscal-years.store');
         Route::post('periods/{period}/close', [FiscalYearController::class, 'closePeriod'])->name('periods.close');
         Route::post('periods/{period}/reopen', [FiscalYearController::class, 'reopenPeriod'])->name('periods.reopen');
+        Route::put('year-end/settings', [YearEndController::class, 'settings'])->name('year-end.settings');
+        Route::post('year-end/{fiscalYear}/close', [YearEndController::class, 'close'])->name('year-end.close');
+        Route::post('year-end/{fiscalYear}/reopen', [YearEndController::class, 'reopen'])->name('year-end.reopen');
         Route::post('journals/{journal}/reverse', [JournalController::class, 'reverse'])->name('journals.reverse');
     });
 });

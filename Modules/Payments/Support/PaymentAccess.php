@@ -65,10 +65,10 @@ class PaymentAccess
         return $rules === null || in_array($departmentId, $rules['departments'], true);
     }
 
-    public function canView(User $user, int $departmentId): bool
+    public function canView(User $user, ?int $departmentId): bool
     {
         $departments = $this->departments($user);
 
-        return $departments === null || in_array($departmentId, $departments, true);
+        return $departments === null || ($departmentId !== null && in_array($departmentId, $departments, true));
     }
 }

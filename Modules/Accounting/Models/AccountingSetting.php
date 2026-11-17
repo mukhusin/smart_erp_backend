@@ -16,7 +16,7 @@ class AccountingSetting extends Model
 
     public const RELEASE = ['period' => 'Finance opens each quarter or month', 'none' => 'The whole approved budget can be spent at once'];
 
-    protected $fillable = ['company_id', 'framework', 'framework_name', 'policies', 'use_gfs', 'budget_phasing', 'budget_control', 'budget_release'];
+    protected $fillable = ['company_id', 'framework', 'framework_name', 'policies', 'use_gfs', 'budget_phasing', 'budget_control', 'budget_release', 'retained_earnings_account_id'];
 
     protected $casts = ['use_gfs' => 'boolean', 'policies' => 'array'];
 

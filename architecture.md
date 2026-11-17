@@ -801,11 +801,14 @@ engine with amount steps; escalation after a configurable time and handovers (RO
 4. Stores: store ledger (bin card), weighted average default with FIFO option, requisition → issue (expense to
    department/activity), transfers with in-transit and shortages, stock take with frozen snapshot and approved
    adjustments, reorder/expiry/slow-moving alerts, employee store requests (supervisor then store, confirm receipt).
-5. Assets: register (number pattern, type-specific fields, one record per unit, tags/QR), assign/return, HR leaver
+5. Opening balances and year-end close (business practice, no government formats): go-live loader for account
+   balances, creditors, debtors and breakdowns (CSV and API, row checks, approval, control-account reconciliation);
+   year-end close to retained earnings with locked periods, carry-forward and statements kept as approved.
+6. Assets: register (number pattern, type-specific fields, one record per unit, tags/QR), assign/return, HR leaver
    clearance, transfers (temporary with reminders), improvements, useful-life review, straight-line daily
    depreciation posted monthly per category (land and WIP never), impairment, revaluation, disposal by committee,
    employee "my assets", fault reports, yearly confirmation.
-6. Procurement advanced: tenders (documents, sealed bids, opening record, evaluation with scores, negotiation, award,
+7. Procurement advanced: tenders (documents, sealed bids, opening record, evaluation with scores, negotiation, award,
    standstill, complaints), contracts (types, milestones, retention, liquidated damages, securities, variations within
    a limit, progress), supplier performance, special-group share; external APIs per API-01..07.
 
@@ -841,7 +844,22 @@ expense per department/activity), transfer (via the transit store, shortages sta
 order (opening / donation / found / return, `stock-receipt` workflow), count (frozen snapshot, `stock-adjustment`
 workflow, gains/losses at average cost); posted documents can be reversed. Daily `inventory:alerts` (reorder and
 expiry) to store managers. Reports: stock balance, movements, consumption, expiry, reorder, slow moving, in transit,
-count variance. Settings: opening and donation accounts, expiry warning and slow-moving days. Next: step 5 assets.
+count variance. Settings: opening and donation accounts, expiry warning and slow-moving days. Next: step 5 opening balances and year-end close.
+
+**Step 5 done (2026-11-17):** opening balances and year-end close in `Accounting`, following business practice only
+(no ministry submission formats, budget classification codes or central-body consolidation). Opening balances: batches
+of account balances, creditors, debtors or breakdowns dated in the first fiscal year, loaded row by row, from CSV or
+the API with the same checks (unique reference, account takes postings, supplier/customer found or created, good
+rows kept and each bad row explained); account balances must balance and post one `opening` journal; creditors
+become approved supplier bills (payment requests without a budget line, paid through vouchers) and debtors become
+open invoices against the receivables control account, neither posted again; their total per account cannot exceed
+the approved account balance; `opening-balance` workflow; reconciliation per control account; permission
+`accounting.opening`; no new loads once a year is closed. Year-end: checks (earlier years closed, no waiting
+journals or opening batches, retained earnings account), `year-end-close` workflow, one `closing` journal per fund
+source to the retained earnings account, all periods locked, next year created, income statement / financial
+position / trial balance kept as approved and reprintable; reopen reverses the closing journal. Closing entries are
+left out of income statements, fund statements, dashboards and the year's trial balance (option to include them).
+Next: step 6 assets.
 
 ## 20. Kairuki Hospital accounting requirements — coverage (2026-11-16)
 
@@ -849,7 +867,7 @@ Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ pa
 
 | Area | Status | Notes |
 |---|---|---|
-| Chart of accounts, journals with approval, period close, trial balance, audit trail | ✓ | year-end closing ✗ |
+| Chart of accounts, journals with approval, period close, year-end close, opening balances, trial balance, audit trail | ✓ | |
 | Departmental / cost-centre tracking, budgeting and variance | ✓ | line dimensions department, fund, activity, budget line |
 | Multi-currency, revaluation | ✗ | currency only on bank accounts |
 | Multi-entity / branches | ◐ | multi-company and branches ✓; consolidation and intercompany ✗ |
@@ -874,8 +892,7 @@ read-only, AP clerk, AR clerk, cashier); bank reconciliation; supplier invoices 
 cash and imprest with retirement; external system integration — generic, not vendor specific: any HIS/billing/lab/pharmacy/insurer
 system (Afyabox is only the first connector) sends patient bills, receipts and insurance claims into Billing &
 Receipts through the signed external API (claims: submitted, partly paid, rejected, resubmitted; departmental and
-service-line revenue); recurring journals and
-year-end closing; multi-currency with revaluation; gratuity accrual; asset maintenance schedule (with step 5).
+service-line revenue); recurring journals; multi-currency with revaluation; gratuity accrual; asset maintenance schedule (with step 5).
 
 **Accounting framework (decided for discussion, 2026-11-16):** not IFRS only. A company setting `framework` = IFRS
 (full) | IFRS for SMEs (default) | US GAAP | local framework. It drives: allowed stock costing methods (FIFO, weighted

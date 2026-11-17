@@ -138,7 +138,7 @@ class DepartmentBudgetController extends Controller
         }
 
         return DB::table('journal_entry_lines as l')->join('journal_entries as e', 'e.id', '=', 'l.journal_entry_id')->join('accounts as a', 'a.id', '=', 'l.account_id')
-            ->where('e.company_id', app(CompanyContext::class)->id())->whereIn('e.status', ['posted', 'reversed'])->where('l.department_id', $department->id)
+            ->where('e.company_id', app(CompanyContext::class)->id())->whereIn('e.status', ['posted', 'reversed'])->where('e.entry_type', '!=', 'closing')->where('l.department_id', $department->id)
             ->whereBetween('e.date', [$prev->start_date->toDateString(), $prev->end_date->toDateString()])->where('a.is_budgetable', true)
             ->groupBy('a.id', 'a.code', 'a.name', 'a.type')->selectRaw('a.id, a.code, a.name, a.type, SUM(l.debit) as d, SUM(l.credit) as c')->orderBy('a.code')->get()
             ->map(fn ($r) => ['account_id' => (int) $r->id, 'code' => $r->code, 'name' => $r->name, 'actual' => round($r->type === 'revenue' ? $r->c - $r->d : $r->d - $r->c, 2)])->values()->all();

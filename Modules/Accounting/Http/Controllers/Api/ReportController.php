@@ -41,12 +41,12 @@ class ReportController extends Controller
         $today = today()->toDateString();
         $year = FiscalYear::containing($today);
         $from = $year?->start_date->toDateString() ?? today()->startOfYear()->toDateString();
-        $byType = $this->lines()->join('accounts as a', 'a.id', '=', 'l.account_id')->whereBetween('e.date', [$from, $today])
+        $byType = $this->lines()->where('e.entry_type', '!=', 'closing')->join('accounts as a', 'a.id', '=', 'l.account_id')->whereBetween('e.date', [$from, $today])
             ->groupBy('a.type')->selectRaw('a.type, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('type');
         $revenue = round((float) ($byType['revenue']->c ?? 0) - (float) ($byType['revenue']->d ?? 0), 2);
         $expense = round((float) ($byType['expense']->d ?? 0) - (float) ($byType['expense']->c ?? 0), 2);
         $cashTotals = $this->lines()->whereIn('l.account_id', CashBankAccount::pluck('account_id'))->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) - SUM(l.credit) as b')->pluck('b', 'account_id');
-        $months = $this->lines()->join('accounts as a', 'a.id', '=', 'l.account_id')->whereIn('a.type', ['revenue', 'expense'])->whereBetween('e.date', [$from, $today])
+        $months = $this->lines()->where('e.entry_type', '!=', 'closing')->join('accounts as a', 'a.id', '=', 'l.account_id')->whereIn('a.type', ['revenue', 'expense'])->whereBetween('e.date', [$from, $today])
             ->groupBy('a.type', 'e.date')->selectRaw('a.type, e.date, SUM(l.debit) as d, SUM(l.credit) as c')->get()
             ->map(fn ($r) => (object) ['type' => $r->type, 'ym' => substr((string) $r->date, 0, 7), 'd' => (float) $r->d, 'c' => (float) $r->c]);
         $period = $year?->periods()->where('status', 'open')->orderBy('number')->first();
@@ -75,12 +75,13 @@ class ReportController extends Controller
     #[QueryParameter('to', type: 'string')]
     #[QueryParameter('department_id', type: 'integer')]
     #[QueryParameter('fund_source_id', type: 'integer')]
+    #[QueryParameter('include_closing', description: 'Include the year-end closing journal (post-closing trial balance).', type: 'boolean')]
     public function trialBalance(Request $request): JsonResponse
     {
         $to = $request->query('to', today()->toDateString());
         $from = $request->query('from', $this->yearStart($to));
         $yearStart = $this->yearStart($from);
-        $filter = fn (Builder $q) => $q->when($request->query('department_id'), fn ($q, $d) => $q->where('l.department_id', $d))
+        $filter = fn (Builder $q) => $q->when(! $request->boolean('include_closing'), fn ($q) => $q->where(fn ($w) => $w->where('e.entry_type', '!=', 'closing')->orWhere('e.date', '<', $yearStart)))->when($request->query('department_id'), fn ($q, $d) => $q->where('l.department_id', $d))
             ->when($request->query('fund_source_id'), fn ($q, $f) => $q->where('l.fund_source_id', $f));
         $sum = fn (Builder $q) => $q->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
         $before = $sum($filter($this->lines())->where('e.date', '<', $from));

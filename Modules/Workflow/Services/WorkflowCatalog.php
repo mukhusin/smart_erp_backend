@@ -21,6 +21,8 @@ use Modules\Hr\Workflow\ProfileItemProcess;
 use Modules\Hr\Workflow\SalaryAdjustmentProcess;
 use Modules\Hr\Workflow\SalaryAdvanceProcess;
 use Modules\Accounting\Workflow\ManualJournalProcess;
+use Modules\Accounting\Workflow\OpeningBalanceProcess;
+use Modules\Accounting\Workflow\YearEndCloseProcess;
 use Modules\Appraisals\Workflow\AppraisalProcess;
 use Modules\Budgeting\Workflow\BudgetApprovalProcess;
 use Modules\Budgeting\Workflow\BudgetReleaseProcess;
@@ -76,6 +78,8 @@ final class WorkflowCatalog
         AppraisalProcess::class,
         DepartmentPlanProcess::class,
         ManualJournalProcess::class,
+        OpeningBalanceProcess::class,
+        YearEndCloseProcess::class,
         DepartmentBudgetProcess::class,
         BudgetApprovalProcess::class,
         BudgetTransferProcess::class,

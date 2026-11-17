@@ -78,7 +78,7 @@ class ManageVouchers
             $settings = PaymentSetting::current();
             $by = $v->preparer;
             $lines = $r->lines->map(fn ($l) => $l->account_id
-                ? ['account_id' => $l->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item->department_id]
+                ? ['account_id' => $l->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item?->department_id ?? $r->department_id]
                 : ['account_id' => $l->item->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item->department_id,
                     'fund_source_id' => $l->item->fund_source_id, 'task_activity_id' => $l->item->task_activity_id, 'budget_item_id' => $l->budget_item_id])->all();
             $lines[] = ['account_id' => $settings->payable_account_id, 'credit' => $v->net, 'description' => 'Payable: '.$r->payees->pluck('name')->join(', ')];

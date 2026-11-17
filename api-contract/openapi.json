@@ -1669,6 +1669,1082 @@
                 }
             }
         },
+        "/accounting/opening-balances": {
+            "get": {
+                "operationId": "accounting.opening.index",
+                "summary": "Opening balance batches, with the first fiscal year they belong to",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "rows": {
+                                                        "type": "integer"
+                                                    },
+                                                    "debit": {
+                                                        "type": "number"
+                                                    },
+                                                    "credit": {
+                                                        "type": "number"
+                                                    },
+                                                    "created_by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "number",
+                                                    "kind",
+                                                    "kind_label",
+                                                    "date",
+                                                    "status",
+                                                    "status_label",
+                                                    "rows",
+                                                    "debit",
+                                                    "credit",
+                                                    "created_by"
+                                                ]
+                                            }
+                                        },
+                                        "first_year": {
+                                            "type": [
+                                                "object",
+                                                "null"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "start_date": {
+                                                    "type": "string"
+                                                },
+                                                "end_date": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "name",
+                                                "start_date",
+                                                "end_date"
+                                            ]
+                                        },
+                                        "locked": {
+                                            "type": "boolean"
+                                        },
+                                        "kinds": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "label"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "first_year",
+                                        "locked",
+                                        "kinds"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "accounting.opening.store",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OpeningBalanceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/accounting/opening-balances/template": {
+            "get": {
+                "operationId": "accounting.opening.template",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "query",
+                        "required": true,
+                        "description": "accounts, creditors, debtors or breakdowns.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/opening-balances/reconciliation": {
+            "get": {
+                "operationId": "accounting.opening.reconciliation",
+                "summary": "Each control account against the creditors, debtors or breakdowns loaded under it",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "account_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "account": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "opening": {
+                                                        "type": "number"
+                                                    },
+                                                    "approved": {
+                                                        "type": "number"
+                                                    },
+                                                    "in_progress": {
+                                                        "type": "number"
+                                                    },
+                                                    "difference": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "account_id",
+                                                    "code",
+                                                    "account",
+                                                    "kind",
+                                                    "kind_label",
+                                                    "opening",
+                                                    "approved",
+                                                    "in_progress",
+                                                    "difference"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/opening-balances/{opening}": {
+            "get": {
+                "operationId": "accounting.opening.show",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "opening",
+                        "in": "path",
+                        "required": true,
+                        "description": "The opening ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "kind": {
+                                                    "type": "string"
+                                                },
+                                                "kind_label": {
+                                                    "type": "string"
+                                                },
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "notes": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "journal": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "reference_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "reference_no"
+                                                    ]
+                                                },
+                                                "debit": {
+                                                    "type": "number"
+                                                },
+                                                "credit": {
+                                                    "type": "number"
+                                                },
+                                                "problems": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "reference": {
+                                                                "type": "string"
+                                                            },
+                                                            "account": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "debit": {
+                                                                "type": "number"
+                                                            },
+                                                            "credit": {
+                                                                "type": "number"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "fund_source": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "party": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "document_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "due_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "description": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "target": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ],
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "number": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "type",
+                                                                    "id",
+                                                                    "number"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "reference",
+                                                            "account",
+                                                            "debit",
+                                                            "credit",
+                                                            "amount",
+                                                            "department",
+                                                            "fund_source",
+                                                            "party",
+                                                            "document_date",
+                                                            "due_date",
+                                                            "description",
+                                                            "target"
+                                                        ]
+                                                    }
+                                                },
+                                                "can": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "edit": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "submit": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "withdraw": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "delete": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "edit",
+                                                        "submit",
+                                                        "withdraw",
+                                                        "delete"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number",
+                                                "kind",
+                                                "kind_label",
+                                                "date",
+                                                "notes",
+                                                "status",
+                                                "status_label",
+                                                "waiting_for",
+                                                "decision_comment",
+                                                "journal",
+                                                "debit",
+                                                "credit",
+                                                "problems",
+                                                "lines",
+                                                "can"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "accounting.opening.update",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "opening",
+                        "in": "path",
+                        "required": true,
+                        "description": "The opening ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OpeningBalanceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "accounting.opening.destroy",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "opening",
+                        "in": "path",
+                        "required": true,
+                        "description": "The opening ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/opening-balances/{opening}/withdraw": {
+            "post": {
+                "operationId": "accounting.opening.withdraw",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "opening",
+                        "in": "path",
+                        "required": true,
+                        "description": "The opening ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/opening-balances/{opening}/rows": {
+            "post": {
+                "operationId": "accounting.opening.rows",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "opening",
+                        "in": "path",
+                        "required": true,
+                        "description": "The opening ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OpeningRowsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "added": {
+                                                    "type": "integer"
+                                                },
+                                                "results": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "row": {
+                                                                "type": "integer"
+                                                            },
+                                                            "reference": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "ok": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "message": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "row",
+                                                            "reference",
+                                                            "ok",
+                                                            "message"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "added",
+                                                "results"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/accounting/opening-balances/{opening}/import": {
+            "post": {
+                "operationId": "accounting.opening.import",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "opening",
+                        "in": "path",
+                        "required": true,
+                        "description": "The opening ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OpeningImportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "added": {
+                                                    "type": "integer"
+                                                },
+                                                "results": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "row": {
+                                                                "type": "integer"
+                                                            },
+                                                            "reference": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "ok": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "message": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "row",
+                                                            "reference",
+                                                            "ok",
+                                                            "message"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "added",
+                                                "results"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/accounting/opening-balances/{opening}/rows/{line}": {
+            "delete": {
+                "operationId": "accounting.opening.rows.destroy",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "opening",
+                        "in": "path",
+                        "required": true,
+                        "description": "The opening ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "line",
+                        "in": "path",
+                        "required": true,
+                        "description": "The line ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/opening-balances/{opening}/submit": {
+            "post": {
+                "operationId": "accounting.opening.submit",
+                "tags": [
+                    "Accounting: opening balances",
+                    "OpeningBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "opening",
+                        "in": "path",
+                        "required": true,
+                        "description": "The opening ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/accounting/payroll/{sheet}": {
             "get": {
                 "operationId": "accounting.payroll.show",
@@ -2261,6 +3337,14 @@
                         "in": "query",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "include_closing",
+                        "in": "query",
+                        "description": "Include the year-end closing journal (post-closing trial balance).",
+                        "schema": {
+                            "type": "boolean"
                         }
                     }
                 ],
@@ -3758,6 +4842,623 @@
                                                 "account_number",
                                                 "currency",
                                                 "is_active"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/accounting/year-end": {
+            "get": {
+                "operationId": "accounting.year-end.index",
+                "summary": "Every fiscal year with its close state, the checks for the next year to close and the retained earnings account",
+                "tags": [
+                    "Accounting: year end",
+                    "YearEnd"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "start_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "end_date": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "closed_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "closing_journal": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "reference_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "reference_no"
+                                                        ]
+                                                    },
+                                                    "statements": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "report": {
+                                                                    "type": "string"
+                                                                },
+                                                                "title": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "report",
+                                                                "title"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "start_date",
+                                                    "end_date",
+                                                    "status",
+                                                    "status_label",
+                                                    "closed_at",
+                                                    "waiting_for",
+                                                    "decision_comment",
+                                                    "closing_journal",
+                                                    "statements"
+                                                ]
+                                            }
+                                        },
+                                        "next": {
+                                            "type": [
+                                                "object",
+                                                "null"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "preview": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "checks": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "key": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "ok": {
+                                                                        "type": "boolean"
+                                                                    },
+                                                                    "detail": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "key",
+                                                                    "label",
+                                                                    "ok",
+                                                                    "detail"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "revenue": {
+                                                            "type": "number"
+                                                        },
+                                                        "expense": {
+                                                            "type": "number"
+                                                        },
+                                                        "result": {
+                                                            "type": "number"
+                                                        },
+                                                        "retained_account": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "next_year": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "can_close": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "checks",
+                                                        "revenue",
+                                                        "expense",
+                                                        "result",
+                                                        "retained_account",
+                                                        "next_year",
+                                                        "can_close"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "preview"
+                                            ]
+                                        },
+                                        "retained_earnings_account_id": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
+                                        },
+                                        "equity_accounts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "next",
+                                        "retained_earnings_account_id",
+                                        "equity_accounts"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/year-end/{fiscalYear}/statements/{report}": {
+            "get": {
+                "operationId": "accounting.year-end.statement",
+                "summary": "A statement of a closed year exactly as it was when the year was closed",
+                "tags": [
+                    "Accounting: year end",
+                    "YearEnd"
+                ],
+                "parameters": [
+                    {
+                        "name": "fiscalYear",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fiscal year ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "report",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "subtitle": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "year": {
+                                                    "type": "string"
+                                                },
+                                                "closed_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "columns": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "key": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "key",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "rows": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "additionalProperties": {}
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "key",
+                                                "title",
+                                                "subtitle",
+                                                "year",
+                                                "closed_at",
+                                                "columns",
+                                                "rows",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/year-end/{fiscalYear}/withdraw": {
+            "post": {
+                "operationId": "accounting.year-end.withdraw",
+                "tags": [
+                    "Accounting: year end",
+                    "YearEnd"
+                ],
+                "parameters": [
+                    {
+                        "name": "fiscalYear",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fiscal year ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/year-end/settings": {
+            "put": {
+                "operationId": "accounting.year-end.settings",
+                "tags": [
+                    "Accounting: year end",
+                    "YearEnd"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/YearEndSettingsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "retained_earnings_account_id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "retained_earnings_account_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/accounting/year-end/{fiscalYear}/close": {
+            "post": {
+                "operationId": "accounting.year-end.close",
+                "tags": [
+                    "Accounting: year end",
+                    "YearEnd"
+                ],
+                "parameters": [
+                    {
+                        "name": "fiscalYear",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fiscal year ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/year-end/{fiscalYear}/reopen": {
+            "post": {
+                "operationId": "accounting.year-end.reopen",
+                "tags": [
+                    "Accounting: year end",
+                    "YearEnd"
+                ],
+                "parameters": [
+                    {
+                        "name": "fiscalYear",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fiscal year ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/YearReopenRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
                                             ]
                                         }
                                     },
@@ -45696,7 +47397,10 @@
                                                     ]
                                                 },
                                                 "department_id": {
-                                                    "type": "integer"
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "department": {
                                                     "type": [
@@ -45761,7 +47465,10 @@
                                                                 "type": "integer"
                                                             },
                                                             "budget_item_id": {
-                                                                "type": "integer"
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
                                                             },
                                                             "label": {
                                                                 "type": "string"
@@ -80027,6 +81734,215 @@
                 ],
                 "title": "NumberFormatResource"
             },
+            "OpeningBalanceRequest": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "type": "string",
+                        "description": "accounts, creditors, debtors or breakdowns. Ignored when updating.",
+                        "enum": [
+                            "accounts",
+                            "creditors",
+                            "debtors",
+                            "breakdowns"
+                        ]
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The go-live date, within the first fiscal year."
+                    },
+                    "notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "kind",
+                    "date"
+                ],
+                "title": "OpeningBalanceRequest"
+            },
+            "OpeningImportRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "CSV in the template layout of the batch kind."
+                    }
+                },
+                "required": [
+                    "file"
+                ],
+                "title": "OpeningImportRequest"
+            },
+            "OpeningRowsRequest": {
+                "type": "object",
+                "properties": {
+                    "rows": {
+                        "type": "array",
+                        "description": "Each row is checked on its own; good rows are kept and the result of every row is returned. Give ids or codes/names.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "reference": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 60
+                                },
+                                "account_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "account_code": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 30
+                                },
+                                "debit": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "description": "Account balances only."
+                                },
+                                "credit": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ]
+                                },
+                                "amount": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "description": "Creditors, debtors and breakdowns."
+                                },
+                                "department_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "department": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 150
+                                },
+                                "fund_source_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "fund_source": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 20
+                                },
+                                "task_activity_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "supplier_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "supplier": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "Supplier name; created when not found by TIN or name.",
+                                    "maxLength": 200
+                                },
+                                "supplier_tin": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 30
+                                },
+                                "customer_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "customer": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 200
+                                },
+                                "customer_tin": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 30
+                                },
+                                "party": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "description": "Breakdowns: client or other party the amount belongs to.",
+                                    "maxLength": 200
+                                },
+                                "document_date": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 20
+                                },
+                                "due_date": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 20
+                                },
+                                "description": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 255
+                                }
+                            }
+                        },
+                        "minItems": 1,
+                        "maxItems": 5000
+                    }
+                },
+                "required": [
+                    "rows"
+                ],
+                "title": "OpeningRowsRequest"
+            },
             "OrderUpdateRequest": {
                 "type": "object",
                 "properties": {
@@ -82359,6 +84275,7 @@
                                 "reports.generate",
                                 "accounting.view",
                                 "accounting.journals",
+                                "accounting.opening",
                                 "accounting.manage",
                                 "payments.request",
                                 "payments.view",
@@ -82637,6 +84554,7 @@
                                 "reports.generate",
                                 "accounting.view",
                                 "accounting.journals",
+                                "accounting.opening",
                                 "accounting.manage",
                                 "payments.request",
                                 "payments.view",
@@ -85192,6 +87110,32 @@
                     "steps"
                 ],
                 "title": "WorkflowTemplateResource"
+            },
+            "YearEndSettingsRequest": {
+                "type": "object",
+                "properties": {
+                    "retained_earnings_account_id": {
+                        "type": "integer",
+                        "description": "Equity account that receives each year's result (retained earnings or accumulated fund)."
+                    }
+                },
+                "required": [
+                    "retained_earnings_account_id"
+                ],
+                "title": "YearEndSettingsRequest"
+            },
+            "YearReopenRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "YearReopenRequest"
             }
         },
         "responses": {

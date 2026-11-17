@@ -106,6 +106,13 @@ class FinanceReports
     public function run(string $key, array $input, User $user): array
     {
         abort_unless($this->available($key, $user), 404, 'This report is not available.');
+
+        return $this->build($key, $input);
+    }
+
+    /** Runs a report without the access check, for snapshots taken by the system (year-end close). */
+    public function build(string $key, array $input): array
+    {
         $values = collect($this->filters($key))->mapWithKeys(fn ($f) => [$f['key'] => ($input[$f['key']] ?? '') !== '' ? (string) $input[$f['key']] : ($f['default'] ?? null)])->all();
         try {
             [$subtitle, $columns, $rows] = $this->{'report'.str_replace('-', '', ucwords($key, '-'))}($values);
@@ -185,7 +192,7 @@ class FinanceReports
 
     private function reportIncomeStatement(array $v): array
     {
-        $sums = $this->lines($v['from'], $v['to'])->when($v['department_id'], fn ($q, $d) => $q->where('l.department_id', $d))
+        $sums = $this->lines($v['from'], $v['to'])->where('e.entry_type', '!=', 'closing')->when($v['department_id'], fn ($q, $d) => $q->where('l.department_id', $d))
             ->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
         $rows = [];
         $totals = [];
@@ -229,7 +236,7 @@ class FinanceReports
                     $total += $amount;
                 }
             }
-            if ($type === 'equity') {
+            if ($type === 'equity' && round($surplus, 2) != 0) {
                 $rows[] = ['code' => '', 'account' => $w['accumulated'], 'amount' => $surplus];
                 $total += $surplus;
             }
@@ -264,7 +271,7 @@ class FinanceReports
 
     private function reportTrialBalance(array $v): array
     {
-        $sums = $this->lines($v['from'], $v['to'])->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
+        $sums = $this->lines($v['from'], $v['to'])->where('e.entry_type', '!=', 'closing')->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
         $rows = Account::whereIn('id', $sums->keys())->orderBy('code')->get()->map(function (Account $a) use ($sums) {
             $net = round((float) $sums[$a->id]->d - (float) $sums[$a->id]->c, 2);
 
@@ -277,7 +284,7 @@ class FinanceReports
 
     private function reportFundStatement(array $v): array
     {
-        $rows = $this->lines($v['from'], $v['to'])->join('accounts as a', 'a.id', '=', 'l.account_id')->whereIn('a.type', ['revenue', 'expense'])
+        $rows = $this->lines($v['from'], $v['to'])->where('e.entry_type', '!=', 'closing')->join('accounts as a', 'a.id', '=', 'l.account_id')->whereIn('a.type', ['revenue', 'expense'])
             ->when($v['department_id'], fn ($q, $d) => $q->where('l.department_id', $d))
             ->groupBy('l.fund_source_id', 'a.type')->selectRaw('l.fund_source_id, a.type, SUM(l.debit) as d, SUM(l.credit) as c')->get()->groupBy('fund_source_id');
         $funds = FundSource::get()->keyBy('id');
