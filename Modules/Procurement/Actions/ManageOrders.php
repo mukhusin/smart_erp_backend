@@ -105,7 +105,9 @@ class ManageOrders
         DB::transaction(function () use ($po) {
             $po->load(['lines', 'requisition.lines', 'creator']);
             $by = $po->creator;
-            if ($po->requisition) {
+            if ($po->contract_id) {
+                app(ManageContracts::class)->ordered($po, $by);
+            } elseif ($po->requisition) {
                 $this->requisitions->ordered($po->requisition, $po->lines->mapWithKeys(fn ($l) => [$l->purchase_requisition_line_id => $l->quantity])->all(), $by);
             }
             $mode = $this->budgets->mode();
@@ -152,7 +154,11 @@ class ManageOrders
             throw ValidationException::withMessages(['order' => 'Only an order with nothing received or waiting can be cancelled.']);
         }
         DB::transaction(function () use ($po, $by, $reason) {
+            $wasApproved = in_array($po->status, ['approved', 'partial'], true);
             $this->budgets->release($po, $by);
+            if ($po->contract_id && $wasApproved) {
+                app(ManageContracts::class)->orderCancelled($po, $by);
+            }
             foreach ($po->lines()->with('requisitionLine')->get() as $l) {
                 if ($l->requisitionLine && in_array($po->status, ['approved', 'partial'], true)) {
                     $l->requisitionLine->update(['ordered_quantity' => max(0, round($l->requisitionLine->ordered_quantity - $l->quantity, 4))]);

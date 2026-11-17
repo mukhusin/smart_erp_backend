@@ -69,6 +69,16 @@ class FinanceReports
         'assets-due-disposal' => ['title' => 'Assets due for disposal or fully depreciated', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
         'asset-disposals' => ['title' => 'Disposal register', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
         'asset-transfers' => ['title' => 'Transfers register', 'group' => 'Assets', 'module' => 'assets', 'permissions' => ['assets.view', 'assets.manage', 'accounting.view']],
+        'tender-register' => ['title' => 'Tender register', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'bid-opening' => ['title' => 'Bid opening record', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'evaluation-summary' => ['title' => 'Evaluation summary', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'tender-awards' => ['title' => 'Awards against the estimate', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'contract-register' => ['title' => 'Contract register', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'contracts-expiring' => ['title' => 'Expiring contracts and securities', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'orders-outstanding' => ['title' => 'Purchase orders outstanding', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'supplier-performance' => ['title' => 'Supplier performance', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'spend-by-method' => ['title' => 'Spend by procurement method', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
+        'special-group-share' => ['title' => 'Special-group share', 'group' => 'Procurement', 'module' => 'procurement', 'permissions' => ['procurement.view', 'procurement.orders', 'procurement.manage', 'accounting.view']],
         'payroll-year' => ['title' => 'Employee earnings for the year', 'group' => 'Payroll', 'module' => 'payroll', 'permissions' => ['payroll.view']],
         'payroll-changes' => ['title' => 'Payroll changes from last month', 'group' => 'Payroll', 'module' => 'payroll', 'permissions' => ['payroll.view']],
         'loans-outstanding' => ['title' => 'Outstanding loans', 'group' => 'Loans', 'module' => 'loans', 'permissions' => ['loans.view', 'loans.manage']],
@@ -101,7 +111,11 @@ class FinanceReports
         'batch' => 'Batch', 'expiry' => 'Expiry', 'days' => 'Days left', 'reorder' => 'Reorder level', 'last_issue' => 'Last issued', 'counted' => 'Counted', 'system' => 'Ledger', 'final' => 'Final budget', 'difference' => 'Difference', 'opening' => 'Opening', 'in' => 'Money in', 'out' => 'Money out', 'documents' => 'Documents',
         'movement' => 'Movements', 'result' => 'Result', 'closing' => 'Closing', 'supplier' => 'Supplier', 'tin' => 'TIN', 'phone' => 'Phone', 'bills' => 'Open bills',
         'not_due' => 'Not yet due', 'd30' => '1–30 days', 'd60' => '31–60 days', 'd90' => '61–90 days', 'over90' => 'Over 90 days', 'total' => 'Total', 'billed' => 'Billed',
-        'paid' => 'Paid', 'age' => 'Days waiting', 'category' => 'Category', 'holder' => 'Held by', 'location' => 'Location', 'acquired' => 'Acquired', 'cost' => 'Cost',
+        'paid' => 'Paid', 'age' => 'Days waiting', 'tender' => 'Tender', 'bidders' => 'Bids', 'closing' => 'Closing', 'estimate' => 'Estimate', 'awarded' => 'Awarded',
+        'saving' => 'Below estimate', 'lot' => 'Lot', 'read_out' => 'Read-out price', 'documents' => 'Documents', 'responsive' => 'Responsive', 'technical' => 'Technical',
+        'financial' => 'Financial', 'combined' => 'Combined', 'rank' => 'Rank', 'contract' => 'Contract', 'varied' => 'Variations', 'certified' => 'Certified / ordered', 'retained' => 'Retained',
+        'end_date' => 'Ends', 'security' => 'Security expires', 'ordered' => 'Ordered', 'received' => 'Received', 'due' => 'Still due', 'deliveries' => 'Deliveries', 'on_time' => 'On time %',
+        'rejected' => 'Rejected %', 'complaints' => 'Complaints', 'share' => 'Share %', 'group_name' => 'Special group', 'category' => 'Category', 'holder' => 'Held by', 'location' => 'Location', 'acquired' => 'Acquired', 'cost' => 'Cost',
         'depreciation' => 'Depreciation', 'accumulated' => 'Accumulated depreciation', 'book_value' => 'Book value', 'additions' => 'Additions', 'revaluation' => 'Revaluation',
         'disposals' => 'Disposals', 'condition' => 'Condition', 'since' => 'Since', 'asset' => 'Asset', 'proceeds' => 'Proceeds', 'gain_loss' => 'Gain / loss',
         'destination' => 'To', 'return_date' => 'Return by', 'serial' => 'Serial', 'opening_cost' => 'Opening cost', 'closing_cost' => 'Closing cost', 'due' => 'Due', 'count' => 'Count', 'issue' => 'Issue', 'line' => 'Line',
@@ -178,6 +192,12 @@ class FinanceReports
                 'options' => $opt(CashBankAccount::orderBy('name')->get())], $from, $to],
             'trial-balance' => [$from, $to],
             'equity-changes', 'cash-flow', 'ledger-check' => [$from, $to],
+            'tender-register', 'tender-awards', 'spend-by-method', 'special-group-share', 'supplier-performance' => [$from, $to],
+            'bid-opening', 'evaluation-summary' => [['key' => 'tender_id', 'label' => 'Tender', 'type' => 'select', 'options' => class_exists(\Modules\Procurement\Models\Tender::class)
+                ? $opt(\Modules\Procurement\Models\Tender::whereNotNull('opened_at')->orderByDesc('id')->get(), fn ($t) => "{$t->number} {$t->title}") : []]],
+            'contract-register' => [['key' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => collect(\Modules\Procurement\Models\Contract::STATUS_LABELS)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values()->all()]],
+            'contracts-expiring' => [['key' => 'days', 'label' => 'Within days', 'type' => 'select', 'default' => '30', 'options' => [['value' => '30', 'label' => '30 days'], ['value' => '60', 'label' => '60 days'], ['value' => '90', 'label' => '90 days']]]],
+            'orders-outstanding' => [],
             'asset-register' => [['key' => 'date', 'label' => 'As at', 'type' => 'date', 'default' => $today->toDateString()], $assetCats, $departments],
             'asset-movements' => [$from, $to],
             'depreciation-schedule' => [$from, $to, $assetCats],
@@ -715,6 +735,170 @@ class FinanceReports
                 'status' => $t->status === 'returned' ? 'Returned' : ((! $t->permanent && $t->return_date?->lt(today())) ? 'Overdue for return' : 'Done'), 'reason' => $t->reason])->values();
 
         return ["{$this->d($v['from'])} to {$this->d($v['to'])}", ['date', 'number', 'asset', 'kind', 'destination', 'return_date', 'status', 'reason'], $rows->all()];
+    }
+
+    private function reportTenderRegister(array $v): array
+    {
+        $rows = \Modules\Procurement\Models\Tender::with(['method', 'requisition.department'])->withCount('bids')->whereDate('created_at', '>=', $v['from'])->whereDate('created_at', '<=', $v['to'])
+            ->orderBy('id')->get()->map(fn ($t) => ['number' => $t->number, 'tender' => $t->title, 'method' => $t->method?->name, 'department' => $t->requisition?->department?->name,
+                'closing' => $this->d($t->closing_at->toDateString()), 'bidders' => $t->bids_count, 'estimate' => (float) $t->requisition?->total,
+                'status' => \Modules\Procurement\Models\Tender::STATUS_LABELS[$t->status] ?? $t->status])->values();
+
+        return ["Tenders made {$this->d($v['from'])} to {$this->d($v['to'])}", ['number', 'tender', 'method', 'department', 'closing', 'bidders', 'estimate', 'status'], $rows->all()];
+    }
+
+    private function openedTender(array $v): \Modules\Procurement\Models\Tender
+    {
+        $t = $v['tender_id'] ? \Modules\Procurement\Models\Tender::with(['bids.supplier', 'bids.lines.tenderLine', 'lines', 'method'])->whereNotNull('opened_at')->find((int) $v['tender_id']) : null;
+        if (! $t) {
+            throw new MissingChoice('Choose a tender whose bids have been opened.');
+        }
+
+        return $t;
+    }
+
+    private function reportBidOpening(array $v): array
+    {
+        $t = $this->openedTender($v);
+        $rows = [];
+        foreach ($t->bids as $b) {
+            foreach ($t->lots() as $lot) {
+                if ($b->lines->contains(fn ($l) => $l->tenderLine->lot === $lot)) {
+                    $rows[] = ['supplier' => $b->supplier->name, 'lot' => $lot, 'read_out' => $b->priceFor($lot), 'documents' => $b->documents_complete ? 'Complete' : 'Missing: '.$b->missing_documents,
+                        'reason' => $b->bid_security ?: ''];
+                }
+            }
+        }
+
+        return ["{$t->number} {$t->title} · opened ".$t->opened_at->format('d M Y H:i').($t->opening_attendees ? " · attendees: {$t->opening_attendees}" : ''), ['supplier', 'lot', 'read_out', 'documents', 'reason'], $rows];
+    }
+
+    private function reportEvaluationSummary(array $v): array
+    {
+        $t = $this->openedTender($v);
+        $rows = [];
+        foreach (app(\Modules\Procurement\Actions\ManageTenders::class)->ranking($t) as $lot => $ranked) {
+            foreach ($ranked as $r) {
+                $rows[] = ['lot' => $lot, 'rank' => $r['rank'], 'supplier' => $r['supplier'], 'amount' => $r['price'], 'technical' => $r['technical'], 'financial' => $r['financial'], 'combined' => $r['combined']];
+            }
+        }
+        foreach ($t->bids->where('responsive', false) as $b) {
+            $rows[] = ['lot' => '', 'rank' => null, 'supplier' => $b->supplier->name, 'amount' => null, 'technical' => $b->technical_score, 'financial' => null, 'combined' => null, 'responsive' => 'Not responsive'];
+        }
+
+        return ["{$t->number} {$t->title} · ".\Modules\Procurement\Models\ProcurementMethod::EVALUATION[$t->method->evaluation], ['lot', 'rank', 'supplier', 'amount', 'technical', 'financial', 'combined'], $rows];
+    }
+
+    private function reportTenderAwards(array $v): array
+    {
+        $rows = \Modules\Procurement\Models\TenderAward::with(['tender.method', 'tender.lines.requisitionLine', 'supplier'])->whereNotNull('letter_sent_at')
+            ->whereDate('letter_sent_at', '>=', $v['from'])->whereDate('letter_sent_at', '<=', $v['to'])->orderBy('id')->get()
+            ->map(function ($a) {
+                $estimate = round($a->tender->lines->where('lot', $a->lot)->sum(fn ($l) => $l->quantity * $l->requisitionLine->estimated_unit_cost), 2);
+
+                return ['tender' => "{$a->tender->number} {$a->tender->title}", 'lot' => $a->lot, 'supplier' => $a->supplier->name, 'method' => $a->tender->method?->name,
+                    'date' => $this->d($a->letter_sent_at->toDateString()), 'estimate' => $estimate, 'awarded' => $a->amount, 'saving' => round($estimate - $a->amount, 2)];
+            })->values();
+        $rows->push(['tender' => 'Total', 'estimate' => round($rows->sum('estimate'), 2), 'awarded' => round($rows->sum('awarded'), 2), 'saving' => round($rows->sum('saving'), 2)]);
+
+        return ["Award letters {$this->d($v['from'])} to {$this->d($v['to'])}", ['tender', 'lot', 'supplier', 'method', 'date', 'estimate', 'awarded', 'saving'], $rows->all()];
+    }
+
+    private function reportContractRegister(array $v): array
+    {
+        $rows = \Modules\Procurement\Models\Contract::with('supplier')->when($v['status'], fn ($q, $s) => $q->where('status', $s))->orderBy('id')->get()
+            ->map(function ($c) {
+                $f = $c->figures();
+
+                return ['number' => $c->number, 'contract' => $c->title, 'supplier' => $c->supplier?->name, 'value' => $f['value'], 'varied' => $f['varied'], 'certified' => $c->byCertificate() ? $f['certified'] : $f['ordered'],
+                    'paid' => $f['paid'], 'retained' => $f['retained'], 'balance' => $f['balance'], 'end_date' => $this->d($c->end_date->toDateString()),
+                    'status' => \Modules\Procurement\Models\Contract::STATUS_LABELS[$c->status] ?? $c->status];
+            })->values();
+        $total = ['number' => 'Total'];
+        foreach (['value', 'varied', 'certified', 'paid', 'retained', 'balance'] as $k) {
+            $total[$k] = round($rows->sum($k), 2);
+        }
+        $rows->push($total);
+
+        return ['Value, variations, used, paid, retained and balance', ['number', 'contract', 'supplier', 'value', 'varied', 'certified', 'paid', 'retained', 'balance', 'end_date', 'status'], $rows->all()];
+    }
+
+    private function reportContractsExpiring(array $v): array
+    {
+        $limit = CarbonImmutable::today()->addDays((int) ($v['days'] ?: 30))->toDateString();
+        $rows = \Modules\Procurement\Models\Contract::with('supplier')->where('status', 'active')->where(fn ($q) => $q->whereDate('end_date', '<=', $limit)->orWhereDate('security_expiry', '<=', $limit))
+            ->orderBy('end_date')->get()->map(fn ($c) => ['number' => $c->number, 'contract' => $c->title, 'supplier' => $c->supplier?->name, 'end_date' => $this->d($c->end_date->toDateString()),
+                'security' => $c->security_expiry ? $this->d($c->security_expiry->toDateString()) : '', 'balance' => $c->figures()['balance']])->values();
+
+        return ["Ending or with a security expiring by {$this->d($limit)}", ['number', 'contract', 'supplier', 'end_date', 'security', 'balance'], $rows->all()];
+    }
+
+    private function reportOrdersOutstanding(array $v): array
+    {
+        $rows = \Modules\Procurement\Models\PurchaseOrder::with(['supplier', 'lines'])->whereIn('status', ['approved', 'partial'])->orderBy('delivery_date')->get()
+            ->map(function ($po) {
+                $ordered = round($po->lines->sum('amount'), 2);
+                $received = round($po->lines->sum(fn ($l) => $l->received_quantity * $l->unit_price), 2);
+
+                return ['number' => $po->number, 'supplier' => $po->supplier?->name, 'date' => $this->d($po->order_date->toDateString()), 'due' => round($ordered - $received, 2),
+                    'ordered' => $ordered, 'received' => $received, 'end_date' => $po->delivery_date ? $this->d($po->delivery_date->toDateString()) : '',
+                    'status' => $po->delivery_date && $po->delivery_date->isPast() ? 'Late' : 'On schedule'];
+            })->values();
+        $rows->push(['number' => 'Total', 'ordered' => round($rows->sum('ordered'), 2), 'received' => round($rows->sum('received'), 2), 'due' => round($rows->sum('due'), 2)]);
+
+        return ['Approved orders not fully delivered', ['number', 'supplier', 'date', 'end_date', 'ordered', 'received', 'due', 'status'], $rows->all()];
+    }
+
+    private function reportSupplierPerformance(array $v): array
+    {
+        $grns = \Modules\Procurement\Models\GoodsReceipt::with(['order', 'lines'])->where('status', 'accepted')->whereDate('received_on', '>=', $v['from'])->whereDate('received_on', '<=', $v['to'])->get()->groupBy(fn ($g) => $g->order?->supplier_id);
+        $complaints = \Modules\Procurement\Models\TenderComplaint::whereDate('received_on', '>=', $v['from'])->whereDate('received_on', '<=', $v['to'])->get()->groupBy('supplier_id');
+        $rows = \Modules\Procurement\Models\Supplier::whereIn('id', $grns->keys()->merge($complaints->keys())->filter())->orderBy('name')->get()->map(function ($s) use ($grns, $complaints) {
+            $g = $grns[$s->id] ?? collect();
+            $onTime = $g->filter(fn ($r) => ! $r->order?->delivery_date || $r->received_on->lte($r->order->delivery_date))->count();
+            $delivered = $g->flatMap->lines->sum('delivered_quantity');
+            $rejected = $g->flatMap->lines->sum('rejected_quantity');
+
+            return ['supplier' => $s->name, 'deliveries' => $g->count(), 'on_time' => $g->count() ? round($onTime / $g->count() * 100, 1) : null,
+                'rejected' => $delivered > 0 ? round($rejected / $delivered * 100, 1) : null, 'complaints' => isset($complaints[$s->id]) ? $complaints[$s->id]->count() : 0];
+        })->values();
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])} · on time against the order's delivery date", ['supplier', 'deliveries', 'on_time', 'rejected', 'complaints'], $rows->all()];
+    }
+
+    /** @return \Illuminate\Support\Collection<int, array{method: string, supplier_id: int, amount: float}> */
+    private function spend(array $v)
+    {
+        $orders = \Modules\Procurement\Models\PurchaseOrder::with('contract.tender.method')->whereNotIn('status', ['draft', 'rejected', 'cancelled', 'pending'])
+            ->whereDate('order_date', '>=', $v['from'])->whereDate('order_date', '<=', $v['to'])->get()
+            ->map(fn ($po) => ['method' => $po->contract?->tender?->method?->name ?? (\Modules\Procurement\Models\PurchaseOrder::METHODS[$po->method] ?? $po->method), 'supplier_id' => $po->supplier_id, 'amount' => (float) $po->total]);
+        $certs = \Modules\Procurement\Models\ContractCertificate::with('contract.tender.method')->where('status', 'approved')->whereDate('date', '>=', $v['from'])->whereDate('date', '<=', $v['to'])->get()
+            ->map(fn ($c) => ['method' => $c->contract->tender?->method?->name ?? 'Contract', 'supplier_id' => $c->contract->supplier_id, 'amount' => (float) $c->gross]);
+
+        return $orders->merge($certs);
+    }
+
+    private function reportSpendByMethod(array $v): array
+    {
+        $spend = $this->spend($v);
+        $total = max($spend->sum('amount'), 0.01);
+        $rows = $spend->groupBy('method')->map(fn ($g, $m) => ['method' => $m, 'count' => $g->count(), 'amount' => round($g->sum('amount'), 2), 'share' => round($g->sum('amount') / $total * 100, 1)])
+            ->sortByDesc('amount')->values();
+        $rows->push(['method' => 'Total', 'count' => $rows->sum('count'), 'amount' => round($rows->sum('amount'), 2), 'share' => $rows->isEmpty() ? 0 : 100]);
+
+        return ["Orders and certificates {$this->d($v['from'])} to {$this->d($v['to'])}", ['method', 'count', 'amount', 'share'], $rows->all()];
+    }
+
+    private function reportSpecialGroupShare(array $v): array
+    {
+        $spend = $this->spend($v);
+        $groups = \Modules\Procurement\Models\Supplier::whereIn('id', $spend->pluck('supplier_id')->unique())->pluck('special_group', 'id');
+        $total = max($spend->sum('amount'), 0.01);
+        $rows = $spend->groupBy(fn ($r) => $groups[$r['supplier_id']] ?? '')->map(fn ($g, $k) => ['group_name' => $k ? (\Modules\Procurement\Models\Supplier::SPECIAL_GROUPS[$k] ?? $k) : 'Not a special group',
+            'count' => $g->count(), 'amount' => round($g->sum('amount'), 2), 'share' => round($g->sum('amount') / $total * 100, 1)])->sortByDesc('amount')->values();
+        $rows->push(['group_name' => 'Total', 'count' => $rows->sum('count'), 'amount' => round($rows->sum('amount'), 2), 'share' => $rows->isEmpty() ? 0 : 100]);
+
+        return ["Orders and certificates {$this->d($v['from'])} to {$this->d($v['to'])}", ['group_name', 'count', 'amount', 'share'], $rows->all()];
     }
 
     private function reportJournalRegister(array $v): array

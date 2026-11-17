@@ -5,6 +5,7 @@ use Modules\Accounting\AccountingServiceProvider;
 use Modules\Budgeting\BudgetingServiceProvider;
 use Modules\Assets\AssetsServiceProvider;
 use Modules\Inventory\InventoryServiceProvider;
+use Modules\Procurement\ProcurementServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -12,4 +13,5 @@ return [
     BudgetingServiceProvider::class,
     InventoryServiceProvider::class,
     AssetsServiceProvider::class,
+    ProcurementServiceProvider::class,
 ];

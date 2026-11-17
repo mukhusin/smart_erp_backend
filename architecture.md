@@ -884,6 +884,24 @@ movement note, depreciation schedule, by holder/location, due for disposal, disp
 printing and phone scan, WIP project capitalisation, foreign-currency cost, HR exit clearance blocking (alerts only).
 Next: step 7 procurement advanced; fleet plan in §21.
 
+**Step 7 done (2026-11-17):** configurable procurement methods (`procurement_methods`: sourcing, value limits, minimum
+bidders, evaluation lowest / technical / combined with weight and pass mark, negotiation, highest-wins for disposals,
+standstill days, reason needed; generic business defaults, no government list). Tenders from an approved requisition:
+lots, criteria, document approval (`tender-document`), clarifications and amendments, bids sealed until opening (prices
+encrypted and never returned before `opened_at`; late bids refused), committees with conflict-of-interest declarations
+(requester and preparer cannot evaluate), opening record, scoring, evaluation report (`tender-evaluation`) with ranking
+per lot, award per lot (`tender-award`, negotiated amount only where allowed), standstill with complaints (dismiss,
+reopen, cancel), award letters and acceptance. Contracts from an accepted award: type and category (goods by call-off
+orders; works/services/consultancy by certificates), vetting (`contract-vetting`), signing moves the requisition hold
+to a contract commitment, call-off POs move commitment from contract to order (cancel gives it back), certificates
+(`contract-certificate`) post Dr budget-line account / Cr clearing (net), retention, damages (capped), advance recovery
+and raise one supplier bill; advance and retention release milestones; variations (`contract-variation`) limited to a
+percentage with budget check; extensions; progress log; close/terminate releases the rest; balance = value +
+variations − ordered or certified. Daily `procurement:daily` ends standstills and warns before contract end and
+security expiry. Reports: tender register, bid opening record, evaluation summary, awards against estimate, contract
+register, expiring contracts and securities, outstanding orders, supplier performance, spend by method, special-group
+share. Not yet: annual procurement plan and packages, e-bidding by suppliers, escalation and handovers in the engine.
+
 ## 20. Kairuki Hospital accounting requirements — coverage (2026-11-16)
 
 Source: "KH Account System requirements" (Kairuki Hospital). ✓ built · ◐ part · ✗ not yet.

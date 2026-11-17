@@ -133,6 +133,12 @@ final class DefaultLeaveTypes
             'store-requisition' => [['Head of department', 'department_head', null, null]],
             'stock-receipt' => [['Chief accountant', 'role', $finance->id, null]],
             'stock-adjustment' => [['Chief accountant', 'role', $finance->id, null]],
+            'tender-document' => [[$director ? 'Tender board' : 'Chief accountant', 'role', ($director ?? $finance)->id, null]],
+            'tender-evaluation' => [[$director ? 'Tender board' : 'Chief accountant', 'role', ($director ?? $finance)->id, null]],
+            'tender-award' => [[$director ? 'Tender board' : 'Chief accountant', 'role', ($director ?? $finance)->id, null]],
+            'contract-vetting' => array_values(array_filter([['Chief accountant (finance and legal check)', 'role', $finance->id, null], $director ? ['Director general (signs)', 'role', $director->id, null] : null])),
+            'contract-variation' => [[$director ? 'Director general' : 'Chief accountant', 'role', ($director ?? $finance)->id, null]],
+            'contract-certificate' => [['Head of department (work done)', 'department_head', null, null], ['Chief accountant', 'role', $finance->id, null]],
         ];
         foreach ($chains as $process => $steps) {
             if (WorkflowTemplate::where('process', $process)->exists()) {

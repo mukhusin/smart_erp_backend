@@ -18,9 +18,9 @@ class PurchaseOrder extends Model
         'partial' => 'Partly delivered', 'received' => 'Delivered', 'closed' => 'Closed',
     ];
 
-    public const METHODS = ['quotation' => 'Request for quotations', 'direct' => 'Direct purchase', 'single' => 'Single source', 'framework' => 'Framework call-off'];
+    public const METHODS = ['quotation' => 'Request for quotations', 'direct' => 'Direct purchase', 'single' => 'Single source', 'framework' => 'Framework call-off', 'contract' => 'Call-off under a contract'];
 
-    protected $fillable = ['company_id', 'number', 'supplier_id', 'purchase_requisition_id', 'quotation_id', 'store_id', 'method', 'method_reason', 'order_date', 'delivery_date',
+    protected $fillable = ['company_id', 'number', 'supplier_id', 'purchase_requisition_id', 'quotation_id', 'contract_id', 'store_id', 'method', 'method_reason', 'order_date', 'delivery_date',
         'delivery_place', 'payment_terms_days', 'total', 'status', 'acknowledged_at', 'notes', 'created_by', 'decision_comment', 'decided_at'];
 
     protected $casts = ['order_date' => 'date', 'delivery_date' => 'date', 'total' => 'float', 'acknowledged_at' => 'datetime', 'decided_at' => 'datetime', 'payment_terms_days' => 'integer'];
@@ -38,6 +38,11 @@ class PurchaseOrder extends Model
     public function store()
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function contract()
+    {
+        return $this->belongsTo(Contract::class);
     }
 
     public function lines()

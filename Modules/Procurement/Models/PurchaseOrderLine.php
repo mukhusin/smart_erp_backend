@@ -11,7 +11,7 @@ class PurchaseOrderLine extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['purchase_order_id', 'purchase_requisition_line_id', 'item_id', 'description', 'unit_id', 'quantity', 'unit_price', 'amount', 'budget_item_id', 'received_quantity'];
+    protected $fillable = ['purchase_order_id', 'purchase_requisition_line_id', 'contract_line_id', 'item_id', 'description', 'unit_id', 'quantity', 'unit_price', 'amount', 'budget_item_id', 'received_quantity'];
 
     protected $casts = ['quantity' => 'float', 'unit_price' => 'float', 'amount' => 'float', 'received_quantity' => 'float'];
 

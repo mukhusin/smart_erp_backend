@@ -180,18 +180,21 @@ class RequisitionController extends Controller
         return response()->json(['data' => $items->map(fn ($i) => ['id' => $i->id, 'label' => $i->label(), 'available' => $f[$i->id]['available']])->values()]);
     }
 
-    /** @response array{data: array{clearing_account_id: int|null, direct_limit: float, min_quotes: int, match_tolerance_percent: float}, accounts: list<array{id: int, code: string, name: string}>} */
+    /** @response array{data: array{clearing_account_id: int|null, direct_limit: float, min_quotes: int, match_tolerance_percent: float, retention_account_id: int|null, damages_account_id: int|null, advance_account_id: int|null, variation_limit_percent: float, expiry_warning_days: int, award_acceptance_days: int}, accounts: list<array{id: int, code: string, name: string}>, all_accounts: list<array{id: int, code: string, name: string, type: string}>} */
     public function settings(Request $request): JsonResponse
     {
         abort_unless($this->access->sees($request->user()), 403);
         $s = ProcurementSetting::current();
 
         return response()->json(['data' => ['clearing_account_id' => $s->clearing_account_id, 'direct_limit' => (float) $s->direct_limit, 'min_quotes' => (int) $s->min_quotes,
-            'match_tolerance_percent' => (float) $s->match_tolerance_percent],
-            'accounts' => Account::where('is_active', true)->where('is_postable', true)->where('type', 'liability')->orderBy('code')->get()->map(fn ($a) => ['id' => $a->id, 'code' => $a->code, 'name' => $a->name])->values()]);
+            'match_tolerance_percent' => (float) $s->match_tolerance_percent, 'retention_account_id' => $s->retention_account_id, 'damages_account_id' => $s->damages_account_id,
+            'advance_account_id' => $s->advance_account_id, 'variation_limit_percent' => (float) $s->variation_limit_percent, 'expiry_warning_days' => (int) $s->expiry_warning_days,
+            'award_acceptance_days' => (int) $s->award_acceptance_days],
+            'accounts' => Account::where('is_active', true)->where('is_postable', true)->where('type', 'liability')->orderBy('code')->get()->map(fn ($a) => ['id' => $a->id, 'code' => $a->code, 'name' => $a->name])->values(),
+            'all_accounts' => Account::where('is_active', true)->where('is_postable', true)->orderBy('code')->get()->map(fn ($a) => ['id' => $a->id, 'code' => $a->code, 'name' => $a->name, 'type' => $a->type])->values()]);
     }
 
-    /** @response array{data: array{clearing_account_id: int|null, direct_limit: float, min_quotes: int, match_tolerance_percent: float}, accounts: list<array{id: int, code: string, name: string}>} */
+    /** @response array{data: array{clearing_account_id: int|null, direct_limit: float, min_quotes: int, match_tolerance_percent: float, retention_account_id: int|null, damages_account_id: int|null, advance_account_id: int|null, variation_limit_percent: float, expiry_warning_days: int, award_acceptance_days: int}, accounts: list<array{id: int, code: string, name: string}>, all_accounts: list<array{id: int, code: string, name: string, type: string}>} */
     public function updateSettings(ProcurementSettingsRequest $request): JsonResponse
     {
         abort_unless($this->access->can($request->user(), 'manage'), 403);
