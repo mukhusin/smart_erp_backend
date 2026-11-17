@@ -1,0 +1,119 @@
+<?php
+
+namespace Modules\Fleet\Actions;
+
+use App\Models\Employee;
+use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Modules\Core\Notifications\Notice;
+use Modules\Fleet\Models\Assignment;
+use Modules\Fleet\Models\Driver;
+use Modules\Fleet\Models\DriverLicence;
+use Modules\Fleet\Models\FleetUnit;
+use Modules\Fleet\Support\FleetFiles;
+
+/** Drivers are always employees registered in HR; their name, department and leave come from HR. */
+class ManageDrivers
+{
+    public function save(?Driver $driver, array $data, User $by): Driver
+    {
+        if (! $driver) {
+            $employee = Employee::find($data['employee_id']);
+            if (! $employee || $employee->employment_status === 'terminated') {
+                throw ValidationException::withMessages(['employee_id' => 'Choose a current employee registered in HR.']);
+            }
+            if (Driver::where('employee_id', $employee->id)->exists()) {
+                throw ValidationException::withMessages(['employee_id' => "{$employee->full_name} is already a driver."]);
+            }
+        }
+
+        return DB::transaction(function () use ($driver, $data, $by) {
+            $driver ??= new Driver(['employee_id' => $data['employee_id'], 'created_by' => $by->id]);
+            $driver->fill(['status' => $data['status'] ?? $driver->status ?? 'active', 'notes' => $data['notes'] ?? null])->save();
+            if ($driver->status !== 'active') {
+                $driver->assignments()->whereNull('ended_on')->update(['ended_on' => today()->toDateString()]);
+            }
+
+            return $driver->refresh();
+        });
+    }
+
+    public function addLicence(Driver $driver, array $data, ?UploadedFile $file, User $by): DriverLicence
+    {
+        $classes = collect($data['classes'])->map(fn ($c) => strtoupper(trim((string) $c)))->filter()->unique()->values()->all();
+        if (! $classes) {
+            throw ValidationException::withMessages(['classes' => 'Enter at least one licence class.']);
+        }
+        if (! empty($data['issued_on']) && Carbon::parse($data['issued_on'])->gt(Carbon::parse($data['expires_on']))) {
+            throw ValidationException::withMessages(['expires_on' => 'The expiry date must be after the issue date.']);
+        }
+
+        return DB::transaction(function () use ($driver, $data, $file, $by, $classes) {
+            $driver->licences()->where('is_current', true)->update(['is_current' => false]);
+            $l = $driver->licences()->create(['number' => trim($data['number']), 'classes' => $classes, 'issued_on' => $data['issued_on'] ?? null, 'expires_on' => $data['expires_on'],
+                'is_current' => true, 'created_by' => $by->id]);
+            if ($file) {
+                $l->update(['document_path' => FleetFiles::store($file, $driver->company_id, "drivers/{$driver->id}"), 'document_name' => mb_substr($file->getClientOriginalName(), 0, 200)]);
+            }
+
+            return $l;
+        });
+    }
+
+    /** Why the driver may not drive this unit, or null when eligible. */
+    public function ineligible(Driver $driver, FleetUnit $unit): ?string
+    {
+        $driver->loadMissing(['employee', 'licence']);
+        if ($driver->status !== 'active') {
+            return "{$driver->name()} is not an active driver.";
+        }
+        if ($driver->employee?->employment_status === 'terminated') {
+            return "{$driver->name()} has left the organisation.";
+        }
+        if ($unit->kind === 'generator') {
+            return null;
+        }
+        $licence = $driver->licence;
+        if (! $licence || ! $licence->valid()) {
+            return "{$driver->name()} has no valid driving licence".($licence ? ' (expired '.$licence->expires_on->format('d M Y').').' : '.');
+        }
+        $needed = $unit->type?->licence_classes ?? [];
+        if ($needed && ! array_intersect($needed, $licence->classes)) {
+            return "{$driver->name()}'s licence (".implode(', ', $licence->classes).") does not cover {$unit->type->name}: needs ".implode(' or ', $needed).'.';
+        }
+
+        return null;
+    }
+
+    public function assign(FleetUnit $unit, Driver $driver, array $data, User $by): Assignment
+    {
+        if (in_array($unit->status, ['disposed', 'lent'], true)) {
+            throw ValidationException::withMessages(['fleet_driver_id' => 'This unit is '.strtolower(FleetUnit::STATUSES[$unit->status]).'.']);
+        }
+        if ($why = $this->ineligible($driver, $unit)) {
+            throw ValidationException::withMessages(['fleet_driver_id' => $why]);
+        }
+        if (! empty($data['ends_on']) && Carbon::parse($data['ends_on'])->lt(Carbon::parse($data['starts_on']))) {
+            throw ValidationException::withMessages(['ends_on' => 'The end date must be after the start date.']);
+        }
+
+        return DB::transaction(function () use ($unit, $driver, $data, $by) {
+            $unit->assignments()->whereNull('ended_on')->update(['ended_on' => Carbon::parse($data['starts_on'])->toDateString()]);
+            $a = $unit->assignments()->create(['fleet_driver_id' => $driver->id, 'starts_on' => $data['starts_on'], 'ends_on' => $data['ends_on'] ?? null, 'note' => $data['note'] ?? null, 'created_by' => $by->id]);
+            $driver->employee?->user?->notify(new Notice('Vehicle assigned to you', "You are the driver of {$unit->label()} from ".Carbon::parse($data['starts_on'])->format('d M Y').'.', '/self-service/my-vehicles', 'truck-front'));
+
+            return $a;
+        });
+    }
+
+    public function endAssignment(Assignment $a, string $date): void
+    {
+        if ($a->ended_on) {
+            throw ValidationException::withMessages(['assignment' => 'This assignment has already ended.']);
+        }
+        $a->update(['ended_on' => Carbon::parse($date)->max($a->starts_on)->toDateString()]);
+    }
+}

@@ -138,6 +138,14 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Fleet phase 1 (2026-11-18)
+
+1. `php artisan migrate`: drops the old empty `vehicles`, `fuel_records` and `vehicle_maintenance_logs` tables (it
+   stops if any has data), creates the fleet tables and the "Odometer or hours correction" approval (chief accountant).
+2. `php artisan erp:sync-permissions --roles`, then give `fleet.manage` to the transport officer's role and
+   `fleet.view` to those who follow the fleet. Enable the Fleet module for the company.
+3. The cron runs `fleet:daily` at 06:15 (assignments ending, reminders before insurance and licences expire).
+
 ## Imprest, petty cash, bank reconciliation and bank feeds (2026-11-17)
 
 1. `php artisan migrate`: imprest columns and tables, bank reconciliation tables, and default approvals for every company

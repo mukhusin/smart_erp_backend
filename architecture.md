@@ -1115,6 +1115,22 @@ geofence and route editors. Tracker models are decided with the customer (open q
 6. Tracking: gateway service, live map, trips, geofences, routes, events, commands, tracking reports, logbook fill.
 7. Driver phone app on the same API (later), with push notifications.
 
+**Phase 1 built (2026-11-18), module `Modules/Fleet`:** legacy `vehicles`/`fuel_records`/`vehicle_maintenance_logs`
+dropped when empty (old models removed). `fleet_vehicle_types` (kind, licence classes any-of, tank); `fleet_units`
+(vehicle | generator, registration unique per company, make/model/year/chassis/engine, fuel, tank, ownership owned |
+donated | borrowed | hired | leased, asset link for owned/donated, owner for the others, branch/department/location,
+status with `fleet_status_changes` history, current reading); `fleet_readings` (source, previous value; forward only,
+lower values through `fleet-reading-correction`); `fleet_drivers` (one per HR employee; status active | suspended |
+left; inactive or terminated cannot drive) with `fleet_driver_licences` (classes, expiry, copy; new licence replaces
+current, history kept); `fleet_assignments` (one open per unit, eligibility = active driver, valid licence whose
+classes meet the type; optional end date, closed by the daily job); `fleet_compliance` (insurance, road licence,
+inspection certificate, permit, other; new one replaces current of its type; amount posts a running cost);
+`fleet_costs` (category, document link; cost per km/hour on the unit page). `fleet:daily` (06:15) ends assignments,
+closes units whose asset was disposed, reminds managers and the assigned driver 30/14/7/0 days before and weekly
+after expiry (driving licences too). Child records bind through their unit/driver so other companies cannot reach
+them. Screens: dashboard, register, unit page, drivers, driver page, compliance calendar, vehicle types, Self Service
+→ My vehicles. Permissions `fleet.view`, `fleet.manage` (internal auditors get view).
+
 **Open questions (to confirm with each customer):** tracker models at go-live; fuel via national supplier, cards, own
 tanks or a mix; whether private trips are charged to the employee (and how: payroll deduction or receipt); who may
 send an immobilise command and when.

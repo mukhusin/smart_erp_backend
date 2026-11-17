@@ -56,6 +56,7 @@ final class DefaultLeaveTypes
         self::payments();
         self::receivables();
         self::procurement();
+        self::fleet();
         self::assets();
     }
 
@@ -102,6 +103,17 @@ final class DefaultLeaveTypes
                 $template->steps()->create(['step_order' => $i + 1, 'name' => $name, 'approver_type' => $type, 'role_id' => $role, 'min_amount' => $min, 'allow_send_back' => true]);
             }
         }
+    }
+
+    public static function fleet(): void
+    {
+        $company = app(CompanyContext::class)->id();
+        $role = Role::where('name', 'Chief Accountant')->where('company_id', $company)->first() ?? Role::where('name', 'company-admin')->where('company_id', $company)->first();
+        if (! $role || WorkflowTemplate::where('process', \Modules\Fleet\Workflow\ReadingCorrectionProcess::KEY)->exists()) {
+            return;
+        }
+        $template = WorkflowTemplate::create(['process' => \Modules\Fleet\Workflow\ReadingCorrectionProcess::KEY, 'company_branch_id' => null, 'is_active' => true]);
+        $template->steps()->create(['step_order' => 1, 'name' => 'Chief accountant', 'approver_type' => 'role', 'role_id' => $role->id, 'allow_send_back' => false]);
     }
 
     public static function receivables(): void

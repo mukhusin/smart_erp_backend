@@ -190,8 +190,8 @@ final class PermissionCatalog
             'assets.manage' => 'Register, assign, transfer, revalue and dispose of assets; run depreciation; handle fault and return reports',
         ],
         'fleet' => [
-            'fleet.view' => 'View vehicles',
-            'fleet.manage' => 'Manage vehicles, fuel and maintenance',
+            'fleet.view' => 'View vehicles, generators, drivers, compliance and running costs',
+            'fleet.manage' => 'Register vehicles, generators and drivers; licences, assignments, readings, compliance and costs',
         ],
         'inventory' => [
             'inventory.view' => 'View the catalogue, stores and stock of all stores',

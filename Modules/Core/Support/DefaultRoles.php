@@ -24,7 +24,7 @@ final class DefaultRoles
         self::COMPANY_ADMIN => ['admin.users.view', 'admin.users.manage', 'admin.roles.manage', 'admin.roles.assign', 'admin.handovers.manage', 'admin.module-locks.manage',
             'admin.branches.manage', 'admin.settings.manage', 'admin.workflow.manage', 'audit.engagements', 'self-service.use', 'tasks.use', 'appraisals.use'],
         'internal-auditor' => ['audit.view', 'audit.queries', 'admin.audit.view', 'hr.employees.view', 'leave.view', 'roster.view', 'attendance.view', 'allowance.view', 'overtime.view',
-            'payroll.view', 'loans.view', 'planning.view', 'budgeting.view', 'accounting.view', 'payments.view', 'receivables.view', 'procurement.view', 'inventory.view', 'assets.view',
+            'payroll.view', 'loans.view', 'planning.view', 'budgeting.view', 'accounting.view', 'payments.view', 'receivables.view', 'procurement.view', 'inventory.view', 'assets.view', 'fleet.view',
             'appraisals.view', 'tasks.view-all', 'reports.view', 'reports.generate', 'self-service.use'],
         'external-auditor' => ['audit.view', 'audit.queries', 'accounting.view', 'budgeting.view', 'payments.view', 'receivables.view', 'procurement.view', 'inventory.view', 'assets.view', 'planning.view'],
         'hr-officer' => [
