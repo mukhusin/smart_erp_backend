@@ -144,3 +144,10 @@ New and "work out again" payrolls are calculated by a queued job (`GeneratePayro
 `php artisan migrate` (adds `payroll_sheets.processing_started_at` and `processing_error`), make sure the queue worker
 processes the default queue, for example `php artisan queue:work --queue=default,attendance --timeout=1800`. Without a
 running worker, payrolls stay "Working out…" (after an hour they can be worked out again).
+
+## Timezone Africa/Dar_es_Salaam (2026-11-17)
+
+The application timezone is now `Africa/Dar_es_Salaam` (was UTC), the same as HRMS, so times imported from HRMS are
+read correctly. Override with `APP_TIMEZONE` in `.env` only if a company is elsewhere. After pulling, run
+`php artisan config:cache`. Times saved by the ERP before this change (it had no production data yet) were in UTC
+and show 3 hours early; nothing needs converting on a fresh server.
