@@ -115,6 +115,7 @@ final class DefaultLeaveTypes
         $chains = [
             \Modules\Fleet\Workflow\ReadingCorrectionProcess::KEY => ['Chief accountant', 'role', $role->id],
             \Modules\Fleet\Workflow\TransportRequestProcess::KEY => ['Head of department', 'department_head', null],
+            \Modules\Fleet\Workflow\FuelRequestProcess::KEY => ['Head of department', 'department_head', null],
         ];
         foreach ($chains as $process => [$name, $type, $roleId]) {
             if (WorkflowTemplate::where('process', $process)->exists()) {

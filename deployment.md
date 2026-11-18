@@ -138,6 +138,13 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Fleet phase 3: fuel (2026-11-18)
+
+1. `php artisan migrate`: fuel stores, deliveries, requests, movements and station batches; adds the "Fuel request"
+   approval (head of department) and the `fleet.fuel` permission ("Issue fuel"); then `erp:sync-permissions --roles`.
+2. Give `fleet.fuel` to the pump attendant or store keeper. Ordering fuel and paying stations needs `fleet.manage` and
+   `payments.request`.
+
 ## Driving licences on the HR profile (2026-11-18)
 
 `php artisan migrate` adds "Driving licence" to licence types (types named like "driving" are marked) and classes to

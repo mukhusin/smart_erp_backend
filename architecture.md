@@ -1145,6 +1145,20 @@ before start. `fleet_agency_contracts` (supplier, per trip / km / day, rate, val
 on a chosen department budget line, source = the batch. Self Service: My transport requests, driver's trips in My
 vehicles. Not yet: fuel for the trip, tracked-trip logbook fill, private-trip charging.
 
+**Phase 3 built (2026-11-18): fuel.** `fleet_fuel_stores` (own tank in litres with capacity and reorder level, or a
+filling station account from the supplier register with a usual price); `fleet_fuel_movements` (stock card: delivered,
+issued, count adjustment; moving average price); `fleet_fuel_recharges` (FRC-, tank orders → draft payment request to
+the supplier on a chosen budget line; "delivered" with the litres actually received, capacity checked);
+`fleet_fuel_requests` (FR-, by the unit's driver or the office, workflow `fuel-request`, default head of department).
+Checks: hard (unit not operational, fuel type differs, litres above the tank, reading below the last, another open
+request) and warnings kept on the request for the approver (litres above distance since last fill ÷ usual consumption
+× 1.25 + 5 L, from the last fills; not enough free in the tank). Issue by `fleet.fuel` or the office, never the
+requester: litres ≤ approved (short supply releases the rest), reading posted as `fuel`, cost at the tank average or
+the station receipt price, running cost added. Station fills are paid in `fleet_fuel_batches` (FB-) → one draft payment
+request. Fuel consumption per unit and period (litres, cost, distance, units per litre, cost per km, flagged fills).
+Budget: the purchase (order or station batch) goes through the payment request and budget; issues only move stock and
+running costs. Not yet: external supplier adapter and fuel cards wallet reconciliation.
+
 **Driving licences in HR (2026-11-18):** one record only. `professional_licences.is_driving` marks driving licence
 types (set by name on migration) and `employee_licences.classes` holds the classes; the fleet reads a driver's approved
 driving licences from the HR profile (the one expiring last counts) and "Add licence" in the fleet saves to the HR

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Fleet\Http\Controllers\Api\AgencyController;
 use Modules\Fleet\Http\Controllers\Api\DriverController;
 use Modules\Fleet\Http\Controllers\Api\FleetSetupController;
+use Modules\Fleet\Http\Controllers\Api\FuelController;
 use Modules\Fleet\Http\Controllers\Api\MyFleetController;
 use Modules\Fleet\Http\Controllers\Api\TransportController;
 use Modules\Fleet\Http\Controllers\Api\UnitController;
@@ -55,6 +56,25 @@ Route::middleware(['auth:sanctum', 'module:fleet'])->group(function () {
         Route::put('contracts/{contract}', [AgencyController::class, 'update'])->name('contracts.update');
         Route::get('contracts/{contract}/unbatched', [AgencyController::class, 'unbatched'])->name('contracts.unbatched');
         Route::post('contracts/{contract}/batch', [AgencyController::class, 'batch'])->name('contracts.batch');
+
+        Route::get('fuel', [FuelController::class, 'index'])->name('fuel.index');
+        Route::get('fuel/form', [FuelController::class, 'form'])->name('fuel.form');
+        Route::get('fuel/consumption', [FuelController::class, 'consumption'])->name('fuel.consumption');
+        Route::post('fuel/check', [FuelController::class, 'check'])->name('fuel.check');
+        Route::post('fuel', [FuelController::class, 'store'])->name('fuel.store');
+        Route::get('fuel/{fuelRequest}', [FuelController::class, 'show'])->name('fuel.show');
+        Route::post('fuel/{fuelRequest}/withdraw', [FuelController::class, 'withdraw'])->name('fuel.withdraw');
+        Route::post('fuel/{fuelRequest}/cancel', [FuelController::class, 'cancel'])->name('fuel.cancel');
+        Route::post('fuel/{fuelRequest}/issue', [FuelController::class, 'issue'])->name('fuel.issue');
+        Route::get('fuel-stores', [FuelController::class, 'stores'])->name('fuel-stores.index');
+        Route::post('fuel-stores', [FuelController::class, 'storeStore'])->name('fuel-stores.store');
+        Route::put('fuel-stores/{store}', [FuelController::class, 'updateStore'])->name('fuel-stores.update');
+        Route::get('fuel-stores/{store}/movements', [FuelController::class, 'movements'])->name('fuel-stores.movements');
+        Route::post('fuel-stores/{store}/recharge', [FuelController::class, 'recharge'])->name('fuel-stores.recharge');
+        Route::post('fuel-stores/{store}/adjust', [FuelController::class, 'adjust'])->name('fuel-stores.adjust');
+        Route::post('fuel-stores/{store}/batch', [FuelController::class, 'batch'])->name('fuel-stores.batch');
+        Route::post('fuel-recharges/{recharge}/receive', [FuelController::class, 'receive'])->name('fuel-recharges.receive');
+        Route::post('fuel-recharges/{recharge}/cancel', [FuelController::class, 'cancelRecharge'])->name('fuel-recharges.cancel');
 
         Route::get('drivers', [DriverController::class, 'index'])->name('drivers.index');
         Route::get('drivers/employees', [DriverController::class, 'employees'])->name('drivers.employees');

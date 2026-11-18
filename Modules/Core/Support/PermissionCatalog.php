@@ -191,6 +191,7 @@ final class PermissionCatalog
         ],
         'fleet' => [
             'fleet.view' => 'View vehicles, generators, drivers, compliance and running costs',
+            'fleet.fuel' => 'Issue fuel from fuel stores and record fuel deliveries',
             'fleet.manage' => 'Register vehicles, generators and drivers; licences, assignments, readings, compliance and costs',
         ],
         'inventory' => [
