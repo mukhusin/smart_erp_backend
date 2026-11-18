@@ -27849,7 +27849,7 @@
                                 "properties": {
                                     "number": {
                                         "type": "string",
-                                        "maxLength": 40
+                                        "maxLength": 100
                                     },
                                     "classes": {
                                         "type": "array",
@@ -27862,10 +27862,7 @@
                                         "maxItems": 20
                                     },
                                     "issued_on": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ],
+                                        "type": "string",
                                         "format": "date-time"
                                     },
                                     "expires_on": {
@@ -27879,12 +27876,13 @@
                                         ],
                                         "format": "binary",
                                         "contentMediaType": "application/octet-stream",
-                                        "description": "Maximum file size: 10240 kilobytes."
+                                        "description": "PDF, JPG or PNG, up to 5 MB."
                                     }
                                 },
                                 "required": [
                                     "number",
                                     "classes",
+                                    "issued_on",
                                     "expires_on"
                                 ]
                             }
@@ -27956,7 +27954,6 @@
                         "name": "licence",
                         "in": "path",
                         "required": true,
-                        "description": "The licence ID",
                         "schema": {
                             "type": "integer"
                         }
@@ -27985,8 +27982,27 @@
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -40496,13 +40512,17 @@
                                                             "string",
                                                             "null"
                                                         ]
+                                                    },
+                                                    "is_driving": {
+                                                        "type": "boolean"
                                                     }
                                                 },
                                                 "required": [
                                                     "id",
                                                     "name",
                                                     "provider_name",
-                                                    "short_name"
+                                                    "short_name",
+                                                    "is_driving"
                                                 ]
                                             }
                                         }
@@ -97013,6 +97033,12 @@
                                                                     "label"
                                                                 ]
                                                             }
+                                                        },
+                                                        "driving_licence_types": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
                                                         }
                                                     },
                                                     "required": [
@@ -97020,7 +97046,8 @@
                                                         "document_types",
                                                         "relationships",
                                                         "genders",
-                                                        "licence_types"
+                                                        "licence_types",
+                                                        "driving_licence_types"
                                                     ]
                                                 }
                                             },
@@ -104607,6 +104634,18 @@
                         ],
                         "maxLength": 100
                     },
+                    "classes": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "description": "Driving licences only: the classes printed on it, e.g. B, C, D.",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 5
+                        },
+                        "maxItems": 20
+                    },
                     "start_date": {
                         "type": "string",
                         "format": "date-time"
@@ -104684,13 +104723,17 @@
                                     "string",
                                     "null"
                                 ]
+                            },
+                            "is_driving": {
+                                "type": "boolean"
                             }
                         },
                         "required": [
                             "id",
                             "name",
                             "provider_name",
-                            "short_name"
+                            "short_name",
+                            "is_driving"
                         ]
                     },
                     "licence_no": {
@@ -104698,6 +104741,12 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "classes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     },
                     "start_date": {
                         "type": "string"
@@ -104742,6 +104791,7 @@
                     "decision_comment",
                     "licence",
                     "licence_no",
+                    "classes",
                     "start_date",
                     "end_date",
                     "days_left",
@@ -104771,6 +104821,10 @@
                             "null"
                         ],
                         "maxLength": 50
+                    },
+                    "is_driving": {
+                        "type": "boolean",
+                        "description": "A driving licence: its holders can be fleet drivers and it records licence classes."
                     },
                     "is_active": {
                         "type": "boolean"
@@ -104802,6 +104856,9 @@
                             "null"
                         ]
                     },
+                    "is_driving": {
+                        "type": "boolean"
+                    },
                     "is_active": {
                         "type": "boolean"
                     }
@@ -104811,6 +104868,7 @@
                     "name",
                     "provider_name",
                     "short_name",
+                    "is_driving",
                     "is_active"
                 ],
                 "title": "LicenceTypeResource"

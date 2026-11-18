@@ -11,9 +11,10 @@ use Illuminate\Validation\ValidationException;
 use Modules\Core\Notifications\Notice;
 use Modules\Fleet\Models\Assignment;
 use Modules\Fleet\Models\Driver;
-use Modules\Fleet\Models\DriverLicence;
 use Modules\Fleet\Models\FleetUnit;
-use Modules\Fleet\Support\FleetFiles;
+use App\Models\EmployeeLicence;
+use App\Models\ProfessionalLicence;
+use Modules\Hr\Support\EmployeeFiles;
 
 /** Drivers are always employees registered in HR; their name, department and leave come from HR. */
 class ManageDrivers
@@ -41,22 +42,25 @@ class ManageDrivers
         });
     }
 
-    public function addLicence(Driver $driver, array $data, ?UploadedFile $file, User $by): DriverLicence
+    /** Saves the licence on the employee's HR profile, where HR also sees and renews it. */
+    public function addLicence(Driver $driver, array $data, ?UploadedFile $file, User $by): EmployeeLicence
     {
         $classes = collect($data['classes'])->map(fn ($c) => strtoupper(trim((string) $c)))->filter()->unique()->values()->all();
         if (! $classes) {
             throw ValidationException::withMessages(['classes' => 'Enter at least one licence class.']);
         }
-        if (! empty($data['issued_on']) && Carbon::parse($data['issued_on'])->gt(Carbon::parse($data['expires_on']))) {
+        if (Carbon::parse($data['issued_on'])->gte(Carbon::parse($data['expires_on']))) {
             throw ValidationException::withMessages(['expires_on' => 'The expiry date must be after the issue date.']);
         }
+        $type = ProfessionalLicence::where('is_driving', true)->where('is_active', true)->orderBy('id')->first()
+            ?? ProfessionalLicence::create(['name' => 'Driving Licence', 'is_driving' => true, 'is_active' => true]);
+        $employee = $driver->employee;
 
-        return DB::transaction(function () use ($driver, $data, $file, $by, $classes) {
-            $driver->licences()->where('is_current', true)->update(['is_current' => false]);
-            $l = $driver->licences()->create(['number' => trim($data['number']), 'classes' => $classes, 'issued_on' => $data['issued_on'] ?? null, 'expires_on' => $data['expires_on'],
-                'is_current' => true, 'created_by' => $by->id]);
+        return DB::transaction(function () use ($employee, $data, $file, $classes, $type) {
+            $l = $employee->licences()->create(['professional_licence_id' => $type->id, 'licence_no' => trim($data['number']), 'classes' => $classes,
+                'start_date' => $data['issued_on'], 'end_date' => $data['expires_on']]);
             if ($file) {
-                $l->update(['document_path' => FleetFiles::store($file, $driver->company_id, "drivers/{$driver->id}"), 'document_name' => mb_substr($file->getClientOriginalName(), 0, 200)]);
+                $l->update(['file_path' => EmployeeFiles::store($file, $employee, 'licences'), 'file_name' => mb_substr($file->getClientOriginalName(), 0, 200)]);
             }
 
             return $l;
@@ -66,7 +70,7 @@ class ManageDrivers
     /** Why the driver may not drive this unit, or null when eligible. */
     public function ineligible(Driver $driver, FleetUnit $unit): ?string
     {
-        $driver->loadMissing(['employee', 'licence']);
+        $driver->loadMissing(['employee', 'licences']);
         if ($driver->status !== 'active') {
             return "{$driver->name()} is not an active driver.";
         }
@@ -76,13 +80,17 @@ class ManageDrivers
         if ($unit->kind === 'generator') {
             return null;
         }
-        $licence = $driver->licence;
+        $licence = $driver->currentLicence();
         if (! $licence || ! $licence->valid()) {
-            return "{$driver->name()} has no valid driving licence".($licence ? ' (expired '.$licence->expires_on->format('d M Y').').' : '.');
+            return "{$driver->name()} has no valid driving licence on the HR profile".($licence ? ' (expired '.$licence->end_date->format('d M Y').').' : '.');
         }
         $needed = $unit->type?->licence_classes ?? [];
-        if ($needed && ! array_intersect($needed, $licence->classes)) {
-            return "{$driver->name()}'s licence (".implode(', ', $licence->classes).") does not cover {$unit->type->name}: needs ".implode(' or ', $needed).'.';
+        $has = $licence->classes ?? [];
+        if ($needed && ! $has) {
+            return "The classes of {$driver->name()}'s driving licence are not entered.";
+        }
+        if ($needed && ! array_intersect($needed, $has)) {
+            return "{$driver->name()}'s licence (".implode(', ', $has).") does not cover {$unit->type->name}: needs ".implode(' or ', $needed).'.';
         }
 
         return null;

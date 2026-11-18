@@ -18,6 +18,7 @@ class LicenceTypeResource extends JsonResource
             'name' => $this->name,
             'provider_name' => $this->provider_name,
             'short_name' => $this->short_name,
+            'is_driving' => (bool) $this->is_driving,
             'is_active' => $this->is_active,
         ];
     }

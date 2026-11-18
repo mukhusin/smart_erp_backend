@@ -12,7 +12,6 @@ use Modules\Assets\Models\Asset;
 use Modules\Fleet\Models\Compliance;
 use Modules\Fleet\Models\Cost;
 use Modules\Fleet\Models\Driver;
-use Modules\Fleet\Models\DriverLicence;
 use Modules\Fleet\Models\FleetUnit;
 use Modules\Fleet\Models\VehicleType;
 use Modules\Fleet\Support\FleetAccess;
@@ -131,9 +130,10 @@ class FleetSetupController extends Controller
         $items = Compliance::with('unit')->where('is_current', true)->whereHas('unit', fn ($q) => $q->where('status', '!=', 'disposed'))->whereDate('expires_on', '<=', $until)->get()
             ->map(fn ($c) => ['kind' => 'unit', 'what' => Compliance::TYPES[$c->type] ?? $c->type, 'for' => $c->unit->label(), 'link' => "/fleet/units/{$c->fleet_unit_id}",
                 'expires_on' => $c->expires_on->toDateString(), 'days_left' => (int) today()->diffInDays($c->expires_on, false)]);
-        $licences = DriverLicence::with('driver.employee')->where('is_current', true)->whereHas('driver', fn ($q) => $q->where('status', 'active'))->whereDate('expires_on', '<=', $until)->get()
-            ->map(fn ($l) => ['kind' => 'driver', 'what' => 'Driving licence', 'for' => $l->driver->name(), 'link' => "/fleet/drivers/{$l->fleet_driver_id}",
-                'expires_on' => $l->expires_on->toDateString(), 'days_left' => (int) today()->diffInDays($l->expires_on, false)]);
+        $licences = Driver::with(['employee', 'licences'])->where('status', 'active')->get()->map(fn ($d) => [$d, $d->currentLicence()])
+            ->filter(fn ($x) => $x[1] && $x[1]->end_date->lte($until))
+            ->map(fn ($x) => ['kind' => 'driver', 'what' => 'Driving licence', 'for' => $x[0]->name(), 'link' => "/fleet/drivers/{$x[0]->id}",
+                'expires_on' => $x[1]->end_date->toDateString(), 'days_left' => (int) today()->diffInDays($x[1]->end_date, false)]);
 
         return $items->concat($licences)->sortBy('days_left')->values();
     }

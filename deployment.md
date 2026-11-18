@@ -138,6 +138,12 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Driving licences on the HR profile (2026-11-18)
+
+`php artisan migrate` adds "Driving licence" to licence types (types named like "driving" are marked) and classes to
+employee licences, then moves any fleet licences into HR. Check HR → Settings → Professional licences: the driving
+licence type must have the "Driving licence" switch on. Then enter the classes on drivers' existing HR licences.
+
 ## Fleet phase 2: transport (2026-11-18)
 
 1. `php artisan migrate`: transport requests, trips, transport company contracts and payment batches; adds the

@@ -5,6 +5,7 @@ namespace Modules\Fleet\Models;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\BelongsToCompany;
 use App\Models\Employee;
+use App\Models\EmployeeLicence;
 use Illuminate\Database\Eloquent\Model;
 
 class Driver extends Model
@@ -22,14 +23,16 @@ class Driver extends Model
         return $this->belongsTo(Employee::class);
     }
 
+    /** Driving licences on the employee's HR profile (approved), newest expiry first. */
     public function licences()
     {
-        return $this->hasMany(DriverLicence::class, 'fleet_driver_id')->orderByDesc('id');
+        return $this->hasMany(EmployeeLicence::class, 'employee_id', 'employee_id')->whereHas('professionalLicence', fn ($q) => $q->where('is_driving', true))
+            ->where(fn ($q) => $q->whereNull('status')->orWhere('status', 'approved'))->orderByDesc('end_date')->orderByDesc('id');
     }
 
-    public function licence()
+    public function currentLicence(): ?EmployeeLicence
     {
-        return $this->hasOne(DriverLicence::class, 'fleet_driver_id')->where('is_current', true)->latestOfMany();
+        return $this->licences->first();
     }
 
     public function assignments()

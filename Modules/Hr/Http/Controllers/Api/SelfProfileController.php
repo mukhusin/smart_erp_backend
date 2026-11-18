@@ -55,6 +55,7 @@ class SelfProfileController extends Controller
                 'education_levels' => O::all()['education_levels'], 'document_types' => O::all()['document_types'], 'relationships' => O::all()['relationships'],
                 'genders' => O::all()['genders'],
                 'licence_types' => ProfessionalLicence::where('is_active', true)->orderBy('name')->get(['id', 'name'])->map(fn ($l) => ['value' => (string) $l->id, 'label' => $l->name])->all(),
+                'driving_licence_types' => ProfessionalLicence::where('is_active', true)->where('is_driving', true)->pluck('id')->map(fn ($id) => (string) $id)->values()->all(),
             ],
         ]]);
     }

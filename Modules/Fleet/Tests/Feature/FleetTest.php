@@ -24,6 +24,8 @@ class FleetTest extends TestCase
 
     private User $officer;
 
+    private User $hrAdmin;
+
     private User $chief;
 
     private User $driverUser;
@@ -37,7 +39,7 @@ class FleetTest extends TestCase
         parent::setUp();
         Storage::fake('local');
         $this->travelTo('2026-11-18 09:00:00');
-        [$this->company] = $this->createCompany('Alpha', ['modules' => [['slug' => 'hr'], ['slug' => 'admin'], ['slug' => 'fleet']]]);
+        [$this->company, $this->hrAdmin] = $this->createCompany('Alpha', ['modules' => [['slug' => 'hr'], ['slug' => 'admin'], ['slug' => 'fleet']]]);
         setPermissionsTeamId($this->company->id);
         app(CompanyContext::class)->run($this->company, function () {
             Role::findOrCreate('transport-officer', 'web')->syncPermissions(['fleet.view', 'fleet.manage']);
@@ -82,11 +84,16 @@ class FleetTest extends TestCase
         $driver = $this->postJson('/api/v1/fleet/drivers', ['employee_id' => $this->employee])->assertCreated()->json('data.id');
         $this->postJson('/api/v1/fleet/drivers', ['employee_id' => $this->employee])->assertUnprocessable();
         $this->postJson("/api/v1/fleet/units/{$unit}/assign", ['fleet_driver_id' => $driver, 'starts_on' => '2026-11-18'])->assertUnprocessable()->assertJsonValidationErrors(['fleet_driver_id' => 'no valid driving licence']);
-        $this->post("/api/v1/fleet/drivers/{$driver}/licences", ['number' => 'DL-1', 'classes' => ['B'], 'expires_on' => '2027-06-30'], ['Accept' => 'application/json'])->assertOk();
+        $this->post("/api/v1/fleet/drivers/{$driver}/licences", ['number' => 'DL-1', 'classes' => ['B'], 'issued_on' => '2021-11-30', 'expires_on' => '2026-11-30'], ['Accept' => 'application/json'])->assertOk();
         $this->postJson("/api/v1/fleet/units/{$unit}/assign", ['fleet_driver_id' => $driver, 'starts_on' => '2026-11-18'])->assertUnprocessable()->assertJsonValidationErrors(['fleet_driver_id' => 'does not cover']);
-        $this->post("/api/v1/fleet/drivers/{$driver}/licences", ['number' => 'DL-2', 'classes' => ['b', 'c'], 'expires_on' => '2026-12-02',
+        $this->post("/api/v1/fleet/drivers/{$driver}/licences", ['number' => 'DL-2', 'classes' => ['b', 'c'], 'issued_on' => '2021-12-02', 'expires_on' => '2026-12-02',
             'document' => UploadedFile::fake()->create('licence.pdf', 20, 'application/pdf')], ['Accept' => 'application/json'])->assertOk();
         $this->getJson("/api/v1/fleet/drivers/{$driver}")->assertJsonCount(2, 'data.licences')->assertJsonPath('data.licences.0.is_current', true)->assertJsonPath('data.licences.1.is_current', false);
+        $hr = $this->actingAs($this->hrAdmin)->getJson("/api/v1/hr/employees/{$this->employee}/licences")->assertOk()->json('data');
+        $this->assertSame(['DL-2', 'DL-1'], array_column($hr, 'licence_no'));
+        $this->assertSame(['B', 'C'], $hr[0]['classes']);
+        $this->assertTrue($hr[0]['licence']['is_driving']);
+        $this->actingAs($this->officer);
         $this->getJson("/api/v1/fleet/drivers?unit_id={$unit}")->assertJsonCount(1, 'data');
         $this->postJson("/api/v1/fleet/units/{$unit}/assign", ['fleet_driver_id' => $driver, 'starts_on' => '2026-11-18', 'ends_on' => '2026-11-25'])->assertOk();
         $this->getJson("/api/v1/fleet/units/{$unit}")->assertJsonPath('data.driver.name', 'Juma Driver');

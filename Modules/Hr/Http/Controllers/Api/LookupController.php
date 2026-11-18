@@ -101,12 +101,12 @@ class LookupController extends Controller
     /**
      * Active professional licence types.
      *
-     * @response array{data: list<array{id: int, name: string, provider_name: string|null, short_name: string|null}>}
+     * @response array{data: list<array{id: int, name: string, provider_name: string|null, short_name: string|null, is_driving: bool}>}
      */
     public function licenceTypes(): JsonResponse
     {
         return response()->json(['data' => ProfessionalLicence::where('is_active', true)->orderBy('name')->get()
-            ->map(fn ($l) => ['id' => $l->id, 'name' => $l->name, 'provider_name' => $l->provider_name, 'short_name' => $l->short_name])]);
+            ->map(fn ($l) => ['id' => $l->id, 'name' => $l->name, 'provider_name' => $l->provider_name, 'short_name' => $l->short_name, 'is_driving' => (bool) $l->is_driving])]);
     }
 
     /**

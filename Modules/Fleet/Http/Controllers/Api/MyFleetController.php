@@ -22,12 +22,12 @@ class MyFleetController extends Controller
     public function index(Request $request): JsonResponse
     {
         $employee = $request->user()->employee;
-        $driver = $employee ? Driver::with(['licence', 'assignments' => fn ($q) => $q->whereNull('ended_on')->with('unit.type', 'unit.compliance')])->where('employee_id', $employee->id)->first() : null;
-        $l = $driver?->licence;
+        $driver = $employee ? Driver::with(['licences', 'assignments' => fn ($q) => $q->whereNull('ended_on')->with('unit.type', 'unit.compliance')])->where('employee_id', $employee->id)->first() : null;
+        $l = $driver?->currentLicence();
 
         return response()->json(['data' => [
             'driver' => (bool) $driver,
-            'licence' => $l ? ['number' => $l->number, 'classes' => $l->classes, 'expires_on' => $l->expires_on->toDateString(), 'days_left' => (int) today()->diffInDays($l->expires_on, false)] : null,
+            'licence' => $l ? ['number' => (string) $l->licence_no, 'classes' => $l->classes ?? [], 'expires_on' => $l->end_date->toDateString(), 'days_left' => (int) today()->diffInDays($l->end_date, false)] : null,
             'vehicles' => ($driver?->assignments ?? collect())->filter(fn ($a) => $a->unit)->map(fn ($a) => ['id' => $a->unit->id, 'label' => $a->unit->label(), 'type' => $a->unit->type?->name,
                 'status' => $a->unit->status, 'status_label' => FleetUnit::STATUSES[$a->unit->status] ?? $a->unit->status, 'reading' => $a->unit->reading, 'unit' => $a->unit->unit(),
                 'since' => $a->starts_on->toDateString(), 'until' => $a->ends_on?->toDateString(),

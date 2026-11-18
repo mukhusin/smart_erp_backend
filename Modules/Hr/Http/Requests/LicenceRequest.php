@@ -27,6 +27,9 @@ class LicenceRequest extends FormRequest
             'professional_licence_id' => ['required', 'integer', Rule::exists('professional_licences', 'id')
                 ->where('company_id', app(CompanyContext::class)->id())->whereNull('deleted_at')],
             'licence_no' => ['nullable', 'string', 'max:100'],
+            /** Driving licences only: the classes printed on it, e.g. B, C, D. */
+            'classes' => ['nullable', 'array', 'max:20'],
+            'classes.*' => ['string', 'max:5'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             /** PDF, JPG or PNG, up to 5 MB. */

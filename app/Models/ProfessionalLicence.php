@@ -10,9 +10,9 @@ class ProfessionalLicence extends Model
 {
     use BelongsToCompany, SoftDeletes;
 
-    protected $fillable = ['company_id', 'name', 'provider_name', 'short_name', 'is_active'];
+    protected $fillable = ['company_id', 'name', 'provider_name', 'short_name', 'is_driving', 'is_active'];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = ['is_active' => 'boolean', 'is_driving' => 'boolean'];
 
     public function employeeLicences()
     {

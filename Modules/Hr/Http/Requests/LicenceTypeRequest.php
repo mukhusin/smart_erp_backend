@@ -18,6 +18,8 @@ class LicenceTypeRequest extends FormRequest
             /** The body that issues it, e.g. Medical Council of Tanganyika. */
             'provider_name' => ['nullable', 'string', 'max:150'],
             'short_name' => ['nullable', 'string', 'max:50'],
+            /** A driving licence: its holders can be fleet drivers and it records licence classes. */
+            'is_driving' => ['sometimes', 'boolean'],
             'is_active' => ['boolean'],
         ];
     }

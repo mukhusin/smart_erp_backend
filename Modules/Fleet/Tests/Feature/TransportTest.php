@@ -62,7 +62,8 @@ class TransportTest extends TestCase
             $driverEmp = $mk('D1', 'Juma', $this->driverUser);
             $this->unit = FleetUnit::create(['kind' => 'vehicle', 'registration' => 'T 100 AAA', 'name' => 'Hilux', 'ownership' => 'owned', 'status' => 'operational', 'seats' => 4, 'reading' => 10000])->id;
             $d = Driver::create(['employee_id' => $driverEmp, 'status' => 'active']);
-            $d->licences()->create(['number' => 'DL', 'classes' => ['B'], 'expires_on' => '2028-01-01', 'is_current' => true]);
+            $type = \App\Models\ProfessionalLicence::create(['name' => 'Driving Licence', 'is_driving' => true, 'is_active' => true]);
+            \App\Models\EmployeeLicence::create(['employee_id' => $driverEmp, 'professional_licence_id' => $type->id, 'licence_no' => 'DL', 'classes' => ['B'], 'start_date' => '2023-01-01', 'end_date' => '2028-01-01']);
             $this->driver = $d->id;
         });
         $this->giveActiveContracts($this->company);

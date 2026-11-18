@@ -10,10 +10,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Fleet\Actions\ManageDrivers;
 use Modules\Fleet\Models\Driver;
-use Modules\Fleet\Models\DriverLicence;
+use App\Models\EmployeeLicence;
 use Modules\Fleet\Models\FleetUnit;
 use Modules\Fleet\Support\FleetAccess;
-use Modules\Fleet\Support\FleetFiles;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -32,21 +31,25 @@ class DriverController extends Controller
     public function index(Request $request): JsonResponse
     {
         abort_unless($this->access->sees($request->user()), 403);
-        $drivers = Driver::with(['employee.department', 'licence', 'assignments' => fn ($q) => $q->whereNull('ended_on')->with('unit')])->get();
+        $drivers = Driver::with(['employee.department', 'licences', 'assignments' => fn ($q) => $q->whereNull('ended_on')->with('unit')])->get();
         if ($unitId = $request->query('unit_id')) {
             $unit = FleetUnit::with('type')->findOrFail($unitId);
             $drivers = $drivers->filter(fn (Driver $d) => ! $this->drivers->ineligible($d, $unit));
         }
         $leave = $this->onLeave($drivers->pluck('employee_id')->all());
 
-        return response()->json(['data' => $drivers->sortBy(fn ($d) => $d->name())->map(fn (Driver $d) => [
-            'id' => $d->id, 'employee_id' => $d->employee_id, 'name' => $d->name(), 'employee_no' => $d->employee?->employee_no, 'department' => $d->employee?->department?->name,
-            'phone' => $d->employee?->phone_number, 'status' => $d->employee?->employment_status === 'terminated' ? 'left' : $d->status,
-            'status_label' => $d->employee?->employment_status === 'terminated' ? 'Left the organisation' : (Driver::STATUSES[$d->status] ?? $d->status),
-            'licence_number' => $d->licence?->number, 'classes' => $d->licence?->classes ?? [], 'expires_on' => $d->licence?->expires_on->toDateString(),
-            'days_left' => $d->licence ? (int) today()->diffInDays($d->licence->expires_on, false) : null,
-            'vehicle' => $d->assignments->map(fn ($a) => $a->unit?->label())->filter()->join(', ') ?: null, 'on_leave' => in_array($d->employee_id, $leave, true),
-        ])->values()]);
+        return response()->json(['data' => $drivers->sortBy(fn ($d) => $d->name())->map(function (Driver $d) use ($leave) {
+            $l = $d->currentLicence();
+
+            return [
+                'id' => $d->id, 'employee_id' => $d->employee_id, 'name' => $d->name(), 'employee_no' => $d->employee?->employee_no, 'department' => $d->employee?->department?->name,
+                'phone' => $d->employee?->phone_number, 'status' => $d->employee?->employment_status === 'terminated' ? 'left' : $d->status,
+                'status_label' => $d->employee?->employment_status === 'terminated' ? 'Left the organisation' : (Driver::STATUSES[$d->status] ?? $d->status),
+                'licence_number' => $l?->licence_no, 'classes' => $l?->classes ?? [], 'expires_on' => $l?->end_date->toDateString(),
+                'days_left' => $l ? (int) today()->diffInDays($l->end_date, false) : null,
+                'vehicle' => $d->assignments->map(fn ($a) => $a->unit?->label())->filter()->join(', ') ?: null, 'on_leave' => in_array($d->employee_id, $leave, true),
+            ];
+        })->values()]);
     }
 
     /**
@@ -64,9 +67,9 @@ class DriverController extends Controller
             'id' => $driver->id, 'employee_id' => $driver->employee_id, 'name' => $driver->name(), 'employee_no' => $e?->employee_no, 'department' => $e?->department?->name,
             'position' => $e?->jobPosition?->title, 'phone' => $e?->phone_number, 'employment_status' => $e?->employment_status, 'status' => $driver->status,
             'status_label' => Driver::STATUSES[$driver->status] ?? $driver->status, 'notes' => $driver->notes, 'on_leave' => in_array($driver->employee_id, $this->onLeave([$driver->employee_id]), true),
-            'licences' => $driver->licences->map(fn (DriverLicence $l) => ['id' => $l->id, 'number' => $l->number, 'classes' => $l->classes, 'issued_on' => $l->issued_on?->toDateString(),
-                'expires_on' => $l->expires_on->toDateString(), 'days_left' => (int) today()->diffInDays($l->expires_on, false), 'is_current' => (bool) $l->is_current,
-                'has_document' => (bool) $l->document_path])->values(),
+            'licences' => $driver->licences->values()->map(fn (EmployeeLicence $l, $i) => ['id' => $l->id, 'number' => (string) $l->licence_no, 'classes' => $l->classes ?? [],
+                'issued_on' => $l->start_date?->toDateString(), 'expires_on' => $l->end_date->toDateString(), 'days_left' => (int) today()->diffInDays($l->end_date, false),
+                'is_current' => $i === 0, 'has_document' => (bool) $l->file_path])->values(),
             'assignments' => $driver->assignments->map(fn ($a) => ['id' => $a->id, 'unit_id' => $a->fleet_unit_id, 'unit' => (string) $a->unit?->label(), 'starts_on' => $a->starts_on->toDateString(),
                 'ends_on' => $a->ends_on?->toDateString(), 'ended_on' => $a->ended_on?->toDateString()])->values(),
             'can' => ['manage' => $this->access->manages($request->user())],
@@ -123,24 +126,26 @@ class DriverController extends Controller
     {
         abort_unless($this->access->manages($request->user()), 403);
         $data = $request->validate([
-            'number' => ['required', 'string', 'max:40'],
+            'number' => ['required', 'string', 'max:100'],
             /** Classes printed on the licence, e.g. B, C, D. */
             'classes' => ['required', 'array', 'min:1', 'max:20'],
             'classes.*' => ['string', 'max:5'],
-            'issued_on' => ['nullable', 'date'],
+            'issued_on' => ['required', 'date'],
             'expires_on' => ['required', 'date'],
-            'document' => FleetFiles::RULES,
+            /** PDF, JPG or PNG, up to 5 MB. */
+            'document' => ['nullable', 'file', ...\Modules\Hr\Support\EmployeeFiles::DOCUMENT_RULES],
         ]);
         $this->drivers->addLicence($driver, collect($data)->except('document')->all(), $request->file('document'), $request->user());
 
         return response()->json(['message' => 'Licence saved.']);
     }
 
-    public function licenceFile(Request $request, DriverLicence $licence): StreamedResponse
+    public function licenceFile(Request $request, int $licence): StreamedResponse
     {
-        abort_unless($this->access->sees($request->user()) && $licence->document_path, 404);
+        abort_unless($this->access->sees($request->user()), 403);
+        $l = EmployeeLicence::whereHas('employee')->whereHas('professionalLicence', fn ($q) => $q->where('is_driving', true))->findOrFail($licence);
 
-        return FleetFiles::response($licence->document_path, (string) $licence->document_name);
+        return \Modules\Hr\Support\EmployeeFiles::response($l->file_path, $l->file_name);
     }
 
     /** @return list<int> */

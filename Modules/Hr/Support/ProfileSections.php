@@ -29,7 +29,7 @@ final class ProfileSections
             'fields' => ['education_level', 'institution', 'program', 'date_of_start', 'date_of_end', 'end_year'],
             'file' => ['input' => 'certificate', 'path' => 'certificate', 'name' => 'certificate_name', 'folder' => 'qualifications']],
         'licences' => ['label' => 'Professional licence', 'model' => EmployeeLicence::class, 'relation' => 'licences', 'resource' => LicenceResource::class,
-            'fields' => ['professional_licence_id', 'licence_no', 'start_date', 'end_date'],
+            'fields' => ['professional_licence_id', 'licence_no', 'classes', 'start_date', 'end_date'],
             'file' => ['input' => 'file', 'path' => 'file_path', 'name' => 'file_name', 'folder' => 'licences']],
         'experiences' => ['label' => 'Work experience', 'model' => EmployeeExperience::class, 'relation' => 'experiences', 'resource' => ExperienceResource::class,
             'fields' => ['company_name', 'position', 'start_date', 'end_date', 'salary', 'description'], 'file' => null],

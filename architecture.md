@@ -1145,6 +1145,12 @@ before start. `fleet_agency_contracts` (supplier, per trip / km / day, rate, val
 on a chosen department budget line, source = the batch. Self Service: My transport requests, driver's trips in My
 vehicles. Not yet: fuel for the trip, tracked-trip logbook fill, private-trip charging.
 
+**Driving licences in HR (2026-11-18):** one record only. `professional_licences.is_driving` marks driving licence
+types (set by name on migration) and `employee_licences.classes` holds the classes; the fleet reads a driver's approved
+driving licences from the HR profile (the one expiring last counts) and "Add licence" in the fleet saves to the HR
+profile. `fleet_driver_licences` was moved into `employee_licences` and dropped. HR and Self Service licence forms
+show the classes field for driving licence types.
+
 **Open questions (to confirm with each customer):** tracker models at go-live; fuel via national supplier, cards, own
 tanks or a mix; whether private trips are charged to the employee (and how: payroll deduction or receipt); who may
 send an immobilise command and when.

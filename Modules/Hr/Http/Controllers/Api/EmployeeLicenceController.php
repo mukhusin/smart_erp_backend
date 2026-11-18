@@ -73,8 +73,7 @@ class EmployeeLicenceController extends Controller
 
     private function fields(LicenceRequest $request): array
     {
-        $keys = ['professional_licence_id', 'licence_no', 'start_date', 'end_date'];
-
+        $keys = ['professional_licence_id', 'licence_no', 'classes', 'start_date', 'end_date'];
         return array_merge(array_fill_keys($keys, null), $request->safe()->only($keys));
     }
 

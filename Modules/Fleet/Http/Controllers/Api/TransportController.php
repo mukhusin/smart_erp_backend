@@ -159,9 +159,9 @@ class TransportController extends Controller
 
                 return ['id' => $u->id, 'label' => $u->label(), 'type' => $u->type?->name, 'seats' => $u->seats, 'free' => ! $trip, 'note' => $trip ? "On trip {$trip->number}" : null];
             })->values(),
-            'drivers' => Driver::with(['employee', 'licence'])->where('status', 'active')->get()->sortBy(fn ($d) => $d->name())->map(function ($d) use ($busy, $leave) {
+            'drivers' => Driver::with(['employee', 'licences'])->where('status', 'active')->get()->sortBy(fn ($d) => $d->name())->map(function ($d) use ($busy, $leave) {
                 $trip = $busy->firstWhere('fleet_driver_id', $d->id);
-                $note = $trip ? "On trip {$trip->number}" : ($leave->has($d->employee_id) ? 'On leave' : (! $d->licence?->valid() ? 'No valid licence' : null));
+                $note = $trip ? "On trip {$trip->number}" : ($leave->has($d->employee_id) ? 'On leave' : (! $d->currentLicence()?->valid() ? 'No valid licence' : null));
 
                 return ['id' => $d->id, 'name' => $d->name(), 'free' => ! $note, 'note' => $note];
             })->values(),

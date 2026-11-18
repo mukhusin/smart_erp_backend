@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use Modules\Core\Notifications\Notice;
 use Modules\Fleet\Models\Assignment;
 use Modules\Fleet\Models\Compliance;
-use Modules\Fleet\Models\DriverLicence;
+use Modules\Fleet\Models\Driver;
 use Modules\Fleet\Models\FleetUnit;
 use Modules\Fleet\Models\StatusChange;
 use Modules\Fleet\Support\FleetAccess;
@@ -63,13 +63,15 @@ class FleetAlerts
                     'users' => collect([$c->unit->activeAssignment?->driver?->employee?->user])->filter()]);
             }
         }
-        $licences = DriverLicence::with('driver.employee.user')->where('is_current', true)->whereHas('driver', fn ($q) => $q->where('status', 'active'))
-            ->whereDate('expires_on', '<=', today()->addDays(30))->get();
-        foreach ($licences as $l) {
-            $days = (int) today()->diffInDays($l->expires_on, false);
-            if ($hit($days)) {
-                $out->push(['what' => 'Driving licence', 'for' => $l->driver->name(), 'days' => $days, 'expires' => $l->expires_on, 'link' => "/fleet/drivers/{$l->fleet_driver_id}",
-                    'users' => collect([$l->driver->employee?->user])->filter()]);
+        foreach (Driver::with(['employee.user', 'licences'])->where('status', 'active')->get() as $d) {
+            $l = $d->currentLicence();
+            if (! $l) {
+                continue;
+            }
+            $days = (int) today()->diffInDays($l->end_date, false);
+            if ($days <= 30 && $hit($days)) {
+                $out->push(['what' => 'Driving licence', 'for' => $d->name(), 'days' => $days, 'expires' => $l->end_date, 'link' => "/fleet/drivers/{$d->id}",
+                    'users' => collect([$d->employee?->user])->filter()]);
             }
         }
 
