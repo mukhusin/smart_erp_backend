@@ -138,6 +138,12 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Workflow background actions (2026-11-18)
+
+`php artisan migrate` adds workflow actions, their log and step waiting/escalation columns. The cron runs
+`workflow:overdue` hourly; the queue worker sends webhooks (default queue). Email actions use the mail settings
+(`MAIL_MAILER=log` on the test server writes them to the log).
+
 ## Fleet phase 5: hire in and reports (2026-11-18)
 
 `php artisan migrate`: hires and hire payments, `fleet_units.fleet_hire_id`. Fleet reports appear under Reports →

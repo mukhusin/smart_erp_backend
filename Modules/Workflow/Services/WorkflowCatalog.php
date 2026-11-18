@@ -136,6 +136,11 @@ final class WorkflowCatalog
         return $out;
     }
 
+    public function has(string $key): bool
+    {
+        return array_key_exists($key, $this->all());
+    }
+
     public function get(string $key): WorkflowProcess
     {
         return $this->all()[$key] ?? throw new \InvalidArgumentException("Unknown workflow process [$key].");

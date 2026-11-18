@@ -1182,7 +1182,17 @@ services due and open jobs, fuel this month, accidents this year, costliest unit
 (`Modules/Reporting/Support/FleetReports.php`, route /reports/fleet): register, running cost per vehicle and per km,
 fuel consumption with usual rate and flagged fills, tank stock card, transport requests, use (trips, days on trips,
 logbook km vs odometer km), maintenance history, accidents, insurance/licences (with driving licences), hires.
-Next: phase 6 tracking (needs the tracker models from the customer) and phase 7 driver app.
+Phase 6 (GPS tracking) is a coming feature, shown as "coming soon" on the fleet dashboard; it starts once the
+customer chooses the tracker devices. Phase 7 (driver phone app) follows.
+
+**Workflow background actions (2026-11-18).** Business effects stay in each process (budget, ledger) and are shown
+read-only per workflow (`Modules/Workflow/Support/ProcessEffects.php`). Administrators add `workflow_actions` per
+template: event (started, step approved, approved, rejected, sent back, cancelled, overdue after N days), optional
+step and minimum amount; action notify (requester, role, person, department head, current approvers; app, email, SMS),
+escalate (overdue only; the step can then also be approved by the named role or person — `workflow_instance_steps`
+escalated_user_id/role_id, pending_since) or webhook (queued POST, HMAC-SHA256 `X-Signature`, 3 tries, logged).
+Actions run after the approval commits and never block it; `workflow_action_logs` records each run; `workflow:overdue`
+hourly; included in workflow export/import (secrets not exported).
 
 **Driving licences in HR (2026-11-18):** one record only. `professional_licences.is_driving` marks driving licence
 types (set by name on migration) and `employee_licences.classes` holds the classes; the fleet reads a driver's approved

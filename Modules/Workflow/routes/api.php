@@ -11,6 +11,10 @@ Route::prefix('admin/workflows')->middleware(['auth:sanctum', 'module:admin', 'c
     Route::get('users', [WorkflowSetupController::class, 'users'])->name('users');
     Route::get('export', [WorkflowSetupController::class, 'export'])->name('export');
     Route::post('import', [WorkflowSetupController::class, 'import'])->name('import');
+    Route::put('actions/{action}', [\Modules\Workflow\Http\Controllers\Api\WorkflowActionController::class, 'update'])->name('actions.update');
+    Route::delete('actions/{action}', [\Modules\Workflow\Http\Controllers\Api\WorkflowActionController::class, 'destroy'])->name('actions.destroy');
+    Route::get('{process}/actions', [\Modules\Workflow\Http\Controllers\Api\WorkflowActionController::class, 'index'])->name('actions.index');
+    Route::post('{process}/actions', [\Modules\Workflow\Http\Controllers\Api\WorkflowActionController::class, 'store'])->name('actions.store');
     Route::put('{process}', [WorkflowSetupController::class, 'save'])->name('save');
 });
 

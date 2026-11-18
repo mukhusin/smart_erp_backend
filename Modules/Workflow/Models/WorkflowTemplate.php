@@ -26,4 +26,9 @@ class WorkflowTemplate extends Model
     {
         return $this->belongsTo(CompanyBranch::class, 'company_branch_id');
     }
+
+    public function actions()
+    {
+        return $this->hasMany(WorkflowAction::class)->orderBy('id');
+    }
 }

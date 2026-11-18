@@ -138,12 +138,12 @@ class WorkflowSetupController extends Controller
      *
      * Roles, users and branches are written by name (users by email or username), not by id, so they match on the other side.
      *
-     * @response array{format: string, version: int, exported_at: string, company: string|null, workflows: list<array{process: string, name: string, branch: string|null, is_active: bool, steps: list<array{name: string, approver_type: string, role: string|null, user: string|null, same_branch: bool, allow_send_back: bool, min_amount: float|null, approve_label: string|null, reject_label: string|null}>}>}
+     * @response array{format: string, version: int, exported_at: string, company: string|null, workflows: list<array{process: string, name: string, branch: string|null, is_active: bool, steps: list<array{name: string, approver_type: string, role: string|null, user: string|null, same_branch: bool, allow_send_back: bool, min_amount: float|null, approve_label: string|null, reject_label: string|null}>, actions: list<array{event: string, step_order: int|null, min_amount: float|null, action: string, target: string|null, role: string|null, user: string|null, channels: list<string>|null, after_days: int|null, message: string|null, url: string|null, is_active: bool}>}>}
      */
     public function export(WorkflowCatalog $catalog, CompanyContext $context): JsonResponse
     {
         $processes = $catalog->forCurrentCompany();
-        $templates = WorkflowTemplate::with(['steps.role', 'steps.user', 'branch'])->orderBy('process')->orderBy('company_branch_id')->get()
+        $templates = WorkflowTemplate::with(['steps.role', 'steps.user', 'branch', 'actions.role', 'actions.user'])->orderBy('process')->orderBy('company_branch_id')->get()
             ->filter(fn ($t) => isset($processes[$t->process]));
 
         return response()->json([
@@ -151,7 +151,10 @@ class WorkflowSetupController extends Controller
             'workflows' => $templates->map(fn (WorkflowTemplate $t) => ['process' => $t->process, 'name' => $processes[$t->process]->name(), 'branch' => $t->branch?->name, 'is_active' => (bool) $t->is_active,
                 'steps' => $t->steps->sortBy('step_order')->map(fn ($s) => ['name' => $s->name, 'approver_type' => $s->approver_type, 'role' => $s->role?->name,
                     'user' => $s->user ? ($s->user->email ?: $s->user->username) : null, 'same_branch' => (bool) $s->same_branch, 'allow_send_back' => (bool) $s->allow_send_back,
-                    'min_amount' => $s->min_amount, 'approve_label' => $s->approve_label, 'reject_label' => $s->reject_label])->values()])->values(),
+                    'min_amount' => $s->min_amount, 'approve_label' => $s->approve_label, 'reject_label' => $s->reject_label])->values(),
+                'actions' => $t->actions->map(fn ($a) => ['event' => $a->event, 'step_order' => $a->step_order, 'min_amount' => $a->min_amount, 'action' => $a->action, 'target' => $a->target,
+                    'role' => $a->role?->name, 'user' => $a->user ? ($a->user->email ?: $a->user->username) : null, 'channels' => $a->channels, 'after_days' => $a->after_days,
+                    'message' => $a->message, 'url' => $a->url, 'is_active' => (bool) $a->is_active])->values()])->values(),
         ]);
     }
 
@@ -186,6 +189,20 @@ class WorkflowSetupController extends Controller
             'workflows.*.steps.*.min_amount' => ['nullable', 'numeric', 'min:0'],
             'workflows.*.steps.*.approve_label' => ['nullable', 'string', 'max:40'],
             'workflows.*.steps.*.reject_label' => ['nullable', 'string', 'max:40'],
+            /** Background actions (optional; a webhook secret is never exported). */
+            'workflows.*.actions' => ['nullable', 'array', 'max:50'],
+            'workflows.*.actions.*.event' => ['required', 'in:'.implode(',', array_keys(\Modules\Workflow\Models\WorkflowAction::EVENTS))],
+            'workflows.*.actions.*.step_order' => ['nullable', 'integer', 'min:1'],
+            'workflows.*.actions.*.min_amount' => ['nullable', 'numeric', 'min:0'],
+            'workflows.*.actions.*.action' => ['required', 'in:'.implode(',', array_keys(\Modules\Workflow\Models\WorkflowAction::ACTIONS))],
+            'workflows.*.actions.*.target' => ['nullable', 'in:'.implode(',', array_keys(\Modules\Workflow\Models\WorkflowAction::TARGETS))],
+            'workflows.*.actions.*.role' => ['nullable', 'string', 'max:150'],
+            'workflows.*.actions.*.user' => ['nullable', 'string', 'max:150'],
+            'workflows.*.actions.*.channels' => ['nullable', 'array'],
+            'workflows.*.actions.*.after_days' => ['nullable', 'integer', 'min:1', 'max:90'],
+            'workflows.*.actions.*.message' => ['nullable', 'string', 'max:500'],
+            'workflows.*.actions.*.url' => ['nullable', 'string', 'max:500'],
+            'workflows.*.actions.*.is_active' => ['nullable', 'boolean'],
         ]);
         $dry = (bool) ($data['dry_run'] ?? false);
         $processes = $catalog->forCurrentCompany();
@@ -228,10 +245,24 @@ class WorkflowSetupController extends Controller
                     'same_branch' => $st['approver_type'] === 'role' && ($st['same_branch'] ?? false), 'allow_send_back' => $st['allow_send_back'] ?? true,
                     'min_amount' => $st['min_amount'] ?? null, 'approve_label' => $st['approve_label'] ?? null, 'reject_label' => $st['reject_label'] ?? null];
             }
+            $actions = [];
+            foreach ($w['actions'] ?? [] as $i => $ac) {
+                $roleId = ! empty($ac['role']) ? ($roles[$ac['role']] ?? null) : null;
+                $userId = ! empty($ac['user']) ? $users->first(fn ($u) => $u->email === $ac['user'] || $u->username === $ac['user'])?->id : null;
+                if (($ac['target'] ?? null) === 'role' && ! $roleId) {
+                    $problems[] = 'Action '.($i + 1).': role '.($ac['role'] ?? '(none)').' not found.';
+                }
+                if (($ac['target'] ?? null) === 'user' && ! $userId) {
+                    $problems[] = 'Action '.($i + 1).': user '.($ac['user'] ?? '(none)').' not found or inactive.';
+                }
+                $actions[] = ['event' => $ac['event'], 'step_order' => $ac['step_order'] ?? null, 'min_amount' => $ac['min_amount'] ?? null, 'action' => $ac['action'], 'target' => $ac['target'] ?? null,
+                    'role_id' => $roleId, 'user_id' => $userId, 'channels' => $ac['channels'] ?? null, 'after_days' => $ac['after_days'] ?? null, 'message' => $ac['message'] ?? null,
+                    'url' => $ac['url'] ?? null, 'is_active' => $ac['is_active'] ?? true];
+            }
             $existing = $process ? WorkflowTemplate::where('process', $w['process'])->where('company_branch_id', $branchId)->exists() : false;
             $action = $problems ? 'skipped' : (empty($steps) ? ($existing ? 'removed' : 'unchanged') : ($existing ? 'replaced' : 'created'));
             if (! $problems && ! $dry) {
-                DB::transaction(function () use ($w, $branchId, $steps, $request) {
+                DB::transaction(function () use ($w, $branchId, $steps, $request, $actions) {
                     $template = WorkflowTemplate::where('process', $w['process'])->where('company_branch_id', $branchId)->first();
                     if (empty($steps)) {
                         $template?->delete();
@@ -243,6 +274,12 @@ class WorkflowSetupController extends Controller
                     $template->steps()->delete();
                     foreach ($steps as $st) {
                         $template->steps()->create($st);
+                    }
+                    if (array_key_exists('actions', $w)) {
+                        $template->actions()->delete();
+                        foreach ($actions as $ac) {
+                            $template->actions()->create($ac);
+                        }
                     }
                 });
             }

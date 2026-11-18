@@ -7840,6 +7840,94 @@
                                                                 "reject_label"
                                                             ]
                                                         }
+                                                    },
+                                                    "actions": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "event": {
+                                                                    "type": "string"
+                                                                },
+                                                                "step_order": {
+                                                                    "type": [
+                                                                        "integer",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "min_amount": {
+                                                                    "type": [
+                                                                        "number",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "action": {
+                                                                    "type": "string"
+                                                                },
+                                                                "target": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "role": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "user": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "channels": {
+                                                                    "type": [
+                                                                        "array",
+                                                                        "null"
+                                                                    ],
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "after_days": {
+                                                                    "type": [
+                                                                        "integer",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "message": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "url": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "is_active": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "event",
+                                                                "step_order",
+                                                                "min_amount",
+                                                                "action",
+                                                                "target",
+                                                                "role",
+                                                                "user",
+                                                                "channels",
+                                                                "after_days",
+                                                                "message",
+                                                                "url",
+                                                                "is_active"
+                                                            ]
+                                                        }
                                                     }
                                                 },
                                                 "required": [
@@ -7847,7 +7935,8 @@
                                                     "name",
                                                     "branch",
                                                     "is_active",
-                                                    "steps"
+                                                    "steps",
+                                                    "actions"
                                                 ]
                                             }
                                         }
@@ -8003,6 +8092,122 @@
                                                         ]
                                                     },
                                                     "maxItems": 20
+                                                },
+                                                "actions": {
+                                                    "type": [
+                                                        "array",
+                                                        "null"
+                                                    ],
+                                                    "description": "Background actions (optional; a webhook secret is never exported).",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "event": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "started",
+                                                                    "step_approved",
+                                                                    "approved",
+                                                                    "rejected",
+                                                                    "sent_back",
+                                                                    "cancelled",
+                                                                    "overdue"
+                                                                ]
+                                                            },
+                                                            "step_order": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ],
+                                                                "minimum": 1
+                                                            },
+                                                            "min_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ],
+                                                                "minimum": 0
+                                                            },
+                                                            "action": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "notify",
+                                                                    "escalate",
+                                                                    "webhook"
+                                                                ]
+                                                            },
+                                                            "target": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "enum": [
+                                                                    "requester",
+                                                                    "role",
+                                                                    "user",
+                                                                    "department_head",
+                                                                    "approvers",
+                                                                    null
+                                                                ]
+                                                            },
+                                                            "role": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "maxLength": 150
+                                                            },
+                                                            "user": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "maxLength": 150
+                                                            },
+                                                            "channels": {
+                                                                "type": [
+                                                                    "array",
+                                                                    "null"
+                                                                ],
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "after_days": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ],
+                                                                "minimum": 1,
+                                                                "maximum": 90
+                                                            },
+                                                            "message": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "maxLength": 500
+                                                            },
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "maxLength": 500
+                                                            },
+                                                            "is_active": {
+                                                                "type": [
+                                                                    "boolean",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "event",
+                                                            "action"
+                                                        ]
+                                                    },
+                                                    "maxItems": 50
                                                 }
                                             },
                                             "required": [
@@ -10502,6 +10707,534 @@
                                                         "direct_permissions"
                                                     ]
                                                 }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/workflows/actions/{action}": {
+            "put": {
+                "operationId": "admin.workflows.actions.update",
+                "tags": [
+                    "Admin: workflow actions",
+                    "WorkflowAction"
+                ],
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "path",
+                        "required": true,
+                        "description": "The action ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActionRuleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin.workflows.actions.destroy",
+                "tags": [
+                    "Admin: workflow actions",
+                    "WorkflowAction"
+                ],
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "path",
+                        "required": true,
+                        "description": "The action ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Action removed."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/workflows/{process}/actions": {
+            "get": {
+                "operationId": "admin.workflows.actions.index",
+                "summary": "What a process does by itself, and the background actions attached to its workflow",
+                "tags": [
+                    "Admin: workflow actions",
+                    "WorkflowAction"
+                ],
+                "parameters": [
+                    {
+                        "name": "process",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "company_branch_id",
+                        "in": "query",
+                        "description": "The branch workflow; empty for the company-wide one.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "effects": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "started": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "approved": {
+                                                            "type": "string"
+                                                        },
+                                                        "rejected": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "started",
+                                                        "approved",
+                                                        "rejected"
+                                                    ]
+                                                },
+                                                "template_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "actions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "event": {
+                                                                "type": "string"
+                                                            },
+                                                            "event_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "step_order": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "min_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "action": {
+                                                                "type": "string"
+                                                            },
+                                                            "action_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "target": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "target_label": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "role_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "role": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "user_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "user": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "channels": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "after_days": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "message": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "secret_set": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "is_active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "event",
+                                                            "event_label",
+                                                            "step_order",
+                                                            "min_amount",
+                                                            "action",
+                                                            "action_label",
+                                                            "target",
+                                                            "target_label",
+                                                            "role_id",
+                                                            "role",
+                                                            "user_id",
+                                                            "user",
+                                                            "channels",
+                                                            "after_days",
+                                                            "message",
+                                                            "url",
+                                                            "secret_set",
+                                                            "is_active"
+                                                        ]
+                                                    }
+                                                },
+                                                "logs": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "action_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "event": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "detail": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "request_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "at": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "action_id",
+                                                            "event",
+                                                            "status",
+                                                            "detail",
+                                                            "request_id",
+                                                            "at"
+                                                        ]
+                                                    }
+                                                },
+                                                "options": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "events": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "value": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "value",
+                                                                    "label"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "actions": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "value": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "value",
+                                                                    "label"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "targets": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "value": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "value",
+                                                                    "label"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "channels": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "value": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "value",
+                                                                    "label"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "events",
+                                                        "actions",
+                                                        "targets",
+                                                        "channels"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "effects",
+                                                "template_id",
+                                                "actions",
+                                                "logs",
+                                                "options"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin.workflows.actions.store",
+                "tags": [
+                    "Admin: workflow actions",
+                    "WorkflowAction"
+                ],
+                "parameters": [
+                    {
+                        "name": "process",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActionRuleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
                                             ]
                                         }
                                     },
@@ -105164,6 +105897,148 @@
                     "budget_control"
                 ],
                 "title": "AccountingSettingsRequest"
+            },
+            "ActionRuleRequest": {
+                "type": "object",
+                "properties": {
+                    "company_branch_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Branch workflow (new actions only); empty for the company-wide one."
+                    },
+                    "event": {
+                        "type": "string",
+                        "description": "started, step_approved, approved, rejected, sent_back, cancelled or overdue.",
+                        "enum": [
+                            "started",
+                            "step_approved",
+                            "approved",
+                            "rejected",
+                            "sent_back",
+                            "cancelled",
+                            "overdue"
+                        ]
+                    },
+                    "step_order": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Only for this step (step approved / overdue); empty = any step.",
+                        "minimum": 1,
+                        "maximum": 20
+                    },
+                    "min_amount": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Only when the request amount is at least this.",
+                        "minimum": 0
+                    },
+                    "action": {
+                        "type": "string",
+                        "description": "notify, escalate (overdue only) or webhook.",
+                        "enum": [
+                            "notify",
+                            "escalate",
+                            "webhook"
+                        ]
+                    },
+                    "target": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "requester, role, user, department_head or approvers.",
+                        "enum": [
+                            "requester",
+                            "role",
+                            "user",
+                            "department_head",
+                            "approvers",
+                            null
+                        ]
+                    },
+                    "role_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "user_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "channels": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "app",
+                                "email",
+                                "sms"
+                            ]
+                        }
+                    },
+                    "after_days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "For \"waiting too long\": after how many days.",
+                        "minimum": 1,
+                        "maximum": 90
+                    },
+                    "message": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Optional text; may use {title}, {process}, {requester}, {step}, {amount}, {days}.",
+                        "maxLength": 500
+                    },
+                    "url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uri",
+                        "maxLength": 500
+                    },
+                    "secret": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Signs each call (header X-Signature, HMAC-SHA256 of the body). Leave empty to keep the saved one.",
+                        "maxLength": 200
+                    },
+                    "clear_secret": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ]
+                    },
+                    "is_active": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "event",
+                    "action"
+                ],
+                "title": "ActionRuleRequest"
             },
             "AdminUserResource": {
                 "type": "object",

@@ -71,8 +71,9 @@ class WorkflowEngine
                 'initiated_by' => $initiator->id,
             ]);
             foreach ($steps as $i => $step) {
-                $instance->steps()->create($this->copy($step) + ['status' => $i === 0 ? WorkflowInstanceStep::PENDING : WorkflowInstanceStep::WAITING]);
+                $instance->steps()->create($this->copy($step) + ['status' => $i === 0 ? WorkflowInstanceStep::PENDING : WorkflowInstanceStep::WAITING, 'pending_since' => $i === 0 ? now() : null]);
             }
+            $this->actions()->fire($instance, 'started');
 
             return $instance->load('steps');
         });
@@ -94,12 +95,14 @@ class WorkflowEngine
             $step->update(['status' => WorkflowInstanceStep::APPROVED, 'acted_by' => $user->id, 'acted_at' => now(), 'comment' => $comment]);
             $next = $instance->steps()->where('status', WorkflowInstanceStep::WAITING)->orderBy('step_order')->orderBy('id')->first();
 
+            $this->actions()->fire($instance, 'step_approved', $step);
             if ($next) {
-                $next->update(['status' => WorkflowInstanceStep::PENDING]);
+                $next->update(['status' => WorkflowInstanceStep::PENDING, 'pending_since' => now()]);
                 $instance->update(['current_step_order' => $next->step_order]);
             } else {
                 $instance->update(['status' => WorkflowInstance::APPROVED, 'current_step_order' => null, 'completed_at' => now()]);
                 $this->catalog->get($instance->process)->onApproved($instance->subject);
+                $this->actions()->fire($instance, 'approved', $step);
             }
         });
     }
@@ -110,6 +113,7 @@ class WorkflowEngine
             $step->update(['status' => WorkflowInstanceStep::REJECTED, 'acted_by' => $user->id, 'acted_at' => now(), 'comment' => $comment]);
             $instance->update(['status' => WorkflowInstance::REJECTED, 'current_step_order' => null, 'completed_at' => now()]);
             $this->catalog->get($instance->process)->onRejected($instance->subject, $comment);
+            $this->actions()->fire($instance, 'rejected', $step);
         });
     }
 
@@ -125,10 +129,11 @@ class WorkflowEngine
 
             $template = $instance->steps()->where('step_order', '>=', $toStepOrder)->orderBy('id')->get()->unique('step_order')->sortBy('step_order');
             foreach ($template->values() as $i => $old) {
-                $instance->steps()->create(collect($old->only($old->getFillable()))->except(['status', 'acted_by', 'acted_at', 'comment'])->all()
-                    + ['status' => $i === 0 ? WorkflowInstanceStep::PENDING : WorkflowInstanceStep::WAITING]);
+                $instance->steps()->create(collect($old->only($old->getFillable()))->except(['status', 'acted_by', 'acted_at', 'comment', 'pending_since', 'escalated_user_id', 'escalated_role_id', 'escalated_at'])->all()
+                    + ['status' => $i === 0 ? WorkflowInstanceStep::PENDING : WorkflowInstanceStep::WAITING, 'pending_since' => $i === 0 ? now() : null]);
             }
             $instance->update(['current_step_order' => $toStepOrder]);
+            $this->actions()->fire($instance, 'sent_back', $step);
         });
     }
 
@@ -143,6 +148,7 @@ class WorkflowEngine
             $instance->steps()->whereIn('status', [WorkflowInstanceStep::PENDING, WorkflowInstanceStep::WAITING])->delete();
             $instance->update(['status' => WorkflowInstance::CANCELLED, 'current_step_order' => null, 'completed_at' => now()]);
             $this->catalog->get($instance->process)->onRejected($instance->subject, 'Withdrawn by the requester.');
+            $this->actions()->fire($instance, 'cancelled');
 
             return $instance->load('steps');
         });
@@ -174,8 +180,17 @@ class WorkflowEngine
         });
     }
 
+    private function actions(): WorkflowActions
+    {
+        return app(WorkflowActions::class);
+    }
+
     private function isApprover(User $user, WorkflowInstance $instance, WorkflowInstanceStep $step): bool
     {
+        if (($step->escalated_user_id || $step->escalated_role_id) && $this->actions()->escalatedTo($user, $step)) {
+            return true;
+        }
+
         return match ($step->approver_type) {
             WorkflowStep::APPROVER_USER => $step->user_id === $user->id,
             WorkflowStep::APPROVER_ROLE => $step->role !== null

@@ -17,4 +17,5 @@ return [
     \Modules\Audit\AuditServiceProvider::class,
     \Modules\Payments\PaymentsServiceProvider::class,
     \Modules\Fleet\FleetServiceProvider::class,
+    \Modules\Workflow\WorkflowServiceProvider::class,
 ];
