@@ -84,6 +84,12 @@ class MeResource extends JsonResource
             'is_head' => (bool) app(\Modules\Hr\Support\Heads::class)->isHead($this->resource),
             /** @var list<string> Optional features the company has switched on, e.g. "receivables.claims". */
             'features' => \Modules\Core\Support\CompanyFeatures::for($this->resource->company_id),
+            /**
+             * When HR requires a filled profile: how far the user's profile is and what is missing; null when not required.
+             *
+             * @var array{required: bool, complete: bool, percent: int, min_percent: int, items: list<array{key: string, label: string, done: bool}>}|null
+             */
+            'profile_gate' => \Modules\Hr\Support\ProfileCompletion::gate($this->resource),
             /** Minutes without activity before the app logs out (the server ends the session too). */
             'idle_minutes' => (int) config('session.idle_minutes'),
         ];

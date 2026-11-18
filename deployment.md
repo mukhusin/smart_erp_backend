@@ -138,6 +138,12 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Required staff profile (2026-11-18)
+
+`php artisan migrate` adds `hr_settings.profile_required` (off), `profile_min_percent` (75), `profile_checks`.
+Switch it on in HR → Settings → General. Users linked to an employee who can use self-service and are below the
+percentage get HTTP 423 on any change except their profile, account and logout; company administrators are exempt.
+
 ## VAT (2026-11-18)
 
 `php artisan migrate`: `vat_settings` (off), `tax_codes`, VAT columns on invoices, invoice lines, credit notes,

@@ -95,4 +95,22 @@ class SelfProfileTest extends TestCase
         $id = $this->post('/api/v1/self/profile/qualifications', $this->qualification(), ['Accept' => 'application/json'])->json('data.id');
         $this->actingAs($other)->get("/api/v1/self/profile/qualifications/{$id}/file")->assertNotFound();
     }
+
+    public function test_required_profile_blocks_requests_until_filled(): void
+    {
+        $this->actingAs($this->me)->getJson('/api/v1/me')->assertJsonPath('data.profile_gate', null);
+        $this->actingAs($this->hr)->putJson('/api/v1/hr/settings/general', ['hospital_patients' => false, 'profile_required' => true, 'profile_min_percent' => 75,
+            'profile_checks' => ['contact', 'qualifications', 'documents', 'dependants']])->assertOk()->assertJsonPath('data.profile_required', true)->assertJsonCount(4, 'data.profile_checks');
+        $this->actingAs($this->hr)->postJson('/api/v1/payments/requests', [])->assertStatus(403);
+
+        $this->actingAs($this->me)->getJson('/api/v1/me')->assertJsonPath('data.profile_gate.complete', false)->assertJsonPath('data.profile_gate.percent', 0);
+        $this->postJson('/api/v1/payments/requests', [])->assertStatus(423)->assertJsonPath('profile_gate.min_percent', 75);
+        $this->putJson('/api/v1/self/profile/contact', ['phone_number' => '0712 000 111', 'home_address' => 'Mikocheni'])->assertOk();
+        $this->post('/api/v1/self/profile/qualifications', $this->qualification(), ['Accept' => 'application/json'])->assertCreated();
+        $this->getJson('/api/v1/self/profile')->assertJsonPath('data.completion.percent', 50);
+        $this->postJson('/api/v1/payments/requests', [])->assertStatus(423);
+        $this->post('/api/v1/self/profile/documents', ['file_type' => 'id_copy', 'file' => UploadedFile::fake()->create('id.pdf', 50, 'application/pdf')], ['Accept' => 'application/json'])->assertCreated();
+        $this->getJson('/api/v1/me')->assertJsonPath('data.profile_gate.complete', true)->assertJsonPath('data.profile_gate.percent', 75);
+        $this->postJson('/api/v1/payments/requests', [])->assertStatus(403);
+    }
 }

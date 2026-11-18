@@ -50390,17 +50390,51 @@
                                                 },
                                                 "task_max_step": {
                                                     "type": "integer"
+                                                },
+                                                "profile_required": {
+                                                    "type": "boolean"
+                                                },
+                                                "profile_min_percent": {
+                                                    "type": "integer"
+                                                },
+                                                "profile_checks": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
                                                 }
                                             },
                                             "required": [
                                                 "hospital_patients",
                                                 "retirement_age",
-                                                "task_max_step"
+                                                "task_max_step",
+                                                "profile_required",
+                                                "profile_min_percent",
+                                                "profile_checks"
                                             ]
+                                        },
+                                        "profile_options": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "label"
+                                                ]
+                                            }
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "data",
+                                        "profile_options"
                                     ]
                                 }
                             }
@@ -50437,6 +50471,33 @@
                                         "type": "integer",
                                         "minimum": 0,
                                         "maximum": 100
+                                    },
+                                    "profile_required": {
+                                        "type": "boolean",
+                                        "description": "Staff must fill their profile to `profile_min_percent` before they can make any request."
+                                    },
+                                    "profile_min_percent": {
+                                        "type": "integer",
+                                        "minimum": 10,
+                                        "maximum": 100
+                                    },
+                                    "profile_checks": {
+                                        "type": "array",
+                                        "description": "What counts towards the profile: contact, next_of_kin, dependants, qualifications, documents, experiences, licences, personal.",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "contact",
+                                                "next_of_kin",
+                                                "dependants",
+                                                "qualifications",
+                                                "documents",
+                                                "experiences",
+                                                "licences",
+                                                "personal"
+                                            ]
+                                        },
+                                        "minItems": 1
                                     }
                                 },
                                 "required": [
@@ -50465,17 +50526,51 @@
                                                 },
                                                 "task_max_step": {
                                                     "type": "integer"
+                                                },
+                                                "profile_required": {
+                                                    "type": "boolean"
+                                                },
+                                                "profile_min_percent": {
+                                                    "type": "integer"
+                                                },
+                                                "profile_checks": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
                                                 }
                                             },
                                             "required": [
                                                 "hospital_patients",
                                                 "retirement_age",
-                                                "task_max_step"
+                                                "task_max_step",
+                                                "profile_required",
+                                                "profile_min_percent",
+                                                "profile_checks"
                                             ]
+                                        },
+                                        "profile_options": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "label"
+                                                ]
+                                            }
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "data",
+                                        "profile_options"
                                     ]
                                 }
                             }
@@ -107224,6 +107319,22 @@
                                                 "sections": {
                                                     "type": "string"
                                                 },
+                                                "completion": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "percent": {
+                                                            "type": "integer"
+                                                        },
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "percent",
+                                                        "items"
+                                                    ]
+                                                },
                                                 "options": {
                                                     "type": "object",
                                                     "properties": {
@@ -107284,6 +107395,7 @@
                                                 "job",
                                                 "contact",
                                                 "sections",
+                                                "completion",
                                                 "options"
                                             ]
                                         }
@@ -115799,6 +115911,56 @@
                             "type": "string"
                         }
                     },
+                    "profile_gate": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "When HR requires a filled profile: how far the user's profile is and what is missing; null when not required.",
+                        "properties": {
+                            "required": {
+                                "type": "boolean"
+                            },
+                            "complete": {
+                                "type": "boolean"
+                            },
+                            "percent": {
+                                "type": "integer"
+                            },
+                            "min_percent": {
+                                "type": "integer"
+                            },
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "label": {
+                                            "type": "string"
+                                        },
+                                        "done": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "key",
+                                        "label",
+                                        "done"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "required",
+                            "complete",
+                            "percent",
+                            "min_percent",
+                            "items"
+                        ]
+                    },
                     "idle_minutes": {
                         "type": "integer",
                         "description": "Minutes without activity before the app logs out (the server ends the session too)."
@@ -115816,6 +115978,7 @@
                     "acting_roles",
                     "is_head",
                     "features",
+                    "profile_gate",
                     "idle_minutes"
                 ],
                 "title": "MeResource"

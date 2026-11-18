@@ -1271,3 +1271,12 @@ invoice; it is added on top of the bill (payee amount and payable grow; undone i
 3-way match compares the invoice before VAT. `GET accounting/vat/summary` gives output less credit notes, input and net
 for a period, with the ledger movement on the two VAT accounts as a check. Petty cash and imprest retirements do not
 claim input VAT yet.
+
+## Required staff profile (2026-11-18)
+
+`Hr/Support/ProfileCompletion`: HR picks the items that count (contact, next of kin, dependants, qualifications with
+certificate, documents, experience, licence, personal details) and a minimum percentage. Items added from self-service
+count while pending approval (only rejected ones do not). `EnsureProfileComplete` (api middleware) answers 423 with
+`profile_gate` for writes outside `auth.*`, `me*`, `self.profile*`; `GET /me` carries `profile_gate`, and the SPA guard
+`profileGateGuard` sends such users to My profile. Applies only to users linked to an employee with self-service;
+company administrators are exempt. Reads stay open.

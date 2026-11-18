@@ -51,6 +51,7 @@ class SelfProfileController extends Controller
             ],
             'contact' => ['phone_number' => $employee->phone_number, 'email' => $employee->email, 'home_address' => $employee->home_address],
             'sections' => $sections,
+            'completion' => \Modules\Hr\Support\ProfileCompletion::of($employee),
             'options' => [
                 'education_levels' => O::all()['education_levels'], 'document_types' => O::all()['document_types'], 'relationships' => O::all()['relationships'],
                 'genders' => O::all()['genders'],
