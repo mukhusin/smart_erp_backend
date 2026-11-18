@@ -38,7 +38,7 @@ class PaymentListController extends Controller
         abort_unless($this->access->seesAll($request->user()), 403);
         $sortParam = (string) $request->query('sort', '-date');
         $sort = in_array(ltrim($sortParam, '-'), ['date', 'total', 'number'], true) ? ltrim($sortParam, '-') : 'date';
-        $page = PaymentList::with(['bank', 'preparer', 'workflow.steps'])->withCount('items')
+        $page = PaymentList::with(['bank', 'preparer', 'workflow.steps'])->withCount('items')->inAuditPeriod('date')
             ->when($request->query('search'), fn ($q, $s) => $q->where('number', 'like', "%{$s}%"))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
             ->orderBy($sort, str_starts_with($sortParam, '-') ? 'desc' : 'asc')->orderByDesc('id')

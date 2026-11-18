@@ -37,7 +37,7 @@ class OrderController extends Controller
         abort_unless($this->access->sees($user) || $this->access->canReceive($user, null), 403);
         $sortParam = (string) $request->query('sort', '-order_date');
         $sort = in_array(ltrim($sortParam, '-'), ['order_date', 'total', 'number'], true) ? ltrim($sortParam, '-') : 'order_date';
-        $page = PurchaseOrder::with(['supplier', 'requisition', 'workflow.steps'])
+        $page = PurchaseOrder::with(['supplier', 'requisition', 'workflow.steps'])->inAuditPeriod('order_date')
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhereHas('supplier', fn ($x) => $x->where('name', 'like', "%{$s}%"))))
             ->when($request->query('status'), fn ($q, $s) => $s === 'open' ? $q->whereIn('status', ['approved', 'partial']) : $q->where('status', $s))
             ->orderBy($sort, str_starts_with($sortParam, '-') ? 'desc' : 'asc')->orderByDesc('id')->paginate(min((int) $request->query('per_page', 10), 100));

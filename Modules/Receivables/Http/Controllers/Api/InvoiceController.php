@@ -40,7 +40,7 @@ class InvoiceController extends Controller
         abort_unless($this->access->sees($request->user()), 403);
         $sortParam = (string) $request->query('sort', '-date');
         $sort = in_array(ltrim($sortParam, '-'), ['date', 'due_date', 'total', 'number'], true) ? ltrim($sortParam, '-') : 'date';
-        $page = Invoice::with(['customer', 'workflow.steps'])
+        $page = Invoice::with(['customer', 'workflow.steps'])->inAuditPeriod('date')
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('reference', 'like', "%{$s}%")
                 ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%{$s}%"))))
             ->when($request->query('status'), fn ($q, $s) => $s === 'unpaid' ? $q->whereIn('status', ['open', 'partial']) : $q->where('status', $s))

@@ -67,7 +67,7 @@ class ContractController extends Controller
     {
         abort_unless($this->access->sees($request->user()), 403);
         $limit = today()->addDays(\Modules\Procurement\Models\ProcurementSetting::current()->expiry_warning_days ?: 30);
-        $page = Contract::with('supplier')
+        $page = Contract::with('supplier')->inAuditPeriod('start_date')
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
             ->when($request->boolean('expiring'), fn ($q) => $q->where('status', 'active')->where(fn ($q) => $q->whereDate('end_date', '<=', $limit)->orWhereDate('security_expiry', '<=', $limit)))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('title', 'like', "%{$s}%")))

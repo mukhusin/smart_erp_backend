@@ -58,6 +58,8 @@ class AssetLifecycleTest extends TestCase
             'in_use_date' => '2025-01-01', 'cost' => 1200000, 'opening_depreciation' => 240000, 'asset_class' => 'vehicle', 'details' => ['registration' => 'T 123 ABC'],
             'department_id' => $ids['admin']])->assertOk()->json('data.0');
         $this->assertSame('VEH-2025-0001', $car['number']);
+        $this->getJson('/api/v1/assets/lookup?code=VEH-2025-0001')->assertOk()->assertJsonPath('data.id', $car['id'])->assertJsonPath('data.can_view', true);
+        $this->getJson('/api/v1/assets/lookup?code=NOPE')->assertNotFound();
         $this->postJson("/api/v1/assets/register/{$car['id']}/submit")->assertUnprocessable();
         $this->putJson('/api/v1/assets/settings', ['number_pattern' => '{CAT}-{YEAR}-{SEQ}', 'depreciation_start' => 'in_use', 'opening_account_id' => $a['opening'],
             'donation_account_id' => $a['donation'], 'gain_loss_account_id' => $a['gain'], 'revaluation_account_id' => $a['reval'], 'impairment_account_id' => $a['impair'], 'confirmation_month' => 1])->assertOk();

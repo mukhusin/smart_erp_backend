@@ -106,7 +106,7 @@ class TenderController extends Controller
         $user = $request->user();
         $member = TenderMember::where('user_id', $user->id)->pluck('tender_id');
         abort_unless($this->access->sees($user) || $member->isNotEmpty(), 403);
-        $page = Tender::with(['method', 'requisition.department'])->withCount('bids')
+        $page = Tender::with(['method', 'requisition.department'])->withCount('bids')->inAuditPeriod('created_at')
             ->when(! $this->access->sees($user), fn ($q) => $q->whereIn('id', $member))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('title', 'like', "%{$s}%")))

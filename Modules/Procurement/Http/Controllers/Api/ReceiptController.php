@@ -30,7 +30,7 @@ class ReceiptController extends Controller
     {
         $user = $request->user();
         abort_unless($this->access->sees($user) || $this->access->canReceive($user, null) || $this->access->canInvoice($user), 403);
-        $page = GoodsReceipt::with(['order.supplier', 'store'])
+        $page = GoodsReceipt::with(['order.supplier', 'store'])->inAuditPeriod('created_at')
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('delivery_note', 'like', "%{$s}%")
                 ->orWhereHas('order', fn ($o) => $o->where('number', 'like', "%{$s}%")->orWhereHas('supplier', fn ($x) => $x->where('name', 'like', "%{$s}%")))))
             ->when($request->query('status'), fn ($q, $s) => $s === 'unbilled' ? $q->where('status', 'accepted')->whereNull('supplier_invoice') : $q->where('status', $s))

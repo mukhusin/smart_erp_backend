@@ -138,6 +138,11 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Auditor period, reorder requisitions, asset labels (2026-11-18)
+
+`php artisan migrate` adds `inventory_settings.auto_requisition` (off). Switch it on in Stores → Settings when wanted;
+each store needs a department and a manager. Frontend: run `npm ci` (new package `qrcode`).
+
 ## Workflow background actions (2026-11-18)
 
 `php artisan migrate` adds workflow actions, their log and step waiting/escalation columns. The cron runs

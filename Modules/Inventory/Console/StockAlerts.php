@@ -16,13 +16,16 @@ class StockAlerts extends Command
 {
     protected $signature = 'inventory:alerts';
 
-    protected $description = 'Notify store managers about reorder levels and expiring stock';
+    protected $description = 'Notify store managers about reorder levels and expiring stock, and prepare reorder requisitions when switched on';
 
     public function handle(CompanyContext $context): int
     {
         foreach (Company::query()->pluck('id') as $companyId) {
             $context->run($companyId, function () {
                 $days = InventorySetting::current()->expiry_warning_days;
+                if (InventorySetting::current()->auto_requisition && class_exists(\Modules\Procurement\Actions\ManageRequisitions::class)) {
+                    app(\Modules\Inventory\Actions\ReorderRequisitions::class)->run();
+                }
                 foreach (Store::with('users')->where('is_active', true)->where('kind', '!=', 'transit')->get() as $store) {
                     $low = StockBalance::with(['item.levels'])->where('store_id', $store->id)->get()->filter(function ($b) use ($store) {
                         $level = $b->item?->levels->firstWhere('store_id', $store->id)?->reorder_level ?? $b->item?->reorder_level;

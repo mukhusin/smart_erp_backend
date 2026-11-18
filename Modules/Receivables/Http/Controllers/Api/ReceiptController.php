@@ -38,7 +38,7 @@ class ReceiptController extends Controller
         abort_unless($this->access->sees($request->user()), 403);
         $sortParam = (string) $request->query('sort', '-date');
         $sort = in_array(ltrim($sortParam, '-'), ['date', 'amount', 'number'], true) ? ltrim($sortParam, '-') : 'date';
-        $page = Receipt::with(['customer', 'bank'])
+        $page = Receipt::with(['customer', 'bank'])->inAuditPeriod('date')
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('payer_name', 'like', "%{$s}%")->orWhere('reference', 'like', "%{$s}%")))
             ->when($request->query('kind'), fn ($q, $k) => $q->where('kind', $k))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))

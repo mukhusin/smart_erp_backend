@@ -132,6 +132,26 @@ class AssetController extends Controller
     }
 
     /**
+     * Find an asset by the code on its label (asset number, tag or serial number), as read from the QR code.
+     *
+     * @response array{data: array{id: int, number: string, name: string, holder: string|null, location: string|null, status_label: string, mine: bool, can_view: bool}}
+     */
+    #[QueryParameter('code', type: 'string', required: true)]
+    public function lookup(Request $request): JsonResponse
+    {
+        $code = trim((string) $request->query('code'));
+        abort_if($code === '', 404);
+        $asset = Asset::with(['employee', 'department'])->where(fn ($q) => $q->where('number', $code)->orWhere('tag', $code)->orWhere('serial_number', $code))->first();
+        abort_unless($asset, 404, 'No asset has this code.');
+        $user = $request->user();
+        $mine = $asset->employee?->user_id === $user->id;
+        abort_unless($this->access->sees($user) || $mine, 403, 'This asset is not yours to see.');
+
+        return response()->json(['data' => ['id' => $asset->id, 'number' => $asset->number, 'name' => $asset->name, 'holder' => $asset->employee?->full_name ?? $asset->department?->name,
+            'location' => $asset->location, 'status_label' => Asset::STATUS_LABELS[$asset->status] ?? $asset->status, 'mine' => $mine, 'can_view' => $this->access->sees($user)]]);
+    }
+
+    /**
      * @response array{data: array{id: int, number: string, name: string, description: string|null, item_category_id: int, category: string|null, category_type: string|null, asset_class: string, class_label: string, details: array<string, string|null>, acquisition_type: string, acquisition_label: string, acquisition_date: string, in_use_date: string|null, cost: float, opening_depreciation: float, useful_life_months: int|null, residual_value: float, fund_source_id: int|null, fund_source: string|null, supplier_id: int|null, supplier: string|null, goods_receipt: array{id: int, number: string}|null, serial_number: string|null, tag: string|null, company_branch_id: int|null, branch: string|null, department_id: int|null, department: string|null, employee_id: int|null, holder: string|null, location: string|null, condition: string, condition_label: string, status: string, status_label: string, decision_comment: string|null, waiting_for: string|null, value: array{cost: float, depreciation: float, book_value: float}, depreciation: array{from: string|null, until: string|null, charged_to: string|null, depreciable: bool, monthly: float}, confirmed_year: int|null, journal: array{id: int, reference_no: string|null}|null, entries: list<array{id: int, date: string, kind: string, kind_label: string, cost: float, depreciation: float, description: string|null, journal: array{id: int, reference_no: string|null}|null}>, assignments: list<array{id: int, holder: string|null, department: string|null, location: string|null, from_date: string, to_date: string|null, condition_out: string|null, condition_in: string|null, reason: string|null, returned_from: string|null}>, changes: list<array{id: int, number: string, kind: string, kind_label: string, date: string, amount: float|null, months: int|null, reason: string, status: string, status_label: string, mine: bool}>, transfers: list<array{id: int, number: string, kind: string, date: string, permanent: bool, return_date: string|null, destination: string, reason: string, status: string, status_label: string, mine: bool, can_return: bool}>, disposals: list<array{id: int, number: string, method: string, method_label: string, date: string, proceeds: float, book_value: float|null, gain_loss: float|null, status: string, status_label: string, has_minutes: bool, mine: bool}>, reports: list<array{id: int, type: string, type_label: string, description: string|null, status: string, status_label: string, reported_by: string|null, created_at: string}>, can: array{edit: bool, submit: bool, withdraw: bool, delete: bool, manage: bool}}}
      */
     public function show(Request $request, Asset $asset): JsonResponse

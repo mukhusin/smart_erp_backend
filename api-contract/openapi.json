@@ -18706,6 +18706,116 @@
                 }
             }
         },
+        "/assets/lookup": {
+            "get": {
+                "operationId": "assets.lookup",
+                "summary": "Find an asset by the code on its label (asset number, tag or serial number), as read from the QR code",
+                "tags": [
+                    "Assets: register",
+                    "Asset"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "holder": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "location": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "mine": {
+                                                    "type": "boolean"
+                                                },
+                                                "can_view": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number",
+                                                "name",
+                                                "holder",
+                                                "location",
+                                                "status_label",
+                                                "mine",
+                                                "can_view"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "This asset is not yours to see."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/assets/register/template": {
             "get": {
                 "operationId": "assets.template",
@@ -54628,6 +54738,9 @@
                                                 "slow_moving_days": {
                                                     "type": "integer"
                                                 },
+                                                "auto_requisition": {
+                                                    "type": "boolean"
+                                                },
                                                 "costing": {
                                                     "type": "string"
                                                 }
@@ -54637,6 +54750,7 @@
                                                 "donation_account_id",
                                                 "expiry_warning_days",
                                                 "slow_moving_days",
+                                                "auto_requisition",
                                                 "costing"
                                             ]
                                         },
@@ -54747,6 +54861,9 @@
                                                 "slow_moving_days": {
                                                     "type": "integer"
                                                 },
+                                                "auto_requisition": {
+                                                    "type": "boolean"
+                                                },
                                                 "costing": {
                                                     "type": "string"
                                                 }
@@ -54756,6 +54873,7 @@
                                                 "donation_account_id",
                                                 "expiry_warning_days",
                                                 "slow_moving_days",
+                                                "auto_requisition",
                                                 "costing"
                                             ]
                                         },
@@ -110286,6 +110404,10 @@
                         "type": "integer",
                         "minimum": 30,
                         "maximum": 1095
+                    },
+                    "auto_requisition": {
+                        "type": "boolean",
+                        "description": "Each night, prepare a draft purchase requisition per store for items at or below reorder level."
                     }
                 },
                 "required": [

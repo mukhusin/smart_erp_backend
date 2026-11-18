@@ -17,6 +17,7 @@ Route::middleware(['auth:sanctum', 'module:assets'])->group(function () {
         Route::get('dashboard', [AssetController::class, 'dashboard'])->name('dashboard');
         Route::get('lookups', [AssetController::class, 'lookups'])->name('lookups');
         Route::get('register', [AssetController::class, 'index'])->name('index');
+        Route::get('lookup', [AssetController::class, 'lookup'])->name('lookup');
         Route::get('register/template', [AssetController::class, 'template'])->name('template');
         Route::get('register/{asset}', [AssetController::class, 'show'])->name('show');
         Route::post('register/{asset}/withdraw', [AssetController::class, 'withdraw'])->name('withdraw');

@@ -39,7 +39,7 @@ class PaymentVoucherController extends Controller
         abort_unless($this->access->seesAll($request->user()), 403);
         $sortParam = (string) $request->query('sort', '-date');
         $sort = in_array(ltrim($sortParam, '-'), ['date', 'net', 'number'], true) ? ltrim($sortParam, '-') : 'date';
-        $page = PaymentVoucher::with(['request.department', 'bank', 'preparer', 'workflow.steps'])
+        $page = PaymentVoucher::with(['request.department', 'bank', 'preparer', 'workflow.steps'])->inAuditPeriod('date')
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")
                 ->orWhereHas('request', fn ($r) => $r->where('number', 'like', "%{$s}%")->orWhere('title', 'like', "%{$s}%"))))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))

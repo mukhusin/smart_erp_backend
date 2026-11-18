@@ -47,7 +47,7 @@ class PaymentRequestController extends Controller
         $departments = $this->access->departments($user);
         $sortParam = (string) $request->query('sort', '-created_at');
         $sort = in_array(ltrim($sortParam, '-'), ['created_at', 'total', 'number'], true) ? ltrim($sortParam, '-') : 'created_at';
-        $page = PaymentRequest::with(['department', 'requester', 'workflow.steps', 'holder'])
+        $page = PaymentRequest::with(['department', 'requester', 'workflow.steps', 'holder'])->inAuditPeriod('created_at')
             ->where(fn ($q) => $q->where('requested_by', $user->id)->when($user->employee, fn ($q, $e) => $q->orWhere(fn ($q) => $q->where('holder_employee_id', $e->id)->where('status', '!=', 'draft')))->when($departments !== null, fn ($q) => $q->orWhereIn('department_id', $departments)->where('status', '!=', 'draft'), fn ($q) => $q->orWhere('status', '!=', 'draft')))
             ->when($request->boolean('mine'), fn ($q) => $q->where(fn ($q) => $q->where('requested_by', $user->id)->when($user->employee, fn ($q, $e) => $q->orWhere('holder_employee_id', $e->id))))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('title', 'like', "%{$s}%")))

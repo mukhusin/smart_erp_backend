@@ -1185,6 +1185,16 @@ logbook km vs odometer km), maintenance history, accidents, insurance/licences (
 Phase 6 (GPS tracking) is a coming feature, shown as "coming soon" on the fleet dashboard; it starts once the
 customer chooses the tracker devices. Phase 7 (driver phone app) follows.
 
+**Smaller items done (2026-11-18).** External auditors: lists of payment requests, vouchers, payment lists, invoices,
+receipts, requisitions, quotations, orders, goods received, tenders, contracts, store requisitions, stock documents and
+stock movements are limited to the audited period (`Builder::inAuditPeriod($column)`, registered by the Audit module;
+external auditors have no HR access). Stores: setting "prepare reorder requisitions" — nightly (`inventory:alerts`)
+one draft purchase requisition per store (with a department and a manager) for items at or below reorder level, up to
+the maximum level, budget line = the store department's line for the category's stock or expense account; items
+without a line are reported. Assets: printable labels with QR codes (`qrcode` npm package) pointing to
+/assets/tag/{number}; `GET assets/lookup?code=` finds by number, tag or serial; asset staff open the record, the holder
+sees a short card.
+
 **Workflow background actions (2026-11-18).** Business effects stay in each process (budget, ledger) and are shown
 read-only per workflow (`Modules/Workflow/Support/ProcessEffects.php`). Administrators add `workflow_actions` per
 template: event (started, step approved, approved, rejected, sent back, cancelled, overdue after N days), optional

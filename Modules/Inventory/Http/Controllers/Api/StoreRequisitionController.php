@@ -36,7 +36,7 @@ class StoreRequisitionController extends Controller
         $user = $request->user();
         $stores = $this->access->stores($user);
         $mine = $request->boolean('mine') || ($stores !== null && $stores === []);
-        $page = StoreRequisition::with(['store', 'department', 'requester', 'workflow.steps'])->withCount('lines')
+        $page = StoreRequisition::with(['store', 'department', 'requester', 'workflow.steps'])->withCount('lines')->inAuditPeriod('created_at')
             ->when($mine, fn ($q) => $q->where('requested_by', $user->id), fn ($q) => $q->where('status', '!=', 'draft')->when($stores !== null, fn ($q) => $q->whereIn('store_id', $stores)))
             ->when($request->query('status'), fn ($q, $s) => $s === 'open' ? $q->whereIn('status', ['approved', 'partial']) : $q->where('status', $s))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('purpose', 'like', "%{$s}%")))

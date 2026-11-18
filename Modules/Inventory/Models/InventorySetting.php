@@ -10,9 +10,9 @@ class InventorySetting extends Model
 {
     use Auditable, BelongsToCompany;
 
-    protected $fillable = ['company_id', 'opening_account_id', 'donation_account_id', 'expiry_warning_days', 'slow_moving_days'];
+    protected $fillable = ['company_id', 'opening_account_id', 'donation_account_id', 'expiry_warning_days', 'slow_moving_days', 'auto_requisition'];
 
-    protected $casts = ['expiry_warning_days' => 'integer', 'slow_moving_days' => 'integer'];
+    protected $casts = ['expiry_warning_days' => 'integer', 'slow_moving_days' => 'integer', 'auto_requisition' => 'boolean'];
 
     public static function current(): self
     {

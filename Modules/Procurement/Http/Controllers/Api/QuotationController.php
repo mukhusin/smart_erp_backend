@@ -35,7 +35,7 @@ class QuotationController extends Controller
     public function index(Request $request): JsonResponse
     {
         abort_unless($this->access->sees($request->user()), 403);
-        $page = QuotationRequest::with('requisition')->withCount('quotations')
+        $page = QuotationRequest::with('requisition')->withCount('quotations')->inAuditPeriod('created_at')
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('title', 'like', "%{$s}%")))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))->latest('id')->paginate(min((int) $request->query('per_page', 10), 100));
 

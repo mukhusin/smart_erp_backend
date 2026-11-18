@@ -46,7 +46,7 @@ class RequisitionController extends Controller
         $departments = $this->access->departments($user);
         $sortParam = (string) $request->query('sort', '-created_at');
         $sort = in_array(ltrim($sortParam, '-'), ['created_at', 'total', 'number'], true) ? ltrim($sortParam, '-') : 'created_at';
-        $page = PurchaseRequisition::with(['department', 'requester', 'workflow.steps'])
+        $page = PurchaseRequisition::with(['department', 'requester', 'workflow.steps'])->inAuditPeriod('created_at')
             ->where(fn ($q) => $q->where('requested_by', $user->id)->when($departments !== null, fn ($q) => $q->orWhereIn('department_id', $departments)->where('status', '!=', 'draft'), fn ($q) => $q->orWhere('status', '!=', 'draft')))
             ->when($request->boolean('mine'), fn ($q) => $q->where('requested_by', $user->id))
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('number', 'like', "%{$s}%")->orWhere('title', 'like', "%{$s}%")))

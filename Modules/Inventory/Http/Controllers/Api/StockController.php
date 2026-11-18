@@ -87,7 +87,7 @@ class StockController extends Controller
             'store' => ['id' => $balance->store_id, 'name' => $balance->store->name],
             'balance' => ['quantity' => $balance->quantity, 'value' => $balance->value, 'average_cost' => $balance->averageCost()],
             'costing' => \Modules\Accounting\Support\FrameworkCatalog::POLICIES['inventory_costing']['options'][$policies->policy('inventory_costing')] ?? '',
-            'movements' => StockMovement::with(['layer', 'department', 'user'])->where('store_id', $storeId)->where('item_id', $item->id)->orderByDesc('id')->limit(1000)->get()
+            'movements' => StockMovement::with(['layer', 'department', 'user'])->inAuditPeriod('date')->where('store_id', $storeId)->where('item_id', $item->id)->orderByDesc('id')->limit(1000)->get()
                 ->map(fn ($m) => ['id' => $m->id, 'date' => $m->date->toDateString(), 'type' => $m->type, 'type_label' => StockMovement::TYPES[$m->type] ?? $m->type, 'reference' => $m->reference,
                     'batch' => $m->layer?->batch_number, 'quantity' => $m->quantity, 'unit_cost' => $m->unit_cost, 'value' => $m->value, 'balance_quantity' => $m->balance_quantity,
                     'balance_value' => $m->balance_value, 'department' => $m->department?->name, 'by' => $m->user?->display_name])->values(),
@@ -117,19 +117,19 @@ class StockController extends Controller
             'track_expiry' => (bool) $i->track_expiry])->values()]);
     }
 
-    /** @response array{data: array{opening_account_id: int|null, donation_account_id: int|null, expiry_warning_days: int, slow_moving_days: int, costing: string}, accounts: list<array{id: int, code: string, name: string, type: string}>} */
+    /** @response array{data: array{opening_account_id: int|null, donation_account_id: int|null, expiry_warning_days: int, slow_moving_days: int, auto_requisition: bool, costing: string}, accounts: list<array{id: int, code: string, name: string, type: string}>} */
     public function settings(Request $request, AccountingPolicies $policies): JsonResponse
     {
         abort_unless($this->access->sees($request->user()), 403);
         $s = InventorySetting::current();
 
-        return response()->json(['data' => ['opening_account_id' => $s->opening_account_id, 'donation_account_id' => $s->donation_account_id, 'expiry_warning_days' => (int) $s->expiry_warning_days,
+        return response()->json(['data' => ['opening_account_id' => $s->opening_account_id, 'donation_account_id' => $s->donation_account_id, 'expiry_warning_days' => (int) $s->expiry_warning_days, 'auto_requisition' => (bool) $s->auto_requisition,
             'slow_moving_days' => (int) $s->slow_moving_days, 'costing' => \Modules\Accounting\Support\FrameworkCatalog::POLICIES['inventory_costing']['options'][$policies->policy('inventory_costing')] ?? ''],
             'accounts' => Account::where('is_active', true)->where('is_postable', true)->whereIn('type', ['equity', 'revenue', 'liability'])->orderBy('code')->get()
                 ->map(fn ($a) => ['id' => $a->id, 'code' => $a->code, 'name' => $a->name, 'type' => $a->type])->values()]);
     }
 
-    /** @response array{data: array{opening_account_id: int|null, donation_account_id: int|null, expiry_warning_days: int, slow_moving_days: int, costing: string}, accounts: list<array{id: int, code: string, name: string, type: string}>} */
+    /** @response array{data: array{opening_account_id: int|null, donation_account_id: int|null, expiry_warning_days: int, slow_moving_days: int, auto_requisition: bool, costing: string}, accounts: list<array{id: int, code: string, name: string, type: string}>} */
     public function updateSettings(InventorySettingsRequest $request, AccountingPolicies $policies): JsonResponse
     {
         abort_unless($this->access->can($request->user(), 'manage'), 403);

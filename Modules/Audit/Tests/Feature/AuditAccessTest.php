@@ -77,6 +77,10 @@ class AuditAccessTest extends TestCase
         $journals = collect($this->getJson('/api/v1/accounting/journals')->assertOk()->json('data'));
         $this->assertSame(['Big adjustment'], $journals->pluck('description')->all());
         $this->getJson("/api/v1/accounting/journals/{$journal2025}")->assertNotFound();
+        app(CompanyContext::class)->run($company, function () {
+            $this->assertSame(1, \Modules\Accounting\Models\JournalEntry::query()->inAuditPeriod('date')->count());
+            $this->assertSame(2, \Modules\Accounting\Models\JournalEntry::count());
+        });
         $this->getJson('/api/v1/payroll/sheets')->assertForbidden();
         $this->getJson('/api/v1/audit/payroll')->assertOk();
         $this->getJson('/api/v1/audit/dashboard')->assertOk()->assertJsonPath('me.kind', 'external')->assertJsonPath('me.period.from', '2026-01-01');

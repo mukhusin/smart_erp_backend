@@ -33,7 +33,7 @@ class StockDocumentController extends Controller
     {
         abort_unless($this->access->seesStock($request->user()), 403);
         $stores = $this->access->stores($request->user());
-        $page = StockDocument::with(['store', 'toStore', 'department', 'creator', 'workflow.steps'])
+        $page = StockDocument::with(['store', 'toStore', 'department', 'creator', 'workflow.steps'])->inAuditPeriod('date')
             ->when($stores !== null, fn ($q) => $q->where(fn ($q) => $q->whereIn('store_id', $stores)->orWhereIn('to_store_id', $stores)))
             ->when($request->query('kind'), fn ($q, $k) => $q->where('kind', $k))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
