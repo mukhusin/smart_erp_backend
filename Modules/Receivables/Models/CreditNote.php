@@ -15,9 +15,9 @@ class CreditNote extends Model
 
     public const STATUS_LABELS = ['pending' => 'Waiting for approval', 'approved' => 'Approved', 'rejected' => 'Not approved', 'cancelled' => 'Withdrawn'];
 
-    protected $fillable = ['company_id', 'number', 'invoice_id', 'date', 'amount', 'reason', 'status', 'journal_entry_id', 'created_by', 'decision_comment', 'decided_at'];
+    protected $fillable = ['company_id', 'number', 'invoice_id', 'date', 'amount', 'tax_amount', 'reason', 'status', 'journal_entry_id', 'created_by', 'decision_comment', 'decided_at'];
 
-    protected $casts = ['date' => 'date', 'amount' => 'float', 'decided_at' => 'datetime'];
+    protected $casts = ['date' => 'date', 'amount' => 'float', 'tax_amount' => 'float', 'decided_at' => 'datetime'];
 
     public function invoice()
     {

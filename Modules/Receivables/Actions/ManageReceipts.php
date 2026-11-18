@@ -82,11 +82,18 @@ class ManageReceipts
             $amount = round(array_sum(array_map(fn ($l) => (float) $l['amount'], $lines)), 2);
             $receipt = $this->make($data, $by, $bank, $customer, $amount);
             $credits = [];
-            foreach ($lines as $l) {
+            $vat = 0.0;
+            foreach ($lines as $n => $l) {
+                [$code, $rate] = \Modules\Accounting\Support\Vat::code($l['tax_code_id'] ?? null, "lines.{$n}.tax_code_id");
                 $row = ['description' => $l['description'], 'account_id' => $l['account_id'], 'department_id' => $l['department_id'] ?? null, 'budget_item_id' => $l['budget_item_id'] ?? null,
-                    'amount' => round((float) $l['amount'], 2)];
+                    'amount' => round((float) $l['amount'], 2), 'tax_code_id' => $code];
+                $row['tax_amount'] = \Modules\Accounting\Support\Vat::inGross($row['amount'], $rate);
+                $vat += $row['tax_amount'];
                 $receipt->lines()->create($row);
-                $credits[] = ['account_id' => $row['account_id'], 'credit' => $row['amount'], 'description' => $row['description'], 'department_id' => $row['department_id'], 'budget_item_id' => $row['budget_item_id']];
+                $credits[] = ['account_id' => $row['account_id'], 'credit' => round($row['amount'] - $row['tax_amount'], 2), 'description' => $row['description'], 'department_id' => $row['department_id'], 'budget_item_id' => $row['budget_item_id']];
+            }
+            if ($vat > 0) {
+                $credits[] = ['account_id' => \Modules\Accounting\Models\VatSetting::ready('output')->output_account_id, 'credit' => round($vat, 2), 'description' => "Output VAT {$receipt->number}"];
             }
             $this->postJournal($receipt, $by, $credits);
 

@@ -61,7 +61,7 @@ class ReceiptController extends Controller
     /**
      * A receipt with the invoices it paid or what it was for.
      *
-     * @response array{data: array{id: int, number: string, date: string, kind: string, kind_label: string, payer_name: string, customer: array{id: int, name: string}|null, bank: string|null, method_label: string, reference: string|null, notes: string|null, amount: float, status: string, status_label: string, void_reason: string|null, created_by: string|null, journal: array{id: int, reference_no: string|null}|null, allocations: list<array{invoice_id: int, number: string|null, amount: float}>, lines: list<array{description: string, account: string|null, department: string|null, amount: float}>, can: array{void: bool}}}
+     * @response array{data: array{id: int, number: string, date: string, kind: string, kind_label: string, payer_name: string, customer: array{id: int, name: string}|null, bank: string|null, method_label: string, reference: string|null, notes: string|null, amount: float, status: string, status_label: string, void_reason: string|null, created_by: string|null, journal: array{id: int, reference_no: string|null}|null, allocations: list<array{invoice_id: int, number: string|null, amount: float}>, lines: list<array{description: string, account: string|null, department: string|null, amount: float, tax_amount: float}>, can: array{void: bool}}}
      */
     public function show(Request $request, Receipt $receipt): JsonResponse
     {
@@ -75,7 +75,7 @@ class ReceiptController extends Controller
             'status' => $r->status, 'status_label' => Receipt::STATUS_LABELS[$r->status] ?? $r->status, 'void_reason' => $r->void_reason, 'created_by' => $r->creator?->display_name,
             'journal' => $r->journal ? ['id' => $r->journal->id, 'reference_no' => $r->journal->reference_no] : null,
             'allocations' => $r->allocations->map(fn ($a) => ['invoice_id' => $a->invoice_id, 'number' => $a->invoice?->number, 'amount' => $a->amount])->values(),
-            'lines' => $r->lines->map(fn ($l) => ['description' => $l->description, 'account' => $l->account ? "{$l->account->code} {$l->account->name}" : null, 'department' => $l->department?->name, 'amount' => $l->amount])->values(),
+            'lines' => $r->lines->map(fn ($l) => ['description' => $l->description, 'account' => $l->account ? "{$l->account->code} {$l->account->name}" : null, 'department' => $l->department?->name, 'amount' => $l->amount, 'tax_amount' => (float) $l->tax_amount])->values(),
             'can' => ['void' => $r->status === 'posted' && $this->access->can($request->user(), 'receipts')],
         ]]);
     }

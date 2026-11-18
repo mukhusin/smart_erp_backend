@@ -48,18 +48,24 @@ class ManageCreditNotes
                 throw ValidationException::withMessages(['amount' => "{$invoice->number} now has only ".number_format($invoice->balance(), 2).' due.']);
             }
             $debits = [];
-            $left = $note->amount;
+            $vat = $invoice->tax_total > 0 ? round($note->amount * $invoice->tax_total / $invoice->total, 2) : 0.0;
+            $net = round($note->amount - $vat, 2);
+            $netTotal = round($invoice->total - $invoice->tax_total, 2);
+            $left = $net;
             foreach ($invoice->lines->values() as $i => $l) {
-                $share = $i === $invoice->lines->count() - 1 ? $left : round($note->amount * $l->amount / $invoice->total, 2);
+                $share = $i === $invoice->lines->count() - 1 ? $left : round($net * $l->amount / $netTotal, 2);
                 $left = round($left - $share, 2);
                 if ($share > 0) {
                     $debits[] = ['account_id' => $l->account_id, 'debit' => $share, 'description' => "Credit: {$l->description}", 'department_id' => $l->department_id, 'budget_item_id' => $l->budget_item_id];
                 }
             }
+            if ($vat > 0) {
+                $debits[] = ['account_id' => \Modules\Accounting\Models\VatSetting::current()->output_account_id, 'debit' => $vat, 'description' => "Output VAT credited {$note->number}"];
+            }
             $journal = $this->posting->post($note->date->toDateString(), "{$note->number} on {$invoice->number} {$invoice->customer->name}", [
                 ...$debits, ['account_id' => ReceivableSetting::current()->receivable_account_id, 'credit' => $note->amount, 'description' => $invoice->customer->name],
             ], $note->creator, 'credit_note', $note);
-            $note->update(['status' => 'approved', 'journal_entry_id' => $journal->id, 'decided_at' => now()]);
+            $note->update(['status' => 'approved', 'tax_amount' => $vat, 'journal_entry_id' => $journal->id, 'decided_at' => now()]);
             $invoice->refreshBalance();
         });
     }

@@ -12,11 +12,14 @@ use Modules\Accounting\Http\Controllers\Api\PayrollPostingController;
 use Modules\Accounting\Http\Controllers\Api\ReconciliationController;
 use Modules\Accounting\Http\Controllers\Api\ReportController;
 use Modules\Accounting\Http\Controllers\Api\SettingsController;
+use Modules\Accounting\Http\Controllers\Api\VatController;
 use Modules\Accounting\Http\Controllers\Api\YearEndController;
 
 Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'can:accounting.view'])->name('accounting.')->group(function () {
     Route::get('settings', [SettingsController::class, 'settings'])->name('settings.show');
     Route::get('lookups', [SettingsController::class, 'lookups'])->name('lookups');
+    Route::get('vat', [VatController::class, 'show'])->name('vat.show');
+    Route::get('vat/summary', [VatController::class, 'summary'])->name('vat.summary');
     Route::get('framework', [FrameworkController::class, 'show'])->name('framework.show');
     Route::get('accounts', [AccountController::class, 'accounts'])->name('accounts.index');
     Route::get('accounts/template', [AccountController::class, 'accountsTemplate'])->name('accounts.template');
@@ -85,6 +88,9 @@ Route::prefix('accounting')->middleware(['auth:sanctum', 'module:accounting', 'c
     Route::middleware('can:accounting.manage')->group(function () {
         Route::put('settings', [SettingsController::class, 'updateSettings'])->name('settings.update');
         Route::put('framework', [FrameworkController::class, 'update'])->name('framework.update');
+        Route::put('vat', [VatController::class, 'update'])->name('vat.update');
+        Route::post('tax-codes', [VatController::class, 'storeCode'])->name('tax-codes.store');
+        Route::put('tax-codes/{code}', [VatController::class, 'updateCode'])->name('tax-codes.update');
         Route::put('payroll-posting', [PayrollPostingController::class, 'updateSettings'])->name('payroll-posting.update');
         Route::post('accounts', [AccountController::class, 'storeAccount'])->name('accounts.store');
         Route::post('accounts/import', [AccountController::class, 'importAccounts'])->name('accounts.import');

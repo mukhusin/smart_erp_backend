@@ -27,6 +27,7 @@ class ManageVouchers
         if ($r->status !== 'approved') {
             throw ValidationException::withMessages(['request' => 'A voucher is prepared from an approved request that has no voucher yet.']);
         }
+        $grn = null;
         if ($r->source_type && $r->source_type === (new \Modules\Procurement\Models\GoodsReceipt)->getMorphClass()) {
             $grn = \Modules\Procurement\Models\GoodsReceipt::find($r->source_id);
             if (! $grn || ! app(\Modules\Procurement\Actions\ManageReceipts::class)->matches($grn)) {
@@ -58,14 +59,21 @@ class ManageVouchers
         if ($wht > 0 && ! $settings->withholding_account_id) {
             throw ValidationException::withMessages(['settings' => 'Choose the withholding tax account in payment settings first.']);
         }
+        [$vat, $addOn] = $this->inputVat($r, $grn, $data);
 
-        return DB::transaction(function () use ($r, $data, $by, $bank, $withholding, $wht) {
+        return DB::transaction(function () use ($r, $data, $by, $bank, $withholding, $wht, $vat, $addOn) {
+            if ($addOn > 0) {
+                $p = $r->payees->first();
+                $p->update(['amount' => round($p->amount + $addOn, 2)]);
+            }
             foreach ($r->payees as $p) {
                 $p->update(['withholding' => $withholding[$p->id] ?? 0]);
             }
+            $gross = round($r->total + $addOn, 2);
             $v = PaymentVoucher::create([
                 'number' => Numbering::next(PaymentVoucher::class, 'PV', $data['date']), 'payment_request_id' => $r->id, 'cash_bank_account_id' => $bank->id,
-                'date' => $data['date'], 'description' => $data['description'] ?? $r->title, 'gross' => $r->total, 'withholding' => $wht, 'net' => round($r->total - $wht, 2),
+                'date' => $data['date'], 'description' => $data['description'] ?? $r->title, 'gross' => $gross, 'withholding' => $wht, 'input_vat' => $vat,
+                'vat_invoice_no' => $vat > 0 ? ($data['vat_invoice_no'] ?? $grn?->supplier_invoice) : null, 'net' => round($gross - $wht, 2),
                 'status' => 'pending', 'prepared_by' => $by->id,
             ]);
             $r->update(['status' => 'vouchered']);
@@ -75,6 +83,27 @@ class ManageVouchers
 
             return $v->refresh();
         });
+    }
+
+    /** @return array{0: float, 1: float} input VAT and the part added on top of the request (supplier bills from goods received). */
+    private function inputVat(PaymentRequest $r, ?\Modules\Procurement\Models\GoodsReceipt $grn, array $data): array
+    {
+        $vat = round((float) ($grn ? $grn->invoice_vat : ($data['input_vat'] ?? 0)), 2);
+        if ($vat <= 0) {
+            return [0.0, 0.0];
+        }
+        \Modules\Accounting\Models\VatSetting::ready('input') ?? throw ValidationException::withMessages(['input_vat' => 'Input VAT is claimed only when the company is VAT registered (Accounting → VAT).']);
+        if ($r->isImprest() || $r->payees->count() !== 1 && $grn) {
+            throw ValidationException::withMessages(['input_vat' => 'No input VAT on this kind of payment.']);
+        }
+        if (! $grn) {
+            $base = round((float) $r->lines->whereNull('account_id')->sum('amount'), 2);
+            if ($vat >= $base) {
+                throw ValidationException::withMessages(['input_vat' => 'The VAT must be less than the budget lines it is part of ('.number_format($base, 2).').']);
+            }
+        }
+
+        return [$vat, $grn ? $vat : 0.0];
     }
 
     public function approved(PaymentVoucher $v): void
@@ -90,6 +119,9 @@ class ManageVouchers
                 ? ['account_id' => $l->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item?->department_id ?? $r->department_id]
                 : ['account_id' => $l->item->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title, 'department_id' => $l->item->department_id,
                     'fund_source_id' => $l->item->fund_source_id, 'task_activity_id' => $l->item->task_activity_id, 'budget_item_id' => $l->budget_item_id])->all();
+            if ($v->input_vat > 0) {
+                $lines = $this->carveVat($lines, $v, $r);
+            }
             $lines[] = ['account_id' => $settings->payable_account_id, 'credit' => $v->net, 'description' => 'Payable: '.$r->payees->pluck('name')->join(', ')];
             if ($v->withholding > 0) {
                 $lines[] = ['account_id' => $settings->withholding_account_id, 'credit' => $v->withholding, 'description' => 'Withholding tax'];
@@ -103,9 +135,32 @@ class ManageVouchers
         $v->preparer?->notify(new Notice('Payment voucher approved', "{$v->number} is approved and can go on a payment list.", "/payments/vouchers/{$v->id}", 'receipt'));
     }
 
+    /** Input VAT: added on top for a supplier bill, otherwise taken out of the budget lines in proportion. */
+    private function carveVat(array $lines, PaymentVoucher $v, PaymentRequest $r): array
+    {
+        $vatLine = ['account_id' => \Modules\Accounting\Models\VatSetting::current()->input_account_id, 'debit' => $v->input_vat, 'description' => 'Input VAT'.($v->vat_invoice_no ? " {$v->vat_invoice_no}" : '')];
+        if (round($v->gross - $r->total, 2) > 0) {
+            return [...$lines, $vatLine];
+        }
+        $budget = array_keys(array_filter($lines, fn ($l) => ! empty($l['budget_item_id'])));
+        $base = array_sum(array_map(fn ($i) => $lines[$i]['debit'], $budget));
+        $left = $v->input_vat;
+        foreach ($budget as $n => $i) {
+            $cut = $n === array_key_last($budget) ? $left : round($v->input_vat * $lines[$i]['debit'] / $base, 2);
+            $left = round($left - $cut, 2);
+            $lines[$i]['debit'] = round($lines[$i]['debit'] - $cut, 2);
+        }
+
+        return [...$lines, $vatLine];
+    }
+
     public function rejected(PaymentVoucher $v, ?string $comment, bool $withdrawn): void
     {
         DB::transaction(function () use ($v, $comment, $withdrawn) {
+            $addOn = round($v->gross - (float) $v->request->total, 2);
+            if ($addOn > 0 && ($p = $v->request->payees()->first())) {
+                $p->update(['amount' => round($p->amount - $addOn, 2)]);
+            }
             $v->update(['status' => $withdrawn ? 'cancelled' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
             $v->request->payees()->update(['withholding' => 0]);
             $v->request->update(['status' => 'approved']);

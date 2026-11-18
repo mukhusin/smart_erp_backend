@@ -138,10 +138,11 @@ class ManageClaims
                 $left = $amount;
                 $lines = [];
                 foreach ($invoice->lines->values() as $i => $l) {
-                    $share = $i === $invoice->lines->count() - 1 ? $left : round($amount * $l->amount / $invoice->total, 2);
+                    $share = $i === $invoice->lines->count() - 1 ? $left : round($amount * ($l->amount + $l->tax_amount) / $invoice->total, 2);
                     $left = round($left - $share, 2);
                     if ($share > 0) {
-                        $lines[] = ['description' => $l->description, 'account_id' => $l->account_id, 'department_id' => $l->department_id, 'budget_item_id' => $l->budget_item_id, 'quantity' => 1, 'unit_price' => $share];
+                        $lines[] = ['description' => $l->description, 'account_id' => $l->account_id, 'department_id' => $l->department_id, 'budget_item_id' => $l->budget_item_id, 'quantity' => 1,
+                            'unit_price' => round($share * 100 / (100 + $l->tax_rate), 2), 'tax_code_id' => $l->tax_code_id];
                     }
                 }
                 $rebill = $this->invoices->save(null, ['customer_id' => $customer->id, 'date' => $data['date'], 'reference' => "Claim {$claim->number} / {$invoice->number}",

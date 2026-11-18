@@ -24,6 +24,8 @@ class InvoiceRequest extends FormRequest
             'lines.*.budget_item_id' => ['nullable', 'integer'],
             'lines.*.quantity' => ['nullable', 'numeric', 'min:0.01'],
             'lines.*.unit_price' => ['required', 'numeric', 'min:0', 'max:999999999999'],
+            /** VAT code; the price is before VAT. Ignored when the company is not VAT registered. */
+            'lines.*.tax_code_id' => ['nullable', 'integer'],
         ];
     }
 }

@@ -18,9 +18,9 @@ class GoodsReceipt extends Model
     public const STATUS_LABELS = ['draft' => 'Draft', 'pending' => 'Inspection and approval', 'accepted' => 'Accepted', 'rejected' => 'Returned', 'cancelled' => 'Cancelled'];
 
     protected $fillable = ['company_id', 'number', 'purchase_order_id', 'store_id', 'delivery_note', 'received_on', 'notes', 'status', 'total', 'journal_entry_id', 'created_by',
-        'decision_comment', 'decided_at', 'supplier_invoice', 'invoice_date', 'invoice_amount', 'payment_request_id'];
+        'decision_comment', 'decided_at', 'supplier_invoice', 'invoice_date', 'invoice_amount', 'invoice_vat', 'payment_request_id'];
 
-    protected $casts = ['received_on' => 'date', 'invoice_date' => 'date', 'total' => 'float', 'invoice_amount' => 'float', 'decided_at' => 'datetime'];
+    protected $casts = ['received_on' => 'date', 'invoice_date' => 'date', 'total' => 'float', 'invoice_amount' => 'float', 'invoice_vat' => 'float', 'decided_at' => 'datetime'];
 
     public function order()
     {

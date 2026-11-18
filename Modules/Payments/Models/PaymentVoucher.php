@@ -19,10 +19,10 @@ class PaymentVoucher extends Model
         'voided' => 'Voided', 'paid' => 'Paid', 'void_pending' => 'Void waiting for approval',
     ];
 
-    protected $fillable = ['company_id', 'number', 'payment_request_id', 'cash_bank_account_id', 'date', 'description', 'gross', 'withholding', 'net', 'status',
+    protected $fillable = ['company_id', 'number', 'payment_request_id', 'cash_bank_account_id', 'date', 'description', 'gross', 'withholding', 'input_vat', 'vat_invoice_no', 'net', 'status',
         'journal_entry_id', 'prepared_by', 'decision_comment', 'decided_at'];
 
-    protected $casts = ['date' => 'date', 'gross' => 'float', 'withholding' => 'float', 'net' => 'float', 'decided_at' => 'datetime'];
+    protected $casts = ['date' => 'date', 'gross' => 'float', 'withholding' => 'float', 'input_vat' => 'float', 'net' => 'float', 'decided_at' => 'datetime'];
 
     public function request()
     {

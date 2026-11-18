@@ -64,7 +64,7 @@ class PaymentVoucherController extends Controller
     /**
      * A voucher with its request, payees, journal and payment.
      *
-     * @response array{data: array{id: int, number: string, date: string, description: string|null, request: array{id: int, number: string, title: string, department: string|null}, bank: array{id: int, name: string}|null, gross: float, withholding: float, net: float, status: string, status_label: string, waiting_for: string|null, decision_comment: string|null, prepared_by: string|null, journal: array{id: int, reference_no: string|null}|null, lines: list<array{label: string, description: string|null, amount: float}>, payees: list<array{id: int, name: string, method_label: string, destination: string, amount: float, withholding: float, net: float, reference: string|null, list_number: string|null, payment_status: string|null, failure_reason: string|null}>, can: array{withdraw: bool, void: bool}}}
+     * @response array{data: array{id: int, number: string, date: string, description: string|null, request: array{id: int, number: string, title: string, department: string|null}, bank: array{id: int, name: string}|null, gross: float, withholding: float, input_vat: float, vat_invoice_no: string|null, net: float, status: string, status_label: string, waiting_for: string|null, decision_comment: string|null, prepared_by: string|null, journal: array{id: int, reference_no: string|null}|null, lines: list<array{label: string, description: string|null, amount: float}>, payees: list<array{id: int, name: string, method_label: string, destination: string, amount: float, withholding: float, net: float, reference: string|null, list_number: string|null, payment_status: string|null, failure_reason: string|null}>, can: array{withdraw: bool, void: bool}}}
      */
     public function show(Request $request, PaymentVoucher $voucher): JsonResponse
     {
@@ -76,7 +76,7 @@ class PaymentVoucherController extends Controller
         return response()->json(['data' => [
             'id' => $v->id, 'number' => $v->number, 'date' => $v->date->toDateString(), 'description' => $v->description,
             'request' => ['id' => $v->request->id, 'number' => $v->request->number, 'title' => $v->request->title, 'department' => $v->request->department?->name],
-            'bank' => $v->bank ? ['id' => $v->bank->id, 'name' => $v->bank->name] : null, 'gross' => (float) $v->gross, 'withholding' => (float) $v->withholding, 'net' => (float) $v->net,
+            'bank' => $v->bank ? ['id' => $v->bank->id, 'name' => $v->bank->name] : null, 'gross' => (float) $v->gross, 'withholding' => (float) $v->withholding, 'input_vat' => (float) $v->input_vat, 'vat_invoice_no' => $v->vat_invoice_no, 'net' => (float) $v->net,
             'status' => $v->status, 'status_label' => PaymentVoucher::STATUS_LABELS[$v->status] ?? $v->status,
             'waiting_for' => $v->status === 'pending' ? $v->workflow?->steps->firstWhere('status', 'pending')?->name : null, 'decision_comment' => $v->decision_comment,
             'prepared_by' => $v->preparer?->display_name, 'journal' => $v->journal ? ['id' => $v->journal->id, 'reference_no' => $v->journal->reference_no] : null,

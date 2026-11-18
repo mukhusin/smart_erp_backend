@@ -15,6 +15,9 @@ class VoucherRequest extends FormRequest
             'withholding' => ['nullable', 'array'],
             'withholding.*.payee_id' => ['required', 'integer'],
             'withholding.*.amount' => ['required', 'numeric', 'min:0'],
+            /** VAT on the supplier's tax invoice, claimed as input VAT (VAT-registered companies). For a supplier bill from goods received it comes from the recorded supplier invoice. */
+            'input_vat' => ['nullable', 'numeric', 'min:0'],
+            'vat_invoice_no' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

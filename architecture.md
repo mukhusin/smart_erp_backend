@@ -1258,3 +1258,16 @@ off (credit note through its approval), billed to the patient / member (credit n
 lines in proportion) or kept to claim again → closed once rejections are handled and approved amounts received.
 Payments are ordinary receipts. Optional features reach the UI through `GET /me` `features` (`Core/Support/CompanyFeatures`);
 menu items can carry `feature`.
+
+## VAT (2026-11-18)
+
+Optional per company (`vat_settings.vat_registered`, off). Tax codes are data (standard with a rate, zero, exempt;
+defaults S 18% / Z / E added when switched on). Output VAT: invoice lines carry a code, price before VAT, invoice
+`total` includes `tax_total`, posting credits the output VAT account; credit notes debit their share
+(`credit_notes.tax_amount`); cash receipt lines are VAT inclusive. Input VAT: a payment voucher records `input_vat` and
+the tax invoice number; it is taken out of the budget lines in proportion (budget spending is net) and debited to the
+input VAT account. Supplier bills from goods received take `goods_receipts.invoice_vat` from the recorded supplier
+invoice; it is added on top of the bill (payee amount and payable grow; undone if the voucher is rejected) and the
+3-way match compares the invoice before VAT. `GET accounting/vat/summary` gives output less credit notes, input and net
+for a period, with the ledger movement on the two VAT accounts as a check. Petty cash and imprest retirements do not
+claim input VAT yet.

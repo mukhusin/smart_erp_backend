@@ -35,14 +35,18 @@ class ManageInvoices
 
         return DB::transaction(function () use ($invoice, $data, $by, $customer, $due) {
             $invoice ??= new Invoice(['number' => Numbering::next(Invoice::class, 'INV', $data['date']), 'created_by' => $by->id, 'status' => 'draft']);
-            $lines = array_map(fn ($l) => [
-                'description' => $l['description'], 'account_id' => $l['account_id'], 'department_id' => $l['department_id'] ?? null, 'budget_item_id' => $l['budget_item_id'] ?? null,
-                'quantity' => round((float) ($l['quantity'] ?? 1), 2), 'unit_price' => round((float) $l['unit_price'], 2),
-                'amount' => round(round((float) ($l['quantity'] ?? 1), 2) * round((float) $l['unit_price'], 2), 2),
-            ], $data['lines']);
+            $lines = [];
+            foreach ($data['lines'] as $n => $l) {
+                $amount = round(round((float) ($l['quantity'] ?? 1), 2) * round((float) $l['unit_price'], 2), 2);
+                [$code, $rate] = \Modules\Accounting\Support\Vat::code($l['tax_code_id'] ?? null, "lines.{$n}.tax_code_id");
+                $lines[] = ['description' => $l['description'], 'account_id' => $l['account_id'], 'department_id' => $l['department_id'] ?? null, 'budget_item_id' => $l['budget_item_id'] ?? null,
+                    'quantity' => round((float) ($l['quantity'] ?? 1), 2), 'unit_price' => round((float) $l['unit_price'], 2), 'amount' => $amount,
+                    'tax_code_id' => $code, 'tax_rate' => $rate, 'tax_amount' => \Modules\Accounting\Support\Vat::onNet($amount, $rate)];
+            }
+            $tax = round(array_sum(array_column($lines, 'tax_amount')), 2);
             $invoice->fill(['customer_id' => $customer->id, 'date' => $data['date'], 'due_date' => $due, 'reference' => $data['reference'] ?? null, 'notes' => $data['notes'] ?? null,
                 'beneficiary' => $data['beneficiary'] ?? null, 'member_no' => $data['member_no'] ?? null,
-                'total' => round(array_sum(array_column($lines, 'amount')), 2)])->save();
+                'total' => round(array_sum(array_column($lines, 'amount')) + $tax, 2), 'tax_total' => $tax])->save();
             $invoice->lines()->delete();
             foreach ($lines as $l) {
                 $invoice->lines()->create($l);
@@ -62,6 +66,9 @@ class ManageInvoices
         }
         if (! ReceivableSetting::current()->receivable_account_id) {
             throw ValidationException::withMessages(['settings' => 'Choose the receivables account in billing settings first.']);
+        }
+        if ($invoice->tax_total > 0) {
+            \Modules\Accounting\Models\VatSetting::ready('output') ?? throw ValidationException::withMessages(['vat' => 'This invoice has VAT but the company is not VAT registered; remove the VAT codes.']);
         }
 
         $overLimit = $this->credit->check($invoice);
@@ -83,6 +90,9 @@ class ManageInvoices
             $lines = [['account_id' => ReceivableSetting::current()->receivable_account_id, 'debit' => $invoice->total, 'description' => $invoice->customer->name]];
             foreach ($invoice->lines as $l) {
                 $lines[] = ['account_id' => $l->account_id, 'credit' => $l->amount, 'description' => $l->description, 'department_id' => $l->department_id, 'budget_item_id' => $l->budget_item_id];
+            }
+            if ($invoice->tax_total > 0) {
+                $lines[] = ['account_id' => \Modules\Accounting\Models\VatSetting::current()->output_account_id, 'credit' => $invoice->tax_total, 'description' => "Output VAT {$invoice->number}"];
             }
             $journal = $this->posting->post($invoice->date->toDateString(), "{$invoice->number} {$invoice->customer->name}", $lines, $by ?? $invoice->creator, 'invoice', $invoice);
             $invoice->update(['status' => 'open', 'journal_entry_id' => $journal->id, 'issued_at' => now()]);

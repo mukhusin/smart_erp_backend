@@ -28,6 +28,8 @@ class ReceiptRequest extends FormRequest
             'lines.*.department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'lines.*.budget_item_id' => ['nullable', 'integer'],
             'lines.*.amount' => ['required', 'numeric', 'min:0'],
+            /** VAT code; the amount received includes the VAT. Ignored when the company is not VAT registered. */
+            'lines.*.tax_code_id' => ['nullable', 'integer'],
         ];
     }
 }

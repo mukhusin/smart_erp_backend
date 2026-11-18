@@ -212,4 +212,37 @@ class PaymentFlowTest extends TestCase
         $this->getJson("/api/v1/payments/requests/{$id}")->assertJsonPath('data.can.withdraw', true)->assertJsonPath('data.can.voucher', false);
         $this->getJson('/api/v1/payments/vouchers')->assertForbidden();
     }
+
+    public function test_input_vat_on_voucher_and_vat_summary(): void
+    {
+        [$out, $in] = app(CompanyContext::class)->run($this->company, function () {
+            WorkflowTemplate::whereIn('process', ['payment-request', 'payment-voucher'])->delete();
+
+            return [Account::create(['code' => '2300', 'name' => 'Output VAT', 'type' => 'liability', 'is_postable' => true, 'is_active' => true])->id,
+                Account::create(['code' => '1300', 'name' => 'Input VAT', 'type' => 'asset', 'is_postable' => true, 'is_active' => true])->id];
+        });
+        $this->actingAs($this->finance)->putJson('/api/v1/accounting/vat', ['vat_registered' => true])->assertUnprocessable()->assertJsonValidationErrors(['output_account_id', 'input_account_id']);
+        $this->putJson('/api/v1/accounting/vat', ['vat_registered' => true, 'vat_number' => '40-123456-X', 'output_account_id' => $out, 'input_account_id' => $in])->assertOk()
+            ->assertJsonCount(3, 'codes')->assertJsonPath('codes.0.code', 'E');
+        $this->postJson('/api/v1/accounting/tax-codes', ['code' => 'S', 'name' => 'Dup', 'kind' => 'standard', 'rate' => 18])->assertUnprocessable();
+        $this->postJson('/api/v1/accounting/tax-codes', ['code' => 'Z2', 'name' => 'Export', 'kind' => 'zero', 'rate' => 5])->assertCreated();
+
+        $id = $this->actingAs($this->head)->postJson('/api/v1/payments/requests', ['department_id' => $this->pharmacy->id, 'title' => 'Gloves', 'lines' => [['budget_item_id' => $this->item, 'amount' => 236000]],
+            'payees' => [['name' => 'MSD', 'method' => 'bank', 'bank_name' => 'NMB', 'account_number' => '2001', 'amount' => 236000]]])->assertCreated()->json('data.id');
+        $this->post("/api/v1/payments/requests/{$id}/attachments", ['file' => UploadedFile::fake()->create('invoice.pdf', 50, 'application/pdf')], ['Accept' => 'application/json'])->assertCreated();
+        $this->postJson("/api/v1/payments/requests/{$id}/submit")->assertOk();
+        $this->actingAs($this->finance)->putJson('/api/v1/payments/settings', ['payable_account_id' => $this->acc['2100'], 'withholding_account_id' => $this->acc['2200'], 'require_attachment' => true])->assertOk();
+        $this->postJson("/api/v1/payments/requests/{$id}/voucher", ['cash_bank_account_id' => $this->bank, 'date' => '2026-11-18', 'input_vat' => 300000])
+            ->assertUnprocessable()->assertJsonValidationErrors(['input_vat']);
+        $v = $this->postJson("/api/v1/payments/requests/{$id}/voucher", ['cash_bank_account_id' => $this->bank, 'date' => '2026-11-18', 'input_vat' => 36000, 'vat_invoice_no' => 'TI-9'])
+            ->assertCreated()->json('data.id');
+        $this->getJson("/api/v1/payments/vouchers/{$v}")->assertJsonPath('data.status', 'approved')->assertJsonPath('data.input_vat', 36000)->assertJsonPath('data.net', 236000);
+        $lines = app(CompanyContext::class)->run($this->company, fn () => \Modules\Accounting\Models\JournalEntryLine::whereHas('entry', fn ($q) => $q->where('entry_type', 'payment'))->get());
+        $this->assertEquals(200000, $lines->firstWhere('account_id', $this->acc['5100'])->debit);
+        $this->assertEquals(36000, $lines->firstWhere('account_id', $in)->debit);
+        $this->assertEquals(236000, $lines->firstWhere('account_id', $this->acc['2100'])->credit);
+
+        $this->getJson('/api/v1/accounting/vat/summary?from=2026-11-01&to=2026-11-30')->assertOk()->assertJsonPath('data.input_vat', 36000)->assertJsonPath('data.net_vat', -36000)
+            ->assertJsonPath('data.purchases.0.vat_invoice_no', 'TI-9')->assertJsonPath('data.ledger.input', 36000)->assertJsonPath('data.vat_number', '40-123456-X');
+    }
 }

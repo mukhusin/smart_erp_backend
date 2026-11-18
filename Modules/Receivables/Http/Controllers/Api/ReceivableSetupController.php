@@ -49,7 +49,7 @@ class ReceivableSetupController extends Controller
     /**
      * Choice lists for billing forms: accounts, departments, revenue budget lines, bank accounts, customer kinds, receipt methods.
      *
-     * @response array{data: array{accounts: list<array{id: int, code: string, name: string, type: string}>, departments: list<array{id: int, name: string}>, budget_lines: list<array{id: int, label: string, account_id: int, department_id: int}>, banks: list<array{id: int, name: string}>, kinds: list<array{value: string, label: string}>, methods: list<array{value: string, label: string}>, default_terms_days: int, claims_enabled: bool}}
+     * @response array{data: array{accounts: list<array{id: int, code: string, name: string, type: string}>, departments: list<array{id: int, name: string}>, budget_lines: list<array{id: int, label: string, account_id: int, department_id: int}>, banks: list<array{id: int, name: string}>, kinds: list<array{value: string, label: string}>, methods: list<array{value: string, label: string}>, default_terms_days: int, claims_enabled: bool, vat_registered: bool, tax_codes: list<array{id: int, code: string, name: string, rate: float}>}}
      */
     public function lookups(Request $request): JsonResponse
     {
@@ -67,6 +67,9 @@ class ReceivableSetupController extends Controller
             'methods' => collect(Receipt::METHODS)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values(),
             'default_terms_days' => (int) ReceivableSetting::current()->default_terms_days,
             'claims_enabled' => (bool) ReceivableSetting::current()->claims_enabled,
+            'vat_registered' => \Modules\Accounting\Models\VatSetting::registered(),
+            'tax_codes' => \Modules\Accounting\Models\VatSetting::registered() ? \Modules\Accounting\Models\TaxCode::where('is_active', true)->orderBy('code')->get()
+                ->map(fn ($c) => ['id' => $c->id, 'code' => $c->code, 'name' => $c->name, 'rate' => $c->kind === 'standard' ? (float) $c->rate : 0.0])->values() : [],
         ]]);
     }
 }

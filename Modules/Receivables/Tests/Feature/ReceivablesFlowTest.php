@@ -191,4 +191,35 @@ class ReceivablesFlowTest extends TestCase
             'allocations' => [['invoice_id' => $a, 'amount' => 200000], ['invoice_id' => $b, 'amount' => 150000]]])->assertCreated();
         $this->getJson("/api/v1/receivables/claims/{$claim}")->assertJsonPath('data.status', 'closed')->assertJsonPath('data.outstanding', 0);
     }
+
+    public function test_output_vat_on_invoices_credit_notes_and_cash_sales(): void
+    {
+        $out = app(CompanyContext::class)->run($this->company, fn () => Account::create(['code' => '2300', 'name' => 'Output VAT', 'type' => 'liability', 'is_postable' => true, 'is_active' => true])->id);
+        $in = app(CompanyContext::class)->run($this->company, fn () => Account::create(['code' => '1300', 'name' => 'Input VAT', 'type' => 'asset', 'is_postable' => true, 'is_active' => true])->id);
+        $this->actingAs($this->billing)->putJson('/api/v1/receivables/settings', ['receivable_account_id' => $this->acc['1200'], 'default_terms_days' => 30])->assertOk();
+        $customer = $this->postJson('/api/v1/receivables/customers', ['name' => 'Acme Ltd', 'kind' => 'company'])->assertCreated()->json('data.id');
+        $this->getJson('/api/v1/receivables/lookups')->assertJsonPath('data.vat_registered', false)->assertJsonCount(0, 'data.tax_codes');
+        $plain = $this->invoice($customer, 100000);
+        $this->getJson("/api/v1/receivables/invoices/{$plain}")->assertJsonPath('data.tax_total', 0);
+        $this->postJson("/api/v1/receivables/invoices/{$plain}/issue")->assertOk();
+
+        $this->actingAs($this->admin)->putJson('/api/v1/accounting/vat', ['vat_registered' => true, 'output_account_id' => $out, 'input_account_id' => $in])->assertOk();
+        $std = collect($this->getJson('/api/v1/receivables/lookups')->assertJsonPath('data.vat_registered', true)->json('data.tax_codes'))->firstWhere('code', 'S')['id'];
+        $inv = $this->actingAs($this->billing)->postJson('/api/v1/receivables/invoices', ['customer_id' => $customer, 'date' => '2026-11-10', 'lines' => [
+            ['description' => 'Lab tests', 'account_id' => $this->acc['4100'], 'quantity' => 2, 'unit_price' => 50000, 'tax_code_id' => $std]]])->assertCreated()->json('data.id');
+        $this->getJson("/api/v1/receivables/invoices/{$inv}")->assertJsonPath('data.total', 118000)->assertJsonPath('data.tax_total', 18000)->assertJsonPath('data.lines.0.tax_amount', 18000);
+        $this->postJson("/api/v1/receivables/invoices/{$inv}/issue")->assertOk();
+        $this->postJson("/api/v1/receivables/invoices/{$inv}/credit-notes", ['date' => '2026-11-18', 'amount' => 59000, 'reason' => 'Half not done'])->assertCreated();
+        $this->approve('credit-note');
+        $this->postJson('/api/v1/receivables/receipts', ['kind' => 'direct', 'payer_name' => 'Walk-in', 'date' => '2026-11-18', 'cash_bank_account_id' => $this->bank, 'method' => 'cash',
+            'lines' => [['description' => 'Pharmacy sale', 'account_id' => $this->acc['4100'], 'amount' => 11800, 'tax_code_id' => $std]]])->assertCreated();
+
+        $sum = $this->actingAs($this->admin)->getJson('/api/v1/accounting/vat/summary?from=2026-11-01&to=2026-11-30')->assertOk()->json('data');
+        $this->assertEquals(18000, collect($sum['sales'])->firstWhere('code', 'S')['vat']);
+        $this->assertEquals(9000, $sum['credit_notes']['vat']);
+        $this->assertEquals(1800, $sum['cash_sales'][0]['vat']);
+        $this->assertEquals(10800, $sum['output_vat']);
+        $this->assertEquals(10800, $sum['ledger']['output']);
+        $this->assertEquals(100000, collect($sum['sales'])->firstWhere('code', '—')['net']);
+    }
 }

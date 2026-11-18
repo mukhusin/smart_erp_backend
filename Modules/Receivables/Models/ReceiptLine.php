@@ -9,9 +9,14 @@ use Modules\Budgeting\Models\BudgetItem;
 
 class ReceiptLine extends Model
 {
-    protected $fillable = ['receipt_id', 'description', 'account_id', 'department_id', 'budget_item_id', 'amount'];
+    protected $fillable = ['receipt_id', 'description', 'account_id', 'department_id', 'budget_item_id', 'amount', 'tax_code_id', 'tax_amount'];
 
-    protected $casts = ['amount' => 'float'];
+    protected $casts = ['amount' => 'float', 'tax_amount' => 'float'];
+
+    public function receipt()
+    {
+        return $this->belongsTo(Receipt::class);
+    }
 
     public function account()
     {

@@ -172,7 +172,11 @@ class ManageReceipts
         if ($grn->paymentRequest && $grn->paymentRequest->vouchers()->whereIn('status', ['pending', 'approved', 'paid'])->exists()) {
             throw ValidationException::withMessages(['receipt' => 'A voucher is already prepared for this bill.']);
         }
-        $grn->update(['supplier_invoice' => $data['supplier_invoice'], 'invoice_date' => $data['invoice_date'], 'invoice_amount' => round((float) $data['invoice_amount'], 2)]);
+        $vat = round((float) ($data['invoice_vat'] ?? 0), 2);
+        if ($vat > 0 && ! \Modules\Accounting\Models\VatSetting::registered()) {
+            throw ValidationException::withMessages(['invoice_vat' => 'VAT is recorded only when the company is VAT registered (Accounting → VAT).']);
+        }
+        $grn->update(['supplier_invoice' => $data['supplier_invoice'], 'invoice_date' => $data['invoice_date'], 'invoice_amount' => round((float) $data['invoice_amount'], 2), 'invoice_vat' => $vat]);
 
         return $grn->refresh();
     }
@@ -184,7 +188,7 @@ class ManageReceipts
         }
         $tolerance = round($grn->total * ProcurementSetting::current()->match_tolerance_percent / 100, 2);
 
-        return abs(round($grn->invoice_amount - $grn->total, 2)) <= $tolerance;
+        return abs(round($grn->invoice_amount - $grn->invoice_vat - $grn->total, 2)) <= $tolerance;
     }
 
     private function bill(GoodsReceipt $grn, array $byItem, int $clearing): PaymentRequest

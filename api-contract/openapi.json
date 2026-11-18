@@ -11,6 +11,697 @@
         }
     ],
     "paths": {
+        "/accounting/vat": {
+            "get": {
+                "operationId": "accounting.vat.show",
+                "summary": "VAT registration, accounts and tax codes",
+                "tags": [
+                    "Accounting: VAT",
+                    "Vat"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "vat_registered": {
+                                                    "type": "boolean"
+                                                },
+                                                "vat_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "output_account_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "input_account_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "vat_registered",
+                                                "vat_number",
+                                                "output_account_id",
+                                                "input_account_id"
+                                            ]
+                                        },
+                                        "codes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "rate": {
+                                                        "type": "number"
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name",
+                                                    "kind",
+                                                    "kind_label",
+                                                    "rate",
+                                                    "is_active"
+                                                ]
+                                            }
+                                        },
+                                        "kinds": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "label"
+                                                ]
+                                            }
+                                        },
+                                        "accounts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name",
+                                                    "type"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "codes",
+                                        "kinds",
+                                        "accounts"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "accounting.vat.update",
+                "tags": [
+                    "Accounting: VAT",
+                    "Vat"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "vat_registered": {
+                                        "type": "boolean",
+                                        "description": "Charge VAT on sales and claim it on purchases. Leave off when the organisation is not VAT registered."
+                                    },
+                                    "vat_number": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 40
+                                    },
+                                    "output_account_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "input_account_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "vat_registered"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "vat_registered": {
+                                                    "type": "boolean"
+                                                },
+                                                "vat_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "output_account_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "input_account_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "vat_registered",
+                                                "vat_number",
+                                                "output_account_id",
+                                                "input_account_id"
+                                            ]
+                                        },
+                                        "codes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "rate": {
+                                                        "type": "number"
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name",
+                                                    "kind",
+                                                    "kind_label",
+                                                    "rate",
+                                                    "is_active"
+                                                ]
+                                            }
+                                        },
+                                        "kinds": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "label"
+                                                ]
+                                            }
+                                        },
+                                        "accounts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "code",
+                                                    "name",
+                                                    "type"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "codes",
+                                        "kinds",
+                                        "accounts"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/vat/summary": {
+            "get": {
+                "operationId": "accounting.vat.summary",
+                "summary": "VAT summary for a period: output VAT on sales less credit notes, input VAT on purchases, and what is due",
+                "tags": [
+                    "Accounting: VAT",
+                    "Vat"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "from": {
+                                                    "type": "string"
+                                                },
+                                                "to": {
+                                                    "type": "string"
+                                                },
+                                                "vat_number": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "sales": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "net": {
+                                                                "type": "number"
+                                                            },
+                                                            "vat": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "code",
+                                                            "name",
+                                                            "kind",
+                                                            "net",
+                                                            "vat"
+                                                        ]
+                                                    }
+                                                },
+                                                "credit_notes": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "count": {
+                                                            "type": "integer"
+                                                        },
+                                                        "amount": {
+                                                            "type": "number"
+                                                        },
+                                                        "vat": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "count",
+                                                        "amount",
+                                                        "vat"
+                                                    ]
+                                                },
+                                                "cash_sales": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "net": {
+                                                                "type": "number"
+                                                            },
+                                                            "vat": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "code",
+                                                            "name",
+                                                            "net",
+                                                            "vat"
+                                                        ]
+                                                    }
+                                                },
+                                                "output_vat": {
+                                                    "type": "number"
+                                                },
+                                                "purchases": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "number": {
+                                                                "type": "string"
+                                                            },
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "payee": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "vat_invoice_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "gross": {
+                                                                "type": "number"
+                                                            },
+                                                            "vat": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "number",
+                                                            "date",
+                                                            "payee",
+                                                            "vat_invoice_no",
+                                                            "gross",
+                                                            "vat"
+                                                        ]
+                                                    }
+                                                },
+                                                "input_vat": {
+                                                    "type": "number"
+                                                },
+                                                "net_vat": {
+                                                    "type": "number"
+                                                },
+                                                "ledger": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "output": {
+                                                            "type": "number"
+                                                        },
+                                                        "input": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "output",
+                                                        "input"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "from",
+                                                "to",
+                                                "vat_number",
+                                                "sales",
+                                                "credit_notes",
+                                                "cash_sales",
+                                                "output_vat",
+                                                "purchases",
+                                                "input_vat",
+                                                "net_vat",
+                                                "ledger"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/accounting/tax-codes": {
+            "post": {
+                "operationId": "accounting.tax-codes.store",
+                "tags": [
+                    "Accounting: VAT",
+                    "Vat"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaxCodeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/accounting/tax-codes/{code}": {
+            "put": {
+                "operationId": "accounting.tax-codes.update",
+                "tags": [
+                    "Accounting: VAT",
+                    "Vat"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "description": "The code ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaxCodeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/accounting/reconciliations/{reconciliation}/pull-feed": {
             "post": {
                 "operationId": "accounting.reconciliations.pull-feed",
@@ -70684,6 +71375,9 @@
                                                 "kind": {
                                                     "type": "string"
                                                 },
+                                                "supplier_bill": {
+                                                    "type": "boolean"
+                                                },
                                                 "holder_employee_id": {
                                                     "type": [
                                                         "integer",
@@ -71126,6 +71820,7 @@
                                                 "id",
                                                 "number",
                                                 "kind",
+                                                "supplier_bill",
                                                 "holder_employee_id",
                                                 "holder",
                                                 "retire_by",
@@ -72869,6 +73564,15 @@
                                                 "withholding": {
                                                     "type": "number"
                                                 },
+                                                "input_vat": {
+                                                    "type": "number"
+                                                },
+                                                "vat_invoice_no": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "net": {
                                                     "type": "number"
                                                 },
@@ -73033,6 +73737,8 @@
                                                 "bank",
                                                 "gross",
                                                 "withholding",
+                                                "input_vat",
+                                                "vat_invoice_no",
                                                 "net",
                                                 "status",
                                                 "status_label",
@@ -86843,6 +87549,9 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "invoice_vat": {
+                                                    "type": "number"
+                                                },
                                                 "matched": {
                                                     "type": "boolean"
                                                 },
@@ -86988,6 +87697,7 @@
                                                 "supplier_invoice",
                                                 "invoice_date",
                                                 "invoice_amount",
+                                                "invoice_vat",
                                                 "matched",
                                                 "payment_request",
                                                 "lines",
@@ -98671,6 +99381,9 @@
                                                 "total": {
                                                     "type": "number"
                                                 },
+                                                "tax_total": {
+                                                    "type": "number"
+                                                },
                                                 "paid": {
                                                     "type": "number"
                                                 },
@@ -98774,6 +99487,18 @@
                                                             },
                                                             "amount": {
                                                                 "type": "number"
+                                                            },
+                                                            "tax_code_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "tax_rate": {
+                                                                "type": "number"
+                                                            },
+                                                            "tax_amount": {
+                                                                "type": "number"
                                                             }
                                                         },
                                                         "required": [
@@ -98786,7 +99511,10 @@
                                                             "budget_item_id",
                                                             "quantity",
                                                             "unit_price",
-                                                            "amount"
+                                                            "amount",
+                                                            "tax_code_id",
+                                                            "tax_rate",
+                                                            "tax_amount"
                                                         ]
                                                     }
                                                 },
@@ -98911,6 +99639,7 @@
                                                 "claim",
                                                 "notes",
                                                 "total",
+                                                "tax_total",
                                                 "paid",
                                                 "credited",
                                                 "balance",
@@ -100028,13 +100757,17 @@
                                                             },
                                                             "amount": {
                                                                 "type": "number"
+                                                            },
+                                                            "tax_amount": {
+                                                                "type": "number"
                                                             }
                                                         },
                                                         "required": [
                                                             "description",
                                                             "account",
                                                             "department",
-                                                            "amount"
+                                                            "amount",
+                                                            "tax_amount"
                                                         ]
                                                     }
                                                 },
@@ -100951,6 +101684,35 @@
                                                 },
                                                 "claims_enabled": {
                                                     "type": "boolean"
+                                                },
+                                                "vat_registered": {
+                                                    "type": "boolean"
+                                                },
+                                                "tax_codes": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "rate": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "code",
+                                                            "name",
+                                                            "rate"
+                                                        ]
+                                                    }
                                                 }
                                             },
                                             "required": [
@@ -100961,7 +101723,9 @@
                                                 "kinds",
                                                 "methods",
                                                 "default_terms_days",
-                                                "claims_enabled"
+                                                "claims_enabled",
+                                                "vat_registered",
+                                                "tax_codes"
                                             ]
                                         }
                                     },
@@ -113328,6 +114092,13 @@
                                     "type": "number",
                                     "minimum": 0,
                                     "maximum": 999999999999
+                                },
+                                "tax_code_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "description": "VAT code; the price is before VAT. Ignored when the company is not VAT registered."
                                 }
                             },
                             "required": [
@@ -116980,6 +117751,13 @@
                                 "amount": {
                                     "type": "number",
                                     "minimum": 0
+                                },
+                                "tax_code_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "description": "VAT code; the amount received includes the VAT. Ignored when the company is not VAT registered."
                                 }
                             },
                             "required": [
@@ -119730,6 +120508,14 @@
                     "invoice_amount": {
                         "type": "number",
                         "minimum": 0
+                    },
+                    "invoice_vat": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "VAT included in the invoice amount; claimed as input VAT when the company is VAT registered.",
+                        "minimum": 0
                     }
                 },
                 "required": [
@@ -120201,6 +120987,43 @@
                     "created_at"
                 ],
                 "title": "TaskResource"
+            },
+            "TaxCodeRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "kind": {
+                        "type": "string",
+                        "description": "standard, zero or exempt; only standard codes carry a rate.",
+                        "enum": [
+                            "standard",
+                            "zero",
+                            "exempt"
+                        ]
+                    },
+                    "rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "code",
+                    "name",
+                    "kind",
+                    "rate"
+                ],
+                "title": "TaxCodeRequest"
             },
             "TransferRequest": {
                 "type": "object",
@@ -120917,6 +121740,21 @@
                                 "amount"
                             ]
                         }
+                    },
+                    "input_vat": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "VAT on the supplier's tax invoice, claimed as input VAT (VAT-registered companies). For a supplier bill from goods received it comes from the recorded supplier invoice.",
+                        "minimum": 0
+                    },
+                    "vat_invoice_no": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 100
                     }
                 },
                 "required": [
@@ -121359,25 +122197,6 @@
                     }
                 }
             },
-            "ModelNotFoundException": {
-                "description": "Not found",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Error overview."
-                                }
-                            },
-                            "required": [
-                                "message"
-                            ]
-                        }
-                    }
-                }
-            },
             "ValidationException": {
                 "description": "Validation error",
                 "content": {
@@ -121403,6 +122222,25 @@
                             "required": [
                                 "message",
                                 "errors"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ModelNotFoundException": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
                             ]
                         }
                     }

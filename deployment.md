@@ -138,6 +138,12 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## VAT (2026-11-18)
+
+`php artisan migrate`: `vat_settings` (off), `tax_codes`, VAT columns on invoices, invoice lines, credit notes,
+receipt lines, payment vouchers and goods receipts. Nothing changes until a company switches VAT on in
+Accounting → VAT and chooses the output and input VAT accounts.
+
 ## Credit control and insurance claims (2026-11-18)
 
 `php artisan migrate`: receivable settings `credit_check` (off), `credit_overdue_days`, `claims_enabled` (off);
