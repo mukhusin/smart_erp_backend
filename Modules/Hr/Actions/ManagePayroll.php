@@ -168,6 +168,7 @@ class ManagePayroll
             $detailIds = $sheet->details()->pluck('id');
             EmployeeMonthlyAdvance::whereIn('payroll_sheet_detail_id', $detailIds)->update(['status' => 'deducted']);
             Overtime::whereIn('id', OvertimeSheet::whereIn('payroll_sheet_detail_id', $detailIds)->pluck('overtime_id'))->update(['is_paid' => true]);
+            app(ManageGratuity::class)->accrue($sheet);
         });
         event(new PayrollApproved($sheet->refresh(), auth()->user()));
         $label = Carbon::create((int) $sheet->year, (int) $sheet->month, 1)->format('F Y');

@@ -1280,3 +1280,12 @@ count while pending approval (only rejected ones do not). `EnsureProfileComplete
 `profile_gate` for writes outside `auth.*`, `me*`, `self.profile*`; `GET /me` carries `profile_gate`, and the SPA guard
 `profileGateGuard` sends such users to My profile. Applies only to users linked to an employee with self-service;
 company administrators are exempt. Reads stay open.
+
+## Gratuity accruals (2026-11-18)
+
+Optional per company (`gratuity_settings.enabled`, off). On payroll approval (`ManagePayroll::approve` →
+`ManageGratuity::accrue`) each payroll line whose contract type is eligible (chosen types, default every non-permanent
+type) accrues rate % of the basic salary paid (`actual_basic_salary`, else `basic_salary`) or of gross, one row per
+employee and sheet. Payroll posting adds Dr gratuity expense by department (budget line when found) / Cr gratuity
+payable when both accounts are set. The register settles everything open per employee: paid (Dr payable / Cr bank)
+or forfeited (Dr payable / Cr expense). Shown in the menu only when on (`features: gratuity`).

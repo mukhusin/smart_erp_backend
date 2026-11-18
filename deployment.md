@@ -138,6 +138,11 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Gratuity accruals (2026-11-18)
+
+`php artisan migrate`: `gratuity_settings` (off), `gratuity_accruals`, `gratuity_settlements`. Nothing changes until a
+company switches gratuity on in Payroll → Payroll settings.
+
 ## Required staff profile (2026-11-18)
 
 `php artisan migrate` adds `hr_settings.profile_required` (off), `profile_min_percent` (75), `profile_checks`.

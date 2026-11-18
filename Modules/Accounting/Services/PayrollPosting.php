@@ -57,7 +57,7 @@ class PayrollPosting
             $lines[] = ['account_id' => $account, $amount > 0 ? 'credit' : 'debit' => abs($amount), 'description' => PayrollPostingSetting::ACCOUNTS[$key]];
         }
 
-        return $lines;
+        return [...$lines, ...$this->gratuityLines($sheet)];
     }
 
     public function post(PayrollSheet $sheet, ?User $by): JournalEntry
@@ -98,6 +98,26 @@ class PayrollPosting
 
             return $journal;
         });
+    }
+
+    /** Gratuity accrued on this payroll: expense by department, owed to staff as a liability. */
+    private function gratuityLines(PayrollSheet $sheet): array
+    {
+        $g = \App\Models\GratuitySetting::current();
+        $accruals = \App\Models\GratuityAccrual::with('employee')->where('payroll_sheet_id', $sheet->id)->get();
+        if ($accruals->isEmpty() || ! $g->expense_account_id || ! $g->liability_account_id) {
+            return [];
+        }
+        $items = $this->budgetLines($sheet, [$g->expense_account_id]);
+        $lines = [];
+        foreach ($accruals->groupBy(fn ($a) => $a->employee?->department_id) as $dept => $group) {
+            $dept = $dept ?: null;
+            $lines[] = ['account_id' => $g->expense_account_id, 'debit' => round($group->sum('amount'), 2), 'description' => 'Gratuity accrued', 'department_id' => $dept,
+                'budget_item_id' => $items[$dept.'|'.$g->expense_account_id] ?? null];
+        }
+        $lines[] = ['account_id' => $g->liability_account_id, 'credit' => round($accruals->sum('amount'), 2), 'description' => 'Gratuity owed to staff'];
+
+        return $lines;
     }
 
     /** @return array<string, int> "department|account" => budget item id in the approved budget covering the payroll date */

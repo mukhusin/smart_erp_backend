@@ -17,6 +17,7 @@ final class CompanyFeatures
         return app(CompanyContext::class)->run($companyId, fn () => array_values(array_filter([
             ReceivableSetting::current()->claims_enabled ? 'receivables.claims' : null,
             \Modules\Accounting\Models\VatSetting::registered() ? 'vat' : null,
+            \App\Models\GratuitySetting::current()->enabled ? 'gratuity' : null,
         ])));
     }
 }

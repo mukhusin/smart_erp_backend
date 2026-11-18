@@ -36,6 +36,7 @@ use Modules\Hr\Http\Controllers\Api\Payroll\PayItemsController;
 use Modules\Hr\Http\Controllers\Api\Payroll\MembershipController;
 use Modules\Hr\Http\Controllers\Api\Payroll\PayrollController;
 use Modules\Hr\Http\Controllers\Api\Payroll\SalaryFileController;
+use Modules\Hr\Http\Controllers\Api\Payroll\GratuityController;
 use Modules\Hr\Http\Controllers\Api\PlacementController;
 use Modules\Hr\Http\Controllers\Api\RenewalController;
 use Modules\Hr\Http\Controllers\Api\RenewalLetterController;
@@ -427,6 +428,9 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::get('settings', [PayrollController::class, 'settings'])->name('settings.show');
         Route::put('settings', [PayrollController::class, 'updateSettings'])->name('settings.update');
         Route::get('settings/paye', [PayrollController::class, 'payeCheck'])->name('settings.paye');
+        Route::get('gratuity/settings', [GratuityController::class, 'settings'])->name('gratuity.settings.show');
+        Route::put('gratuity/settings', [GratuityController::class, 'updateSettings'])->name('gratuity.settings.update');
+        Route::post('gratuity/employees/{employee}/settle', [GratuityController::class, 'settle'])->name('gratuity.settle');
     });
     Route::middleware('can:payroll.view')->group(function () {
         Route::get('dashboard', [PayrollController::class, 'dashboard'])->name('dashboard');
@@ -434,6 +438,8 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::get('sheets/{sheet}', [PayrollController::class, 'show'])->name('sheets.show');
         Route::get('sheets/{sheet}/payslips/{detail}', [PayrollController::class, 'payslip'])->name('sheets.payslip');
         Route::get('sheets/{sheet}/payslips/{detail}/pdf', [PayrollController::class, 'payslipPdf'])->name('sheets.payslip.pdf');
+        Route::get('gratuity', [GratuityController::class, 'index'])->name('gratuity.index');
+        Route::get('gratuity/employees/{employee}', [GratuityController::class, 'show'])->name('gratuity.show');
         Route::get('salary-files', [SalaryFileController::class, 'index'])->name('salary-files.index');
         Route::get('salary-files/template', [SalaryFileController::class, 'template'])->name('salary-files.template');
         Route::get('salary-files/{upload}/rows', [SalaryFileController::class, 'rows'])->name('salary-files.rows');
