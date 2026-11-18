@@ -18,7 +18,7 @@ use Modules\Workflow\Services\WorkflowEngine;
 
 class ManageInvoices
 {
-    public function __construct(private readonly WorkflowEngine $workflow, private readonly PostingService $posting) {}
+    public function __construct(private readonly WorkflowEngine $workflow, private readonly PostingService $posting, private readonly \Modules\Receivables\Support\CreditControl $credit) {}
 
     public function save(?Invoice $invoice, array $data, User $by): Invoice
     {
@@ -41,6 +41,7 @@ class ManageInvoices
                 'amount' => round(round((float) ($l['quantity'] ?? 1), 2) * round((float) $l['unit_price'], 2), 2),
             ], $data['lines']);
             $invoice->fill(['customer_id' => $customer->id, 'date' => $data['date'], 'due_date' => $due, 'reference' => $data['reference'] ?? null, 'notes' => $data['notes'] ?? null,
+                'beneficiary' => $data['beneficiary'] ?? null, 'member_no' => $data['member_no'] ?? null,
                 'total' => round(array_sum(array_column($lines, 'amount')), 2)])->save();
             $invoice->lines()->delete();
             foreach ($lines as $l) {
@@ -63,8 +64,10 @@ class ManageInvoices
             throw ValidationException::withMessages(['settings' => 'Choose the receivables account in billing settings first.']);
         }
 
-        return DB::transaction(function () use ($invoice, $by) {
-            $invoice->update(['status' => 'pending', 'decision_comment' => null]);
+        $overLimit = $this->credit->check($invoice);
+
+        return DB::transaction(function () use ($invoice, $by, $overLimit) {
+            $invoice->update(['status' => 'pending', 'over_limit' => $overLimit, 'decision_comment' => null]);
             if (! $this->workflow->start(InvoiceProcess::KEY, $invoice, $by)) {
                 $this->post($invoice, $by);
             }

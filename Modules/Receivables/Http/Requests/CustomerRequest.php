@@ -20,6 +20,8 @@ class CustomerRequest extends FormRequest
             'contact_person' => ['nullable', 'string', 'max:150'],
             'terms_days' => ['nullable', 'integer', 'min:0', 'max:365'],
             'credit_limit' => ['nullable', 'numeric', 'min:0'],
+            /** Stop new invoices to this customer until released. */
+            'on_hold' => ['sometimes', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

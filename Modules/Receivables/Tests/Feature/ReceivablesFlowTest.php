@@ -122,4 +122,73 @@ class ReceivablesFlowTest extends TestCase
         $this->getJson("/api/v1/budgeting/items/{$this->item}")->assertJsonPath('data.actual', 166666.67);
         $this->artisan('budget:check-balances')->assertSuccessful();
     }
+
+    private function invoice(int $customer, int $price, string $date = '2026-11-10', array $extra = []): int
+    {
+        $id = $this->postJson('/api/v1/receivables/invoices', $extra + ['customer_id' => $customer, 'date' => $date, 'lines' => [
+            ['description' => 'Consultation', 'account_id' => $this->acc['4100'], 'quantity' => 1, 'unit_price' => $price]]])->assertCreated()->json('data.id');
+
+        return $id;
+    }
+
+    public function test_credit_limit_check_and_insurance_claim_lifecycle(): void
+    {
+        $this->actingAs($this->billing)->putJson('/api/v1/receivables/settings', ['receivable_account_id' => $this->acc['1200'], 'default_terms_days' => 30, 'credit_check' => 'block'])->assertOk()
+            ->assertJsonPath('data.credit_check', 'block')->assertJsonPath('data.claims_enabled', false);
+        $insurer = $this->postJson('/api/v1/receivables/customers', ['name' => 'Afya Insurance', 'kind' => 'insurer', 'credit_limit' => 500000])->assertCreated()->json('data.id');
+        $patient = $this->postJson('/api/v1/receivables/customers', ['name' => 'Juma Ali', 'kind' => 'patient'])->assertCreated()->json('data.id');
+
+        $a = $this->invoice($insurer, 300000, '2026-11-10', ['beneficiary' => 'Juma Ali', 'member_no' => 'AF-77']);
+        $this->postJson("/api/v1/receivables/invoices/{$a}/issue")->assertOk();
+        $b = $this->invoice($insurer, 250000, '2026-11-12');
+        $this->postJson("/api/v1/receivables/invoices/{$b}/issue")->assertUnprocessable()->assertJsonValidationErrors(['invoice']);
+        $this->putJson('/api/v1/receivables/settings', ['default_terms_days' => 30, 'receivable_account_id' => $this->acc['1200'], 'credit_check' => 'warn'])->assertOk();
+        $this->postJson("/api/v1/receivables/invoices/{$b}/issue")->assertOk();
+        $this->getJson("/api/v1/receivables/invoices/{$b}")->assertJsonPath('data.over_limit', true);
+        $this->getJson("/api/v1/receivables/customers/{$insurer}")->assertJsonPath('data.on_hold', false)->assertJsonPath('credit.exposure', 550000)->assertJsonPath('credit.available', -50000);
+        $this->putJson("/api/v1/receivables/customers/{$patient}", ['name' => 'Juma Ali', 'kind' => 'patient', 'on_hold' => true])->assertOk();
+        $this->putJson('/api/v1/receivables/settings', ['default_terms_days' => 30, 'receivable_account_id' => $this->acc['1200'], 'credit_check' => 'block'])->assertOk();
+        $p = $this->invoice($patient, 1000);
+        $this->postJson("/api/v1/receivables/invoices/{$p}/issue")->assertUnprocessable();
+        $this->putJson("/api/v1/receivables/customers/{$patient}", ['name' => 'Juma Ali', 'kind' => 'patient', 'on_hold' => false])->assertOk();
+        $this->putJson('/api/v1/receivables/settings', ['default_terms_days' => 30, 'receivable_account_id' => $this->acc['1200'], 'credit_check' => 'off'])->assertOk();
+
+        $this->postJson('/api/v1/receivables/claims', ['customer_id' => $insurer, 'period_from' => '2026-11-01', 'period_to' => '2026-11-30'])->assertUnprocessable()->assertJsonValidationErrors(['claim']);
+        $this->putJson('/api/v1/receivables/settings', ['default_terms_days' => 30, 'receivable_account_id' => $this->acc['1200'], 'claims_enabled' => true])->assertOk();
+        $this->getJson('/api/v1/receivables/lookups')->assertJsonPath('data.claims_enabled', true);
+        $this->getJson('/api/v1/me')->assertJsonPath('data.features', ['receivables.claims']);
+        $claim = $this->postJson('/api/v1/receivables/claims', ['customer_id' => $insurer, 'period_from' => '2026-11-01', 'period_to' => '2026-11-30'])->assertCreated()
+            ->assertJsonPath('data.number', 'CLM-2026-00001')->json('data.id');
+        $c = $this->getJson("/api/v1/receivables/claims/{$claim}")->assertOk()->assertJsonCount(2, 'data.lines')->assertJsonPath('data.claimed', 550000)->json('data');
+        $this->postJson('/api/v1/receivables/claims', ['customer_id' => $insurer, 'period_from' => '2026-11-01', 'period_to' => '2026-11-30'])->assertCreated();
+        $this->getJson('/api/v1/receivables/claims?status=draft')->assertJsonPath('meta.total', 2)->assertJsonPath('data.0.lines', 0);
+
+        $this->putJson("/api/v1/receivables/claims/{$claim}", ['invoice_ids' => [$a]])->assertOk();
+        $this->putJson("/api/v1/receivables/claims/{$claim}", ['invoice_ids' => [$a, $b]])->assertOk();
+        $this->postJson("/api/v1/receivables/claims/{$claim}/submit", ['submitted_on' => '2026-11-18', 'payer_reference' => 'AF/B/11'])->assertOk()->assertJsonPath('data.status', 'submitted');
+        $lines = $this->getJson("/api/v1/receivables/claims/{$claim}")->json('data.lines');
+        $lineA = collect($lines)->firstWhere('invoice_id', $a)['id'];
+        $lineB = collect($lines)->firstWhere('invoice_id', $b)['id'];
+        $this->postJson("/api/v1/receivables/claims/{$claim}/respond", ['responded_on' => '2026-11-18', 'lines' => [['line_id' => $lineA, 'approved' => 200000], ['line_id' => $lineB, 'approved' => 250000]]])
+            ->assertUnprocessable();
+        $this->postJson("/api/v1/receivables/claims/{$claim}/respond", ['responded_on' => '2026-11-18', 'lines' => [['line_id' => $lineA, 'approved' => 200000, 'reason' => 'Drug not covered'],
+            ['line_id' => $lineB, 'approved' => 150000, 'reason' => 'Above tariff']]])->assertOk()->assertJsonPath('data.status', 'responded');
+        $this->getJson("/api/v1/receivables/claims/{$claim}")->assertJsonPath('data.approved', 350000)->assertJsonPath('data.rejected', 200000)->assertJsonPath('data.outstanding', 350000);
+
+        $this->postJson("/api/v1/receivables/claims/{$claim}/lines/{$lineA}/resolve", ['action' => 'rebilled', 'date' => '2026-11-18', 'customer_id' => $patient])->assertOk();
+        $this->approve('credit-note');
+        $l = collect($this->getJson("/api/v1/receivables/claims/{$claim}")->json('data.lines'))->firstWhere('id', $lineA);
+        $this->assertSame('rebilled', $l['resolution']);
+        $this->assertEquals(200000, $l['invoice_balance']);
+        $this->getJson("/api/v1/receivables/invoices/{$l['rebill_invoice_id']}")->assertJsonPath('data.total', 100000)->assertJsonPath('data.customer.id', $patient)
+            ->assertJsonPath('data.beneficiary', 'Juma Ali')->assertJsonPath('data.status', 'draft');
+        $this->postJson("/api/v1/receivables/claims/{$claim}/lines/{$lineB}/resolve", ['action' => 'written_off', 'date' => '2026-11-18'])->assertOk();
+        $this->approve('credit-note');
+        $this->postJson("/api/v1/receivables/claims/{$claim}/lines/{$lineB}/resolve", ['action' => 'written_off', 'date' => '2026-11-18'])->assertUnprocessable();
+        $this->getJson("/api/v1/receivables/invoices/{$a}")->assertJsonPath('data.claim.id', $claim);
+
+        $this->postJson('/api/v1/receivables/receipts', ['kind' => 'invoice', 'customer_id' => $insurer, 'date' => '2026-11-18', 'cash_bank_account_id' => $this->bank, 'method' => 'bank',
+            'allocations' => [['invoice_id' => $a, 'amount' => 200000], ['invoice_id' => $b, 'amount' => 150000]]])->assertCreated();
+        $this->getJson("/api/v1/receivables/claims/{$claim}")->assertJsonPath('data.status', 'closed')->assertJsonPath('data.outstanding', 0);
+    }
 }

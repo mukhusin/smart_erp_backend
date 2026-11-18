@@ -96331,6 +96331,9 @@
                                                             "null"
                                                         ]
                                                     },
+                                                    "on_hold": {
+                                                        "type": "boolean"
+                                                    },
                                                     "is_active": {
                                                         "type": "boolean"
                                                     },
@@ -96352,6 +96355,7 @@
                                                     "tin",
                                                     "terms_days",
                                                     "credit_limit",
+                                                    "on_hold",
                                                     "is_active",
                                                     "balance",
                                                     "overdue"
@@ -96588,6 +96592,9 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "on_hold": {
+                                                    "type": "boolean"
+                                                },
                                                 "is_active": {
                                                     "type": "boolean"
                                                 },
@@ -96615,9 +96622,32 @@
                                                 "tin",
                                                 "terms_days",
                                                 "credit_limit",
+                                                "on_hold",
                                                 "is_active",
                                                 "address",
                                                 "contact_person"
+                                            ]
+                                        },
+                                        "credit": {
+                                            "type": "object",
+                                            "properties": {
+                                                "available": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "exposure": {
+                                                    "type": "number"
+                                                },
+                                                "overdue_days": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "available",
+                                                "exposure",
+                                                "overdue_days"
                                             ]
                                         },
                                         "ageing": {
@@ -96734,6 +96764,7 @@
                                     },
                                     "required": [
                                         "data",
+                                        "credit",
                                         "ageing",
                                         "statement",
                                         "open_invoices"
@@ -96864,6 +96895,1235 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/receivables/claims": {
+            "get": {
+                "operationId": "receivables.claims.index",
+                "summary": "Claims to insurers and other third-party payers",
+                "tags": [
+                    "Receivables: insurance claims",
+                    "Claim"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "customer_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "`period_to`, `claimed`, `number`, `submitted_on`; prefix `-` for descending.",
+                        "schema": {
+                            "type": "string",
+                            "default": "-period_to"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "customer_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "customer": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "period_from": {
+                                                        "type": "string"
+                                                    },
+                                                    "period_to": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "claimed": {
+                                                        "type": "number"
+                                                    },
+                                                    "approved": {
+                                                        "type": "number"
+                                                    },
+                                                    "rejected": {
+                                                        "type": "number"
+                                                    },
+                                                    "outstanding": {
+                                                        "type": "number"
+                                                    },
+                                                    "submitted_on": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "days_waiting": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "lines": {
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "number",
+                                                    "customer_id",
+                                                    "customer",
+                                                    "period_from",
+                                                    "period_to",
+                                                    "status",
+                                                    "status_label",
+                                                    "claimed",
+                                                    "approved",
+                                                    "rejected",
+                                                    "outstanding",
+                                                    "submitted_on",
+                                                    "days_waiting",
+                                                    "lines"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "last_page",
+                                                "per_page",
+                                                "total",
+                                                "from",
+                                                "to"
+                                            ]
+                                        },
+                                        "payers": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "kind"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta",
+                                        "payers"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "receivables.claims.store",
+                "tags": [
+                    "Receivables: insurance claims",
+                    "Claim"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "customer_id": {
+                                        "type": "integer"
+                                    },
+                                    "period_from": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "period_to": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "notes": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 1000
+                                    }
+                                },
+                                "required": [
+                                    "customer_id",
+                                    "period_from",
+                                    "period_to"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/receivables/claims/{claim}": {
+            "get": {
+                "operationId": "receivables.claims.show",
+                "summary": "A claim with its invoices, the payer's response and what is left to handle",
+                "tags": [
+                    "Receivables: insurance claims",
+                    "Claim"
+                ],
+                "parameters": [
+                    {
+                        "name": "claim",
+                        "in": "path",
+                        "required": true,
+                        "description": "The claim ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                },
+                                                "customer": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "name"
+                                                    ]
+                                                },
+                                                "period_from": {
+                                                    "type": "string"
+                                                },
+                                                "period_to": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "payer_reference": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "notes": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "claimed": {
+                                                    "type": "number"
+                                                },
+                                                "approved": {
+                                                    "type": "number"
+                                                },
+                                                "rejected": {
+                                                    "type": "number"
+                                                },
+                                                "outstanding": {
+                                                    "type": "number"
+                                                },
+                                                "submitted_on": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "responded_on": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_by": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "invoice_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "invoice": {
+                                                                "type": "string"
+                                                            },
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "beneficiary": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "member_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "claimed": {
+                                                                "type": "number"
+                                                            },
+                                                            "approved": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "rejected": {
+                                                                "type": "number"
+                                                            },
+                                                            "rejection_reason": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "invoice_balance": {
+                                                                "type": "number"
+                                                            },
+                                                            "resolution": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "resolution_label": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "credit_note": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "rebill_invoice_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "rebill_invoice": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "invoice_id",
+                                                            "invoice",
+                                                            "date",
+                                                            "beneficiary",
+                                                            "member_no",
+                                                            "claimed",
+                                                            "approved",
+                                                            "rejected",
+                                                            "rejection_reason",
+                                                            "invoice_balance",
+                                                            "resolution",
+                                                            "resolution_label",
+                                                            "credit_note",
+                                                            "rebill_invoice_id",
+                                                            "rebill_invoice"
+                                                        ]
+                                                    }
+                                                },
+                                                "candidates": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "number": {
+                                                                "type": "string"
+                                                            },
+                                                            "date": {
+                                                                "type": "string"
+                                                            },
+                                                            "beneficiary": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "member_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "balance": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "number",
+                                                            "date",
+                                                            "beneficiary",
+                                                            "member_no",
+                                                            "balance"
+                                                        ]
+                                                    }
+                                                },
+                                                "can": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "edit": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "submit": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "respond": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "resolve": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "cancel": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "edit",
+                                                        "submit",
+                                                        "respond",
+                                                        "resolve",
+                                                        "cancel"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number",
+                                                "customer",
+                                                "period_from",
+                                                "period_to",
+                                                "status",
+                                                "status_label",
+                                                "payer_reference",
+                                                "notes",
+                                                "claimed",
+                                                "approved",
+                                                "rejected",
+                                                "outstanding",
+                                                "submitted_on",
+                                                "responded_on",
+                                                "created_by",
+                                                "lines",
+                                                "candidates",
+                                                "can"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "receivables.claims.update",
+                "tags": [
+                    "Receivables: insurance claims",
+                    "Claim"
+                ],
+                "parameters": [
+                    {
+                        "name": "claim",
+                        "in": "path",
+                        "required": true,
+                        "description": "The claim ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "invoice_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "maxItems": 5000
+                                    }
+                                },
+                                "required": [
+                                    "invoice_ids"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/receivables/claims/{claim}/submit": {
+            "post": {
+                "operationId": "receivables.claims.submit",
+                "tags": [
+                    "Receivables: insurance claims",
+                    "Claim"
+                ],
+                "parameters": [
+                    {
+                        "name": "claim",
+                        "in": "path",
+                        "required": true,
+                        "description": "The claim ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "submitted_on": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "payer_reference": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
+                                    }
+                                },
+                                "required": [
+                                    "submitted_on"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/receivables/claims/{claim}/respond": {
+            "post": {
+                "operationId": "receivables.claims.respond",
+                "tags": [
+                    "Receivables: insurance claims",
+                    "Claim"
+                ],
+                "parameters": [
+                    {
+                        "name": "claim",
+                        "in": "path",
+                        "required": true,
+                        "description": "The claim ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "responded_on": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "lines": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "line_id": {
+                                                    "type": "integer"
+                                                },
+                                                "approved": {
+                                                    "type": "number",
+                                                    "minimum": 0
+                                                },
+                                                "reason": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "maxLength": 500
+                                                }
+                                            },
+                                            "required": [
+                                                "line_id",
+                                                "approved"
+                                            ]
+                                        },
+                                        "minItems": 1
+                                    }
+                                },
+                                "required": [
+                                    "responded_on",
+                                    "lines"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/receivables/claims/{claim}/lines/{line}/resolve": {
+            "post": {
+                "operationId": "receivables.claims.resolve",
+                "tags": [
+                    "Receivables: insurance claims",
+                    "Claim"
+                ],
+                "parameters": [
+                    {
+                        "name": "claim",
+                        "in": "path",
+                        "required": true,
+                        "description": "The claim ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "line",
+                        "in": "path",
+                        "required": true,
+                        "description": "The line ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "description": "written_off (credit note), rebilled (credit note + draft invoice to the patient / member) or resubmit (claim it again later).",
+                                        "enum": [
+                                            "written_off",
+                                            "rebilled",
+                                            "resubmit"
+                                        ]
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "customer_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "action",
+                                    "date"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "resolution": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "resolution"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/receivables/claims/{claim}/cancel": {
+            "post": {
+                "operationId": "receivables.claims.cancel",
+                "tags": [
+                    "Receivables: insurance claims",
+                    "Claim"
+                ],
+                "parameters": [
+                    {
+                        "name": "claim",
+                        "in": "path",
+                        "required": true,
+                        "description": "The claim ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -97248,6 +98508,43 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "beneficiary": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "member_no": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "over_limit": {
+                                                    "type": "boolean"
+                                                },
+                                                "claim": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "number": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "number",
+                                                        "status"
+                                                    ]
+                                                },
                                                 "notes": {
                                                     "type": [
                                                         "string",
@@ -97491,6 +98788,10 @@
                                                 "due_date",
                                                 "customer",
                                                 "reference",
+                                                "beneficiary",
+                                                "member_no",
+                                                "over_limit",
+                                                "claim",
                                                 "notes",
                                                 "total",
                                                 "paid",
@@ -99186,11 +100487,26 @@
                                                 },
                                                 "default_terms_days": {
                                                     "type": "integer"
+                                                },
+                                                "credit_check": {
+                                                    "type": "string"
+                                                },
+                                                "credit_overdue_days": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "claims_enabled": {
+                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
                                                 "receivable_account_id",
-                                                "default_terms_days"
+                                                "default_terms_days",
+                                                "credit_check",
+                                                "credit_overdue_days",
+                                                "claims_enabled"
                                             ]
                                         },
                                         "accounts": {
@@ -99286,11 +100602,26 @@
                                                 },
                                                 "default_terms_days": {
                                                     "type": "integer"
+                                                },
+                                                "credit_check": {
+                                                    "type": "string"
+                                                },
+                                                "credit_overdue_days": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "claims_enabled": {
+                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
                                                 "receivable_account_id",
-                                                "default_terms_days"
+                                                "default_terms_days",
+                                                "credit_check",
+                                                "credit_overdue_days",
+                                                "claims_enabled"
                                             ]
                                         },
                                         "accounts": {
@@ -99500,6 +100831,9 @@
                                                 },
                                                 "default_terms_days": {
                                                     "type": "integer"
+                                                },
+                                                "claims_enabled": {
+                                                    "type": "boolean"
                                                 }
                                             },
                                             "required": [
@@ -99509,7 +100843,8 @@
                                                 "banks",
                                                 "kinds",
                                                 "methods",
-                                                "default_terms_days"
+                                                "default_terms_days",
+                                                "claims_enabled"
                                             ]
                                         }
                                     },
@@ -110016,6 +111351,10 @@
                         ],
                         "minimum": 0
                     },
+                    "on_hold": {
+                        "type": "boolean",
+                        "description": "Stop new invoices to this customer until released."
+                    },
                     "is_active": {
                         "type": [
                             "boolean",
@@ -111815,6 +113154,21 @@
                         ],
                         "maxLength": 100
                     },
+                    "beneficiary": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Patient, student or member the bill is for when a third party (insurer, sponsor) pays.",
+                        "maxLength": 150
+                    },
+                    "member_no": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 60
+                    },
                     "notes": {
                         "type": [
                             "string",
@@ -113550,6 +114904,13 @@
                         "type": "boolean",
                         "description": "Heads (or deputies) of a department or section: they start on \"My department\"."
                     },
+                    "features": {
+                        "type": "array",
+                        "description": "Optional features the company has switched on, e.g. \"receivables.claims\".",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "idle_minutes": {
                         "type": "integer",
                         "description": "Minutes without activity before the app logs out (the server ends the session too)."
@@ -113566,6 +114927,7 @@
                     "permissions",
                     "acting_roles",
                     "is_head",
+                    "features",
                     "idle_minutes"
                 ],
                 "title": "MeResource"
@@ -115533,6 +116895,28 @@
                         "type": "integer",
                         "minimum": 0,
                         "maximum": 365
+                    },
+                    "credit_check": {
+                        "type": "string",
+                        "description": "off, warn (flag invoices over limit for the approver) or block (they cannot be issued).",
+                        "enum": [
+                            "off",
+                            "warn",
+                            "block"
+                        ]
+                    },
+                    "credit_overdue_days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Also stop new invoices when an older one is overdue more than these days; empty = no check.",
+                        "minimum": 1,
+                        "maximum": 365
+                    },
+                    "claims_enabled": {
+                        "type": "boolean",
+                        "description": "Insurance / third-party billing: claim batches to payers."
                     }
                 },
                 "required": [

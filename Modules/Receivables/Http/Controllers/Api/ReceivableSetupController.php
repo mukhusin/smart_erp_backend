@@ -23,20 +23,21 @@ class ReceivableSetupController extends Controller
 {
     public function __construct(private readonly ReceivableAccess $access) {}
 
-    /** @response array{data: array{receivable_account_id: int|null, default_terms_days: int}, accounts: list<array{id: int, code: string, name: string}>} */
+    /** @response array{data: array{receivable_account_id: int|null, default_terms_days: int, credit_check: string, credit_overdue_days: int|null, claims_enabled: bool}, accounts: list<array{id: int, code: string, name: string}>} */
     public function settings(Request $request): JsonResponse
     {
         abort_unless($this->access->sees($request->user()), 403);
         $s = ReceivableSetting::current();
 
         return response()->json([
-            'data' => ['receivable_account_id' => $s->receivable_account_id, 'default_terms_days' => (int) $s->default_terms_days],
+            'data' => ['receivable_account_id' => $s->receivable_account_id, 'default_terms_days' => (int) $s->default_terms_days, 'credit_check' => $s->credit_check ?? 'off',
+                'credit_overdue_days' => $s->credit_overdue_days, 'claims_enabled' => (bool) $s->claims_enabled],
             'accounts' => Account::where('is_active', true)->where('is_postable', true)->where('type', 'asset')->orderBy('code')->get()
                 ->map(fn ($a) => ['id' => $a->id, 'code' => $a->code, 'name' => $a->name])->values(),
         ]);
     }
 
-    /** @response array{data: array{receivable_account_id: int|null, default_terms_days: int}, accounts: list<array{id: int, code: string, name: string}>} */
+    /** @response array{data: array{receivable_account_id: int|null, default_terms_days: int, credit_check: string, credit_overdue_days: int|null, claims_enabled: bool}, accounts: list<array{id: int, code: string, name: string}>} */
     public function updateSettings(ReceivableSettingsRequest $request): JsonResponse
     {
         abort_unless($this->access->can($request->user(), 'manage'), 403);
@@ -48,7 +49,7 @@ class ReceivableSetupController extends Controller
     /**
      * Choice lists for billing forms: accounts, departments, revenue budget lines, bank accounts, customer kinds, receipt methods.
      *
-     * @response array{data: array{accounts: list<array{id: int, code: string, name: string, type: string}>, departments: list<array{id: int, name: string}>, budget_lines: list<array{id: int, label: string, account_id: int, department_id: int}>, banks: list<array{id: int, name: string}>, kinds: list<array{value: string, label: string}>, methods: list<array{value: string, label: string}>, default_terms_days: int}}
+     * @response array{data: array{accounts: list<array{id: int, code: string, name: string, type: string}>, departments: list<array{id: int, name: string}>, budget_lines: list<array{id: int, label: string, account_id: int, department_id: int}>, banks: list<array{id: int, name: string}>, kinds: list<array{value: string, label: string}>, methods: list<array{value: string, label: string}>, default_terms_days: int, claims_enabled: bool}}
      */
     public function lookups(Request $request): JsonResponse
     {
@@ -65,6 +66,7 @@ class ReceivableSetupController extends Controller
             'kinds' => collect(Customer::KINDS)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values(),
             'methods' => collect(Receipt::METHODS)->map(fn ($l, $v) => ['value' => $v, 'label' => $l])->values(),
             'default_terms_days' => (int) ReceivableSetting::current()->default_terms_days,
+            'claims_enabled' => (bool) ReceivableSetting::current()->claims_enabled,
         ]]);
     }
 }

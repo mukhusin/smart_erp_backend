@@ -13,6 +13,9 @@ class InvoiceRequest extends FormRequest
             'date' => ['required', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:date'],
             'reference' => ['nullable', 'string', 'max:100'],
+            /** Patient, student or member the bill is for when a third party (insurer, sponsor) pays. */
+            'beneficiary' => ['nullable', 'string', 'max:150'],
+            'member_no' => ['nullable', 'string', 'max:60'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'lines' => ['required', 'array', 'min:1', 'max:200'],
             'lines.*.description' => ['required', 'string', 'max:255'],

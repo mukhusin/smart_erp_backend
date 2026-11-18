@@ -25,7 +25,7 @@ class CustomerController extends Controller
     /**
      * Customers with what they owe.
      *
-     * @response array{data: list<array{id: int, code: string, name: string, kind: string, kind_label: string, phone: string|null, email: string|null, tin: string|null, terms_days: int|null, credit_limit: float|null, is_active: bool, balance: float, overdue: float}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
+     * @response array{data: list<array{id: int, code: string, name: string, kind: string, kind_label: string, phone: string|null, email: string|null, tin: string|null, terms_days: int|null, credit_limit: float|null, on_hold: bool, is_active: bool, balance: float, overdue: float}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
      */
     #[QueryParameter('search', description: 'Code, name, phone or TIN.', type: 'string')]
     #[QueryParameter('kind', type: 'string')]
@@ -57,7 +57,7 @@ class CustomerController extends Controller
     /**
      * A customer with the account statement (running balance) and ageing of unpaid invoices.
      *
-     * @response array{data: array{id: int, code: string, name: string, kind: string, kind_label: string, phone: string|null, email: string|null, tin: string|null, terms_days: int|null, credit_limit: float|null, is_active: bool, address: string|null, contact_person: string|null}, ageing: array{current: float, d30: float, d60: float, d90: float, over90: float, total: float}, statement: list<array{date: string, type: string, number: string, link: string, description: string, debit: float, credit: float, balance: float}>, open_invoices: list<array{id: int, number: string, date: string, due_date: string, total: float, balance: float, overdue_days: int}>}
+     * @response array{data: array{id: int, code: string, name: string, kind: string, kind_label: string, phone: string|null, email: string|null, tin: string|null, terms_days: int|null, credit_limit: float|null, on_hold: bool, is_active: bool, address: string|null, contact_person: string|null}, credit: array{available: float|null, exposure: float, overdue_days: int}, ageing: array{current: float, d30: float, d60: float, d90: float, over90: float, total: float}, statement: list<array{date: string, type: string, number: string, link: string, description: string, debit: float, credit: float, balance: float}>, open_invoices: list<array{id: int, number: string, date: string, due_date: string, total: float, balance: float, overdue_days: int}>}
      */
     public function show(Request $request, Customer $customer): JsonResponse
     {
@@ -84,6 +84,7 @@ class CustomerController extends Controller
 
         return response()->json([
             'data' => $this->row($customer) + ['address' => $customer->address, 'contact_person' => $customer->contact_person],
+            'credit' => app(\Modules\Receivables\Support\CreditControl::class)->position($customer),
             'ageing' => Ageing::sum($open),
             'statement' => $statement->values(),
             'open_invoices' => $open->map(fn ($i) => ['id' => $i->id, 'number' => $i->number, 'date' => $i->date->toDateString(), 'due_date' => $i->due_date->toDateString(),
@@ -112,6 +113,6 @@ class CustomerController extends Controller
     private function row(Customer $c): array
     {
         return ['id' => $c->id, 'code' => $c->code, 'name' => $c->name, 'kind' => $c->kind, 'kind_label' => Customer::KINDS[$c->kind] ?? $c->kind, 'phone' => $c->phone,
-            'email' => $c->email, 'tin' => $c->tin, 'terms_days' => $c->terms_days, 'credit_limit' => $c->credit_limit, 'is_active' => (bool) $c->is_active];
+            'email' => $c->email, 'tin' => $c->tin, 'terms_days' => $c->terms_days, 'credit_limit' => $c->credit_limit, 'on_hold' => (bool) $c->on_hold, 'is_active' => (bool) $c->is_active];
     }
 }

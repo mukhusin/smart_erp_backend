@@ -19,10 +19,10 @@ class Invoice extends Model
 
     public const ISSUED = ['open', 'partial', 'paid'];
 
-    protected $fillable = ['company_id', 'number', 'customer_id', 'date', 'due_date', 'reference', 'notes', 'total', 'paid', 'credited', 'status', 'journal_entry_id',
+    protected $fillable = ['company_id', 'number', 'customer_id', 'date', 'due_date', 'reference', 'beneficiary', 'member_no', 'notes', 'over_limit', 'total', 'paid', 'credited', 'status', 'journal_entry_id',
         'created_by', 'decision_comment', 'issued_at'];
 
-    protected $casts = ['date' => 'date', 'due_date' => 'date', 'total' => 'float', 'paid' => 'float', 'credited' => 'float', 'issued_at' => 'datetime'];
+    protected $casts = ['date' => 'date', 'due_date' => 'date', 'total' => 'float', 'paid' => 'float', 'credited' => 'float', 'over_limit' => 'boolean', 'issued_at' => 'datetime'];
 
     public function customer()
     {
@@ -42,6 +42,11 @@ class Invoice extends Model
     public function creditNotes()
     {
         return $this->hasMany(CreditNote::class)->orderBy('id');
+    }
+
+    public function claimLines()
+    {
+        return $this->hasMany(InsuranceClaimLine::class);
     }
 
     public function journal()

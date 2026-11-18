@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Receivables\Http\Controllers\Api\ClaimController;
 use Modules\Receivables\Http\Controllers\Api\CustomerController;
 use Modules\Receivables\Http\Controllers\Api\InvoiceController;
 use Modules\Receivables\Http\Controllers\Api\ReceiptController;
@@ -29,6 +30,15 @@ Route::prefix('receivables')->middleware(['auth:sanctum', 'module:receivables'])
     Route::post('invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
     Route::post('invoices/{invoice}/credit-notes', [InvoiceController::class, 'credit'])->name('credit-notes.store');
     Route::post('invoices/{invoice}/credit-notes/{creditNote}/withdraw', [InvoiceController::class, 'withdrawCredit'])->name('credit-notes.withdraw');
+
+    Route::get('claims', [ClaimController::class, 'index'])->name('claims.index');
+    Route::post('claims', [ClaimController::class, 'store'])->name('claims.store');
+    Route::get('claims/{claim}', [ClaimController::class, 'show'])->name('claims.show');
+    Route::put('claims/{claim}', [ClaimController::class, 'update'])->name('claims.update');
+    Route::post('claims/{claim}/submit', [ClaimController::class, 'submit'])->name('claims.submit');
+    Route::post('claims/{claim}/respond', [ClaimController::class, 'respond'])->name('claims.respond');
+    Route::post('claims/{claim}/lines/{line}/resolve', [ClaimController::class, 'resolve'])->name('claims.resolve');
+    Route::post('claims/{claim}/cancel', [ClaimController::class, 'cancel'])->name('claims.cancel');
 
     Route::get('receipts', [ReceiptController::class, 'index'])->name('receipts.index');
     Route::post('receipts', [ReceiptController::class, 'store'])->name('receipts.store');

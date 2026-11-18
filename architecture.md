@@ -1246,3 +1246,15 @@ plan can be revised (back to draft, revision + 1), and requisitions keep followi
 compares each line with what is left on its plan line (other live requisitions excluded). Setting `plan_check`: off,
 warn (sets `purchase_requisitions.unplanned`), block (only special requisitions may go outside the plan). Progress per
 line: not started, started, requisitioned, late (quarter ended with nothing requisitioned).
+
+## Credit control and insurance claims (2026-11-18)
+
+Optional per company, off by default (`receivable_settings`). Credit check (`Support/CreditControl`): exposure = unpaid
+balances + invoices waiting for approval; problems = credit hold, over limit, older invoice overdue more than
+`credit_overdue_days`; warn sets `invoices.over_limit` (shown to the approver), block refuses issuing. Claims
+(`ManageClaims`): a claim batches a payer's unpaid invoices of a period (an invoice is on one live claim unless kept
+to claim again) → submitted → payer response per invoice (approved / rejected + reason) → each rejection is written
+off (credit note through its approval), billed to the patient / member (credit note + draft invoice to that customer,
+lines in proportion) or kept to claim again → closed once rejections are handled and approved amounts received.
+Payments are ordinary receipts. Optional features reach the UI through `GET /me` `features` (`Core/Support/CompanyFeatures`);
+menu items can carry `feature`.

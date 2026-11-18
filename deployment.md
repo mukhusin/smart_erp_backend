@@ -138,6 +138,12 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Credit control and insurance claims (2026-11-18)
+
+`php artisan migrate`: receivable settings `credit_check` (off), `credit_overdue_days`, `claims_enabled` (off);
+`customers.on_hold`; invoices `over_limit`, `beneficiary`, `member_no`; `insurance_claims` and lines. Nothing changes
+for a company until it switches these on in Billing → Settings. `GET /me` now lists `features` (optional features on).
+
 ## Annual procurement plan (2026-11-18)
 
 `php artisan migrate`: procurement plans and lines, `purchase_requisition_lines.procurement_plan_line_id`,

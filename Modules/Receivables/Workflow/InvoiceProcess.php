@@ -38,7 +38,9 @@ class InvoiceProcess implements HasAmount, WorkflowProcess
 
         return [
             'title' => "{$subject->number} {$subject->customer?->name}: ".number_format((float) $subject->total, 2),
-            'lines' => [...$subject->lines->map(fn ($l) => $l->description.': '.number_format($l->amount, 2))->all(), 'Due: '.$subject->due_date?->toDateString()],
+            'lines' => [...($subject->over_limit ? ['Over the customer’s credit limit or terms: '.implode(' ', app(\Modules\Receivables\Support\CreditControl::class)->problems($subject))] : []),
+                ...($subject->beneficiary ? ["For: {$subject->beneficiary}".($subject->member_no ? " ({$subject->member_no})" : '')] : []),
+                ...$subject->lines->map(fn ($l) => $l->description.': '.number_format($l->amount, 2))->all(), 'Due: '.$subject->due_date?->toDateString()],
             'link' => "/receivables/invoices/{$subject->id}",
         ];
     }
