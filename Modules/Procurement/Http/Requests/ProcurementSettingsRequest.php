@@ -23,6 +23,8 @@ class ProcurementSettingsRequest extends FormRequest
             'variation_limit_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'expiry_warning_days' => ['sometimes', 'integer', 'min:1', 'max:365'],
             'award_acceptance_days' => ['sometimes', 'integer', 'min:1', 'max:90'],
+            /** off, warn (flag requisitions outside the approved plan) or block (only special requisitions may go outside it). */
+            'plan_check' => ['sometimes', 'in:off,warn,block'],
         ];
     }
 }

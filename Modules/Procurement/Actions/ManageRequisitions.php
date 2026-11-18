@@ -16,7 +16,7 @@ use Modules\Workflow\Services\WorkflowEngine;
 
 class ManageRequisitions
 {
-    public function __construct(private readonly WorkflowEngine $workflow, private readonly BudgetService $budgets) {}
+    public function __construct(private readonly WorkflowEngine $workflow, private readonly BudgetService $budgets, private readonly ManagePlans $plans) {}
 
     public function save(?PurchaseRequisition $r, array $data, User $by): PurchaseRequisition
     {
@@ -27,12 +27,14 @@ class ManageRequisitions
             throw ValidationException::withMessages(['special_reason' => 'A special requisition needs a written reason.']);
         }
         $items = BudgetLines::check(array_column($data['lines'], 'budget_item_id'), (int) $data['department_id']);
+        $this->plans->checkLinks($data['lines'], (int) $items->first()->budget_id, (int) $data['department_id']);
 
         return DB::transaction(function () use ($r, $data, $by, $items) {
             $lines = array_map(fn ($l) => [
                 'item_id' => $l['item_id'] ?? null, 'description' => $l['description'], 'specification' => $l['specification'] ?? null, 'unit_id' => $l['unit_id'] ?? null,
                 'quantity' => round((float) $l['quantity'], 4), 'estimated_unit_cost' => round((float) $l['estimated_unit_cost'], 2),
                 'amount' => round((float) $l['quantity'] * (float) $l['estimated_unit_cost'], 2), 'budget_item_id' => $l['budget_item_id'],
+                'procurement_plan_line_id' => $l['procurement_plan_line_id'] ?? null,
             ], $data['lines']);
             $r ??= new PurchaseRequisition(['number' => Numbering::next(PurchaseRequisition::class, 'PRQ'), 'requested_by' => $by->id, 'status' => 'draft']);
             $r->fill(collect($data)->only(['department_id', 'store_id', 'title', 'purpose', 'kind', 'special_reason', 'needed_by', 'delivery_place'])->all()
@@ -52,10 +54,11 @@ class ManageRequisitions
             throw ValidationException::withMessages(['requisition' => 'This requisition is already submitted.']);
         }
         $mode = $this->budgets->mode();
+        $unplanned = $this->plans->unplanned($r);
 
-        return DB::transaction(function () use ($r, $by, $mode) {
+        return DB::transaction(function () use ($r, $by, $mode, $unplanned) {
             $short = $this->budgets->reserve($r, BudgetLines::amounts($r->lines), $mode !== 'block', $by);
-            $r->update(['status' => 'pending', 'submitted_at' => now(), 'over_budget' => $short !== [] && $mode === 'warn', 'decision_comment' => null, 'decided_at' => null]);
+            $r->update(['status' => 'pending', 'submitted_at' => now(), 'over_budget' => $short !== [] && $mode === 'warn', 'unplanned' => $unplanned, 'decision_comment' => null, 'decided_at' => null]);
             if (! $this->workflow->start(PurchaseRequisitionProcess::KEY, $r, $by)) {
                 $this->approved($r);
             }

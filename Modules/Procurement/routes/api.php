@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Procurement\Http\Controllers\Api\ContractController;
 use Modules\Procurement\Http\Controllers\Api\OrderController;
+use Modules\Procurement\Http\Controllers\Api\PlanController;
 use Modules\Procurement\Http\Controllers\Api\QuotationController;
 use Modules\Procurement\Http\Controllers\Api\ReceiptController;
 use Modules\Procurement\Http\Controllers\Api\RequisitionController;
@@ -15,6 +16,15 @@ Route::prefix('procurement')->middleware(['auth:sanctum', 'module:procurement'])
     Route::get('budget-lines', [RequisitionController::class, 'budgetLines'])->name('budget-lines');
     Route::get('settings', [RequisitionController::class, 'settings'])->name('settings.show');
     Route::put('settings', [RequisitionController::class, 'updateSettings'])->name('settings.update');
+
+    Route::get('plans', [PlanController::class, 'index'])->name('plans.index');
+    Route::post('plans', [PlanController::class, 'store'])->name('plans.store');
+    Route::get('plan-lines', [PlanController::class, 'lines'])->name('plans.lines');
+    Route::get('plans/{plan}', [PlanController::class, 'show'])->name('plans.show');
+    Route::put('plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
+    Route::post('plans/{plan}/submit', [PlanController::class, 'submit'])->name('plans.submit');
+    Route::post('plans/{plan}/withdraw', [PlanController::class, 'withdraw'])->name('plans.withdraw');
+    Route::post('plans/{plan}/revise', [PlanController::class, 'revise'])->name('plans.revise');
 
     Route::get('requisitions', [RequisitionController::class, 'index'])->name('requisitions.index');
     Route::post('requisitions', [RequisitionController::class, 'store'])->name('requisitions.store');

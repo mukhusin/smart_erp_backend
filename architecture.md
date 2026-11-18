@@ -900,7 +900,7 @@ percentage with budget check; extensions; progress log; close/terminate releases
 variations − ordered or certified. Daily `procurement:daily` ends standstills and warns before contract end and
 security expiry. Reports: tender register, bid opening record, evaluation summary, awards against estimate, contract
 register, expiring contracts and securities, outstanding orders, supplier performance, spend by method, special-group
-share. Not yet: annual procurement plan and packages, e-bidding by suppliers, escalation and handovers in the engine.
+share. Not yet: packages/lots, e-bidding by suppliers. The annual plan and workflow escalation are done (see below).
 
 **Step 8 built (2026-11-17): imprest and bank reconciliation.**
 Imprest is a payment request of kind `imprest` with a holder (an HR employee, the only payee) and a retire-by date
@@ -1235,3 +1235,14 @@ separation of duties, payment risks, procurement, stores and assets, system acce
 records. Audit queries: raised by auditors, answered by the addressee (also in self service), sent back or closed.
 Not yet: year clamp on every module list (HR lists, procurement and stores pages show all years to external
 auditors who have those permissions), audit sampling tools.
+
+## Annual procurement plan (2026-11-18)
+
+One plan per budget (`procurement_plans`, lines in `procurement_plan_lines`: department, budget line, item, category,
+method, quarter, quantity × cost). "Start from the budget" makes a line per expense/asset budget item, quarter from its
+first phased period, method suggested from the method value ranges. Approval process `procurement-plan`; an approved
+plan can be revised (back to draft, revision + 1), and requisitions keep following its lines meanwhile
+(`ProcurementPlan::approvedFor`). Requisition lines may link `procurement_plan_line_id`; on submit `ManagePlans::unplanned`
+compares each line with what is left on its plan line (other live requisitions excluded). Setting `plan_check`: off,
+warn (sets `purchase_requisitions.unplanned`), block (only special requisitions may go outside the plan). Progress per
+line: not started, started, requisitioned, late (quarter ended with nothing requisitioned).

@@ -32,7 +32,7 @@ class RequisitionController extends Controller
     /**
      * Purchase requisitions the user can see.
      *
-     * @response array{data: list<array{id: int, number: string, title: string, department: string|null, kind: string, total: float, status: string, status_label: string, over_budget: bool, needed_by: string|null, requested_by: string|null, waiting_for: string|null, created_at: string}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
+     * @response array{data: list<array{id: int, number: string, title: string, department: string|null, kind: string, total: float, status: string, status_label: string, over_budget: bool, unplanned: bool, needed_by: string|null, requested_by: string|null, waiting_for: string|null, created_at: string}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
      */
     #[QueryParameter('search', type: 'string')]
     #[QueryParameter('status', type: 'string')]
@@ -55,7 +55,7 @@ class RequisitionController extends Controller
 
         return response()->json(['data' => collect($page->items())->map(fn (PurchaseRequisition $r) => [
             'id' => $r->id, 'number' => $r->number, 'title' => $r->title, 'department' => $r->department?->name, 'kind' => $r->kind, 'total' => (float) $r->total, 'status' => $r->status,
-            'status_label' => PurchaseRequisition::STATUS_LABELS[$r->status] ?? $r->status, 'over_budget' => (bool) $r->over_budget, 'needed_by' => $r->needed_by?->toDateString(),
+            'status_label' => PurchaseRequisition::STATUS_LABELS[$r->status] ?? $r->status, 'over_budget' => (bool) $r->over_budget, 'unplanned' => (bool) $r->unplanned, 'needed_by' => $r->needed_by?->toDateString(),
             'requested_by' => $r->requester?->display_name, 'waiting_for' => $r->status === 'pending' ? $r->workflow?->steps->firstWhere('status', 'pending')?->name : null,
             'created_at' => $r->created_at->toIso8601String(),
         ])->values(), 'meta' => $this->meta($page)]);
@@ -64,12 +64,12 @@ class RequisitionController extends Controller
     /**
      * A requisition with lines, what is ordered, quotation requests and orders.
      *
-     * @response array{data: array{id: int, number: string, title: string, purpose: string|null, department_id: int, department: string|null, store_id: int|null, store: string|null, kind: string, special_reason: string|null, needed_by: string|null, delivery_place: string|null, total: float, status: string, status_label: string, over_budget: bool, requested_by: string|null, decision_comment: string|null, waiting_for: string|null, lines: list<array{id: int, item_id: int|null, item_code: string|null, description: string, specification: string|null, unit_id: int|null, unit: string|null, quantity: float, estimated_unit_cost: float, amount: float, budget_item_id: int, budget_line: string|null, ordered_quantity: float, remaining: float}>, rfqs: list<array{id: int, number: string, status: string, status_label: string, closing_date: string}>, orders: list<array{id: int, number: string, supplier: string|null, total: float, status: string, status_label: string}>, can: array{edit: bool, submit: bool, withdraw: bool, cancel: bool, source: bool}}}
+     * @response array{data: array{id: int, number: string, title: string, purpose: string|null, department_id: int, department: string|null, store_id: int|null, store: string|null, kind: string, special_reason: string|null, needed_by: string|null, delivery_place: string|null, total: float, status: string, status_label: string, over_budget: bool, unplanned: bool, requested_by: string|null, decision_comment: string|null, waiting_for: string|null, lines: list<array{id: int, item_id: int|null, item_code: string|null, description: string, specification: string|null, unit_id: int|null, unit: string|null, quantity: float, estimated_unit_cost: float, amount: float, budget_item_id: int, budget_line: string|null, procurement_plan_line_id: int|null, plan_line: string|null, ordered_quantity: float, remaining: float}>, rfqs: list<array{id: int, number: string, status: string, status_label: string, closing_date: string}>, orders: list<array{id: int, number: string, supplier: string|null, total: float, status: string, status_label: string}>, can: array{edit: bool, submit: bool, withdraw: bool, cancel: bool, source: bool}}}
      */
     public function show(Request $request, PurchaseRequisition $requisition): JsonResponse
     {
         $user = $request->user();
-        $r = $requisition->load(['department', 'store', 'lines.item', 'lines.unit', 'lines.budgetItem.account', 'lines.budgetItem.subActivity', 'lines.budgetItem.activity', 'quotationRequests', 'orders.supplier', 'requester', 'workflow.steps']);
+        $r = $requisition->load(['department', 'store', 'lines.item', 'lines.unit', 'lines.budgetItem.account', 'lines.budgetItem.subActivity', 'lines.budgetItem.activity', 'lines.planLine', 'quotationRequests', 'orders.supplier', 'requester', 'workflow.steps']);
         $this->authorizeView($user, $r);
         $mine = $r->requested_by === $user->id;
 
@@ -77,11 +77,12 @@ class RequisitionController extends Controller
             'id' => $r->id, 'number' => $r->number, 'title' => $r->title, 'purpose' => $r->purpose, 'department_id' => $r->department_id, 'department' => $r->department?->name,
             'store_id' => $r->store_id, 'store' => $r->store?->name, 'kind' => $r->kind, 'special_reason' => $r->special_reason, 'needed_by' => $r->needed_by?->toDateString(),
             'delivery_place' => $r->delivery_place, 'total' => (float) $r->total, 'status' => $r->status, 'status_label' => PurchaseRequisition::STATUS_LABELS[$r->status] ?? $r->status,
-            'over_budget' => (bool) $r->over_budget, 'requested_by' => $r->requester?->display_name, 'decision_comment' => $r->decision_comment,
+            'over_budget' => (bool) $r->over_budget, 'unplanned' => (bool) $r->unplanned, 'requested_by' => $r->requester?->display_name, 'decision_comment' => $r->decision_comment,
             'waiting_for' => $r->status === 'pending' ? $r->workflow?->steps->firstWhere('status', 'pending')?->name : null,
             'lines' => $r->lines->map(fn ($l) => ['id' => $l->id, 'item_id' => $l->item_id, 'item_code' => $l->item?->code, 'description' => $l->description, 'specification' => $l->specification,
                 'unit_id' => $l->unit_id, 'unit' => $l->unit?->code, 'quantity' => $l->quantity, 'estimated_unit_cost' => $l->estimated_unit_cost, 'amount' => $l->amount,
-                'budget_item_id' => $l->budget_item_id, 'budget_line' => $l->budgetItem?->label(), 'ordered_quantity' => $l->ordered_quantity, 'remaining' => $l->remaining()])->values(),
+                'budget_item_id' => $l->budget_item_id, 'budget_line' => $l->budgetItem?->label(), 'procurement_plan_line_id' => $l->procurement_plan_line_id,
+                'plan_line' => $l->planLine ? "Q{$l->planLine->quarter} {$l->planLine->description}" : null, 'ordered_quantity' => $l->ordered_quantity, 'remaining' => $l->remaining()])->values(),
             'rfqs' => $r->quotationRequests->map(fn ($q) => ['id' => $q->id, 'number' => $q->number, 'status' => $q->status, 'status_label' => QuotationRequest::STATUS_LABELS[$q->status] ?? $q->status,
                 'closing_date' => $q->closing_date->toDateString()])->values(),
             'orders' => $r->orders->map(fn ($o) => ['id' => $o->id, 'number' => $o->number, 'supplier' => $o->supplier?->name, 'total' => (float) $o->total, 'status' => $o->status,
@@ -180,7 +181,7 @@ class RequisitionController extends Controller
         return response()->json(['data' => $items->map(fn ($i) => ['id' => $i->id, 'label' => $i->label(), 'available' => $f[$i->id]['available']])->values()]);
     }
 
-    /** @response array{data: array{clearing_account_id: int|null, direct_limit: float, min_quotes: int, match_tolerance_percent: float, retention_account_id: int|null, damages_account_id: int|null, advance_account_id: int|null, variation_limit_percent: float, expiry_warning_days: int, award_acceptance_days: int}, accounts: list<array{id: int, code: string, name: string}>, all_accounts: list<array{id: int, code: string, name: string, type: string}>} */
+    /** @response array{data: array{clearing_account_id: int|null, direct_limit: float, min_quotes: int, match_tolerance_percent: float, retention_account_id: int|null, damages_account_id: int|null, advance_account_id: int|null, variation_limit_percent: float, expiry_warning_days: int, award_acceptance_days: int, plan_check: string}, accounts: list<array{id: int, code: string, name: string}>, all_accounts: list<array{id: int, code: string, name: string, type: string}>} */
     public function settings(Request $request): JsonResponse
     {
         abort_unless($this->access->sees($request->user()), 403);
@@ -189,12 +190,12 @@ class RequisitionController extends Controller
         return response()->json(['data' => ['clearing_account_id' => $s->clearing_account_id, 'direct_limit' => (float) $s->direct_limit, 'min_quotes' => (int) $s->min_quotes,
             'match_tolerance_percent' => (float) $s->match_tolerance_percent, 'retention_account_id' => $s->retention_account_id, 'damages_account_id' => $s->damages_account_id,
             'advance_account_id' => $s->advance_account_id, 'variation_limit_percent' => (float) $s->variation_limit_percent, 'expiry_warning_days' => (int) $s->expiry_warning_days,
-            'award_acceptance_days' => (int) $s->award_acceptance_days],
+            'award_acceptance_days' => (int) $s->award_acceptance_days, 'plan_check' => $s->plan_check ?? 'off'],
             'accounts' => Account::where('is_active', true)->where('is_postable', true)->where('type', 'liability')->orderBy('code')->get()->map(fn ($a) => ['id' => $a->id, 'code' => $a->code, 'name' => $a->name])->values(),
             'all_accounts' => Account::where('is_active', true)->where('is_postable', true)->orderBy('code')->get()->map(fn ($a) => ['id' => $a->id, 'code' => $a->code, 'name' => $a->name, 'type' => $a->type])->values()]);
     }
 
-    /** @response array{data: array{clearing_account_id: int|null, direct_limit: float, min_quotes: int, match_tolerance_percent: float, retention_account_id: int|null, damages_account_id: int|null, advance_account_id: int|null, variation_limit_percent: float, expiry_warning_days: int, award_acceptance_days: int}, accounts: list<array{id: int, code: string, name: string}>, all_accounts: list<array{id: int, code: string, name: string, type: string}>} */
+    /** @response array{data: array{clearing_account_id: int|null, direct_limit: float, min_quotes: int, match_tolerance_percent: float, retention_account_id: int|null, damages_account_id: int|null, advance_account_id: int|null, variation_limit_percent: float, expiry_warning_days: int, award_acceptance_days: int, plan_check: string}, accounts: list<array{id: int, code: string, name: string}>, all_accounts: list<array{id: int, code: string, name: string, type: string}>} */
     public function updateSettings(ProcurementSettingsRequest $request): JsonResponse
     {
         abort_unless($this->access->can($request->user(), 'manage'), 403);

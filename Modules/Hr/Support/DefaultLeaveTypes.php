@@ -155,6 +155,7 @@ final class DefaultLeaveTypes
         }
         $chains = [
             'purchase-requisition' => [['Head of department', 'department_head', null, null], ['Finance (budget check)', 'role', $finance->id, null]],
+            'procurement-plan' => array_values(array_filter([['Chief accountant (budget check)', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, null] : null])),
             'quotation-award' => [[$director ? 'Director general' : 'Chief accountant', 'role', ($director ?? $finance)->id, null]],
             'purchase-order' => array_values(array_filter([['Chief accountant', 'role', $finance->id, null], $director ? ['Director general', 'role', $director->id, 10000000] : null])),
             'goods-receipt' => [['Head of department (inspection)', 'department_head', null, null]],

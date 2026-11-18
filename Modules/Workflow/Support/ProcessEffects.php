@@ -14,6 +14,7 @@ final class ProcessEffects
         'petty-cash-voucher' => ['started' => 'The amount is held on the budget line.', 'approved' => 'The expense is posted and the cash box goes down.', 'rejected' => 'The hold is released.'],
         'petty-cash-replenishment' => ['approved' => 'Money moves from the bank to petty cash in the ledger.', 'rejected' => 'Nothing moves.'],
         'purchase-requisition' => ['started' => 'The amount is held on the budget lines.', 'approved' => 'Procurement can source it.', 'rejected' => 'The hold is released.'],
+        'procurement-plan' => ['approved' => 'The plan becomes the approved plan; requisitions are checked against it.', 'rejected' => 'The plan goes back for changes.'],
         'purchase-order' => ['approved' => 'The commitment moves from the requisition to the order; the supplier can deliver.', 'rejected' => 'The requisition keeps its hold.'],
         'goods-receipt' => ['approved' => 'Goods are taken into stock or expense and the supplier becomes payable.', 'rejected' => 'Nothing is received.'],
         'department-budget' => ['approved' => 'The department budget goes forward for the organisation budget.'],

@@ -81,6 +81,7 @@ final class WorkflowCatalog
         OpeningBalanceProcess::class,
         YearEndCloseProcess::class,
         \Modules\Accounting\Workflow\BankReconciliationProcess::class,
+        \Modules\Procurement\Workflow\ProcurementPlanProcess::class,
         \Modules\Procurement\Workflow\TenderDocumentProcess::class,
         \Modules\Procurement\Workflow\TenderEvaluationProcess::class,
         \Modules\Procurement\Workflow\TenderAwardProcess::class,

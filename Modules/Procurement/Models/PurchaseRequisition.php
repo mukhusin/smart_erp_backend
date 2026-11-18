@@ -23,9 +23,9 @@ class PurchaseRequisition extends Model
     public const KINDS = ['normal' => 'Normal', 'special' => 'Special / emergency'];
 
     protected $fillable = ['company_id', 'number', 'department_id', 'budget_id', 'store_id', 'title', 'purpose', 'kind', 'special_reason', 'needed_by', 'delivery_place', 'total',
-        'status', 'over_budget', 'requested_by', 'decision_comment', 'submitted_at', 'decided_at'];
+        'status', 'over_budget', 'unplanned', 'requested_by', 'decision_comment', 'submitted_at', 'decided_at'];
 
-    protected $casts = ['needed_by' => 'date', 'total' => 'float', 'over_budget' => 'boolean', 'submitted_at' => 'datetime', 'decided_at' => 'datetime'];
+    protected $casts = ['needed_by' => 'date', 'total' => 'float', 'over_budget' => 'boolean', 'unplanned' => 'boolean', 'submitted_at' => 'datetime', 'decided_at' => 'datetime'];
 
     public function department()
     {

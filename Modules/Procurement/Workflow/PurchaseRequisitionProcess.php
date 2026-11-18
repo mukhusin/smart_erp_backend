@@ -41,6 +41,7 @@ class PurchaseRequisitionProcess implements HasAmount, WorkflowProcess
                 'Department: '.$subject->department?->name,
                 $subject->kind === 'special' ? 'Special / emergency: '.$subject->special_reason : null,
                 $subject->over_budget ? 'Over the available budget.' : null,
+                $subject->unplanned ? 'Outside the approved procurement plan.' : null,
                 ...$subject->lines->take(8)->map(fn ($l) => "{$l->description}: {$l->quantity} × ".number_format($l->estimated_unit_cost, 2))->all(),
             ])),
             'link' => "/procurement/requisitions/{$subject->id}",

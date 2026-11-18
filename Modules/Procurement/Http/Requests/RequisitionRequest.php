@@ -26,6 +26,8 @@ class RequisitionRequest extends FormRequest
             'lines.*.quantity' => ['required', 'numeric', 'gt:0'],
             'lines.*.estimated_unit_cost' => ['required', 'numeric', 'min:0'],
             'lines.*.budget_item_id' => ['required', 'integer', 'exists:budget_items,id'],
+            /** The line of the approved procurement plan this buys against. */
+            'lines.*.procurement_plan_line_id' => ['nullable', 'integer'],
         ];
     }
 }

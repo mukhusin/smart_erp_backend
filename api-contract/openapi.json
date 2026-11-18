@@ -83194,6 +83194,1106 @@
                 }
             }
         },
+        "/procurement/plans": {
+            "get": {
+                "operationId": "procurement.plans.index",
+                "summary": "Procurement plans, one per budget year",
+                "tags": [
+                    "Procurement: annual plan",
+                    "Plan"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "year": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "budget_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "revision": {
+                                                        "type": "integer"
+                                                    },
+                                                    "lines": {
+                                                        "type": "integer"
+                                                    },
+                                                    "total": {
+                                                        "type": "number"
+                                                    },
+                                                    "requisitioned": {
+                                                        "type": "number"
+                                                    },
+                                                    "approved_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "title",
+                                                    "year",
+                                                    "budget_id",
+                                                    "status",
+                                                    "status_label",
+                                                    "revision",
+                                                    "lines",
+                                                    "total",
+                                                    "requisitioned",
+                                                    "approved_at",
+                                                    "waiting_for"
+                                                ]
+                                            }
+                                        },
+                                        "budgets": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "year": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "has_plan": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "title",
+                                                    "year",
+                                                    "has_plan"
+                                                ]
+                                            }
+                                        },
+                                        "can_manage": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "budgets",
+                                        "can_manage"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "procurement.plans.store",
+                "tags": [
+                    "Procurement: annual plan",
+                    "Plan"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "budget_id": {
+                                        "type": "integer"
+                                    },
+                                    "title": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 200
+                                    },
+                                    "from_budget": {
+                                        "type": "boolean",
+                                        "description": "Start from the budget lines of expense and asset accounts."
+                                    }
+                                },
+                                "required": [
+                                    "budget_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/procurement/plan-lines": {
+            "get": {
+                "operationId": "procurement.plans.lines",
+                "summary": "Lines of the approved plan for a department, with what is left, for linking requisition lines",
+                "tags": [
+                    "Procurement: annual plan",
+                    "Plan"
+                ],
+                "parameters": [
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "budget_id",
+                        "in": "query",
+                        "description": "Empty for the approved budget of the current year.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "budget_item_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "item_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "unit_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "estimated_unit_cost": {
+                                                        "type": "number"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "left": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "label",
+                                                    "budget_item_id",
+                                                    "item_id",
+                                                    "unit_id",
+                                                    "estimated_unit_cost",
+                                                    "amount",
+                                                    "left"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/procurement/plans/{plan}": {
+            "get": {
+                "operationId": "procurement.plans.show",
+                "summary": "A plan with its lines and how far each line has gone",
+                "tags": [
+                    "Procurement: annual plan",
+                    "Plan"
+                ],
+                "parameters": [
+                    {
+                        "name": "plan",
+                        "in": "path",
+                        "required": true,
+                        "description": "The plan ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "year": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "budget_id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "status_label": {
+                                                    "type": "string"
+                                                },
+                                                "revision": {
+                                                    "type": "integer"
+                                                },
+                                                "decision_comment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "approved_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "waiting_for": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "total": {
+                                                    "type": "number"
+                                                },
+                                                "requisitioned": {
+                                                    "type": "number"
+                                                },
+                                                "lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "department_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "budget_item_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "budget_line": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "item_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "description": {
+                                                                "type": "string"
+                                                            },
+                                                            "category": {
+                                                                "type": "string"
+                                                            },
+                                                            "category_label": {
+                                                                "type": "string"
+                                                            },
+                                                            "procurement_method_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "method": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unit_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "unit": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "quantity": {
+                                                                "type": "number"
+                                                            },
+                                                            "estimated_unit_cost": {
+                                                                "type": "number"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            },
+                                                            "quarter": {
+                                                                "type": "integer"
+                                                            },
+                                                            "notes": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "requisitioned": {
+                                                                "type": "number"
+                                                            },
+                                                            "ordered": {
+                                                                "type": "number"
+                                                            },
+                                                            "progress": {
+                                                                "type": "string"
+                                                            },
+                                                            "quarter_ends": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "department_id",
+                                                            "department",
+                                                            "budget_item_id",
+                                                            "budget_line",
+                                                            "item_id",
+                                                            "description",
+                                                            "category",
+                                                            "category_label",
+                                                            "procurement_method_id",
+                                                            "method",
+                                                            "unit_id",
+                                                            "unit",
+                                                            "quantity",
+                                                            "estimated_unit_cost",
+                                                            "amount",
+                                                            "quarter",
+                                                            "notes",
+                                                            "requisitioned",
+                                                            "ordered",
+                                                            "progress",
+                                                            "quarter_ends"
+                                                        ]
+                                                    }
+                                                },
+                                                "by_quarter": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "quarter": {
+                                                                "type": "integer"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            },
+                                                            "requisitioned": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "quarter",
+                                                            "amount",
+                                                            "requisitioned"
+                                                        ]
+                                                    }
+                                                },
+                                                "can": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "edit": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "submit": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "withdraw": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "revise": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "edit",
+                                                        "submit",
+                                                        "withdraw",
+                                                        "revise"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "title",
+                                                "year",
+                                                "budget_id",
+                                                "status",
+                                                "status_label",
+                                                "revision",
+                                                "decision_comment",
+                                                "approved_at",
+                                                "waiting_for",
+                                                "total",
+                                                "requisitioned",
+                                                "lines",
+                                                "by_quarter",
+                                                "can"
+                                            ]
+                                        },
+                                        "options": {
+                                            "type": "object",
+                                            "properties": {
+                                                "categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "value": {
+                                                                "type": "string"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "value",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                },
+                                                "methods": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "category": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "min_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "max_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "code",
+                                                            "name",
+                                                            "category",
+                                                            "min_amount",
+                                                            "max_amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "budget_lines": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "department_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "department_id",
+                                                            "label"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "categories",
+                                                "methods",
+                                                "budget_lines"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "options"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "procurement.plans.update",
+                "tags": [
+                    "Procurement: annual plan",
+                    "Plan"
+                ],
+                "parameters": [
+                    {
+                        "name": "plan",
+                        "in": "path",
+                        "required": true,
+                        "description": "The plan ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlanRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/procurement/plans/{plan}/submit": {
+            "post": {
+                "operationId": "procurement.plans.submit",
+                "tags": [
+                    "Procurement: annual plan",
+                    "Plan"
+                ],
+                "parameters": [
+                    {
+                        "name": "plan",
+                        "in": "path",
+                        "required": true,
+                        "description": "The plan ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/procurement/plans/{plan}/withdraw": {
+            "post": {
+                "operationId": "procurement.plans.withdraw",
+                "tags": [
+                    "Procurement: annual plan",
+                    "Plan"
+                ],
+                "parameters": [
+                    {
+                        "name": "plan",
+                        "in": "path",
+                        "required": true,
+                        "description": "The plan ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/procurement/plans/{plan}/revise": {
+            "post": {
+                "operationId": "procurement.plans.revise",
+                "tags": [
+                    "Procurement: annual plan",
+                    "Plan"
+                ],
+                "parameters": [
+                    {
+                        "name": "plan",
+                        "in": "path",
+                        "required": true,
+                        "description": "The plan ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/procurement/contracts": {
             "get": {
                 "operationId": "procurement.contracts.index",
@@ -88500,6 +89600,9 @@
                                                 },
                                                 "award_acceptance_days": {
                                                     "type": "integer"
+                                                },
+                                                "plan_check": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -88512,7 +89615,8 @@
                                                 "advance_account_id",
                                                 "variation_limit_percent",
                                                 "expiry_warning_days",
-                                                "award_acceptance_days"
+                                                "award_acceptance_days",
+                                                "plan_check"
                                             ]
                                         },
                                         "accounts": {
@@ -88668,6 +89772,9 @@
                                                 },
                                                 "award_acceptance_days": {
                                                     "type": "integer"
+                                                },
+                                                "plan_check": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -88680,7 +89787,8 @@
                                                 "advance_account_id",
                                                 "variation_limit_percent",
                                                 "expiry_warning_days",
-                                                "award_acceptance_days"
+                                                "award_acceptance_days",
+                                                "plan_check"
                                             ]
                                         },
                                         "accounts": {
@@ -88871,6 +89979,9 @@
                                                     "over_budget": {
                                                         "type": "boolean"
                                                     },
+                                                    "unplanned": {
+                                                        "type": "boolean"
+                                                    },
                                                     "needed_by": {
                                                         "type": [
                                                             "string",
@@ -88903,6 +90014,7 @@
                                                     "status",
                                                     "status_label",
                                                     "over_budget",
+                                                    "unplanned",
                                                     "needed_by",
                                                     "requested_by",
                                                     "waiting_for",
@@ -89142,6 +90254,9 @@
                                                 "over_budget": {
                                                     "type": "boolean"
                                                 },
+                                                "unplanned": {
+                                                    "type": "boolean"
+                                                },
                                                 "requested_by": {
                                                     "type": [
                                                         "string",
@@ -89219,6 +90334,18 @@
                                                                     "null"
                                                                 ]
                                                             },
+                                                            "procurement_plan_line_id": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "plan_line": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
                                                             "ordered_quantity": {
                                                                 "type": "number"
                                                             },
@@ -89239,6 +90366,8 @@
                                                             "amount",
                                                             "budget_item_id",
                                                             "budget_line",
+                                                            "procurement_plan_line_id",
+                                                            "plan_line",
                                                             "ordered_quantity",
                                                             "remaining"
                                                         ]
@@ -89356,6 +90485,7 @@
                                                 "status",
                                                 "status_label",
                                                 "over_budget",
+                                                "unplanned",
                                                 "requested_by",
                                                 "decision_comment",
                                                 "waiting_for",
@@ -113756,6 +114886,104 @@
                 ],
                 "title": "PlanActivityRequest"
             },
+            "PlanRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "department_id": {
+                                    "type": "integer"
+                                },
+                                "budget_item_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "item_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                },
+                                "category": {
+                                    "type": "string",
+                                    "enum": [
+                                        "goods",
+                                        "works",
+                                        "services",
+                                        "consultancy",
+                                        "disposal"
+                                    ]
+                                },
+                                "procurement_method_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "unit_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "quantity": {
+                                    "type": "number"
+                                },
+                                "estimated_unit_cost": {
+                                    "type": "number",
+                                    "minimum": 0
+                                },
+                                "quarter": {
+                                    "type": "integer",
+                                    "description": "Quarter of the year the purchase should start, 1 to 4.",
+                                    "minimum": 1,
+                                    "maximum": 4
+                                },
+                                "notes": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 500
+                                }
+                            },
+                            "required": [
+                                "department_id",
+                                "description",
+                                "category",
+                                "quantity",
+                                "estimated_unit_cost",
+                                "quarter"
+                            ]
+                        },
+                        "maxItems": 2000
+                    }
+                },
+                "required": [
+                    "title",
+                    "lines"
+                ],
+                "title": "PlanRequest"
+            },
             "ProcurementSettingsRequest": {
                 "type": "object",
                 "properties": {
@@ -113815,6 +115043,15 @@
                         "type": "integer",
                         "minimum": 1,
                         "maximum": 90
+                    },
+                    "plan_check": {
+                        "type": "string",
+                        "description": "off, warn (flag requisitions outside the approved plan) or block (only special requisitions may go outside it).",
+                        "enum": [
+                            "off",
+                            "warn",
+                            "block"
+                        ]
                     }
                 },
                 "required": [
@@ -114962,6 +116199,13 @@
                                 },
                                 "budget_item_id": {
                                     "type": "integer"
+                                },
+                                "procurement_plan_line_id": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "description": "The line of the approved procurement plan this buys against."
                                 }
                             },
                             "required": [

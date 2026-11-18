@@ -138,6 +138,12 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Annual procurement plan (2026-11-18)
+
+`php artisan migrate`: procurement plans and lines, `purchase_requisition_lines.procurement_plan_line_id`,
+`purchase_requisitions.unplanned`, `procurement_settings.plan_check` (off). Adds the approval "Annual procurement plan"
+(chief accountant, then director general where the role exists).
+
 ## Notice expiry, salary file rows (2026-11-18)
 
 `php artisan migrate` adds `messagings.expires_at`. In-app notices past that time drop out of notifications.
