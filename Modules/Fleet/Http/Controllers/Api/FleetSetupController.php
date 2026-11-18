@@ -27,7 +27,7 @@ class FleetSetupController extends Controller
     /**
      * Start page figures.
      *
-     * @response array{data: array{units: int, vehicles: int, generators: int, by_status: list<array{status: string, label: string, count: int}>, drivers: int, unassigned: int, due_soon: int, overdue: int, cost_this_year: float, cost_by_category: list<array{category: string, amount: float}>, due: list<array{kind: string, what: string, for: string, link: string, expires_on: string, days_left: int}>}}
+     * @response array{data: array{services_due: int, open_jobs: int, units: int, vehicles: int, generators: int, by_status: list<array{status: string, label: string, count: int}>, drivers: int, unassigned: int, due_soon: int, overdue: int, cost_this_year: float, cost_by_category: list<array{category: string, amount: float}>, due: list<array{kind: string, what: string, for: string, link: string, expires_on: string, days_left: int}>}}
      */
     public function dashboard(Request $request): JsonResponse
     {
@@ -36,7 +36,11 @@ class FleetSetupController extends Controller
         $due = $this->calendar(60);
         $costs = Cost::whereYear('date', today()->year)->whereHas('unit', fn ($q) => $q)->get();
 
+        $mnt = app(\Modules\Fleet\Actions\ManageMaintenance::class);
+
         return response()->json(['data' => [
+            'services_due' => $units->sum(fn ($u) => $mnt->due($u)->where('state', '!=', 'ok')->count()),
+            'open_jobs' => \Modules\Fleet\Models\Maintenance::whereIn('status', \Modules\Fleet\Models\Maintenance::OPEN)->count(),
             'units' => $units->count(), 'vehicles' => $units->where('kind', 'vehicle')->count(), 'generators' => $units->where('kind', 'generator')->count(),
             'by_status' => collect(FleetUnit::STATUSES)->except('disposed')->map(fn ($l, $s) => ['status' => $s, 'label' => $l, 'count' => $units->where('status', $s)->count()])->values(),
             'drivers' => Driver::where('status', 'active')->count(), 'unassigned' => $units->where('kind', 'vehicle')->where('active', 0)->count(),

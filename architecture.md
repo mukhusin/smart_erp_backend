@@ -1159,6 +1159,20 @@ request. Fuel consumption per unit and period (litres, cost, distance, units per
 Budget: the purchase (order or station batch) goes through the payment request and budget; issues only move stock and
 running costs. Not yet: external supplier adapter and fuel cards wallet reconciliation.
 
+**Phase 4 built (2026-11-18): maintenance and accidents.** `fleet_service_plans` (per vehicle type or one unit; every
+km/hours and/or months, whichever first; warn before by reading and days): due = last completed service of the plan
+(or the first reading / registration) + interval; `fleet:daily` opens a service job (approved) for each due plan
+without an open job and tells the office and the driver. `fleet_maintenance` (MNT-; service, repair, accident repair):
+repair requests by the unit's driver or the office through `maintenance-request` (default head of department);
+inspection with priced lines (parts, labour, other), workshop (supplier or name), department and budget line through
+`maintenance-inspection` (amount-based, default chief accountant); approval raises and submits a purchase requisition
+(no cost = in-house, no requisition); "into the workshop" marks the unit not working; "work done" records date,
+reading (`maintenance`), final cost (running cost), invoice, and puts the unit back in service. `fleet_accidents`
+(ACC-; place, time, injuries, others involved, police report, photos; office notified; reviewed through
+`fleet-accident`): assessment repair (opens an accident repair job, unit not working), write off (unit not working;
+owned units disposed in Fixed Assets) or none; insurance claim number. Unit page shows the service plans and when each
+is due; dashboard counts services due and open jobs. Self Service: report a fault or accident from My vehicles.
+
 **Driving licences in HR (2026-11-18):** one record only. `professional_licences.is_driving` marks driving licence
 types (set by name on migration) and `employee_licences.classes` holds the classes; the fleet reads a driver's approved
 driving licences from the HR profile (the one expiring last counts) and "Add licence" in the fleet saves to the HR

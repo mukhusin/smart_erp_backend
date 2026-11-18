@@ -6,20 +6,24 @@ use App\Models\Company;
 use App\Services\CompanyContext;
 use Illuminate\Console\Command;
 use Modules\Fleet\Actions\FleetAlerts;
+use Modules\Fleet\Actions\ManageMaintenance;
 
 class FleetJobs extends Command
 {
     protected $signature = 'fleet:daily';
 
-    protected $description = 'End driver assignments that ran out, close units whose asset was disposed, and remind about expiring insurance, licences and certificates.';
+    protected $description = 'End driver assignments that ran out, close units whose asset was disposed, remind about expiring insurance, licences and certificates, and open jobs for services that are due.';
 
-    public function handle(FleetAlerts $alerts): int
+    public function handle(FleetAlerts $alerts, ManageMaintenance $maintenance): int
     {
         foreach (Company::query()->get() as $company) {
             if (! $company->modules()->where('module_slug', 'fleet')->where('is_enabled', true)->exists()) {
                 continue;
             }
-            app(CompanyContext::class)->run($company, fn () => $alerts->run());
+            app(CompanyContext::class)->run($company, function () use ($alerts, $maintenance) {
+                $alerts->run();
+                $maintenance->autoServices();
+            });
         }
 
         return self::SUCCESS;

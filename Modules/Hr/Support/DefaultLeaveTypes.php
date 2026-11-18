@@ -116,6 +116,9 @@ final class DefaultLeaveTypes
             \Modules\Fleet\Workflow\ReadingCorrectionProcess::KEY => ['Chief accountant', 'role', $role->id],
             \Modules\Fleet\Workflow\TransportRequestProcess::KEY => ['Head of department', 'department_head', null],
             \Modules\Fleet\Workflow\FuelRequestProcess::KEY => ['Head of department', 'department_head', null],
+            \Modules\Fleet\Workflow\MaintenanceRequestProcess::KEY => ['Head of department', 'department_head', null],
+            \Modules\Fleet\Workflow\MaintenanceInspectionProcess::KEY => ['Chief accountant', 'role', $role->id],
+            \Modules\Fleet\Workflow\AccidentProcess::KEY => ['Chief accountant', 'role', $role->id],
         ];
         foreach ($chains as $process => [$name, $type, $roleId]) {
             if (WorkflowTemplate::where('process', $process)->exists()) {

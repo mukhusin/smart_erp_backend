@@ -5,6 +5,7 @@ use Modules\Fleet\Http\Controllers\Api\AgencyController;
 use Modules\Fleet\Http\Controllers\Api\DriverController;
 use Modules\Fleet\Http\Controllers\Api\FleetSetupController;
 use Modules\Fleet\Http\Controllers\Api\FuelController;
+use Modules\Fleet\Http\Controllers\Api\MaintenanceController;
 use Modules\Fleet\Http\Controllers\Api\MyFleetController;
 use Modules\Fleet\Http\Controllers\Api\TransportController;
 use Modules\Fleet\Http\Controllers\Api\UnitController;
@@ -75,6 +76,24 @@ Route::middleware(['auth:sanctum', 'module:fleet'])->group(function () {
         Route::post('fuel-stores/{store}/batch', [FuelController::class, 'batch'])->name('fuel-stores.batch');
         Route::post('fuel-recharges/{recharge}/receive', [FuelController::class, 'receive'])->name('fuel-recharges.receive');
         Route::post('fuel-recharges/{recharge}/cancel', [FuelController::class, 'cancelRecharge'])->name('fuel-recharges.cancel');
+
+        Route::get('service-plans', [MaintenanceController::class, 'plans'])->name('service-plans.index');
+        Route::post('service-plans', [MaintenanceController::class, 'storePlan'])->name('service-plans.store');
+        Route::put('service-plans/{plan}', [MaintenanceController::class, 'updatePlan'])->name('service-plans.update');
+        Route::get('maintenance/due', [MaintenanceController::class, 'due'])->name('maintenance.due');
+        Route::get('maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
+        Route::post('maintenance', [MaintenanceController::class, 'store'])->name('maintenance.store');
+        Route::get('maintenance/{maintenance}', [MaintenanceController::class, 'show'])->name('maintenance.show');
+        Route::post('maintenance/{maintenance}/withdraw', [MaintenanceController::class, 'withdraw'])->name('maintenance.withdraw');
+        Route::post('maintenance/{maintenance}/cancel', [MaintenanceController::class, 'cancel'])->name('maintenance.cancel');
+        Route::post('maintenance/{maintenance}/inspect', [MaintenanceController::class, 'inspect'])->name('maintenance.inspect');
+        Route::post('maintenance/{maintenance}/start', [MaintenanceController::class, 'start'])->name('maintenance.start');
+        Route::post('maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
+        Route::get('accidents', [MaintenanceController::class, 'accidents'])->name('accidents.index');
+        Route::post('accidents', [MaintenanceController::class, 'report'])->name('accidents.store');
+        Route::get('accidents/{accident}', [MaintenanceController::class, 'accident'])->name('accidents.show');
+        Route::get('accidents/{accident}/photos/{index}', [MaintenanceController::class, 'photo'])->whereNumber('index')->name('accidents.photo');
+        Route::post('accidents/{accident}/assess', [MaintenanceController::class, 'assess'])->name('accidents.assess');
 
         Route::get('drivers', [DriverController::class, 'index'])->name('drivers.index');
         Route::get('drivers/employees', [DriverController::class, 'employees'])->name('drivers.employees');

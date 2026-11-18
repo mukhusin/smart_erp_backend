@@ -138,6 +138,12 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Fleet phase 4: maintenance (2026-11-18)
+
+`php artisan migrate`: service plans, maintenance jobs and lines, accidents; adds approvals "Repair request" (head of
+department), "Repair inspection and cost" and "Vehicle accident" (chief accountant). The transport officer needs
+`fleet.manage`; raising the repair requisition uses the officer as requester. `fleet:daily` (06:15) opens service jobs.
+
 ## Fleet phase 3: fuel (2026-11-18)
 
 1. `php artisan migrate`: fuel stores, deliveries, requests, movements and station batches; adds the "Fuel request"

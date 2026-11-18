@@ -22,10 +22,10 @@ class ApiContractTest extends TestCase
         'procurement.tenders.submit', 'procurement.tenders.end-standstill', 'procurement.contracts.submit', 'procurement.contracts.withdraw', 'procurement.certificates.withdraw', 'procurement.variations.withdraw', 'procurement.contracts.milestones.pay',
         'audit.engagements.withdraw', 'audit.engagements.end',
         'accounting.reconciliations.auto-match', 'accounting.reconciliations.submit', 'accounting.reconciliations.withdraw', 'accounting.reconciliations.reopen',
-        'payments.retirements.submit', 'payments.retirements.withdraw', 'payments.recoveries.cancel', 'payments.petty-cash.vouchers.withdraw', 'payments.petty-cash.top-ups.withdraw', 'accounting.cash-bank.feed.test', 'accounting.cash-bank.feed.sync', 'accounting.reconciliations.pull-feed', 'fleet.readings.withdraw', 'fleet.requests.withdraw', 'fleet.trips.confirm', 'fleet.fuel.withdraw', 'fleet.fuel-recharges.cancel',
+        'payments.retirements.submit', 'payments.retirements.withdraw', 'payments.recoveries.cancel', 'payments.petty-cash.vouchers.withdraw', 'payments.petty-cash.top-ups.withdraw', 'accounting.cash-bank.feed.test', 'accounting.cash-bank.feed.sync', 'accounting.reconciliations.pull-feed', 'fleet.readings.withdraw', 'fleet.requests.withdraw', 'fleet.trips.confirm', 'fleet.fuel.withdraw', 'fleet.fuel-recharges.cancel', 'fleet.maintenance.withdraw',
     ];
 
-    private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store', 'payments.requests.attach', 'procurement.suppliers.documents.store', 'inventory.items.import', 'procurement.rfqs.record', 'accounting.opening.import', 'assets.import', 'assets.disposals.store', 'self.assets.report', 'payments.retirements.attach', 'payments.petty-cash.vouchers.store', 'fleet.units.compliance', 'fleet.drivers.licences'];
+    private const UPLOADS = ['hr.employees.sick-sheets.store', 'self.sick-sheets.store', 'self.profile.store', 'payments.requests.attach', 'procurement.suppliers.documents.store', 'inventory.items.import', 'procurement.rfqs.record', 'accounting.opening.import', 'assets.import', 'assets.disposals.store', 'self.assets.report', 'payments.retirements.attach', 'payments.petty-cash.vouchers.store', 'fleet.units.compliance', 'fleet.drivers.licences', 'fleet.accidents.store'];
 
     public function test_every_endpoint_that_takes_input_declares_its_request_body(): void
     {
