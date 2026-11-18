@@ -49,6 +49,9 @@ class ManageRetirements
         if ($spent > $advanced) {
             throw ValidationException::withMessages(['lines' => 'Spent '.number_format($spent, 2).' is more than the imprest of '.number_format($advanced, 2).'. Raise a payment request for the extra.']);
         }
+        foreach ($lines as $i => $l) {
+            \Modules\Payments\Support\InputVat::check((float) ($l['input_vat'] ?? 0), (float) $l['amount'], "lines.$i.input_vat");
+        }
         $returned = round($advanced - $spent, 2);
         $bank = null;
         if ($returned > 0) {
@@ -71,7 +74,9 @@ class ManageRetirements
                 'cash_bank_account_id' => $bank?->id, 'return_reference' => $returned > 0 ? ($data['return_reference'] ?? null) : null])->save();
             $ret->lines()->delete();
             foreach ($lines as $l) {
-                $ret->lines()->create(['budget_item_id' => $l['budget_item_id'], 'description' => $l['description'] ?? null, 'amount' => round((float) $l['amount'], 2)]);
+                $vat = round((float) ($l['input_vat'] ?? 0), 2);
+                $ret->lines()->create(['budget_item_id' => $l['budget_item_id'], 'description' => $l['description'] ?? null, 'amount' => round((float) $l['amount'], 2),
+                    'input_vat' => $vat, 'vat_invoice_no' => $vat > 0 ? ($l['vat_invoice_no'] ?? null) : null]);
             }
 
             return $ret->refresh();
@@ -104,9 +109,12 @@ class ManageRetirements
             $r = $ret->request;
             $by = $ret->preparer;
             $holder = $r->payees->first()?->name;
-            $lines = $ret->lines->map(fn ($l) => ['account_id' => $l->item->account_id, 'debit' => $l->amount, 'description' => $l->description ?: $r->title,
+            $lines = $ret->lines->map(fn ($l) => ['account_id' => $l->item->account_id, 'debit' => round($l->amount - $l->input_vat, 2), 'description' => $l->description ?: $r->title,
                 'department_id' => $l->item->department_id, 'fund_source_id' => $l->item->fund_source_id, 'task_activity_id' => $l->item->task_activity_id,
                 'budget_item_id' => $l->budget_item_id])->all();
+            foreach ($ret->lines->where('input_vat', '>', 0) as $l) {
+                $lines = [...$lines, ...\Modules\Payments\Support\InputVat::line($l->input_vat, $l->vat_invoice_no)];
+            }
             if ($ret->returned > 0) {
                 $lines[] = ['account_id' => $ret->bank->account_id, 'debit' => $ret->returned, 'description' => 'Imprest returned by '.$holder.($ret->return_reference ? " ({$ret->return_reference})" : '')];
             }

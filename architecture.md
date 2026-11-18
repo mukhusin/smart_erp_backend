@@ -1268,9 +1268,10 @@ defaults S 18% / Z / E added when switched on). Output VAT: invoice lines carry 
 the tax invoice number; it is taken out of the budget lines in proportion (budget spending is net) and debited to the
 input VAT account. Supplier bills from goods received take `goods_receipts.invoice_vat` from the recorded supplier
 invoice; it is added on top of the bill (payee amount and payable grow; undone if the voucher is rejected) and the
-3-way match compares the invoice before VAT. `GET accounting/vat/summary` gives output less credit notes, input and net
-for a period, with the ledger movement on the two VAT accounts as a check. Petty cash and imprest retirements do not
-claim input VAT yet.
+3-way match compares the invoice before VAT. Petty cash vouchers and imprest retirement lines carry `input_vat` and
+`vat_invoice_no` (VAT inside the amount; the expense is debited net). `GET accounting/vat/summary` gives output less
+credit notes, input (vouchers, petty cash, retirements) and net for a period, with the ledger movement on the two VAT
+accounts as a check.
 
 ## Required staff profile (2026-11-18)
 

@@ -82,10 +82,12 @@ class ManagePettyCash
             throw ValidationException::withMessages(['budget_item_id' => 'Choose a line of the approved budget.']);
         }
         $mode = $this->budgets->mode();
+        $vat = \Modules\Payments\Support\InputVat::check((float) ($data['input_vat'] ?? 0), $amount, 'input_vat');
 
-        return DB::transaction(function () use ($float, $data, $receipt, $by, $amount, $item, $mode) {
+        return DB::transaction(function () use ($float, $data, $receipt, $by, $amount, $item, $mode, $vat) {
             $v = PettyCashVoucher::create(['number' => Numbering::next(PettyCashVoucher::class, 'PCV', $data['date']), 'petty_cash_float_id' => $float->id, 'date' => $data['date'],
-                'payee' => trim($data['payee']), 'description' => trim($data['description']), 'budget_item_id' => $item->id, 'amount' => $amount, 'status' => 'pending', 'created_by' => $by->id]);
+                'payee' => trim($data['payee']), 'description' => trim($data['description']), 'budget_item_id' => $item->id, 'amount' => $amount, 'input_vat' => $vat,
+                'vat_invoice_no' => $vat > 0 ? ($data['vat_invoice_no'] ?? null) : null, 'status' => 'pending', 'created_by' => $by->id]);
             if ($receipt) {
                 $name = Str::uuid().'.'.strtolower($receipt->getClientOriginalExtension() ?: $receipt->extension());
                 $v->update(['receipt_path' => $receipt->storeAs("payments/{$float->company_id}/petty-cash/{$float->id}", $name, PaymentFiles::DISK),
@@ -107,8 +109,9 @@ class ManagePettyCash
             $v->load(['item', 'float.cash', 'creator']);
             $item = $v->item;
             $journal = $this->posting->post($v->date->toDateString(), "{$v->number} petty cash: {$v->payee} — {$v->description}", [
-                ['account_id' => $item->account_id, 'debit' => $v->amount, 'description' => $v->description, 'department_id' => $item->department_id,
+                ['account_id' => $item->account_id, 'debit' => round($v->amount - $v->input_vat, 2), 'description' => $v->description, 'department_id' => $item->department_id,
                     'fund_source_id' => $item->fund_source_id, 'task_activity_id' => $item->task_activity_id, 'budget_item_id' => $item->id],
+                ...\Modules\Payments\Support\InputVat::line($v->input_vat, $v->vat_invoice_no),
                 ['account_id' => $v->float->cash->account_id, 'credit' => $v->amount, 'description' => "Paid to {$v->payee}"],
             ], $v->creator, 'petty_cash', $v);
             $this->budgets->release($v, $v->creator);

@@ -88,7 +88,7 @@ class VatController extends Controller
     /**
      * VAT summary for a period: output VAT on sales less credit notes, input VAT on purchases, and what is due.
      *
-     * @response array{data: array{from: string, to: string, vat_number: string|null, sales: list<array{code: string, name: string, kind: string, net: float, vat: float}>, credit_notes: array{count: int, amount: float, vat: float}, cash_sales: list<array{code: string, name: string, net: float, vat: float}>, output_vat: float, purchases: list<array{id: int, number: string, date: string, payee: string|null, vat_invoice_no: string|null, gross: float, vat: float}>, input_vat: float, net_vat: float, ledger: array{output: float, input: float}}}
+     * @response array{data: array{from: string, to: string, vat_number: string|null, sales: list<array{code: string, name: string, kind: string, net: float, vat: float}>, credit_notes: array{count: int, amount: float, vat: float}, cash_sales: list<array{code: string, name: string, net: float, vat: float}>, output_vat: float, purchases: list<array{id: int, kind: string, link: string, number: string, date: string, payee: string|null, vat_invoice_no: string|null, gross: float, vat: float}>, input_vat: float, net_vat: float, ledger: array{output: float, input: float}}}
      */
     #[QueryParameter('from', type: 'string', required: true)]
     #[QueryParameter('to', type: 'string', required: true)]
@@ -117,8 +117,16 @@ class VatController extends Controller
             })->values();
         $output = round($sales->sum('vat') - $credit['vat'] + $cash->sum('vat'), 2);
         $purchases = PaymentVoucher::with('request.payees')->whereIn('status', ['approved', 'paid'])->where('input_vat', '>', 0)->whereDate('date', '>=', $from)->whereDate('date', '<=', $to)
-            ->orderBy('date')->get()->map(fn ($v) => ['id' => $v->id, 'number' => $v->number, 'date' => $v->date->toDateString(), 'payee' => $v->request?->payees->pluck('name')->join(', '),
-                'vat_invoice_no' => $v->vat_invoice_no, 'gross' => (float) $v->gross, 'vat' => (float) $v->input_vat])->values();
+            ->orderBy('date')->get()->map(fn ($v) => ['id' => $v->id, 'kind' => 'Payment voucher', 'link' => "/payments/vouchers/{$v->id}", 'number' => $v->number, 'date' => $v->date->toDateString(),
+                'payee' => $v->request?->payees->pluck('name')->join(', '), 'vat_invoice_no' => $v->vat_invoice_no, 'gross' => (float) $v->gross, 'vat' => (float) $v->input_vat])
+            ->concat(\Modules\Payments\Models\PettyCashVoucher::where('status', 'approved')->where('input_vat', '>', 0)->whereDate('date', '>=', $from)->whereDate('date', '<=', $to)->get()
+                ->map(fn ($v) => ['id' => $v->id, 'kind' => 'Petty cash', 'link' => '/payments/petty-cash', 'number' => $v->number, 'date' => $v->date->toDateString(), 'payee' => $v->payee,
+                    'vat_invoice_no' => $v->vat_invoice_no, 'gross' => (float) $v->amount, 'vat' => (float) $v->input_vat]))
+            ->concat(\Modules\Payments\Models\ImprestRetirementLine::with('retirement')->where('input_vat', '>', 0)
+                ->whereHas('retirement', fn ($q) => $q->where('status', 'approved')->whereDate('date', '>=', $from)->whereDate('date', '<=', $to))->get()
+                ->map(fn ($l) => ['id' => $l->id, 'kind' => 'Imprest retirement', 'link' => "/payments/requests/{$l->retirement->payment_request_id}", 'number' => $l->retirement->number,
+                    'date' => $l->retirement->date->toDateString(), 'payee' => $l->description, 'vat_invoice_no' => $l->vat_invoice_no, 'gross' => (float) $l->amount, 'vat' => (float) $l->input_vat]))
+            ->sortBy('date')->values();
         $input = round($purchases->sum('vat'), 2);
         $s = VatSetting::current();
         $move = fn (?int $account, int $sign) => $account ? round($sign * (float) JournalEntryLine::where('account_id', $account)

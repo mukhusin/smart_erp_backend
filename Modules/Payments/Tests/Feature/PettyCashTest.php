@@ -140,4 +140,34 @@ class PettyCashTest extends TestCase
         $other = tap(User::factory()->create(['company_id' => $this->company->id]))->assignRole('employee');
         $this->actingAs($other)->getJson("/api/v1/payments/petty-cash/{$float}")->assertForbidden();
     }
+
+    public function test_petty_cash_voucher_claims_input_vat(): void
+    {
+        $float = $this->actingAs($this->finance)->postJson('/api/v1/payments/petty-cash', ['cash_bank_account_id' => $this->cash, 'custodian_id' => $this->staff->id, 'float_amount' => 100000,
+            'replenish_from_id' => $this->bank])->assertCreated()->json('data.id');
+        $this->actingAs($this->staff)->postJson("/api/v1/payments/petty-cash/{$float}/top-up", ['date' => '2026-11-18'])->assertCreated();
+        $wf = WorkflowInstance::where('process', 'petty-cash-replenishment')->where('status', 'pending')->value('id');
+        $this->actingAs($this->finance)->postJson("/api/v1/workflow/requests/{$wf}/approve")->assertOk();
+        $body = ['date' => '2026-11-18', 'payee' => 'Shell', 'description' => 'Fuel', 'budget_item_id' => $this->item, 'amount' => 23600, 'input_vat' => 3600, 'vat_invoice_no' => 'EFD-9',
+            'receipt' => UploadedFile::fake()->create('r.jpg', 20, 'image/jpeg')];
+        $this->actingAs($this->staff)->post("/api/v1/payments/petty-cash/{$float}/vouchers", $body, ['Accept' => 'application/json'])->assertUnprocessable()->assertJsonValidationErrors(['input_vat']);
+        $in = app(CompanyContext::class)->run($this->company, function () {
+            $out = \Modules\Accounting\Models\Account::create(['code' => '2400', 'name' => 'Output VAT', 'type' => 'liability', 'is_postable' => true, 'is_active' => true])->id;
+            $in = \Modules\Accounting\Models\Account::create(['code' => '1400', 'name' => 'Input VAT', 'type' => 'asset', 'is_postable' => true, 'is_active' => true])->id;
+            $this->acc['1400'] = $in;
+            \Modules\Accounting\Models\VatSetting::current()->fill(['vat_registered' => true, 'output_account_id' => $out, 'input_account_id' => $in])->save();
+
+            return $in;
+        });
+        $body['receipt'] = UploadedFile::fake()->create('r.jpg', 20, 'image/jpeg');
+        $this->post("/api/v1/payments/petty-cash/{$float}/vouchers", $body, ['Accept' => 'application/json'])->assertCreated();
+        $wf = WorkflowInstance::where('process', 'petty-cash-voucher')->where('status', 'pending')->value('id');
+        if ($wf) {
+            $this->actingAs($this->finance)->postJson("/api/v1/workflow/requests/{$wf}/approve")->assertOk();
+        }
+        $this->assertSame(20000.0, $this->balance('5200'));
+        $this->assertSame(3600.0, $this->balance('1400'));
+        $this->assertSame(76400.0, $this->balance('1050'));
+        $this->assertNotNull($in);
+    }
 }

@@ -16,10 +16,10 @@ class PettyCashVoucher extends Model
 
     public const STATUS_LABELS = ['pending' => 'Waiting for approval', 'approved' => 'Paid out', 'rejected' => 'Not approved', 'cancelled' => 'Withdrawn'];
 
-    protected $fillable = ['company_id', 'number', 'petty_cash_float_id', 'date', 'payee', 'description', 'budget_item_id', 'amount', 'receipt_path', 'receipt_name', 'status',
+    protected $fillable = ['company_id', 'number', 'petty_cash_float_id', 'date', 'payee', 'description', 'budget_item_id', 'amount', 'input_vat', 'vat_invoice_no', 'receipt_path', 'receipt_name', 'status',
         'over_budget', 'journal_entry_id', 'petty_cash_replenishment_id', 'created_by', 'decision_comment', 'decided_at'];
 
-    protected $casts = ['date' => 'date', 'amount' => 'float', 'over_budget' => 'boolean', 'decided_at' => 'datetime'];
+    protected $casts = ['date' => 'date', 'amount' => 'float', 'input_vat' => 'float', 'over_budget' => 'boolean', 'decided_at' => 'datetime'];
 
     public function float()
     {

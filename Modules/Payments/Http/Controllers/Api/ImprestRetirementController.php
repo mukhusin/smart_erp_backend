@@ -36,7 +36,7 @@ class ImprestRetirementController extends Controller
     /**
      * An imprest retirement with its lines, receipts and what the user can do.
      *
-     * @response array{data: array{id: int, number: string, date: string, notes: string|null, status: string, status_label: string, advanced: float, spent: float, returned: float, cash_bank_account_id: int|null, bank: string|null, return_reference: string|null, decision_comment: string|null, waiting_for: string|null, journal: array{id: int, reference_no: string}|null, prepared_by: string|null, request: array{id: int, number: string, title: string, holder: string|null, retire_by: string|null, lines: list<array{budget_item_id: int|null, label: string, amount: float}>}, lines: list<array{id: int, budget_item_id: int, label: string, description: string|null, amount: float}>, attachments: list<array{id: int, name: string, size: int, uploaded_by: string|null, created_at: string}>, can: array{edit: bool, submit: bool, withdraw: bool, delete: bool}}}
+     * @response array{data: array{id: int, number: string, date: string, notes: string|null, status: string, status_label: string, advanced: float, spent: float, returned: float, cash_bank_account_id: int|null, bank: string|null, return_reference: string|null, decision_comment: string|null, waiting_for: string|null, journal: array{id: int, reference_no: string}|null, prepared_by: string|null, request: array{id: int, number: string, title: string, holder: string|null, retire_by: string|null, lines: list<array{budget_item_id: int|null, label: string, amount: float}>}, lines: list<array{id: int, budget_item_id: int, label: string, description: string|null, amount: float, input_vat: float, vat_invoice_no: string|null}>, attachments: list<array{id: int, name: string, size: int, uploaded_by: string|null, created_at: string}>, can: array{edit: bool, submit: bool, withdraw: bool, delete: bool}}}
      */
     public function show(Request $request, ImprestRetirement $retirement): JsonResponse
     {
@@ -55,7 +55,8 @@ class ImprestRetirementController extends Controller
             'journal' => $ret->journal ? ['id' => $ret->journal->id, 'reference_no' => $ret->journal->reference_no] : null, 'prepared_by' => $ret->preparer?->display_name,
             'request' => ['id' => $r->id, 'number' => $r->number, 'title' => $r->title, 'holder' => $r->payees->first()?->name, 'retire_by' => $r->retire_by?->toDateString(),
                 'lines' => $r->lines->map(fn ($l) => ['budget_item_id' => $l->budget_item_id, 'label' => $l->item?->label() ?? ($l->description ?: '—'), 'amount' => $l->amount])->values()],
-            'lines' => $ret->lines->map(fn ($l) => ['id' => $l->id, 'budget_item_id' => $l->budget_item_id, 'label' => $l->item?->label() ?? '—', 'description' => $l->description, 'amount' => $l->amount])->values(),
+            'lines' => $ret->lines->map(fn ($l) => ['id' => $l->id, 'budget_item_id' => $l->budget_item_id, 'label' => $l->item?->label() ?? '—', 'description' => $l->description, 'amount' => $l->amount,
+                'input_vat' => (float) $l->input_vat, 'vat_invoice_no' => $l->vat_invoice_no])->values(),
             'attachments' => $ret->attachments->map(fn (PaymentAttachment $a) => ['id' => $a->id, 'name' => $a->name, 'size' => (int) $a->size, 'uploaded_by' => $a->uploader?->display_name,
                 'created_at' => $a->created_at->toIso8601String()])->values(),
             'can' => ['edit' => $ret->editable() && $mine, 'submit' => $ret->editable() && $mine, 'withdraw' => $ret->status === 'pending' && $ret->prepared_by === $user->id,

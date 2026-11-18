@@ -102,7 +102,7 @@ class PettyCashController extends Controller
     /**
      * A float with its vouchers and top-ups, newest first.
      *
-     * @response array{data: array{float: array{id: int, cash_bank_account_id: int, name: string|null, custodian_id: int, custodian: string|null, float_amount: float, max_voucher: float|null, replenish_from_id: int|null, replenish_from: string|null, is_active: bool, balance: float, available: float, pending: int, spent_since_top_up: float, mine: bool}, vouchers: list<array{id: int, number: string, date: string, payee: string, description: string, budget_line: string|null, amount: float, status: string, status_label: string, over_budget: bool, has_receipt: bool, created_by: string|null, waiting_for: string|null, decision_comment: string|null, topped_up: bool, can_withdraw: bool}>, replenishments: list<array{id: int, number: string, date: string, amount: float, from: string|null, status: string, status_label: string, waiting_for: string|null, decision_comment: string|null, can_withdraw: bool}>, can: array{voucher: bool, top_up: bool}}}
+     * @response array{data: array{float: array{id: int, cash_bank_account_id: int, name: string|null, custodian_id: int, custodian: string|null, float_amount: float, max_voucher: float|null, replenish_from_id: int|null, replenish_from: string|null, is_active: bool, balance: float, available: float, pending: int, spent_since_top_up: float, mine: bool}, vouchers: list<array{id: int, number: string, date: string, payee: string, description: string, budget_line: string|null, amount: float, input_vat: float, vat_invoice_no: string|null, status: string, status_label: string, over_budget: bool, has_receipt: bool, created_by: string|null, waiting_for: string|null, decision_comment: string|null, topped_up: bool, can_withdraw: bool}>, replenishments: list<array{id: int, number: string, date: string, amount: float, from: string|null, status: string, status_label: string, waiting_for: string|null, decision_comment: string|null, can_withdraw: bool}>, can: array{voucher: bool, top_up: bool}}}
      */
     public function show(Request $request, PettyCashFloat $float): JsonResponse
     {
@@ -116,7 +116,7 @@ class PettyCashController extends Controller
         return response()->json(['data' => [
             'float' => $this->floatRow($float, $user),
             'vouchers' => $vouchers->map(fn (PettyCashVoucher $v) => ['id' => $v->id, 'number' => $v->number, 'date' => $v->date->toDateString(), 'payee' => $v->payee,
-                'description' => $v->description, 'budget_line' => $v->item?->label(), 'amount' => $v->amount, 'status' => $v->status,
+                'description' => $v->description, 'budget_line' => $v->item?->label(), 'amount' => $v->amount, 'input_vat' => (float) $v->input_vat, 'vat_invoice_no' => $v->vat_invoice_no, 'status' => $v->status,
                 'status_label' => PettyCashVoucher::STATUS_LABELS[$v->status] ?? $v->status, 'over_budget' => (bool) $v->over_budget, 'has_receipt' => (bool) $v->receipt_path,
                 'created_by' => $v->creator?->display_name, 'waiting_for' => $v->status === 'pending' ? $v->workflow?->steps->firstWhere('status', 'pending')?->name : null,
                 'decision_comment' => $v->decision_comment, 'topped_up' => (bool) $v->petty_cash_replenishment_id, 'can_withdraw' => $v->status === 'pending' && $v->created_by === $user->id])->values(),
@@ -158,6 +158,9 @@ class PettyCashController extends Controller
             'description' => ['required', 'string', 'max:255'],
             'budget_item_id' => ['required', 'integer', 'exists:budget_items,id'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999999'],
+            /** VAT included in the amount, from the supplier's tax invoice (VAT-registered companies). */
+            'input_vat' => ['nullable', 'numeric', 'min:0', 'lt:amount'],
+            'vat_invoice_no' => ['nullable', 'string', 'max:100'],
             'receipt' => ['nullable', ...array_slice(PaymentFiles::RULES, 1)],
         ]);
         $v = $this->petty->createVoucher($float, $data, $request->file('receipt'), $request->user());

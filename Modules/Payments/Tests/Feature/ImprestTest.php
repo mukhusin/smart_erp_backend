@@ -216,4 +216,34 @@ class ImprestTest extends TestCase
         $this->assertSame(0.0, (float) $this->figures()['committed']);
         $this->assertSame(0.0, (float) $this->figures()['actual']);
     }
+
+    public function test_retirement_claims_input_vat(): void
+    {
+        app(CompanyContext::class)->run($this->company, function () {
+            $out = \Modules\Accounting\Models\Account::create(['code' => '2400', 'name' => 'Output VAT', 'type' => 'liability', 'is_postable' => true, 'is_active' => true])->id;
+            $in = \Modules\Accounting\Models\Account::create(['code' => '1400', 'name' => 'Input VAT', 'type' => 'asset', 'is_postable' => true, 'is_active' => true])->id;
+            $this->acc['1400'] = $in;
+            \Modules\Accounting\Models\VatSetting::current()->fill(['vat_registered' => true, 'output_account_id' => $out, 'input_account_id' => $in])->save();
+        });
+        $this->actingAs($this->finance)->putJson('/api/v1/payments/settings', ['payable_account_id' => $this->acc['2100'], 'imprest_account_id' => $this->acc['1300'], 'require_attachment' => false])->assertOk();
+        $id = $this->imprest();
+        $this->postJson("/api/v1/payments/requests/{$id}/submit")->assertOk();
+        $this->payOut($id);
+        $this->actingAs($this->staff)->postJson("/api/v1/payments/requests/{$id}/retirements", ['date' => '2026-11-25', 'lines' => [['budget_item_id' => $this->item, 'amount' => 200000, 'input_vat' => 200000]]])
+            ->assertUnprocessable()->assertJsonValidationErrors(['lines.0.input_vat']);
+        $ret = $this->postJson("/api/v1/payments/requests/{$id}/retirements", ['date' => '2026-11-25', 'lines' => [
+            ['budget_item_id' => $this->item, 'description' => 'Hotel', 'amount' => 118000, 'input_vat' => 18000, 'vat_invoice_no' => 'EFD-55'],
+            ['budget_item_id' => $this->item, 'description' => 'Allowances', 'amount' => 82000]]])->assertCreated()->json('data.id');
+        $this->getJson("/api/v1/payments/retirements/{$ret}")->assertJsonPath('data.lines.0.input_vat', 18000)->assertJsonPath('data.lines.0.vat_invoice_no', 'EFD-55');
+        $this->postJson("/api/v1/payments/retirements/{$ret}/submit")->assertOk();
+        $wf = WorkflowInstance::where('process', 'imprest-retirement')->where('status', 'pending')->value('id');
+        if ($wf) {
+            $this->actingAs($this->finance)->postJson("/api/v1/workflow/requests/{$wf}/approve")->assertOk();
+        }
+        $this->assertSame(182000.0, $this->balance('5200'));
+        $this->assertSame(18000.0, $this->balance('1400'));
+        $this->assertSame(0.0, $this->balance('1300'));
+        $this->actingAs($this->finance)->getJson('/api/v1/accounting/vat/summary?from=2026-11-01&to=2026-11-30')->assertJsonPath('data.input_vat', 18000)
+            ->assertJsonPath('data.purchases.0.kind', 'Imprest retirement');
+    }
 }

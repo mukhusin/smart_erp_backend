@@ -138,6 +138,10 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Input VAT on petty cash and retirements (2026-11-18)
+
+`php artisan migrate` adds `input_vat` and `vat_invoice_no` to petty cash vouchers and imprest retirement lines.
+
 ## Gratuity accruals (2026-11-18)
 
 `php artisan migrate`: `gratuity_settings` (off), `gratuity_accruals`, `gratuity_settlements`. Nothing changes until a

@@ -484,6 +484,12 @@
                                                             "id": {
                                                                 "type": "integer"
                                                             },
+                                                            "kind": {
+                                                                "type": "string"
+                                                            },
+                                                            "link": {
+                                                                "type": "string"
+                                                            },
                                                             "number": {
                                                                 "type": "string"
                                                             },
@@ -511,6 +517,8 @@
                                                         },
                                                         "required": [
                                                             "id",
+                                                            "kind",
+                                                            "link",
                                                             "number",
                                                             "date",
                                                             "payee",
@@ -68398,6 +68406,15 @@
                                                             },
                                                             "amount": {
                                                                 "type": "number"
+                                                            },
+                                                            "input_vat": {
+                                                                "type": "number"
+                                                            },
+                                                            "vat_invoice_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
@@ -68405,7 +68422,9 @@
                                                             "budget_item_id",
                                                             "label",
                                                             "description",
-                                                            "amount"
+                                                            "amount",
+                                                            "input_vat",
+                                                            "vat_invoice_no"
                                                         ]
                                                     }
                                                 },
@@ -70477,6 +70496,15 @@
                                                             "amount": {
                                                                 "type": "number"
                                                             },
+                                                            "input_vat": {
+                                                                "type": "number"
+                                                            },
+                                                            "vat_invoice_no": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
                                                             "status": {
                                                                 "type": "string"
                                                             },
@@ -70522,6 +70550,8 @@
                                                             "description",
                                                             "budget_line",
                                                             "amount",
+                                                            "input_vat",
+                                                            "vat_invoice_no",
                                                             "status",
                                                             "status_label",
                                                             "over_budget",
@@ -70801,6 +70831,21 @@
                                         "type": "number",
                                         "minimum": 0.01,
                                         "maximum": 999999999999
+                                    },
+                                    "input_vat": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ],
+                                        "description": "VAT included in the amount, from the supplier's tax invoice (VAT-registered companies).",
+                                        "minimum": 0
+                                    },
+                                    "vat_invoice_no": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 100
                                     },
                                     "receipt": {
                                         "type": [
@@ -119572,6 +119617,21 @@
                                     "type": "number",
                                     "minimum": 0,
                                     "maximum": 999999999999
+                                },
+                                "input_vat": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ],
+                                    "description": "VAT included in the line, from the supplier's tax invoice (VAT-registered companies).",
+                                    "minimum": 0
+                                },
+                                "vat_invoice_no": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 100
                                 }
                             },
                             "required": [
