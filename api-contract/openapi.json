@@ -30474,6 +30474,802 @@
                 }
             }
         },
+        "/fleet/hires": {
+            "get": {
+                "operationId": "fleet.hires.index",
+                "summary": "Vehicle hires with their vehicles and payments",
+                "tags": [
+                    "Fleet: hired vehicles",
+                    "Hire"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "supplier": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "reference": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "vehicle_type": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "starts_on": {
+                                                        "type": "string"
+                                                    },
+                                                    "ends_on": {
+                                                        "type": "string"
+                                                    },
+                                                    "ended_on": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "end_note": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "rate_mode": {
+                                                        "type": "string"
+                                                    },
+                                                    "rate_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "rate": {
+                                                        "type": "number"
+                                                    },
+                                                    "currency": {
+                                                        "type": "string"
+                                                    },
+                                                    "notes": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "vehicles": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "status_label": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "id",
+                                                                "label",
+                                                                "status_label"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "paid_until": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "paid": {
+                                                        "type": "number"
+                                                    },
+                                                    "payments": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "from_date": {
+                                                                    "type": "string"
+                                                                },
+                                                                "to_date": {
+                                                                    "type": "string"
+                                                                },
+                                                                "quantity": {
+                                                                    "type": "number"
+                                                                },
+                                                                "amount": {
+                                                                    "type": "number"
+                                                                },
+                                                                "payment_request": {
+                                                                    "type": [
+                                                                        "object",
+                                                                        "null"
+                                                                    ],
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "number": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "status_label": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "id",
+                                                                        "number",
+                                                                        "status_label"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "from_date",
+                                                                "to_date",
+                                                                "quantity",
+                                                                "amount",
+                                                                "payment_request"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "number",
+                                                    "supplier",
+                                                    "reference",
+                                                    "vehicle_type",
+                                                    "starts_on",
+                                                    "ends_on",
+                                                    "ended_on",
+                                                    "end_note",
+                                                    "rate_mode",
+                                                    "rate_label",
+                                                    "rate",
+                                                    "currency",
+                                                    "notes",
+                                                    "status",
+                                                    "status_label",
+                                                    "vehicles",
+                                                    "paid_until",
+                                                    "paid",
+                                                    "payments"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "fleet.hires.store",
+                "tags": [
+                    "Fleet: hired vehicles",
+                    "Hire"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "supplier_id": {
+                                        "type": "integer"
+                                    },
+                                    "reference": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 60
+                                    },
+                                    "vehicle_type_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "starts_on": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "ends_on": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "rate_mode": {
+                                        "type": "string",
+                                        "description": "day or month (per vehicle).",
+                                        "enum": [
+                                            "day",
+                                            "month"
+                                        ]
+                                    },
+                                    "rate": {
+                                        "type": "number",
+                                        "minimum": 0.01
+                                    },
+                                    "currency": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "minLength": 3,
+                                        "maxLength": 3
+                                    },
+                                    "notes": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 500
+                                    },
+                                    "vehicles": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "registration": {
+                                                    "type": "string",
+                                                    "maxLength": 30
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "maxLength": 150
+                                                },
+                                                "make": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "maxLength": 60
+                                                },
+                                                "model": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "maxLength": 60
+                                                },
+                                                "seats": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1,
+                                                    "maximum": 200
+                                                },
+                                                "fuel_type": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "enum": [
+                                                        "petrol",
+                                                        "diesel",
+                                                        "electric",
+                                                        "hybrid",
+                                                        "gas",
+                                                        null
+                                                    ]
+                                                },
+                                                "reading": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 0
+                                                },
+                                                "department_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "registration",
+                                                "name"
+                                            ]
+                                        },
+                                        "minItems": 1,
+                                        "maxItems": 100
+                                    }
+                                },
+                                "required": [
+                                    "supplier_id",
+                                    "starts_on",
+                                    "ends_on",
+                                    "rate_mode",
+                                    "rate",
+                                    "vehicles"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "number": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "number"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/fleet/hires/{hire}/vehicles": {
+            "post": {
+                "operationId": "fleet.hires.vehicles",
+                "tags": [
+                    "Fleet: hired vehicles",
+                    "Hire"
+                ],
+                "parameters": [
+                    {
+                        "name": "hire",
+                        "in": "path",
+                        "required": true,
+                        "description": "The hire ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "registration": {
+                                        "type": "string",
+                                        "maxLength": 30
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 150
+                                    },
+                                    "make": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 60
+                                    },
+                                    "model": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 60
+                                    },
+                                    "seats": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ],
+                                        "minimum": 1,
+                                        "maximum": 200
+                                    },
+                                    "fuel_type": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "enum": [
+                                            "petrol",
+                                            "diesel",
+                                            "electric",
+                                            "hybrid",
+                                            "gas",
+                                            null
+                                        ]
+                                    },
+                                    "reading": {
+                                        "type": [
+                                            "number",
+                                            "null"
+                                        ],
+                                        "minimum": 0
+                                    },
+                                    "department_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "registration",
+                                    "name"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/fleet/hires/{hire}/end": {
+            "post": {
+                "operationId": "fleet.hires.end",
+                "tags": [
+                    "Fleet: hired vehicles",
+                    "Hire"
+                ],
+                "parameters": [
+                    {
+                        "name": "hire",
+                        "in": "path",
+                        "required": true,
+                        "description": "The hire ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "note": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "date"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/fleet/hires/{hire}/pay": {
+            "post": {
+                "operationId": "fleet.hires.pay",
+                "tags": [
+                    "Fleet: hired vehicles",
+                    "Hire"
+                ],
+                "parameters": [
+                    {
+                        "name": "hire",
+                        "in": "path",
+                        "required": true,
+                        "description": "The hire ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "from_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "to_date": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "department_id": {
+                                        "type": "integer"
+                                    },
+                                    "budget_item_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "required": [
+                                    "from_date",
+                                    "to_date",
+                                    "department_id",
+                                    "budget_item_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "payment_request_id": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "amount": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "payment_request_id",
+                                                "amount"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/fleet/service-plans": {
             "get": {
                 "operationId": "fleet.service-plans.index",
@@ -33020,6 +33816,52 @@
                                         "data": {
                                             "type": "object",
                                             "properties": {
+                                                "trips_today": {
+                                                    "type": "integer"
+                                                },
+                                                "on_the_road": {
+                                                    "type": "integer"
+                                                },
+                                                "to_confirm": {
+                                                    "type": "integer"
+                                                },
+                                                "requests_to_allocate": {
+                                                    "type": "integer"
+                                                },
+                                                "fuel_month_litres": {
+                                                    "type": "number"
+                                                },
+                                                "fuel_month_amount": {
+                                                    "type": "number"
+                                                },
+                                                "accidents_year": {
+                                                    "type": "integer"
+                                                },
+                                                "active_hires": {
+                                                    "type": "integer"
+                                                },
+                                                "top_costs": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "unit_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "unit": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "unit_id",
+                                                            "unit",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
                                                 "services_due": {
                                                     "type": "integer"
                                                 },
@@ -33126,6 +33968,15 @@
                                                 }
                                             },
                                             "required": [
+                                                "trips_today",
+                                                "on_the_road",
+                                                "to_confirm",
+                                                "requests_to_allocate",
+                                                "fuel_month_litres",
+                                                "fuel_month_amount",
+                                                "accidents_year",
+                                                "active_hires",
+                                                "top_costs",
                                                 "services_due",
                                                 "open_jobs",
                                                 "units",

@@ -1173,6 +1173,17 @@ reading (`maintenance`), final cost (running cost), invoice, and puts the unit b
 owned units disposed in Fixed Assets) or none; insurance claim number. Unit page shows the service plans and when each
 is due; dashboard counts services due and open jobs. Self Service: report a fault or accident from My vehicles.
 
+**Phase 5 built (2026-11-18): hire in, dashboard, reports.** `fleet_hires` (HIR-, supplier, contract, type, dates, rate per
+day or month per vehicle) with its vehicles as fleet units (ownership hired, `fleet_units.fleet_hire_id`), driven by our
+own drivers; ends on its date (`fleet:daily`) or early, the vehicles then disposed from the fleet. `fleet_hire_payments`:
+a period is paid once (overlap refused), clipped to the hire; one draft payment request to the supplier; cost shared on
+the vehicles (category hire). Dashboard adds requests to allocate, trips today and on the road, logbooks to confirm,
+services due and open jobs, fuel this month, accidents this year, costliest units. Ten reports in group Fleet
+(`Modules/Reporting/Support/FleetReports.php`, route /reports/fleet): register, running cost per vehicle and per km,
+fuel consumption with usual rate and flagged fills, tank stock card, transport requests, use (trips, days on trips,
+logbook km vs odometer km), maintenance history, accidents, insurance/licences (with driving licences), hires.
+Next: phase 6 tracking (needs the tracker models from the customer) and phase 7 driver app.
+
 **Driving licences in HR (2026-11-18):** one record only. `professional_licences.is_driving` marks driving licence
 types (set by name on migration) and `employee_licences.classes` holds the classes; the fleet reads a driver's approved
 driving licences from the HR profile (the one expiring last counts) and "Add licence" in the fleet saves to the HR

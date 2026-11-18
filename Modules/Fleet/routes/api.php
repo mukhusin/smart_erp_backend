@@ -5,6 +5,7 @@ use Modules\Fleet\Http\Controllers\Api\AgencyController;
 use Modules\Fleet\Http\Controllers\Api\DriverController;
 use Modules\Fleet\Http\Controllers\Api\FleetSetupController;
 use Modules\Fleet\Http\Controllers\Api\FuelController;
+use Modules\Fleet\Http\Controllers\Api\HireController;
 use Modules\Fleet\Http\Controllers\Api\MaintenanceController;
 use Modules\Fleet\Http\Controllers\Api\MyFleetController;
 use Modules\Fleet\Http\Controllers\Api\TransportController;
@@ -94,6 +95,12 @@ Route::middleware(['auth:sanctum', 'module:fleet'])->group(function () {
         Route::get('accidents/{accident}', [MaintenanceController::class, 'accident'])->name('accidents.show');
         Route::get('accidents/{accident}/photos/{index}', [MaintenanceController::class, 'photo'])->whereNumber('index')->name('accidents.photo');
         Route::post('accidents/{accident}/assess', [MaintenanceController::class, 'assess'])->name('accidents.assess');
+
+        Route::get('hires', [HireController::class, 'index'])->name('hires.index');
+        Route::post('hires', [HireController::class, 'store'])->name('hires.store');
+        Route::post('hires/{hire}/vehicles', [HireController::class, 'addVehicle'])->name('hires.vehicles');
+        Route::post('hires/{hire}/end', [HireController::class, 'end'])->name('hires.end');
+        Route::post('hires/{hire}/pay', [HireController::class, 'pay'])->name('hires.pay');
 
         Route::get('drivers', [DriverController::class, 'index'])->name('drivers.index');
         Route::get('drivers/employees', [DriverController::class, 'employees'])->name('drivers.employees');

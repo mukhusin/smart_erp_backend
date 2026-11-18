@@ -34,6 +34,8 @@ use Modules\Tasks\Models\TaskActivity;
 /** Finance and planning reports: accounting statements, payroll, loans, budget and plan performance. Same shape as HR reports. */
 class FinanceReports
 {
+    use FleetReports;
+
     public const REPORTS = [
         'income-statement' => ['title' => 'Statement of income and expenditure', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'financial-position' => ['title' => 'Statement of financial position', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
@@ -94,6 +96,16 @@ class FinanceReports
         'plan-activities' => ['title' => 'Annual plan activities', 'group' => 'Planning', 'module' => 'planning', 'permissions' => ['planning.view', 'planning.manage']],
         'plan-performance' => ['title' => 'Plan performance by department', 'group' => 'Planning', 'module' => 'planning', 'permissions' => ['planning.view', 'planning.manage']],
         'objective-performance' => ['title' => 'Performance by strategic objective', 'group' => 'Planning', 'module' => 'planning', 'permissions' => ['planning.view', 'planning.manage']],
+        'fleet-register' => ['title' => 'Fleet register', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
+        'fleet-costs' => ['title' => 'Running cost per vehicle and per km', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
+        'fleet-fuel' => ['title' => 'Fuel consumption and fills above usual', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
+        'fuel-store-movements' => ['title' => 'Fuel tank stock card', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage', 'fleet.fuel']],
+        'transport-requests' => ['title' => 'Transport requests', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
+        'fleet-utilisation' => ['title' => 'Vehicle use (trips, days and km)', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
+        'maintenance-history' => ['title' => 'Maintenance history', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
+        'fleet-accidents' => ['title' => 'Accidents', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
+        'fleet-compliance' => ['title' => 'Insurance, licences and certificates', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
+        'fleet-hires' => ['title' => 'Hired vehicles', 'group' => 'Fleet', 'module' => 'fleet', 'permissions' => ['fleet.view', 'fleet.manage']],
     ];
 
     private const LABELS = [
@@ -194,6 +206,10 @@ class FinanceReports
         $assetCats = ['key' => 'category_id', 'label' => 'Category', 'type' => 'select', 'options' => class_exists(\Modules\Inventory\Models\ItemCategory::class)
             ? $opt(\Modules\Inventory\Models\ItemCategory::whereIn('type', ['asset', 'intangible', 'wip'])->orderBy('name')->get()) : []];
         $providers = ['key' => 'provider_id', 'label' => 'Provider', 'type' => 'select', 'options' => $opt(LoanProvider::orderBy('name')->get())];
+
+        if ($fleet = $this->fleetFilters($key, $from, $to)) {
+            return $fleet;
+        }
 
         return match ($key) {
             'income-statement', 'fund-statement' => [$from, $to, $departments],

@@ -22,7 +22,7 @@ class FleetUnit extends Model
     public const FUELS = ['petrol' => 'Petrol', 'diesel' => 'Diesel', 'electric' => 'Electric', 'hybrid' => 'Hybrid', 'gas' => 'Gas'];
 
     protected $fillable = ['company_id', 'kind', 'vehicle_type_id', 'registration', 'name', 'make', 'model', 'year', 'chassis_number', 'engine_number', 'colour', 'seats', 'fuel_type',
-        'tank_capacity', 'ownership', 'owner_name', 'asset_id', 'company_branch_id', 'department_id', 'location', 'status', 'status_note', 'reading', 'reading_date', 'notes', 'created_by'];
+        'tank_capacity', 'ownership', 'owner_name', 'asset_id', 'fleet_hire_id', 'company_branch_id', 'department_id', 'location', 'status', 'status_note', 'reading', 'reading_date', 'notes', 'created_by'];
 
     protected $casts = ['year' => 'integer', 'seats' => 'integer', 'tank_capacity' => 'float', 'reading' => 'float', 'reading_date' => 'date'];
 
@@ -34,6 +34,11 @@ class FleetUnit extends Model
     public function asset()
     {
         return $this->belongsTo(Asset::class);
+    }
+
+    public function hire()
+    {
+        return $this->belongsTo(Hire::class, 'fleet_hire_id');
     }
 
     public function branch()

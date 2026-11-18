@@ -27,18 +27,28 @@ class FleetSetupController extends Controller
     /**
      * Start page figures.
      *
-     * @response array{data: array{services_due: int, open_jobs: int, units: int, vehicles: int, generators: int, by_status: list<array{status: string, label: string, count: int}>, drivers: int, unassigned: int, due_soon: int, overdue: int, cost_this_year: float, cost_by_category: list<array{category: string, amount: float}>, due: list<array{kind: string, what: string, for: string, link: string, expires_on: string, days_left: int}>}}
+     * @response array{data: array{trips_today: int, on_the_road: int, to_confirm: int, requests_to_allocate: int, fuel_month_litres: float, fuel_month_amount: float, accidents_year: int, active_hires: int, top_costs: list<array{unit_id: int, unit: string, amount: float}>, services_due: int, open_jobs: int, units: int, vehicles: int, generators: int, by_status: list<array{status: string, label: string, count: int}>, drivers: int, unassigned: int, due_soon: int, overdue: int, cost_this_year: float, cost_by_category: list<array{category: string, amount: float}>, due: list<array{kind: string, what: string, for: string, link: string, expires_on: string, days_left: int}>}}
      */
     public function dashboard(Request $request): JsonResponse
     {
         abort_unless($this->access->sees($request->user()), 403);
         $units = FleetUnit::where('status', '!=', 'disposed')->withCount(['assignments as active' => fn ($q) => $q->whereNull('ended_on')])->get();
         $due = $this->calendar(60);
-        $costs = Cost::whereYear('date', today()->year)->whereHas('unit', fn ($q) => $q)->get();
+        $costs = Cost::with('unit')->whereYear('date', today()->year)->whereHas('unit')->get();
 
         $mnt = app(\Modules\Fleet\Actions\ManageMaintenance::class);
 
         return response()->json(['data' => [
+            'trips_today' => \Modules\Fleet\Models\Trip::whereDate('departs_at', today())->where('status', '!=', 'cancelled')->count(),
+            'on_the_road' => \Modules\Fleet\Models\Trip::where('status', 'started')->count(),
+            'to_confirm' => \Modules\Fleet\Models\Trip::where('status', 'completed')->count(),
+            'requests_to_allocate' => \Modules\Fleet\Models\TransportRequest::where('status', 'approved')->count(),
+            'fuel_month_litres' => round((float) \Modules\Fleet\Models\FuelRequest::where('status', 'issued')->where('issued_at', '>=', today()->startOfMonth())->sum('issued_litres'), 2),
+            'fuel_month_amount' => round((float) \Modules\Fleet\Models\FuelRequest::where('status', 'issued')->where('issued_at', '>=', today()->startOfMonth())->sum('amount'), 2),
+            'accidents_year' => \Modules\Fleet\Models\Accident::whereYear('happened_at', today()->year)->count(),
+            'active_hires' => \Modules\Fleet\Models\Hire::where('status', 'active')->count(),
+            'top_costs' => $costs->groupBy('fleet_unit_id')->map(fn ($g, $id) => ['unit_id' => (int) $id, 'unit' => (string) $g->first()->unit?->label(), 'amount' => round($g->sum('amount'), 2)])
+                ->sortByDesc('amount')->take(5)->values(),
             'services_due' => $units->sum(fn ($u) => $mnt->due($u)->where('state', '!=', 'ok')->count()),
             'open_jobs' => \Modules\Fleet\Models\Maintenance::whereIn('status', \Modules\Fleet\Models\Maintenance::OPEN)->count(),
             'units' => $units->count(), 'vehicles' => $units->where('kind', 'vehicle')->count(), 'generators' => $units->where('kind', 'generator')->count(),

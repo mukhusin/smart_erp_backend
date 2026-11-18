@@ -138,6 +138,11 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Fleet phase 5: hire in and reports (2026-11-18)
+
+`php artisan migrate`: hires and hire payments, `fleet_units.fleet_hire_id`. Fleet reports appear under Reports →
+Fleet for users with `fleet.view` or `fleet.manage`. `fleet:daily` also ends hires on their last day.
+
 ## Fleet phase 4: maintenance (2026-11-18)
 
 `php artisan migrate`: service plans, maintenance jobs and lines, accidents; adds approvals "Repair request" (head of
