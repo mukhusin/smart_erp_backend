@@ -69,21 +69,7 @@ class TeamController extends Controller
             $attendance ? $group('absent', 'Absent', $pick($att->where('status', 'Absent'), fn ($t) => $t->planned_code)) : null,
         ]));
 
-        $soon = $today->copy()->addDays(14);
-        $contracts = EmployeeContract::with('natureOfContract')->whereIn('employee_id', $ids)->where('is_active', true)->whereDate('end_date', '>=', $today)->whereDate('end_date', '<=', $today->copy()->addDays(90))
-            ->get()->filter(fn ($c) => ! $c->natureOfContract?->is_permanent)->sortBy('end_date');
-        $licences = EmployeeLicence::with('professionalLicence')->whereIn('employee_id', $ids)->whereNotNull('end_date')->whereDate('end_date', '<=', $today->copy()->addDays(60))->get()->sortBy('end_date');
-        $limited = $this->heads->limited($user);
-        $upcoming = array_values(array_filter([
-            $group('leave_starting', 'Leave starting (2 weeks)', $pick(EmpLeave::with('leaveType')->whereIn('employee_id', $ids)->whereIn('status', [EmpLeave::APPROVED, EmpLeave::PENDING])
-                ->whereDate('start_date', '>', $today)->whereDate('start_date', '<=', $soon)->orderBy('start_date')->get(), fn ($l) => ($l->leaveType?->name ?? 'Leave').' from '.$d($l->start_date).($l->status === EmpLeave::PENDING ? ' (waiting)' : ''))),
-            $limited ? null : $group('contracts', 'Contracts ending (90 days)', $pick($contracts, fn ($c) => 'ends '.$d($c->end_date))),
-            $limited ? null : $group('licences', 'Licences expiring (60 days)', $pick($licences, fn ($l) => ($l->professionalLicence?->name ?? 'Licence').($l->end_date->lt($today) ? ' expired ' : ' expires ').$d($l->end_date))),
-            $limited ? null : $group('probation', 'Probation ending (30 days)', $staff->filter(fn ($e) => $e->probation_end && $e->probation_end->between($today, $today->copy()->addDays(30)) && $e->employment_status === 'probation')
-                ->sortBy('probation_end')->map(fn ($e) => $person($e, 'ends '.$d($e->probation_end)))),
-            $group('birthdays', 'Birthdays (7 days)', $staff->filter(fn ($e) => $e->date_of_birth && $this->birthdayWithin($e->date_of_birth, $today, 7))
-                ->sortBy(fn ($e) => $this->nextBirthday($e->date_of_birth, $today))->map(fn ($e) => $person($e, $d($this->nextBirthday($e->date_of_birth, $today))))),
-        ]));
+        $upcoming = $this->upcoming($user, $staff, $today, 60);
 
         $h = $this->heads->of($user);
         $rules = $this->scope->rules($user);
@@ -124,6 +110,50 @@ class TeamController extends Controller
             ],
             'attendance' => $attendance,
         ]]);
+    }
+
+    /**
+     * Everyone in one "Coming up" group of the user's team, for the full list.
+     *
+     * @response array{data: array{key: string, label: string, count: int, people: list<array{id: int, name: string, employee_no: string|null, detail: string|null}>}}
+     */
+    public function upcomingGroup(Request $request, string $key): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($this->scope->canBrowse($user) || $this->heads->isHead($user), 403);
+        $staff = $this->scope->apply(Employee::query()->onDuty()->with('jobPosition'), $user)->get()->keyBy('id');
+        $group = collect($this->upcoming($user, $staff, Carbon::today(), null))->firstWhere('key', $key);
+        abort_unless($group, 404);
+
+        return response()->json(['data' => $group]);
+    }
+
+    private function upcoming($user, Collection $staff, Carbon $today, ?int $limit): array
+    {
+        $ids = $staff->keys();
+        $person = fn ($e, ?string $detail = null) => ['id' => $e->id, 'name' => $e->full_name, 'employee_no' => $e->employee_no, 'detail' => $detail];
+        $group = fn (string $key, string $label, Collection $people) => ['key' => $key, 'label' => $label, 'count' => $people->count(), 'people' => ($limit ? $people->take($limit) : $people)->values()->all()];
+        $d = fn ($date) => Carbon::parse($date)->format('d M');
+        $pick = fn ($rows, $fn) => $rows->map(fn ($r) => $staff->has($r->employee_id) ? $person($staff[$r->employee_id], $fn($r)) : null)->filter();
+
+        $soon = $today->copy()->addDays(14);
+        $contracts = EmployeeContract::with('natureOfContract')->whereIn('employee_id', $ids)->where('is_active', true)->whereDate('end_date', '>=', $today)->whereDate('end_date', '<=', $today->copy()->addDays(90))
+            ->get()->filter(fn ($c) => ! $c->natureOfContract?->is_permanent)->sortBy('end_date');
+        $licences = EmployeeLicence::with('professionalLicence')->whereIn('employee_id', $ids)->whereNotNull('end_date')->whereDate('end_date', '<=', $today->copy()->addDays(60))->get()->sortBy('end_date');
+        $limited = $this->heads->limited($user);
+        $upcoming = array_values(array_filter([
+            $group('leave_starting', 'Leave starting (2 weeks)', $pick(EmpLeave::with('leaveType')->whereIn('employee_id', $ids)->whereIn('status', [EmpLeave::APPROVED, EmpLeave::PENDING])
+                ->whereDate('start_date', '>', $today)->whereDate('start_date', '<=', $soon)->orderBy('start_date')->get(), fn ($l) => ($l->leaveType?->name ?? 'Leave').' from '.$d($l->start_date).($l->status === EmpLeave::PENDING ? ' (waiting)' : ''))),
+            $limited ? null : $group('contracts', 'Contracts ending (90 days)', $pick($contracts, fn ($c) => 'ends '.$d($c->end_date))),
+            $limited ? null : $group('licences', 'Licences expiring (60 days)', $pick($licences, fn ($l) => ($l->professionalLicence?->name ?? 'Licence').($l->end_date->lt($today) ? ' expired ' : ' expires ').$d($l->end_date))),
+            $limited ? null : $group('probation', 'Probation ending (30 days)', $staff->filter(fn ($e) => $e->probation_end && $e->probation_end->between($today, $today->copy()->addDays(30)) && $e->employment_status === 'probation')
+                ->sortBy('probation_end')->map(fn ($e) => $person($e, 'ends '.$d($e->probation_end)))),
+            $group('birthdays', 'Birthdays (7 days)', $staff->filter(fn ($e) => $e->date_of_birth && $this->birthdayWithin($e->date_of_birth, $today, 7))
+                ->sortBy(fn ($e) => $this->nextBirthday($e->date_of_birth, $today))->map(fn ($e) => $person($e, $d($this->nextBirthday($e->date_of_birth, $today))))),
+        ]));
+
+
+        return $upcoming;
     }
 
     private function nextBirthday(Carbon $born, Carbon $today): Carbon

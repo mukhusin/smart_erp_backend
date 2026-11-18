@@ -108,6 +108,9 @@ class HeadsAndRostersTest extends TestCase
         $this->assertSame(['Nursing'], $team['scope']);
         $this->assertSame(5, $team['staff']);
         $this->assertSame(5, collect($team['upcoming'])->firstWhere('key', 'birthdays')['count']);
+        $this->getJson('/api/v1/team/upcoming/birthdays')->assertOk()->assertJsonPath('data.count', 5)->assertJsonCount(5, 'data.people');
+        $this->getJson('/api/v1/team/upcoming/nothing')->assertNotFound();
+        $this->actingAs($this->users['asha'])->getJson('/api/v1/team/upcoming/birthdays')->assertForbidden();
         $this->actingAs($this->users['sister'])->getJson('/api/v1/team/summary')->assertOk()->assertJsonPath('data.staff', 3);
         $this->actingAs($this->users['asha'])->getJson('/api/v1/team/summary')->assertForbidden();
     }

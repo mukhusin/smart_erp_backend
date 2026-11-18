@@ -246,6 +246,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'module:hr', 'hr.scope'])->name
 });
 
 Route::get('team/summary', [\Modules\Hr\Http\Controllers\Api\TeamController::class, 'summary'])->middleware(['auth:sanctum', 'module:hr'])->name('team.summary');
+Route::get('team/upcoming/{key}', [\Modules\Hr\Http\Controllers\Api\TeamController::class, 'upcomingGroup'])->middleware(['auth:sanctum', 'module:hr'])->name('team.upcoming');
 
 Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.')->group(function () {
     Route::get('summary', [SelfSummaryController::class, 'show'])->name('summary');
