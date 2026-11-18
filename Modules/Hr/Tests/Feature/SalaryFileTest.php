@@ -75,6 +75,7 @@ class SalaryFileTest extends TestCase
         $this->getJson('/api/v1/payroll/salary-files')->assertOk()->assertJsonPath('data.0.label', 'April 2026')->assertJsonPath('meta.total', 1);
         $rowId = $this->getJson("/api/v1/payroll/salary-files/{$id}/rows?search=Asha")->assertOk()->assertJsonPath('data.0.employee_no', 'ST1741')->json('data.0.id');
         $this->get("/api/v1/payroll/salary-files/{$id}/rows/{$rowId}/pdf")->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->getJson("/api/v1/payroll/salary-files/{$id}/rows/{$rowId}")->assertOk()->assertJsonPath('data.employee.employee_no', 'ST1741');
 
         $sheet = app(CompanyContext::class)->run($this->company, function () {
             $s = PayrollSheet::create(['name' => 'Payroll March 2026', 'year' => '2026', 'month' => '3', 'payroll_from_date' => '2026-02-26', 'payroll_to_date' => '2026-03-25', 'status' => 'approved']);

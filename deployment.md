@@ -138,6 +138,11 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Notice expiry, salary file rows (2026-11-18)
+
+`php artisan migrate` adds `messagings.expires_at`. In-app notices past that time drop out of notifications.
+Salary file rows open the payslip in a popup (`GET payroll/salary-files/{upload}/rows/{row}`).
+
 ## Auditor period, reorder requisitions, asset labels (2026-11-18)
 
 `php artisan migrate` adds `inventory_settings.auto_requisition` (off). Switch it on in Stores → Settings when wanted;

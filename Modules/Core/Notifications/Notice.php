@@ -10,7 +10,7 @@ class Notice extends Notification
 {
     use Queueable;
 
-    public function __construct(public readonly string $title, public readonly string $message, public readonly ?string $link = null, public readonly string $icon = 'bell') {}
+    public function __construct(public readonly string $title, public readonly string $message, public readonly ?string $link = null, public readonly string $icon = 'bell', public readonly ?string $expiresAt = null) {}
 
     public function via(object $notifiable): array
     {
@@ -19,6 +19,6 @@ class Notice extends Notification
 
     public function toArray(object $notifiable): array
     {
-        return ['title' => $this->title, 'message' => $this->message, 'link' => $this->link, 'icon' => $this->icon];
+        return array_filter(['title' => $this->title, 'message' => $this->message, 'link' => $this->link, 'icon' => $this->icon, 'expires_at' => $this->expiresAt], fn ($v) => $v !== null) + ['link' => null];
     }
 }

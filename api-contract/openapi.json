@@ -47881,6 +47881,13 @@
                                                             "null"
                                                         ]
                                                     },
+                                                    "expires_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "description": "In-app notices: when they leave the notifications."
+                                                    },
                                                     "popup": {
                                                         "type": [
                                                             "object",
@@ -47930,6 +47937,7 @@
                                                     "skipped",
                                                     "created_by",
                                                     "created_at",
+                                                    "expires_at",
                                                     "popup"
                                                 ]
                                             }
@@ -48082,6 +48090,13 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "expires_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "In-app notices: when they leave the notifications."
+                                                },
                                                 "popup": {
                                                     "type": [
                                                         "object",
@@ -48131,6 +48146,7 @@
                                                 "skipped",
                                                 "created_by",
                                                 "created_at",
+                                                "expires_at",
                                                 "popup"
                                             ]
                                         }
@@ -48373,6 +48389,13 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "expires_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "In-app notices: when they leave the notifications."
+                                                },
                                                 "popup": {
                                                     "type": [
                                                         "object",
@@ -48422,6 +48445,7 @@
                                                 "skipped",
                                                 "created_by",
                                                 "created_at",
+                                                "expires_at",
                                                 "popup"
                                             ]
                                         }
@@ -48573,6 +48597,13 @@
                                                         "null"
                                                     ]
                                                 },
+                                                "expires_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "In-app notices: when they leave the notifications."
+                                                },
                                                 "popup": {
                                                     "type": [
                                                         "object",
@@ -48622,6 +48653,7 @@
                                                 "skipped",
                                                 "created_by",
                                                 "created_at",
+                                                "expires_at",
                                                 "popup"
                                             ]
                                         }
@@ -64606,6 +64638,7 @@
         "/me/notifications": {
             "get": {
                 "operationId": "me.notifications",
+                "description": "Notices past their expiry (staff messages with an end date) are left out.",
                 "summary": "Latest notifications and the number unread",
                 "tags": [
                     "Me: Notifications",
@@ -64650,6 +64683,12 @@
                                                     },
                                                     "created_at": {
                                                         "type": "string"
+                                                    },
+                                                    "expires_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -64659,7 +64698,8 @@
                                                     "link",
                                                     "icon",
                                                     "read",
-                                                    "created_at"
+                                                    "created_at",
+                                                    "expires_at"
                                                 ]
                                             }
                                         },
@@ -79200,6 +79240,211 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/payroll/salary-files/{upload}/rows/{row}": {
+            "get": {
+                "operationId": "payroll.salary-files.row",
+                "summary": "One employee's payslip from the salary file, for the screen",
+                "tags": [
+                    "Payroll: Salary files",
+                    "SalaryFile"
+                ],
+                "parameters": [
+                    {
+                        "name": "upload",
+                        "in": "path",
+                        "required": true,
+                        "description": "The upload ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "row",
+                        "in": "path",
+                        "required": true,
+                        "description": "The row ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sheet": {
+                                                    "type": "string"
+                                                },
+                                                "period": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "source": {
+                                                    "type": "string"
+                                                },
+                                                "employee": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "employee_no": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "position": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "department": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "bank": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "account": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "employee_no",
+                                                        "position",
+                                                        "department",
+                                                        "bank",
+                                                        "account"
+                                                    ]
+                                                },
+                                                "earnings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "deductions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "employer": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "amount"
+                                                        ]
+                                                    }
+                                                },
+                                                "gross": {
+                                                    "type": "number"
+                                                },
+                                                "taxable": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "total_deductions": {
+                                                    "type": "number"
+                                                },
+                                                "net": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "required": [
+                                                "sheet",
+                                                "period",
+                                                "status",
+                                                "source",
+                                                "employee",
+                                                "earnings",
+                                                "deductions",
+                                                "employer",
+                                                "gross",
+                                                "taxable",
+                                                "total_deductions",
+                                                "net"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -115714,6 +115959,13 @@
                     "popup": {
                         "type": "boolean"
                     },
+                    "expires_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
                     "popup_from": {
                         "type": [
                             "string",
@@ -115820,6 +116072,14 @@
                     "popup": {
                         "type": "boolean",
                         "description": "In-app notices only: also show as a pop-up to the recipients between popup_from and popup_until (one pop-up at a time)."
+                    },
+                    "expires_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "In-app notices only: after this the notice leaves the recipients' notifications."
                     },
                     "popup_from": {
                         "type": [

@@ -158,6 +158,8 @@ class StaffMessageController extends Controller
             'skipped' => (int) $m->skipped_count,
             'created_by' => $m->creator?->username,
             'created_at' => $m->created_at?->toIso8601String(),
+            /** In-app notices: when they leave the notifications. */
+            'expires_at' => $m->expires_at?->toIso8601String(),
             /** In-app notices shown as a pop-up; `live` = showing now. */
             'popup' => $m->type === Messaging::TYPE_NOTICE ? [
                 'active' => (bool) $m->popup_active, 'from' => $m->popup_from?->toIso8601String(), 'until' => $m->popup_until?->toIso8601String(),

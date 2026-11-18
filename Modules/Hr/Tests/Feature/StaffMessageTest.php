@@ -80,6 +80,12 @@ class StaffMessageTest extends TestCase
         $this->actingAs($this->admin)->postJson('/api/v1/hr/messages', $this->sms(['type' => 'Notice', 'subject' => 'Meeting', 'message' => 'Today 2pm']))
             ->assertCreated()->assertJsonPath('data.recipients', 1);
         $this->assertSame('Meeting', $this->ashaUser->notifications()->first()->data['title']);
+
+        $this->postJson('/api/v1/hr/messages', $this->sms(['type' => 'Notice', 'subject' => 'Short notice', 'message' => 'Fire drill now', 'expires_at' => now()->addHours(2)->format('Y-m-d H:i')]))
+            ->assertCreated()->assertJsonPath('data.expires_at', fn ($v) => $v !== null);
+        $this->actingAs($this->ashaUser)->getJson('/api/v1/me/notifications')->assertJsonCount(2, 'data')->assertJsonPath('meta.unread', 2);
+        $this->travel(3)->hours();
+        $this->getJson('/api/v1/me/notifications')->assertJsonCount(1, 'data')->assertJsonPath('meta.unread', 1)->assertJsonPath('data.0.title', 'Meeting');
     }
 
     public function test_notice_pop_up_shows_to_recipients_one_at_a_time_and_can_be_switched_off(): void

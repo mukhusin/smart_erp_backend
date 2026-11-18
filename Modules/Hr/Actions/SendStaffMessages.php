@@ -94,6 +94,7 @@ class SendStaffMessages
                 'popup_active' => $popup,
                 'popup_from' => $popup ? $data['popup_from'] : null,
                 'popup_until' => $popup ? $data['popup_until'] : null,
+                'expires_at' => $data['type'] === Messaging::TYPE_NOTICE ? ($data['expires_at'] ?? null) : null,
             ]);
 
             foreach ($reachable as $employee) {
@@ -184,7 +185,7 @@ class SendStaffMessages
             Messaging::TYPE_EMAIL => $this->each($messaging, fn (MessageRecipient $r, string $company) => Mail::to($r->recipient_address)
                 ->send(new StaffMessageMail($messaging->subject ?? 'Message', $r->individual_message ?? $messaging->message, $company))),
             Messaging::TYPE_NOTICE => $this->each($messaging, fn (MessageRecipient $r) => $r->employee?->user?->notify(
-                new Notice($messaging->subject ?? 'Message', $r->individual_message ?? $messaging->message, null, 'megaphone'))),
+                new Notice($messaging->subject ?? 'Message', $r->individual_message ?? $messaging->message, null, 'megaphone', $messaging->expires_at?->format('Y-m-d H:i:s')))),
         };
 
         $failed = $messaging->recipients()->where('status', MessageRecipient::STATUS_FAILED)->count();

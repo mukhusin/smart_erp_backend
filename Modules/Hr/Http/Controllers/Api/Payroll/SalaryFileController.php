@@ -140,6 +140,18 @@ class SalaryFileController extends Controller
     }
 
     /**
+     * One employee's payslip from the salary file, for the screen.
+     *
+     * @response array{data: array{sheet: string, period: string, status: string, source: string, employee: array{name: string|null, employee_no: string|null, position: string|null, department: string|null, bank: string|null, account: string|null}, earnings: list<array{label: string, amount: float}>, deductions: list<array{label: string, amount: float}>, employer: list<array{label: string, amount: float}>, gross: float, taxable: float|null, total_deductions: float, net: float}}
+     */
+    public function row(UploadedPayroll $upload, UploadedPayrollRow $row, Payslip $payslip): JsonResponse
+    {
+        abort_unless($row->uploaded_payroll_id === $upload->id, 404);
+
+        return response()->json(['data' => $payslip->screen($payslip->forRow($row))]);
+    }
+
+    /**
      * Print one employee's payslip from the salary file.
      */
     public function pdf(Request $request, UploadedPayroll $upload, UploadedPayrollRow $row, Payslip $payslip, PdfDocument $pdf): Response

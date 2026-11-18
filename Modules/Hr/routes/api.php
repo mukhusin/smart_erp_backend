@@ -436,6 +436,7 @@ Route::prefix('payroll')->middleware(['auth:sanctum', 'module:payroll'])->name('
         Route::get('salary-files', [SalaryFileController::class, 'index'])->name('salary-files.index');
         Route::get('salary-files/template', [SalaryFileController::class, 'template'])->name('salary-files.template');
         Route::get('salary-files/{upload}/rows', [SalaryFileController::class, 'rows'])->name('salary-files.rows');
+        Route::get('salary-files/{upload}/rows/{row}', [SalaryFileController::class, 'row'])->name('salary-files.row');
         Route::get('salary-files/{upload}/rows/{row}/pdf', [SalaryFileController::class, 'pdf'])->name('salary-files.pdf');
         Route::get('sheets/{sheet}/compare', [PayrollController::class, 'compare'])->name('sheets.compare');
         Route::get('sheets/{sheet}/history', [PayrollController::class, 'history'])->name('sheets.history');
