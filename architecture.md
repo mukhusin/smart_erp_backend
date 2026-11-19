@@ -1314,5 +1314,6 @@ toasts. Terms are fixed in `i18n-glossary.md`; words without a natural Kiswahili
 Phase 1 is the foundation. Phase 2 (done): Self Service and Approvals screens; notices store the English template and
 values (`Notice(..., params: [...])`, data `t`) and `GET me/notifications` renders them in the reader's language
 (`Locale::render`); titles of all notices translate, messages once converted (self service, leave, payroll, payments);
-system SMS (contract reminders, renewals) go in the recipient's language (`Locale::text`). Next: HR, leave, attendance
-and payroll screens; then finance; then operations, reports and PDFs.
+system SMS (contract reminders, renewals) go in the recipient's language (`Locale::text`). Phase 3 (done): HR, leave,
+attendance, roster, overtime, allowances, loans, payroll, appraisals and My department screens; appraisal, payroll and
+task notices. Next: finance; then procurement, stores, assets, fleet, reports and PDFs.

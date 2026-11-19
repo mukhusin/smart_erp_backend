@@ -54,7 +54,8 @@ class ManageCycles
                 ->whereNotIn('id', $existing)->get();
             foreach ($staff as $e) {
                 Appraisal::create(['appraisal_cycle_id' => $cycle->id, 'employee_id' => $e->id, 'department_id' => $e->department_id, 'status' => 'open']);
-                $e->user?->notify(new Notice('Appraisal opened', "Your appraisal for {$cycle->name} is open.".($cycle->self_due ? ' Send your self-assessment by '.$cycle->self_due->format('d M Y').'.' : ''), '/appraisals/mine', 'star-half'));
+                $e->user?->notify(new Notice('Appraisal opened', $cycle->self_due ? 'Your appraisal for :name is open. Send your self-assessment by :date.' : 'Your appraisal for :name is open.', '/appraisals/mine', 'star-half',
+                    params: ['name' => $cycle->name, 'date' => $cycle->self_due?->format('d M Y')]));
             }
 
             return $staff->count();

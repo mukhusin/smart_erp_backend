@@ -80,14 +80,15 @@ class ManageAppraisals
         $a->load('scores', 'cycle');
         $final = $this->scoring->final($a);
         $a->update(['status' => 'acknowledge', 'final_score' => $final, 'rating' => $a->cycle->band($final)]);
-        $a->employee?->user?->notify(new Notice('Appraisal completed', "Your appraisal for {$a->cycle->name} is complete".($final !== null ? ": {$final}%" : '').'. Read it and acknowledge.', "/appraisals/{$a->id}", 'star-half'));
+        $a->employee?->user?->notify(new Notice('Appraisal completed', $final !== null ? 'Your appraisal for :name is complete: :score%. Read it and acknowledge.' : 'Your appraisal for :name is complete. Read it and acknowledge.', "/appraisals/{$a->id}", 'star-half',
+            params: ['name' => $a->cycle->name, 'score' => $final]));
     }
 
     public function returned(Appraisal $a, ?string $comment, bool $withdrawn): void
     {
         $a->update(['status' => $withdrawn ? 'open' : 'returned', 'decision_comment' => $withdrawn ? null : $comment]);
         if (! $withdrawn) {
-            $a->employee?->user?->notify(new Notice('Appraisal returned', "Your appraisal for {$a->cycle->name} was returned: {$comment}", "/appraisals/{$a->id}", 'arrow-counterclockwise'));
+            $a->employee?->user?->notify(new Notice('Appraisal returned', 'Your appraisal for :name was returned: :reason', "/appraisals/{$a->id}", 'arrow-counterclockwise', params: ['name' => $a->cycle->name, 'reason' => $comment]));
         }
     }
 
@@ -111,7 +112,7 @@ class ManageAppraisals
             throw ValidationException::withMessages(['appraisal' => 'You cannot record the mid-year review of this appraisal now.']);
         }
         $a->update(['mid_year_comment' => $comment, 'mid_year_by' => $by->id, 'mid_year_at' => now()]);
-        $a->employee?->user?->notify(new Notice('Mid-year review', "{$by->display_name} recorded your mid-year review.", "/appraisals/{$a->id}", 'star-half'));
+        $a->employee?->user?->notify(new Notice('Mid-year review', ':name recorded your mid-year review.', "/appraisals/{$a->id}", 'star-half', params: ['name' => $by->display_name]));
 
         return $a;
     }

@@ -27,15 +27,15 @@ class TasksDailyCommand extends Command
 
                 Task::with(['employee.user', 'creator'])->whereIn('status', ['todo', 'in_progress', 'returned'])->whereDate('due_date', today()->addDay())->get()
                     ->each(function (Task $t) use (&$reminded) {
-                        $t->employee?->user?->notify(new Notice('Task due tomorrow', "{$t->title} is due tomorrow ({$t->progress}% done).", "/tasks/{$t->id}", 'alarm'));
+                        $t->employee?->user?->notify(new Notice('Task due tomorrow', ':title is due tomorrow (:progress% done).', "/tasks/{$t->id}", 'alarm', params: ['title' => $t->title, 'progress' => $t->progress]));
                         $reminded++;
                     });
 
                 Task::with(['employee.user', 'creator'])->whereIn('status', ['todo', 'in_progress', 'returned'])->whereDate('due_date', today()->subDay())->get()
                     ->each(function (Task $t) use (&$reminded) {
-                        $t->employee?->user?->notify(new Notice('Task overdue', "{$t->title} was due yesterday ({$t->progress}% done).", "/tasks/{$t->id}", 'exclamation-triangle'));
+                        $t->employee?->user?->notify(new Notice('Task overdue', ':title was due yesterday (:progress% done).', "/tasks/{$t->id}", 'exclamation-triangle', params: ['title' => $t->title, 'progress' => $t->progress]));
                         if ($t->assignedByOther()) {
-                            $t->creator?->notify(new Notice('Task overdue', "{$t->employee?->full_name}: {$t->title} was due yesterday ({$t->progress}% done).", "/tasks/{$t->id}", 'exclamation-triangle'));
+                            $t->creator?->notify(new Notice('Task overdue', ':name: :title was due yesterday (:progress% done).', "/tasks/{$t->id}", 'exclamation-triangle', params: ['name' => $t->employee?->full_name, 'title' => $t->title, 'progress' => $t->progress]));
                         }
                         $reminded++;
                     });

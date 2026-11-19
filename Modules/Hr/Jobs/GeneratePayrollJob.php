@@ -45,7 +45,8 @@ class GeneratePayrollJob implements ShouldBeUnique, ShouldQueue
             $sheet->forceFill(['processing_started_at' => null])->save();
             $done = $payroll->generate($sheet->refresh());
             $done->forceFill(['processing_error' => null])->save();
-            User::find($this->userId)?->notify(new Notice('Payroll ready', "{$done->name} is worked out: {$done->employees_count} staff, net ".number_format((float) $done->net_total, 2).'.', "/payroll/sheets/{$done->id}", 'cash-stack'));
+            User::find($this->userId)?->notify(new Notice('Payroll ready', ':name is worked out: :count staff, net :net.', "/payroll/sheets/{$done->id}", 'cash-stack',
+                params: ['name' => $done->name, 'count' => $done->employees_count, 'net' => number_format((float) $done->net_total, 2)]));
         });
     }
 
@@ -58,6 +59,6 @@ class GeneratePayrollJob implements ShouldBeUnique, ShouldQueue
         $reason = $e instanceof ValidationException ? collect($e->errors())->flatten()->join(' ') : 'Something went wrong while working out the payroll. Try again or contact support.';
         $sheet->forceFill(['processing_started_at' => null, 'processing_error' => $reason])->save();
         report($e);
-        app(CompanyContext::class)->run(Company::find($sheet->company_id), fn () => User::find($this->userId)?->notify(new Notice('Payroll not worked out', "{$sheet->name}: {$reason}", "/payroll/sheets/{$sheet->id}", 'exclamation-triangle')));
+        app(CompanyContext::class)->run(Company::find($sheet->company_id), fn () => User::find($this->userId)?->notify(new Notice('Payroll not worked out', ':name: :reason', "/payroll/sheets/{$sheet->id}", 'exclamation-triangle', params: ['name' => $sheet->name, 'reason' => $reason])));
     }
 }
