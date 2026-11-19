@@ -38,14 +38,14 @@ class TeamController extends Controller
     /**
      * Today, what is coming up, rosters and this month's overtime and allowances of the user's team.
      *
-     * @response array{data: array{scope: list<string>, is_head: bool, staff: int, today: list<array{key: string, label: string, count: int, people: list<array{id: int, name: string, employee_no: string|null, detail: string|null}>}>, upcoming: list<array{key: string, label: string, count: int, people: list<array{id: int, name: string, employee_no: string|null, detail: string|null}>}>, rosters: list<array{id: int, title: string, kind: string, status: string, status_label: string, from_date: string, to_date: string, pending_changes: int, link: string}>, month: array{label: string, overtime_hours: float, overtime_amount: float, overtime_pending: int, allowance_items: float, allowance_amount: float, allowance_pending: int, lost_hours: float|null}, attendance: bool}}
+     * @response array{data: array{scope: list<string>, is_head: bool, staff: int, today: list<array{key: string, label: string, count: int, people: list<array{id: int, name: string, employee_no: string|null, detail: string|null}>}>, upcoming: list<array{key: string, label: string, count: int, people: list<array{id: int, name: string, employee_no: string|null, detail: string|null, department: string|null, position: string|null}>}>, rosters: list<array{id: int, title: string, kind: string, status: string, status_label: string, from_date: string, to_date: string, pending_changes: int, link: string}>, month: array{label: string, overtime_hours: float, overtime_amount: float, overtime_pending: int, allowance_items: float, allowance_amount: float, allowance_pending: int, lost_hours: float|null}, attendance: bool}}
      */
     public function summary(Request $request): JsonResponse
     {
         $user = $request->user();
         abort_unless($this->scope->canBrowse($user) || $this->heads->isHead($user), 403);
         $today = Carbon::today();
-        $staff = $this->scope->apply(Employee::query()->onDuty()->with('jobPosition'), $user)->get()->keyBy('id');
+        $staff = $this->scope->apply(Employee::query()->onDuty()->with(['jobPosition', 'department']), $user)->get()->keyBy('id');
         $ids = $staff->keys();
         $person = fn ($e, ?string $detail = null) => ['id' => $e->id, 'name' => $e->full_name, 'employee_no' => $e->employee_no, 'detail' => $detail];
         $group = fn (string $key, string $label, Collection $people) => ['key' => $key, 'label' => $label, 'count' => $people->count(), 'people' => $people->take(60)->values()->all()];
@@ -115,13 +115,13 @@ class TeamController extends Controller
     /**
      * Everyone in one "Coming up" group of the user's team, for the full list.
      *
-     * @response array{data: array{key: string, label: string, count: int, people: list<array{id: int, name: string, employee_no: string|null, detail: string|null}>}}
+     * @response array{data: array{key: string, label: string, count: int, people: list<array{id: int, name: string, employee_no: string|null, detail: string|null, department: string|null, position: string|null}>}}
      */
     public function upcomingGroup(Request $request, string $key): JsonResponse
     {
         $user = $request->user();
         abort_unless($this->scope->canBrowse($user) || $this->heads->isHead($user), 403);
-        $staff = $this->scope->apply(Employee::query()->onDuty()->with('jobPosition'), $user)->get()->keyBy('id');
+        $staff = $this->scope->apply(Employee::query()->onDuty()->with(['jobPosition', 'department']), $user)->get()->keyBy('id');
         $group = collect($this->upcoming($user, $staff, Carbon::today(), null))->firstWhere('key', $key);
         abort_unless($group, 404);
 
@@ -131,7 +131,8 @@ class TeamController extends Controller
     private function upcoming($user, Collection $staff, Carbon $today, ?int $limit): array
     {
         $ids = $staff->keys();
-        $person = fn ($e, ?string $detail = null) => ['id' => $e->id, 'name' => $e->full_name, 'employee_no' => $e->employee_no, 'detail' => $detail];
+        $person = fn ($e, ?string $detail = null) => ['id' => $e->id, 'name' => $e->full_name, 'employee_no' => $e->employee_no, 'detail' => $detail,
+            'department' => $e->department?->name, 'position' => $e->jobPosition?->title];
         $group = fn (string $key, string $label, Collection $people) => ['key' => $key, 'label' => $label, 'count' => $people->count(), 'people' => ($limit ? $people->take($limit) : $people)->values()->all()];
         $d = fn ($date) => Carbon::parse($date)->format('d M');
         $pick = fn ($rows, $fn) => $rows->map(fn ($r) => $staff->has($r->employee_id) ? $person($staff[$r->employee_id], $fn($r)) : null)->filter();

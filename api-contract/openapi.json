@@ -49501,13 +49501,27 @@
                                                                                 "string",
                                                                                 "null"
                                                                             ]
+                                                                        },
+                                                                        "department": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
+                                                                        },
+                                                                        "position": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ]
                                                                         }
                                                                     },
                                                                     "required": [
                                                                         "id",
                                                                         "name",
                                                                         "employee_no",
-                                                                        "detail"
+                                                                        "detail",
+                                                                        "department",
+                                                                        "position"
                                                                     ]
                                                                 }
                                                             }
@@ -49719,13 +49733,27 @@
                                                                     "string",
                                                                     "null"
                                                                 ]
+                                                            },
+                                                            "department": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "position": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
                                                             "id",
                                                             "name",
                                                             "employee_no",
-                                                            "detail"
+                                                            "detail",
+                                                            "department",
+                                                            "position"
                                                         ]
                                                     }
                                                 }
