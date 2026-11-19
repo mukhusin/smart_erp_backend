@@ -29,6 +29,8 @@ class MeResource extends JsonResource
                 'avatar_url' => $this->avatar_url,
                 /** System owner: manages client companies only, has no company. */
                 'is_platform_admin' => $this->isPlatformAdmin(),
+                /** The user's language (en or sw): their own choice, else the company default. */
+                'locale' => \App\Support\Locale::for($this->resource),
             ],
             'employee' => $employee ? [
                 'id' => $employee->id,

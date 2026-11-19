@@ -28,6 +28,7 @@ class User extends Authenticatable
         'access_expires_at',
         'full_name',
         'is_platform_admin',
+        'locale',
         'otp',
         'otp_expiry',
         'verification_code',

@@ -43,6 +43,7 @@ class CompanyResource extends JsonResource
             'city' => $this->city,
             'country' => $this->country,
             'currency' => $this->currency,
+            'default_locale' => $this->default_locale ?? 'en',
             'logo_url' => $this->logo_url,
             'login_background_url' => $this->login_background_url,
             /** #rrggbb or null (ERP default). */

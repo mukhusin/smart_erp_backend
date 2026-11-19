@@ -1299,3 +1299,16 @@ RFQ (`rfqs/{rfq}/pdf`, optional `supplier_id`) and quotation comparison (`rfqs/{
 party, document details, lines, totals, terms, the workflow decisions (step, decision, by, date, comment) and
 signature lines. When the company is VAT registered the LPO notes that VAT comes on the supplier's tax invoice and
 shows the company VRN.
+
+## English and Kiswahili (2026-11-19)
+
+Backend: `users.locale` (own choice) and `companies.default_locale` (en); `App\Support\Locale::for()` picks user, then
+company, then en; middleware `SetLocale` sets the request language (guests: `X-Locale` / `Accept-Language`).
+`PUT me/language`; `GET /me` returns `user.locale`. Kiswahili in `lang/sw/*.php` (validation, auth, passwords) and
+`lang/sw.json` (messages by their English text, `__('...')`). `Locale::as($user, fn)` runs SMS, PDFs and notifications in
+the recipient's language. Frontend: Transloco; the English text in the code is the key and the fallback, Kiswahili in
+`public/i18n/sw.json` (common) and later one file per module. `AppLanguage` keeps the choice in the browser and on the
+account (a choice made on the login page is saved at login) and sends `X-Locale`. Shared parts translate whatever
+English they are given: menus, page headers, tables (columns, search, empty states, paginator), dialogs, confirmations,
+toasts. Terms are fixed in `i18n-glossary.md`; words without a natural Kiswahili term stay in English.
+Phase 1 (this) is the foundation; next: self service, approvals and notifications/SMS; then HR, finance, operations.

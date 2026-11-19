@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsureSessionTimeout::class,
             \Modules\Audit\Http\Middleware\AuditorGuard::class,
             \Modules\Hr\Http\Middleware\EnsureProfileComplete::class,
+            \App\Http\Middleware\SetLocale::class,
         ]);
 
         // No login page in the backend: unauthenticated requests get 401 JSON.

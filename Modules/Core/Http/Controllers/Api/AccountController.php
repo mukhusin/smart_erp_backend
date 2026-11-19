@@ -29,6 +29,16 @@ class AccountController extends Controller
     private const ATTEMPTS = 5;
 
     /** Change my password (needs the current one). */
+    /** Change my language: en (English) or sw (Kiswahili). */
+    public function language(Request $request): JsonResponse
+    {
+        $data = $request->validate(['locale' => ['required', 'in:'.implode(',', array_keys(\App\Support\Locale::SUPPORTED))]]);
+        $request->user()->forceFill(['locale' => $data['locale']])->save();
+        app()->setLocale($data['locale']);
+
+        return response()->json(['data' => ['locale' => $data['locale']], 'message' => __('Language saved.')]);
+    }
+
     public function password(ChangePasswordRequest $request): Response
     {
         $user = $request->user();

@@ -29,6 +29,8 @@ class UpdateCompanyRequest extends FormRequest
             'city' => ['sometimes', 'required', 'string', 'max:100'],
             'country' => ['sometimes', 'required', 'string', 'max:100'],
             'currency' => ['sometimes', 'nullable', 'string', 'size:3'],
+            /** Language for users who have not chosen one, and for SMS to staff without an account: en or sw. */
+            'default_locale' => ['sometimes', 'in:en,sw'],
             'fiscal_year_start' => ['sometimes', 'nullable', 'string', 'max:10'],
             /** false = suspended: the company's users can no longer log in. */
             'is_active' => ['sometimes', 'boolean'],

@@ -65423,10 +65423,80 @@
                 }
             }
         },
+        "/me/language": {
+            "put": {
+                "operationId": "me.language",
+                "summary": "Change my language: en (English) or sw (Kiswahili)",
+                "tags": [
+                    "Me",
+                    "Account"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "locale": {
+                                        "type": "string",
+                                        "enum": [
+                                            "en",
+                                            "sw"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "locale"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "locale": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "locale"
+                                            ]
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Language saved."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/me/password": {
             "put": {
                 "operationId": "me.password",
-                "summary": "Change my password (needs the current one)",
                 "tags": [
                     "Me",
                     "Account"
@@ -112727,6 +112797,9 @@
                     "currency": {
                         "type": "string"
                     },
+                    "default_locale": {
+                        "type": "string"
+                    },
                     "logo_url": {
                         "type": [
                             "string",
@@ -112913,6 +112986,7 @@
                     "city",
                     "country",
                     "currency",
+                    "default_locale",
                     "logo_url",
                     "login_background_url",
                     "primary_color",
@@ -116800,6 +116874,10 @@
                             "is_platform_admin": {
                                 "type": "boolean",
                                 "description": "System owner: manages client companies only, has no company."
+                            },
+                            "locale": {
+                                "type": "string",
+                                "description": "The user's language (en or sw): their own choice, else the company default."
                             }
                         },
                         "required": [
@@ -116808,7 +116886,8 @@
                             "username",
                             "email",
                             "avatar_url",
-                            "is_platform_admin"
+                            "is_platform_admin",
+                            "locale"
                         ]
                     },
                     "employee": {
@@ -122762,6 +122841,14 @@
                         ],
                         "minLength": 3,
                         "maxLength": 3
+                    },
+                    "default_locale": {
+                        "type": "string",
+                        "description": "Language for users who have not chosen one, and for SMS to staff without an account: en or sw.",
+                        "enum": [
+                            "en",
+                            "sw"
+                        ]
                     },
                     "fiscal_year_start": {
                         "type": [

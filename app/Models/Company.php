@@ -14,7 +14,7 @@ class Company extends Model
     protected $fillable = [
         'name', 'slug', 'short_name', 'registration_number', 'tin',
         'phone', 'email', 'website', 'address', 'city', 'country',
-        'logo', 'login_background', 'primary_color', 'secondary_color', 'theme', 'currency', 'fiscal_year_start', 'is_active',
+        'logo', 'login_background', 'primary_color', 'secondary_color', 'theme', 'currency', 'fiscal_year_start', 'is_active', 'default_locale',
     ];
 
     /**
