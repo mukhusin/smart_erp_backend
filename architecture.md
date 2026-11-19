@@ -1290,3 +1290,12 @@ type) accrues rate % of the basic salary paid (`actual_basic_salary`, else `basi
 employee and sheet. Payroll posting adds Dr gratuity expense by department (budget line when found) / Cr gratuity
 payable when both accounts are set. The register settles everything open per employee: paid (Dr payable / Cr bank)
 or forfeited (Dr payable / Cr expense). Shown in the menu only when on (`features: gratuity`).
+
+## Printed procurement documents (2026-11-19)
+
+`resources/views/pdf/procurement.blade.php` on the shared letterhead layout; data from
+`Procurement/Support/ProcurementDocuments`: LPO (`orders/{order}/pdf`), goods received note (`receipts/{receipt}/pdf`),
+RFQ (`rfqs/{rfq}/pdf`, optional `supplier_id`) and quotation comparison (`rfqs/{rfq}/comparison/pdf`). Each shows the
+party, document details, lines, totals, terms, the workflow decisions (step, decision, by, date, comment) and
+signature lines. When the company is VAT registered the LPO notes that VAT comes on the supplier's tax invoice and
+shows the company VRN.

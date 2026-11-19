@@ -50,6 +50,26 @@ class QuotationController extends Controller
      *
      * @response array{data: array{id: int, number: string, title: string, closing_date: string, instructions: string|null, status: string, status_label: string, award_comment: string|null, waiting_for: string|null, min_quotes: int, requisition: array{id: int, number: string, title: string, department: string|null}, lines: list<array{id: int, description: string, unit: string|null, quantity: float, estimated_unit_cost: float}>, quotations: list<array{id: int, supplier_id: int, supplier: string|null, reference: string|null, valid_until: string|null, delivery_days: int|null, notes: string|null, responsive: bool, total: float, file_name: string|null, lines: list<array{purchase_requisition_line_id: int, unit_price: float, quantity: float, amount: float, awarded: bool, remarks: string|null}>}>, can: array{record: bool, award: bool, cancel: bool}}}
      */
+    /** Request for quotations as a PDF to send to suppliers; `supplier_id` addresses it to one supplier. */
+    #[\Dedoc\Scramble\Attributes\QueryParameter('supplier_id', type: 'integer')]
+    public function pdf(Request $request, QuotationRequest $rfq, \Modules\Core\Support\PdfDocument $pdf): \Illuminate\Http\Response
+    {
+        abort_unless($this->access->sees($request->user()), 403);
+        $to = $request->query('supplier_id') ? \Modules\Procurement\Models\Supplier::find((int) $request->query('supplier_id')) : null;
+
+        return $pdf->view($request->user(), 'pdf.procurement', "Request for quotations {$rfq->number}", \Modules\Procurement\Support\ProcurementDocuments::rfq($rfq, $to));
+    }
+
+    /** Quotation comparison sheet as a PDF for the evaluation file. */
+    public function comparisonPdf(Request $request, QuotationRequest $rfq, \Modules\Core\Support\PdfDocument $pdf): \Illuminate\Http\Response
+    {
+        $user = $request->user();
+        $approver = $rfq->workflow && ($rfq->workflow->steps->contains('acted_by', $user->id) || app(WorkflowEngine::class)->canAct($user, $rfq->workflow));
+        abort_unless($this->access->sees($user) || $approver, 403);
+
+        return $pdf->view($user, 'pdf.procurement', "Quotation comparison {$rfq->number}", \Modules\Procurement\Support\ProcurementDocuments::comparison($rfq), 'landscape');
+    }
+
     public function show(Request $request, QuotationRequest $rfq): JsonResponse
     {
         $user = $request->user();

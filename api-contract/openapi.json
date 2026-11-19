@@ -88423,7 +88423,6 @@
         "/procurement/receipts/{receipt}": {
             "get": {
                 "operationId": "procurement.receipts.show",
-                "summary": "A goods received note with inspection results, journal, supplier invoice match and the bill",
                 "tags": [
                     "Procurement: goods received",
                     "Receipt"
@@ -88466,10 +88465,7 @@
                                                             "type": "string"
                                                         },
                                                         "supplier": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         }
                                                     },
                                                     "required": [
@@ -88593,10 +88589,7 @@
                                                         "type": "object",
                                                         "properties": {
                                                             "description": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
+                                                                "type": "string"
                                                             },
                                                             "unit": {
                                                                 "type": [
@@ -88642,9 +88635,7 @@
                                                                     "array",
                                                                     "null"
                                                                 ],
-                                                                "items": {
-                                                                    "type": "string"
-                                                                }
+                                                                "items": {}
                                                             },
                                                             "amount": {
                                                                 "type": "number"
@@ -88718,6 +88709,74 @@
                                     "required": [
                                         "data"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/procurement/receipts/{receipt}/pdf": {
+            "get": {
+                "operationId": "procurement.receipts.pdf",
+                "summary": "Goods received note as a PDF",
+                "tags": [
+                    "Procurement: goods received",
+                    "Receipt"
+                ],
+                "parameters": [
+                    {
+                        "name": "receipt",
+                        "in": "path",
+                        "required": true,
+                        "description": "The receipt ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -90460,7 +90519,6 @@
         "/procurement/rfqs/{rfq}": {
             "get": {
                 "operationId": "procurement.rfqs.show",
-                "summary": "A request for quotations with the comparison: each requisition line against each supplier's price",
                 "tags": [
                     "Procurement: quotations",
                     "Quotation"
@@ -90539,10 +90597,7 @@
                                                             "type": "string"
                                                         },
                                                         "department": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         }
                                                     },
                                                     "required": [
@@ -90597,10 +90652,7 @@
                                                                 "type": "integer"
                                                             },
                                                             "supplier": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
+                                                                "type": "string"
                                                             },
                                                             "reference": {
                                                                 "type": [
@@ -90732,6 +90784,149 @@
                                     "required": [
                                         "data"
                                     ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/procurement/rfqs/{rfq}/pdf": {
+            "get": {
+                "operationId": "procurement.rfqs.pdf",
+                "summary": "Request for quotations as a PDF to send to suppliers; `supplier_id` addresses it to one supplier",
+                "tags": [
+                    "Procurement: quotations",
+                    "Quotation"
+                ],
+                "parameters": [
+                    {
+                        "name": "rfq",
+                        "in": "path",
+                        "required": true,
+                        "description": "The rfq ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "supplier_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                ""
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/procurement/rfqs/{rfq}/comparison/pdf": {
+            "get": {
+                "operationId": "procurement.rfqs.comparison-pdf",
+                "summary": "Quotation comparison sheet as a PDF for the evaluation file",
+                "tags": [
+                    "Procurement: quotations",
+                    "Quotation"
+                ],
+                "parameters": [
+                    {
+                        "name": "rfq",
+                        "in": "path",
+                        "required": true,
+                        "description": "The rfq ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         }

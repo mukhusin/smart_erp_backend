@@ -138,11 +138,7 @@ class OrderController extends Controller
     public function pdf(Request $request, PurchaseOrder $order, PdfDocument $pdf): Response
     {
         abort_unless($this->access->sees($request->user()), 403);
-        $o = $order->load(['supplier', 'lines.unit']);
-        $rows = $o->lines->map(fn ($l) => ['description' => $l->description, 'unit' => $l->unit?->code, 'quantity' => $l->quantity, 'unit_price' => number_format($l->unit_price, 2), 'amount' => number_format($l->amount, 2)])->all();
-        $rows[] = ['description' => 'Total', 'unit' => '', 'quantity' => '', 'unit_price' => '', 'amount' => number_format($o->total, 2)];
 
-        return $pdf->keyed($request->user(), "Purchase order {$o->number}", "To {$o->supplier->name} (TIN {$o->supplier->tin}) · dated ".$o->order_date->format('j M Y').($o->delivery_date ? ' · deliver by '.$o->delivery_date->format('j M Y') : ''),
-            [['key' => 'description', 'label' => 'Description'], ['key' => 'unit', 'label' => 'Unit'], ['key' => 'quantity', 'label' => 'Quantity'], ['key' => 'unit_price', 'label' => 'Unit price'], ['key' => 'amount', 'label' => 'Amount']], $rows);
+        return $pdf->view($request->user(), 'pdf.procurement', "Local purchase order {$order->number}", \Modules\Procurement\Support\ProcurementDocuments::order($order));
     }
 }

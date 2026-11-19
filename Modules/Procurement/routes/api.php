@@ -79,6 +79,8 @@ Route::prefix('procurement')->middleware(['auth:sanctum', 'module:procurement'])
 
     Route::get('rfqs', [QuotationController::class, 'index'])->name('rfqs.index');
     Route::get('rfqs/{rfq}', [QuotationController::class, 'show'])->name('rfqs.show');
+    Route::get('rfqs/{rfq}/pdf', [QuotationController::class, 'pdf'])->name('rfqs.pdf');
+    Route::get('rfqs/{rfq}/comparison/pdf', [QuotationController::class, 'comparisonPdf'])->name('rfqs.comparison-pdf');
     Route::post('rfqs/{rfq}/quotations', [QuotationController::class, 'record'])->name('rfqs.record');
     Route::get('rfqs/{rfq}/quotations/{quotation}/file', [QuotationController::class, 'file'])->name('rfqs.file');
     Route::post('rfqs/{rfq}/award', [QuotationController::class, 'award'])->name('rfqs.award');
@@ -96,6 +98,7 @@ Route::prefix('procurement')->middleware(['auth:sanctum', 'module:procurement'])
 
     Route::get('receipts', [ReceiptController::class, 'index'])->name('receipts.index');
     Route::get('receipts/{receipt}', [ReceiptController::class, 'show'])->name('receipts.show');
+    Route::get('receipts/{receipt}/pdf', [ReceiptController::class, 'pdf'])->name('receipts.pdf');
     Route::post('receipts/{receipt}/submit', [ReceiptController::class, 'submit'])->name('receipts.submit');
     Route::post('receipts/{receipt}/withdraw', [ReceiptController::class, 'withdraw'])->name('receipts.withdraw');
     Route::post('receipts/{receipt}/cancel', [ReceiptController::class, 'cancel'])->name('receipts.cancel');

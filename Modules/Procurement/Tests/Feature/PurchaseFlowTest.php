@@ -122,6 +122,8 @@ class PurchaseFlowTest extends TestCase
         $this->postJson("/api/v1/procurement/rfqs/{$rfq}/award", ['awards' => [['purchase_requisition_line_id' => $line, 'quotation_id' => $qa]]])->assertUnprocessable()->assertJsonValidationErrors(['comment']);
         $qb = $this->postJson("/api/v1/procurement/rfqs/{$rfq}/quotations", ['supplier_id' => $this->ids['supB'], 'delivery_days' => 7, 'lines' => [['purchase_requisition_line_id' => $line, 'unit_price' => 12000]]])->assertCreated()->json('data.id');
         $this->getJson("/api/v1/procurement/rfqs/{$rfq}")->assertJsonCount(2, 'data.quotations')->assertJsonPath('data.quotations.0.supplier', 'Beta Paper Ltd');
+        $this->get("/api/v1/procurement/rfqs/{$rfq}/pdf?supplier_id={$this->ids['supA']}")->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->get("/api/v1/procurement/rfqs/{$rfq}/comparison/pdf")->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->postJson("/api/v1/procurement/rfqs/{$rfq}/award", ['awards' => [['purchase_requisition_line_id' => $line, 'quotation_id' => $qb]]])->assertOk()->assertJsonPath('data.status', 'pending');
         $this->approve('quotation-award');
 
@@ -139,6 +141,7 @@ class PurchaseFlowTest extends TestCase
         $grn = $this->postJson("/api/v1/procurement/orders/{$po}/receipts", ['delivery_note' => 'DN-77', 'received_on' => '2026-11-18',
             'lines' => [['purchase_order_line_id' => $poLine, 'delivered_quantity' => 60, 'accepted_quantity' => 50, 'rejection_reason' => 'Wet boxes']]])->assertCreated()->json('data.id');
         $this->postJson("/api/v1/procurement/receipts/{$grn}/submit")->assertOk();
+        $this->get("/api/v1/procurement/receipts/{$grn}/pdf")->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->approve('goods-receipt');
         $f = $this->figures();
         $this->assertSame([600000.0, 120000.0], [(float) $f['actual'], (float) $f['committed']]);

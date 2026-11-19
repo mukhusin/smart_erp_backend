@@ -47,6 +47,16 @@ class ReceiptController extends Controller
      *
      * @response array{data: array{id: int, number: string, order: array{id: int, number: string, supplier: string|null}, store: string|null, delivery_note: string|null, received_on: string, notes: string|null, total: float, status: string, status_label: string, decision_comment: string|null, waiting_for: string|null, journal: array{id: int, reference_no: string|null}|null, supplier_invoice: string|null, invoice_date: string|null, invoice_amount: float|null, invoice_vat: float, matched: bool, payment_request: array{id: int, number: string, status_label: string}|null, lines: list<array{description: string|null, unit: string|null, ordered: float, unit_price: float, delivered_quantity: float, accepted_quantity: float, rejected_quantity: float, rejection_reason: string|null, batch_number: string|null, expiry_date: string|null, serials: list<string>|null, amount: float}>, can: array{submit: bool, withdraw: bool, cancel: bool, invoice: bool}}}
      */
+    /** Goods received note as a PDF. */
+    public function pdf(Request $request, GoodsReceipt $receipt, \Modules\Core\Support\PdfDocument $pdf): \Illuminate\Http\Response
+    {
+        $user = $request->user();
+        $approver = $receipt->workflow && ($receipt->workflow->steps->contains('acted_by', $user->id) || app(WorkflowEngine::class)->canAct($user, $receipt->workflow));
+        abort_unless($this->access->sees($user) || $this->access->canReceive($user, $receipt->store_id) || $this->access->canInvoice($user) || $approver, 403);
+
+        return $pdf->view($user, 'pdf.procurement', "Goods received note {$receipt->number}", \Modules\Procurement\Support\ProcurementDocuments::receipt($receipt), 'landscape');
+    }
+
     public function show(Request $request, GoodsReceipt $receipt): JsonResponse
     {
         $user = $request->user();
