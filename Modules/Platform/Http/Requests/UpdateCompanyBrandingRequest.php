@@ -17,7 +17,7 @@ class UpdateCompanyBrandingRequest extends FormRequest
     /** Multipart sends booleans as text ("true"/"false"/"1"/"0"). */
     protected function prepareForValidation(): void
     {
-        foreach (['remove_logo', 'remove_login_background'] as $flag) {
+        foreach (['remove_logo', 'remove_login_background', 'login_features'] as $flag) {
             if ($this->has($flag)) {
                 $this->merge([$flag => $this->boolean($flag)]);
             }
@@ -49,6 +49,8 @@ class UpdateCompanyBrandingRequest extends FormRequest
             'theme_cards' => ['sometimes', Rule::in(Company::THEME_AREAS['cards'])],
             /** Home page module tiles: brand (company colors) or module (each module's own color). */
             'theme_tiles' => ['sometimes', Rule::in(Company::THEME_AREAS['tiles'])],
+            /** Show the Smart ERP feature slides on this organization's login page (on by default). */
+            'login_features' => ['sometimes', 'boolean'],
         ];
     }
 }

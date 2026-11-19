@@ -68,6 +68,10 @@ class CompanyBrandingTest extends TestCase
             ->assertOk()->assertJsonPath('data.theme', ['sidebar' => 'solid', 'navbar' => 'plain', 'tables' => 'tinted', 'cards' => 'accent', 'tiles' => 'brand']);
         $this->post($url, ['theme_navbar' => 'solid'], $json)->assertOk()->assertJsonPath('data.theme.sidebar', 'solid')->assertJsonPath('data.theme.navbar', 'solid');
         $this->post($url, ['theme_tiles' => 'module'], $json)->assertOk()->assertJsonPath('data.theme.tiles', 'module');
+        $this->getJson("/api/v1/auth/login-branding?org={$company->slug}")->assertJsonPath('data.features', true);
+        $this->post($url, ['login_features' => 'false'], $json)->assertOk()->assertJsonPath('data.login_features', false)->assertJsonPath('data.theme.tiles', 'module');
+        $this->getJson("/api/v1/auth/login-branding?org={$company->slug}")->assertJsonPath('data.features', false);
+        $this->post($url, ['theme_navbar' => 'tinted'], $json)->assertOk()->assertJsonPath('data.login_features', false);
         $this->post($url, ['theme_cards' => 'solid', 'theme_sidebar' => 'neon', 'theme_tiles' => 'plain'], $json)
             ->assertUnprocessable()->assertJsonValidationErrors(['theme_cards', 'theme_sidebar', 'theme_tiles']);
 

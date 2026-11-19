@@ -112780,6 +112780,10 @@
                             "tiles"
                         ]
                     },
+                    "login_features": {
+                        "type": "boolean",
+                        "description": "Smart ERP feature slides on the login page."
+                    },
                     "fiscal_year_start": {
                         "type": "string"
                     },
@@ -112914,6 +112918,7 @@
                     "primary_color",
                     "secondary_color",
                     "theme",
+                    "login_features",
                     "fiscal_year_start",
                     "is_active",
                     "created_at"
@@ -116647,6 +116652,13 @@
                             "secondary_color"
                         ]
                     },
+                    "features": {
+                        "description": "Show the Smart ERP feature slides after the announcements.",
+                        "type": [
+                            "string",
+                            "boolean"
+                        ]
+                    },
                     "slides": {
                         "type": "array",
                         "items": {
@@ -116682,6 +116694,7 @@
                 },
                 "required": [
                     "organization",
+                    "features",
                     "slides"
                 ],
                 "title": "LoginBrandingResource"
@@ -122644,6 +122657,10 @@
                             "brand",
                             "module"
                         ]
+                    },
+                    "login_features": {
+                        "type": "boolean",
+                        "description": "Show the Smart ERP feature slides on this organization's login page (on by default)."
                     }
                 },
                 "title": "UpdateCompanyBrandingRequest"

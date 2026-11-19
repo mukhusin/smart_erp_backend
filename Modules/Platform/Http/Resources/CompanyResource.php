@@ -50,6 +50,8 @@ class CompanyResource extends JsonResource
             'secondary_color' => $this->secondary_color,
             /** Where the brand colors are used. */
             'theme' => $this->resource->themeSettings(),
+            /** Smart ERP feature slides on the login page. */
+            'login_features' => $this->resource->showsLoginFeatures(),
             'fiscal_year_start' => $this->fiscal_year_start,
             'is_active' => $this->is_active,
             'created_at' => $this->created_at?->toIso8601String(),

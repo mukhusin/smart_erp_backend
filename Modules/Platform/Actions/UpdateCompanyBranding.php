@@ -35,6 +35,7 @@ class UpdateCompanyBranding
                 $theme[$area] = $data["theme_{$area}"];
             }
         }
+        $theme['login_features'] = array_key_exists('login_features', $data) ? (bool) $data['login_features'] : $company->showsLoginFeatures();
         $company->theme = $theme;
 
         $company->save();

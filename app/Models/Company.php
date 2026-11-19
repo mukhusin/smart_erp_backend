@@ -39,6 +39,11 @@ class Company extends Model
         return collect(self::THEME_AREAS)->map(fn ($options, $area) => in_array($saved[$area] ?? null, $options, true) ? $saved[$area] : $options[0])->all();
     }
 
+    public function showsLoginFeatures(): bool
+    {
+        return (bool) (($this->theme ?? [])['login_features'] ?? true);
+    }
+
     /** Already limited to this company, so the current-company filter is not needed here. */
     public function branches()
     {

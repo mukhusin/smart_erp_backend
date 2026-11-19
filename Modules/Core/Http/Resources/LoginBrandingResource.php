@@ -35,6 +35,8 @@ class LoginBrandingResource extends JsonResource
                 'primary_color' => $company->primary_color,
                 'secondary_color' => $company->secondary_color,
             ] : null,
+            /** Show the Smart ERP feature slides after the announcements. */
+            'features' => $company ? $company->showsLoginFeatures() : true,
             /** @var list<array{id: int, title: string, content: string|null, image_url: string|null}> */
             'slides' => LoginSlide::query()->visibleFor($company?->id)->limit(10)->get()
                 ->map(fn (LoginSlide $s) => [
