@@ -1,6 +1,6 @@
 # Test server from scratch, with production data
 
-For a fresh Ubuntu 24.04 server. The test server runs the ERP and imports a **copy** of the production HRMS
+For a fresh Ubuntu server (24.04 or 26.04). The test server runs the ERP and imports a **copy** of the production HRMS
 database. The steps are run as a user with `sudo`. Replace the values in `<angle brackets>`.
 
 **Safety first.** The test server holds real staff data. Until step 11 is done:
@@ -9,6 +9,24 @@ database. The steps are run as a user with `sudo`. Replace the values in `<angle
 - the scheduler (cron) stays off.
 
 ## 1. Server packages
+
+**PHP repository.** Ubuntu 24.04 gets PHP 8.3 from Ubuntu itself or the `ppa:ondrej/php` PPA. Ubuntu 26.04
+(resolute) has no PPA build; use Ondřej Surý's repository at packages.sury.org. Download the key from
+`apt.gpg` (not the sury.org home page, which saves an HTML file that apt rejects with `NO_PUBKEY`):
+
+```bash
+sudo curl -fsSL https://packages.sury.org/php/apt.gpg -o /usr/share/keyrings/sury-php.gpg
+file /usr/share/keyrings/sury-php.gpg   # must say "OpenPGP Public Key"
+echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" \
+  | sudo tee /etc/apt/sources.list.d/sury-php.list
+sudo apt update
+apt policy php8.3                        # shows a candidate from packages.sury.org
+```
+
+If `apt update` still shows `NO_PUBKEY`, the `signed-by=` path does not match the key file. Remove any
+leftover `ppa:ondrej/php` entry on 26.04 (`sudo rm -f /etc/apt/sources.list.d/ondrej-*php*`), it gives a 404.
+
+On a fish shell, write `; and` where the commands below use `&&`, and run SQL only at the `mysql>` prompt.
 
 ```bash
 sudo apt update && sudo apt -y upgrade
@@ -314,12 +332,3 @@ Read the newest sections of `deployment.md` for extra steps a release needs.
 - **Queue worker:** create a draft payroll for a test month. It shows "Working out…" and then the bell
   notifies "Payroll ready". If it stays "Working out…", check `sudo supervisorctl status`.
 - **Logs:** `storage/logs/laravel-*.log` holds no errors, and SMS and emails appear there instead of being sent.
-
-
-CREATE DATABASE smart_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE hrms_prod CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'erp'@'localhost' IDENTIFIED BY 'P@$$w0rd';
-GRANT ALL ON smart_erp.* TO 'erp'@'localhost';
-GRANT ALL ON hrms_prod.* TO 'erp'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
