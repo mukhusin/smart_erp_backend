@@ -314,3 +314,12 @@ Read the newest sections of `deployment.md` for extra steps a release needs.
 - **Queue worker:** create a draft payroll for a test month. It shows "Working out…" and then the bell
   notifies "Payroll ready". If it stays "Working out…", check `sudo supervisorctl status`.
 - **Logs:** `storage/logs/laravel-*.log` holds no errors, and SMS and emails appear there instead of being sent.
+
+
+CREATE DATABASE smart_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE hrms_prod CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'erp'@'localhost' IDENTIFIED BY 'P@$$w0rd';
+GRANT ALL ON smart_erp.* TO 'erp'@'localhost';
+GRANT ALL ON hrms_prod.* TO 'erp'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
