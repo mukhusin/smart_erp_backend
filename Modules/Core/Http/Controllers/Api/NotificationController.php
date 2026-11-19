@@ -26,7 +26,7 @@ class NotificationController extends Controller
 
         return response()->json([
             'data' => $this->live($user->notifications())->latest()->limit(30)->get()->map(fn ($n) => [
-                'id' => $n->id, 'title' => $n->data['title'] ?? '', 'message' => $n->data['message'] ?? '', 'link' => $n->data['link'] ?? null,
+                'id' => $n->id, 'title' => \App\Support\Locale::render($n->data, 'title'), 'message' => \App\Support\Locale::render($n->data, 'message'), 'link' => $n->data['link'] ?? null,
                 'icon' => $n->data['icon'] ?? null, 'read' => $n->read_at !== null, 'created_at' => $n->created_at->toIso8601String(),
                 'expires_at' => isset($n->data['expires_at']) ? \Illuminate\Support\Carbon::parse($n->data['expires_at'])->toIso8601String() : null,
             ]),

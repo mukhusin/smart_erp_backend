@@ -172,8 +172,8 @@ class ManageLeave
             }
             app(ManageAnnualRoster::class)->sync($leave);
         });
-        $this->notify($leave, 'Leave approved', sprintf('Your %s from %s to %s (%s days) is approved.',
-            $leave->leaveType?->name ?? 'leave', $leave->start_date->format('d M Y'), $leave->end_date->format('d M Y'), $this->num($leave->days)));
+        $this->notify($leave, 'Leave approved', 'Your :type from :from to :to (:days days) is approved.',
+            ['type' => $leave->leaveType?->name ?? 'leave', 'from' => $leave->start_date->format('d M Y'), 'to' => $leave->end_date->format('d M Y'), 'days' => $this->num($leave->days)]);
     }
 
     public function reject(EmpLeave $leave, ?string $comment): void
@@ -183,7 +183,8 @@ class ManageLeave
         $this->clearCalendar($leave);
         app(ManageAnnualRoster::class)->sync($leave);
         if (! $withdrawn) {
-            $this->notify($leave, 'Leave not approved', "Your {$leave->leaveType?->name} request from {$leave->start_date->format('d M Y')} was not approved.".($comment ? " Reason: {$comment}" : ''));
+            $this->notify($leave, 'Leave not approved', $comment ? 'Your :type request from :from was not approved. Reason: :reason' : 'Your :type request from :from was not approved.',
+                ['type' => $leave->leaveType?->name, 'from' => $leave->start_date->format('d M Y'), 'reason' => $comment]);
         }
     }
 
@@ -312,9 +313,9 @@ class ManageLeave
         app(WorkCalendar::class)->forget();
     }
 
-    private function notify(EmpLeave $leave, string $title, string $message): void
+    private function notify(EmpLeave $leave, string $title, string $message, array $params = []): void
     {
-        $leave->employee?->user?->notify(new Notice($title, $message, '/self-service/leave', 'calendar-check'));
+        $leave->employee?->user?->notify(new Notice($title, $message, '/self-service/leave', 'calendar-check', params: $params));
     }
 
     private function num(float $n): string

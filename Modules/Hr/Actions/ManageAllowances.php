@@ -223,7 +223,8 @@ class ManageAllowances
     public function approve(DailyAllowance $claim): void
     {
         $claim->update(['status' => 'approved', 'is_active' => true, 'is_hr_approved' => true, 'decided_at' => now()]);
-        $claim->employee?->user?->notify(new Notice('Allowance approved', sprintf('%s for %s: %s.', $claim->category, $claim->start_date->format('d M Y'), number_format($claim->amount, 2)), '/self-service/allowances', 'cash-coin'));
+        $claim->employee?->user?->notify(new Notice('Allowance approved', ':category for :date: :amount.', '/self-service/allowances', 'cash-coin',
+            params: ['category' => $claim->category, 'date' => $claim->start_date->format('d M Y'), 'amount' => number_format($claim->amount, 2)]));
     }
 
     public function reject(DailyAllowance $claim, ?string $comment): void

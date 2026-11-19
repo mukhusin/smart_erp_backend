@@ -64,7 +64,8 @@ class ContractReminderCommand extends Command
             }
 
             $days = (int) $today->diffInDays($contract->end_date, false);
-            $message = sprintf('Hi %s, contract ends on %s (%d days left). Please contact HR.', $employee->full_name ?: 'Colleague', $contract->end_date->toDateString(), max($days, 0));
+            $message = \App\Support\Locale::text($employee->user, 'Hi :name, contract ends on :date (:days days left). Please contact HR.',
+                ['name' => $employee->full_name ?: \App\Support\Locale::text($employee->user, 'Colleague'), 'date' => $contract->end_date->toDateString(), 'days' => max($days, 0)]);
             $sent += $sms->send('Contract Expiry Reminder', [['employee_id' => $employee->id, 'phone' => $employee->phone_number, 'message' => $message]], self::CAMPAIGN, $key) ? 1 : 0;
         }
 

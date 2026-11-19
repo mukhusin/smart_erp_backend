@@ -181,8 +181,8 @@ class ManageOvertime
     public function approve(Overtime $claim): void
     {
         $claim->update(['status' => 'approved', 'is_active' => true, 'is_hr_approved' => true, 'decided_at' => now()]);
-        $claim->employee?->user?->notify(new Notice('Overtime approved', sprintf('Overtime on %s (%s) is approved: %s.', $claim->date_of_task_done->format('d M Y'),
-            self::duration($claim->overtime_minutes), number_format($claim->amount, 2)), '/self-service/overtime', 'hourglass-split'));
+        $claim->employee?->user?->notify(new Notice('Overtime approved', 'Overtime on :date (:duration) is approved: :amount.', '/self-service/overtime', 'hourglass-split',
+            params: ['date' => $claim->date_of_task_done->format('d M Y'), 'duration' => self::duration($claim->overtime_minutes), 'amount' => number_format($claim->amount, 2)]));
     }
 
     public function reject(Overtime $claim, ?string $comment): void
@@ -190,7 +190,8 @@ class ManageOvertime
         $withdrawn = $comment === 'Withdrawn by the requester.';
         $claim->update(['status' => $withdrawn ? 'cancelled' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         if (! $withdrawn) {
-            $claim->employee?->user?->notify(new Notice('Overtime not approved', "Overtime on {$claim->date_of_task_done->format('d M Y')} was not approved.".($comment ? " Reason: {$comment}" : ''), '/self-service/overtime', 'hourglass-split'));
+            $claim->employee?->user?->notify(new Notice('Overtime not approved', $comment ? 'Overtime on :date was not approved. Reason: :reason' : 'Overtime on :date was not approved.', '/self-service/overtime', 'hourglass-split',
+                params: ['date' => $claim->date_of_task_done->format('d M Y'), 'reason' => $comment]));
         }
     }
 

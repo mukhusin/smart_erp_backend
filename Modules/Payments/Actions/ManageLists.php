@@ -82,7 +82,7 @@ class ManageLists
             foreach ($list->items->pluck('voucher')->unique('id') as $v) {
                 $this->settle($v);
                 if ($v->status === 'paid') {
-                    $v->request->requester?->notify(new Notice('Payment made', "{$v->request->number} {$v->request->title} is paid.", "/payments/requests/{$v->request->id}", 'cash-coin'));
+                    $v->request->requester?->notify(new Notice('Payment made', ':number :title is paid.', "/payments/requests/{$v->request->id}", 'cash-coin', params: ['number' => $v->request->number, 'title' => $v->request->title]));
                 }
             }
         });
@@ -92,7 +92,7 @@ class ManageLists
     {
         $list->update(['status' => $withdrawn ? 'cancelled' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         if (! $withdrawn) {
-            $list->preparer?->notify(new Notice('Payment list not approved', "{$list->number} was not approved: {$comment}", "/payments/lists/{$list->id}", 'bank'));
+            $list->preparer?->notify(new Notice('Payment list not approved', ':number was not approved: :reason', "/payments/lists/{$list->id}", 'bank', params: ['number' => $list->number, 'reason' => $comment]));
         }
     }
 

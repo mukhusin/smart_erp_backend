@@ -21,12 +21,12 @@ class WorkflowAlert extends Notification
 
     public function toArray(object $notifiable): array
     {
-        return ['title' => $this->title, 'message' => $this->message, 'link' => $this->link, 'icon' => 'diagram-3'];
+        return ['title' => $this->title, 'message' => $this->message, 'link' => $this->link, 'icon' => 'diagram-3', 't' => ['title' => $this->title]];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)->subject($this->title)->line($this->message);
+        $mail = \App\Support\Locale::as($notifiable instanceof \App\Models\User ? $notifiable : null, fn () => (new MailMessage)->subject(__($this->title))->line($this->message));
 
         return $this->link ? $mail->action('Open', rtrim((string) config('app.frontend_url', config('app.url')), '/').$this->link) : $mail;
     }

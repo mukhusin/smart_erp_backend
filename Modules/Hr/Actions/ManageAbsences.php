@@ -58,8 +58,8 @@ class ManageAbsences
     {
         $absence->update(['status' => 'approved', 'decided_at' => now()]);
         $this->recompile($absence);
-        $absence->employee?->user?->notify(new Notice('Official absence approved',
-            'Your official absence '.$absence->from_date->format('d M').' – '.$absence->to_date->format('d M Y').' is approved.', '/self-service/attendance', 'briefcase'));
+        $absence->employee?->user?->notify(new Notice('Official absence approved', 'Your official absence :from – :to is approved.', '/self-service/attendance', 'briefcase',
+            params: ['from' => $absence->from_date->format('d M'), 'to' => $absence->to_date->format('d M Y')]));
     }
 
     public function reject(AbsenceRequest $absence, ?string $comment): void

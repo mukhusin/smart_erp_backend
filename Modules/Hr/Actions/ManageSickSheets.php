@@ -60,8 +60,8 @@ class ManageSickSheets
     {
         $sheet->update(['status' => 'active', 'decided_at' => now()]);
         $this->writeCalendar($sheet);
-        $sheet->employee?->user?->notify(new Notice('Sick sheet approved',
-            'Your excuse of duty '.$sheet->start_date->format('d M').' – '.$sheet->end_date->format('d M Y').' is approved. Get well soon.', '/self-service/sick-sheets', 'bandaid'));
+        $sheet->employee?->user?->notify(new Notice('Sick sheet approved', 'Your excuse of duty :from – :to is approved. Get well soon.', '/self-service/sick-sheets', 'bandaid',
+            params: ['from' => $sheet->start_date->format('d M'), 'to' => $sheet->end_date->format('d M Y')]));
     }
 
     public function reject(ExcuseOfDuty $sheet, ?string $comment): void

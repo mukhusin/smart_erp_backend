@@ -49,7 +49,7 @@ class ManageAttendanceClaims
             $day->update(['accepted_hour' => (float) $day->accepted_hour + (float) $claim->hr_accepted]);
             app(ManageAttendance::class)->compileDay($day->employee, $day->transaction_date);
         }
-        $claim->employee?->user?->notify(new Notice('Attendance claim approved', "Lost time on {$claim->claim_date->format('d M Y')} is forgiven.", '/self-service/attendance', 'fingerprint'));
+        $claim->employee?->user?->notify(new Notice('Attendance claim approved', 'Lost time on :date is forgiven.', '/self-service/attendance', 'fingerprint', params: ['date' => $claim->claim_date->format('d M Y')]));
     }
 
     public function reject(AttendanceClaim $claim, ?string $comment): void
@@ -58,7 +58,8 @@ class ManageAttendanceClaims
         $claim->update(['claim_status' => $withdrawn ? 'cancelled' : 'rejected', 'comment' => $comment]);
         $claim->transaction?->update(['is_claimed' => false]);
         if (! $withdrawn) {
-            $claim->employee?->user?->notify(new Notice('Attendance claim not approved', "Your claim for {$claim->claim_date->format('d M Y')} was not approved.".($comment ? " Reason: {$comment}" : ''), '/self-service/attendance', 'fingerprint'));
+            $claim->employee?->user?->notify(new Notice('Attendance claim not approved', $comment ? 'Your claim for :date was not approved. Reason: :reason' : 'Your claim for :date was not approved.', '/self-service/attendance', 'fingerprint',
+                params: ['date' => $claim->claim_date->format('d M Y'), 'reason' => $comment]));
         }
     }
 }

@@ -130,7 +130,7 @@ class ManageRenewals
         $withdrawn = $comment === 'Withdrawn by the requester.';
         $renewal->update(['status' => $withdrawn ? 'cancelled' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         if (! $withdrawn && $renewal->source === ContractRenewal::FROM_EMPLOYEE) {
-            $this->notify($renewal, 'Contract renewal not approved', 'Your contract renewal request was not approved.'.($comment ? " Reason: {$comment}" : ''));
+            $this->notify($renewal, 'Contract renewal not approved', $comment ? 'Your contract renewal request was not approved. Reason: :reason' : 'Your contract renewal request was not approved.', ['reason' => $comment]);
         }
     }
 
@@ -163,10 +163,9 @@ class ManageRenewals
                 'comment' => $terms['comment'] ?? 'Renewal '.($renewal->source === ContractRenewal::FROM_EMPLOYEE ? 'requested by the employee' : 'started by HR'),
             ] + (array_key_exists('has_annual_leave', $terms) ? ['has_annual_leave' => $terms['has_annual_leave']] : []), $by);
             $renewal->update(['status' => 'completed', 'new_contract_id' => $contract->id] + $data);
-            DB::afterCommit(fn () => $this->notify($renewal, 'Contract renewed', sprintf(
-                'Your contract renewal is approved. New contract: %s, %d months, from %s to %s.',
-                $contract->natureOfContract?->contract_name ?? 'contract', $contract->period, $contract->start_date->format('d M Y'), $contract->end_date->format('d M Y'),
-            )));
+            DB::afterCommit(fn () => $this->notify($renewal, 'Contract renewed', 'Your contract renewal is approved. New contract: :type, :months months, from :from to :to.', [
+                'type' => $contract->natureOfContract?->contract_name ?? 'contract', 'months' => $contract->period, 'from' => $contract->start_date->format('d M Y'), 'to' => $contract->end_date->format('d M Y'),
+            ]));
 
             return $renewal;
         });
@@ -225,13 +224,13 @@ class ManageRenewals
         ]));
     }
 
-    private function notify(ContractRenewal $renewal, string $title, string $message): void
+    private function notify(ContractRenewal $renewal, string $title, string $message, array $params = []): void
     {
         $employee = $renewal->employee;
-        $employee?->user?->notify(new Notice($title, $message, '/self-service/contract', 'file-earmark-check'));
+        $employee?->user?->notify(new Notice($title, $message, '/self-service/contract', 'file-earmark-check', params: $params));
         if ($employee?->phone_number) {
             try {
-                app(SmsService::class)->send($title, [['employee_id' => $employee->id, 'phone' => $employee->phone_number, 'message' => $message]], 'contract-renewal', "renewal-{$renewal->id}-{$renewal->status}");
+                app(SmsService::class)->send($title, [['employee_id' => $employee->id, 'phone' => $employee->phone_number, 'message' => \App\Support\Locale::text($employee->user, $message, $params)]], 'contract-renewal', "renewal-{$renewal->id}-{$renewal->status}");
             } catch (\Throwable $e) {
                 report($e);
             }

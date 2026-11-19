@@ -124,14 +124,14 @@ class ManageRetirements
             $ret->update(['status' => 'approved', 'journal_entry_id' => $journal->id, 'decided_at' => now()]);
             $r->update(['status' => 'retired']);
         });
-        $this->tell($ret, 'Imprest retired', "{$ret->number}: imprest {$ret->request->number} is retired.");
+        $this->tell($ret, 'Imprest retired', ':number: imprest :request is retired.', ['number' => $ret->number, 'request' => $ret->request->number]);
     }
 
     public function rejected(ImprestRetirement $ret, ?string $comment, bool $withdrawn): void
     {
         $ret->update(['status' => $withdrawn ? 'draft' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         if (! $withdrawn) {
-            $this->tell($ret, 'Imprest retirement returned', "{$ret->number} was returned: {$comment}");
+            $this->tell($ret, 'Imprest retirement returned', ':number was returned: :reason', ['number' => $ret->number, 'reason' => $comment]);
         }
     }
 
@@ -189,7 +189,8 @@ class ManageRetirements
             if ($late % 7 !== 1) {
                 continue;
             }
-            $notice = new Notice('Imprest not retired', "{$r->number} {$r->title} (".number_format((float) $r->total, 2).") was due for retirement on {$r->retire_by->format('d M Y')}. Retire it now.", "/payments/requests/{$r->id}", 'hourglass-split');
+            $notice = new Notice('Imprest not retired', ':number :title (:amount) was due for retirement on :date. Retire it now.', "/payments/requests/{$r->id}", 'hourglass-split',
+                params: ['number' => $r->number, 'title' => $r->title, 'amount' => number_format((float) $r->total, 2), 'date' => $r->retire_by->format('d M Y')]);
             foreach (collect([$r->holder?->user, $r->requester])->filter()->unique('id') as $user) {
                 $user->notify($notice);
                 $sent++;
@@ -199,10 +200,10 @@ class ManageRetirements
         return $sent;
     }
 
-    private function tell(ImprestRetirement $ret, string $title, string $message): void
+    private function tell(ImprestRetirement $ret, string $title, string $message, array $params = []): void
     {
         $r = $ret->request()->with(['holder.user', 'requester'])->first();
-        $notice = new Notice($title, $message, "/payments/requests/{$r->id}", 'receipt');
+        $notice = new Notice($title, $message, "/payments/requests/{$r->id}", 'receipt', params: $params);
         foreach (collect([$ret->preparer, $r->holder?->user, $r->requester])->filter()->unique('id') as $user) {
             $user->notify($notice);
         }

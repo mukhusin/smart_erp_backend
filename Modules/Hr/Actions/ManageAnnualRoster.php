@@ -181,7 +181,7 @@ class ManageAnnualRoster
         if ($first) {
             $roster->annualLeaves()->with('employee.user')->where('status', AnnualLeaveRoster::PLANNED)->get()->groupBy('employee_id')->each(function ($plans) {
                 $lines = $plans->map(fn ($p) => $p->start_date->format('d M Y').' – '.$p->end_date->format('d M Y').' ('.$p->days.' days)')->implode('; ');
-                $plans->first()->employee?->user?->notify(new Notice('Annual leave planned', "Your annual leave is planned for {$lines}. Request it from My leave.", '/self-service/leave', 'calendar-range'));
+                $plans->first()->employee?->user?->notify(new Notice('Annual leave planned', 'Your annual leave is planned for :dates. Request it from My leave.', '/self-service/leave', 'calendar-range', params: ['dates' => $lines]));
             });
         }
 
@@ -228,7 +228,8 @@ class ManageAnnualRoster
             ->whereHas('roster', fn ($q) => $q->where('status', Roster::PUBLISHED))
             ->whereDate('start_date', '>=', $today)->whereDate('start_date', '<=', $today->copy()->addDays(self::REMIND_DAYS))->get();
         $plans->each(function (AnnualLeaveRoster $p) {
-            $p->employee?->user?->notify(new Notice('Request your planned leave', "Your annual leave is planned from {$p->start_date->format('d M Y')} ({$p->days} days). Request it from My leave.", '/self-service/leave', 'calendar-range'));
+            $p->employee?->user?->notify(new Notice('Request your planned leave', 'Your annual leave is planned from :from (:days days). Request it from My leave.', '/self-service/leave', 'calendar-range',
+                params: ['from' => $p->start_date->format('d M Y'), 'days' => $p->days]));
             $p->update(['reminded_at' => now()]);
         });
 

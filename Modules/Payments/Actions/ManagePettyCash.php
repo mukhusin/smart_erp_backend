@@ -126,7 +126,7 @@ class ManagePettyCash
             $v->update(['status' => $withdrawn ? 'cancelled' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         });
         if (! $withdrawn) {
-            $v->creator?->notify(new Notice('Petty cash voucher not approved', "{$v->number} was not approved: {$comment}", '/payments/petty-cash', 'cash'));
+            $v->creator?->notify(new Notice('Petty cash voucher not approved', ':number was not approved: :reason', '/payments/petty-cash', 'cash', params: ['number' => $v->number, 'reason' => $comment]));
         }
     }
 
@@ -180,14 +180,14 @@ class ManagePettyCash
             $r->float->vouchers()->where('status', 'approved')->whereNull('petty_cash_replenishment_id')->update(['petty_cash_replenishment_id' => $r->id]);
             $r->update(['status' => 'approved', 'journal_entry_id' => $journal->id, 'decided_at' => now()]);
         });
-        $r->float->custodian?->notify(new Notice('Petty cash topped up', "{$r->number}: ".number_format($r->amount, 2)." added to {$r->float->cash->name}.", '/payments/petty-cash', 'cash'));
+        $r->float->custodian?->notify(new Notice('Petty cash topped up', ':number: :amount added to :cash.', '/payments/petty-cash', 'cash', params: ['number' => $r->number, 'amount' => number_format($r->amount, 2), 'cash' => $r->float->cash->name]));
     }
 
     public function replenishmentRejected(PettyCashReplenishment $r, ?string $comment, bool $withdrawn): void
     {
         $r->update(['status' => $withdrawn ? 'cancelled' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         if (! $withdrawn) {
-            $r->creator?->notify(new Notice('Petty cash top-up not approved', "{$r->number} was not approved: {$comment}", '/payments/petty-cash', 'cash'));
+            $r->creator?->notify(new Notice('Petty cash top-up not approved', ':number was not approved: :reason', '/payments/petty-cash', 'cash', params: ['number' => $r->number, 'reason' => $comment]));
         }
     }
 

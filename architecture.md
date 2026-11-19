@@ -1311,4 +1311,8 @@ the recipient's language. Frontend: Transloco; the English text in the code is t
 account (a choice made on the login page is saved at login) and sends `X-Locale`. Shared parts translate whatever
 English they are given: menus, page headers, tables (columns, search, empty states, paginator), dialogs, confirmations,
 toasts. Terms are fixed in `i18n-glossary.md`; words without a natural Kiswahili term stay in English.
-Phase 1 (this) is the foundation; next: self service, approvals and notifications/SMS; then HR, finance, operations.
+Phase 1 is the foundation. Phase 2 (done): Self Service and Approvals screens; notices store the English template and
+values (`Notice(..., params: [...])`, data `t`) and `GET me/notifications` renders them in the reader's language
+(`Locale::render`); titles of all notices translate, messages once converted (self service, leave, payroll, payments);
+system SMS (contract reminders, renewals) go in the recipient's language (`Locale::text`). Next: HR, leave, attendance
+and payroll screens; then finance; then operations, reports and PDFs.

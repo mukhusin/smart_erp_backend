@@ -99,7 +99,8 @@ class ManagePayItems
         if ($item instanceof SalaryAdjustment && ! $item->effective_date?->isFuture()) {
             $this->applyAdjustment($item);
         }
-        $employee?->user?->notify(new Notice(...$this->approvedNotice($item)));
+        [$title, $message, $link, $icon, $params] = $this->approvedNotice($item);
+        $employee?->user?->notify(new Notice($title, $message, $link, $icon, params: $params));
     }
 
     public function reject(Model $item, ?string $comment): void
@@ -171,9 +172,12 @@ class ManagePayItems
         $money = fn ($v) => number_format((float) $v, 2);
 
         return match (true) {
-            $item instanceof EmpAllowance => ['Allowance assigned', "{$item->category}: {$money($item->amount)} a month from {$item->start_date->format('d M Y')}.", '/self-service/payslips', 'cash-coin'],
-            $item instanceof OtherDeduction => ['Deduction from salary', "{$item->name}: {$money($item->amount)} a month from {$item->start_month->format('F Y')}".($item->months ? " for {$item->months} months." : '.'), '/self-service/payslips', 'dash-circle'],
-            default => ['Salary adjusted', "Your basic salary changes from {$money($item->current_salary)} to {$money($item->new_salary)}".($item->effective_date ? " from {$item->effective_date->format('d M Y')}." : '.'), '/self-service/contract', 'graph-up-arrow'],
+            $item instanceof EmpAllowance => ['Allowance assigned', ':name: :amount a month from :from.', '/self-service/payslips', 'cash-coin',
+                ['name' => $item->category, 'amount' => $money($item->amount), 'from' => $item->start_date->format('d M Y')]],
+            $item instanceof OtherDeduction => ['Deduction from salary', $item->months ? ':name: :amount a month from :from for :months months.' : ':name: :amount a month from :from.', '/self-service/payslips', 'dash-circle',
+                ['name' => $item->name, 'amount' => $money($item->amount), 'from' => $item->start_month->format('F Y'), 'months' => $item->months]],
+            default => ['Salary adjusted', $item->effective_date ? 'Your basic salary changes from :old to :new from :from.' : 'Your basic salary changes from :old to :new.', '/self-service/contract', 'graph-up-arrow',
+                ['old' => $money($item->current_salary), 'new' => $money($item->new_salary), 'from' => $item->effective_date?->format('d M Y')]],
         };
     }
 }

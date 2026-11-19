@@ -132,7 +132,7 @@ class ManageVouchers
             $journal = $this->posting->post($v->date->toDateString(), "{$v->number} {$r->number} {$r->title}", $lines, $by, 'payment', $v);
             $v->update(['status' => 'approved', 'journal_entry_id' => $journal->id, 'decided_at' => now()]);
         });
-        $v->preparer?->notify(new Notice('Payment voucher approved', "{$v->number} is approved and can go on a payment list.", "/payments/vouchers/{$v->id}", 'receipt'));
+        $v->preparer?->notify(new Notice('Payment voucher approved', ':number is approved and can go on a payment list.', "/payments/vouchers/{$v->id}", 'receipt', params: ['number' => $v->number]));
     }
 
     /** Input VAT: added on top for a supplier bill, otherwise taken out of the budget lines in proportion. */
@@ -166,7 +166,7 @@ class ManageVouchers
             $v->request->update(['status' => 'approved']);
         });
         if (! $withdrawn) {
-            $v->preparer?->notify(new Notice('Payment voucher not approved', "{$v->number} was not approved: {$comment}", "/payments/vouchers/{$v->id}", 'receipt'));
+            $v->preparer?->notify(new Notice('Payment voucher not approved', ':number was not approved: :reason', "/payments/vouchers/{$v->id}", 'receipt', params: ['number' => $v->number, 'reason' => $comment]));
         }
     }
 
@@ -222,7 +222,7 @@ class ManageVouchers
     public function voidRejected(PaymentVoucher $v, ?string $comment): void
     {
         $v->update(['status' => $v->outstandingPayees()->isEmpty() ? 'paid' : 'approved']);
-        $v->preparer?->notify(new Notice('Void not approved', "Voiding {$v->number} was not approved".($comment ? ": {$comment}" : '.'), "/payments/vouchers/{$v->id}", 'receipt'));
+        $v->preparer?->notify(new Notice('Void not approved', $comment ? 'Voiding :number was not approved: :reason' : 'Voiding :number was not approved.', "/payments/vouchers/{$v->id}", 'receipt', params: ['number' => $v->number, 'reason' => $comment]));
     }
 
     private function undo(PaymentVoucher $v, User $by, string $reason): void

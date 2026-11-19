@@ -173,7 +173,7 @@ class ManagePayroll
         event(new PayrollApproved($sheet->refresh(), auth()->user()));
         $label = Carbon::create((int) $sheet->year, (int) $sheet->month, 1)->format('F Y');
         $sheet->details()->with('employee.user')->get()->each(fn ($d) => $d->employee?->user?->notify(
-            new Notice('Payslip ready', "Your payslip for {$label} is ready. Net pay: ".number_format($d->net_salary, 2).'.', '/self-service/payslips', 'receipt')));
+            new Notice('Payslip ready', 'Your payslip for :month is ready. Net pay: :net.', '/self-service/payslips', 'receipt', params: ['month' => $label, 'net' => number_format($d->net_salary, 2)])));
     }
 
     public function reject(PayrollSheet $sheet, ?string $comment): void

@@ -148,7 +148,7 @@ class ManageRequests
     {
         $this->budgets->commit($r);
         $r->update(['status' => 'approved', 'decided_at' => now()]);
-        $r->requester?->notify(new Notice('Payment request approved', "{$r->number} {$r->title} is approved and goes to finance for the voucher.", $this->link($r), 'cash-coin'));
+        $r->requester?->notify(new Notice('Payment request approved', ':number :title is approved and goes to finance for the voucher.', $this->link($r), 'cash-coin', params: ['number' => $r->number, 'title' => $r->title]));
     }
 
     public function rejected(PaymentRequest $r, ?string $comment, bool $withdrawn): void
@@ -156,7 +156,7 @@ class ManageRequests
         $this->budgets->release($r);
         $r->update(['status' => $withdrawn ? 'draft' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         if (! $withdrawn) {
-            $r->requester?->notify(new Notice('Payment request returned', "{$r->number} {$r->title} was returned: {$comment}", $this->link($r), 'cash-coin'));
+            $r->requester?->notify(new Notice('Payment request returned', ':number :title was returned: :reason', $this->link($r), 'cash-coin', params: ['number' => $r->number, 'title' => $r->title, 'reason' => $comment]));
         }
     }
 
@@ -183,7 +183,7 @@ class ManageRequests
             $r->update(['status' => 'cancelled', 'decision_comment' => $reason, 'decided_at' => now()]);
         });
         if (! $mine) {
-            $r->requester?->notify(new Notice('Payment request cancelled', "{$r->number} {$r->title} was cancelled: {$reason}", $this->link($r), 'cash-coin'));
+            $r->requester?->notify(new Notice('Payment request cancelled', ':number :title was cancelled: :reason', $this->link($r), 'cash-coin', params: ['number' => $r->number, 'title' => $r->title, 'reason' => $reason]));
         }
 
         return $r->refresh();

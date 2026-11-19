@@ -53,7 +53,8 @@ class ManageRecoveries
             $recovery = $r->recoveries()->create(['deduction_ids' => $ids, 'amount' => $amount, 'months' => $months, 'start_month' => $start->toDateString(),
                 'status' => 'active', 'reason' => $reason, 'created_by' => $by->id]);
             $r->update(['status' => 'recovering']);
-            $holder->user?->notify(new Notice('Imprest recovered from salary', "{$r->number} ".number_format($amount, 2)." was not retired and will be deducted from your salary over {$months} month(s) from {$start->format('F Y')}.", "/payments/requests/{$r->id}", 'dash-circle'));
+            $holder->user?->notify(new Notice('Imprest recovered from salary', ':number :amount was not retired and will be deducted from your salary over :months month(s) from :from.', "/payments/requests/{$r->id}", 'dash-circle',
+                params: ['number' => $r->number, 'amount' => number_format($amount, 2), 'months' => $months, 'from' => $start->format('F Y')]));
 
             return $recovery;
         });

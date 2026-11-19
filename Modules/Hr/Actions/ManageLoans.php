@@ -79,8 +79,8 @@ class ManageLoans
     public function approveLoan(EmployeeLoan $loan): void
     {
         $loan->update(['status' => 'enabled', 'is_active' => true, 'decided_at' => now()]);
-        $loan->employee?->user?->notify(new Notice('Loan recorded', sprintf('Your %s loan of %s is recorded: %s a month from your salary.',
-            $loan->loanProvider?->name ?? '', number_format($loan->amount, 2), number_format($loan->instalment, 2)), '/self-service/loans', 'bank'));
+        $loan->employee?->user?->notify(new Notice('Loan recorded', 'Your :provider loan of :amount is recorded: :instalment a month from your salary.', '/self-service/loans', 'bank',
+            params: ['provider' => $loan->loanProvider?->name ?? '', 'amount' => number_format($loan->amount, 2), 'instalment' => number_format($loan->instalment, 2)]));
     }
 
     public function rejectLoan(EmployeeLoan $loan, ?string $comment): void
@@ -166,7 +166,7 @@ class ManageLoans
     public function approveAdvance(EmployeeMonthlyAdvance $advance): void
     {
         $advance->update(['status' => 'approved', 'decided_at' => now()]);
-        $advance->employee?->user?->notify(new Notice('Salary advance approved', 'Your salary advance of '.number_format($advance->amount, 2).' is approved; it is deducted on the next payroll.', '/self-service/loans', 'cash'));
+        $advance->employee?->user?->notify(new Notice('Salary advance approved', 'Your salary advance of :amount is approved; it is deducted on the next payroll.', '/self-service/loans', 'cash', params: ['amount' => number_format($advance->amount, 2)]));
     }
 
     public function rejectAdvance(EmployeeMonthlyAdvance $advance, ?string $comment): void
@@ -174,7 +174,7 @@ class ManageLoans
         $withdrawn = $comment === 'Withdrawn by the requester.';
         $advance->update(['status' => $withdrawn ? 'cancelled' : 'rejected', 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         if (! $withdrawn) {
-            $advance->employee?->user?->notify(new Notice('Salary advance not approved', 'Your salary advance was not approved.'.($comment ? " Reason: {$comment}" : ''), '/self-service/loans', 'cash'));
+            $advance->employee?->user?->notify(new Notice('Salary advance not approved', $comment ? 'Your salary advance was not approved. Reason: :reason' : 'Your salary advance was not approved.', '/self-service/loans', 'cash', params: ['reason' => $comment]));
         }
     }
 
