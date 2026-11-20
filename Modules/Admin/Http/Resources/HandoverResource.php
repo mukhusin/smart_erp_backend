@@ -13,13 +13,7 @@ class HandoverResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $now = now();
-        $status = match (true) {
-            $this->revoked_at !== null => 'ended',
-            $this->starts_at > $now => 'upcoming',
-            $this->ends_at !== null && $this->ends_at <= $now => 'ended',
-            default => 'active',
-        };
+        $status = $this->state();
 
         return [
             'id' => $this->id,
@@ -32,8 +26,11 @@ class HandoverResource extends JsonResource
             'starts_at' => $this->starts_at->toIso8601String(),
             'ends_at' => $this->ends_at?->toIso8601String(),
             'reason' => $this->reason,
-            /** active | upcoming | ended */
+            /** active | upcoming | ended | pending | rejected | cancelled */
             'status' => $status,
+            'source' => $this->source,
+            'suspend_giver' => (bool) $this->suspend_giver,
+            'decision_comment' => $this->decision_comment,
             'revoked_at' => $this->revoked_at?->toIso8601String(),
         ];
     }

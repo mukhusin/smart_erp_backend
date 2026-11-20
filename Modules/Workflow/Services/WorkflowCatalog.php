@@ -4,6 +4,7 @@ namespace Modules\Workflow\Services;
 
 use App\Services\ModuleAccessService;
 use Modules\Admin\Workflow\UserAccessChangeProcess;
+use Modules\Core\Workflow\RoleHandoverProcess;
 use Modules\Hr\Workflow\AllowanceBatchProcess;
 use Modules\Hr\Workflow\AllowanceClaimProcess;
 use Modules\Hr\Workflow\AssignedAllowanceProcess;
@@ -65,6 +66,7 @@ final class WorkflowCatalog
         LeaveRequestProcess::class,
         AllowanceClaimProcess::class,
         AllowanceBatchProcess::class,
+        RoleHandoverProcess::class,
         OvertimeClaimProcess::class,
         PayrollSheetProcess::class,
         LoanProcess::class,

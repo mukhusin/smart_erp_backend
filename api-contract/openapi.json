@@ -109776,6 +109776,374 @@
                 }
             }
         },
+        "/self/handovers": {
+            "get": {
+                "operationId": "self.handovers.index",
+                "summary": "Handovers I gave and received, and the roles I can hand over",
+                "tags": [
+                    "Self service: Handovers",
+                    "SelfHandover"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "direction": {
+                                                        "type": "string"
+                                                    },
+                                                    "role": {
+                                                        "type": "string"
+                                                    },
+                                                    "other": {
+                                                        "type": "string"
+                                                    },
+                                                    "starts_on": {
+                                                        "type": "string"
+                                                    },
+                                                    "ends_on": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "source": {
+                                                        "type": "string"
+                                                    },
+                                                    "suspend_giver": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "leave_id": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "waiting_for": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "decision_comment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "can_cancel": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "direction",
+                                                    "role",
+                                                    "other",
+                                                    "starts_on",
+                                                    "ends_on",
+                                                    "reason",
+                                                    "status",
+                                                    "status_label",
+                                                    "source",
+                                                    "suspend_giver",
+                                                    "leave_id",
+                                                    "waiting_for",
+                                                    "decision_comment",
+                                                    "can_cancel"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "roles"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "self.handovers.store",
+                "summary": "Hand over one of my roles; it goes for approval",
+                "tags": [
+                    "Self service: Handovers",
+                    "SelfHandover"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "role_id": {
+                                        "type": "integer"
+                                    },
+                                    "to_user_id": {
+                                        "type": "integer"
+                                    },
+                                    "starts_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "ends_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "description": "The last day of the handover."
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 500
+                                    },
+                                    "suspend_giver": {
+                                        "type": [
+                                            "boolean",
+                                            "null"
+                                        ],
+                                        "description": "I cannot use the role while it is handed over (default yes)."
+                                    }
+                                },
+                                "required": [
+                                    "role_id",
+                                    "to_user_id",
+                                    "starts_at",
+                                    "ends_at",
+                                    "reason"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/handovers/colleagues": {
+            "get": {
+                "operationId": "self.handovers.colleagues",
+                "summary": "Colleagues to hand over to",
+                "tags": [
+                    "Self service: Handovers",
+                    "SelfHandover"
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "label": {
+                                                        "type": "string"
+                                                    },
+                                                    "detail": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "label",
+                                                    "detail"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/self/handovers/{handover}/cancel": {
+            "post": {
+                "operationId": "self.handovers.cancel",
+                "summary": "Withdraw a request, or end a handover early",
+                "tags": [
+                    "Self service: Handovers",
+                    "SelfHandover"
+                ],
+                "parameters": [
+                    {
+                        "name": "handover",
+                        "in": "path",
+                        "required": true,
+                        "description": "The handover ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "status"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/self/duties": {
             "get": {
                 "operationId": "self.duties",
@@ -117117,11 +117485,18 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "active | upcoming | ended",
-                        "enum": [
-                            "ended",
-                            "upcoming",
-                            "active"
+                        "description": "active | upcoming | ended | pending | rejected | cancelled"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "suspend_giver": {
+                        "type": "boolean"
+                    },
+                    "decision_comment": {
+                        "type": [
+                            "string",
+                            "null"
                         ]
                     },
                     "revoked_at": {
@@ -117140,6 +117515,9 @@
                     "ends_at",
                     "reason",
                     "status",
+                    "source",
+                    "suspend_giver",
+                    "decision_comment",
                     "revoked_at"
                 ],
                 "title": "HandoverResource"
@@ -117870,6 +118248,13 @@
                             "null"
                         ],
                         "description": "Request this planned annual leave (from the annual leave roster)."
+                    },
+                    "handover_to_user_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "A colleague (user id) who covers the employee's roles during the leave, once it is approved."
                     },
                     "files": {
                         "type": [
@@ -123384,6 +123769,13 @@
                     "reason": {
                         "type": "string",
                         "maxLength": 500
+                    },
+                    "suspend_giver": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ],
+                        "description": "The person handing over cannot use the role while it is handed over."
                     }
                 },
                 "required": [

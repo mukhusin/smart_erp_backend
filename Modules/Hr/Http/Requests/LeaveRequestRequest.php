@@ -43,6 +43,8 @@ class LeaveRequestRequest extends FormRequest
             'details.death_date' => ['nullable', 'date'],
             /** Request this planned annual leave (from the annual leave roster). */
             'annual_plan_id' => ['nullable', 'integer'],
+            /** A colleague (user id) who covers the employee's roles during the leave, once it is approved. */
+            'handover_to_user_id' => ['nullable', 'integer'],
             'files' => ['nullable', 'array', 'max:5'],
             'files.*' => ['file', ...EmployeeFiles::DOCUMENT_RULES],
         ];

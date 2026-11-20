@@ -66,3 +66,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'module:admin'])->name('admi
         Route::post('sms-settings/test', [SmsSettingsController::class, 'test'])->middleware('throttle:5,1')->name('sms-settings.test');
     });
 });
+
+Route::prefix('self/handovers')->middleware(['auth:sanctum', 'module:self-service', 'can:self-service.use'])->name('self.handovers.')->group(function () {
+    Route::get('/', [\Modules\Admin\Http\Controllers\Api\SelfHandoverController::class, 'index'])->name('index');
+    Route::get('colleagues', [\Modules\Admin\Http\Controllers\Api\SelfHandoverController::class, 'colleagues'])->name('colleagues');
+    Route::post('/', [\Modules\Admin\Http\Controllers\Api\SelfHandoverController::class, 'store'])->name('store');
+    Route::post('{handover}/cancel', [\Modules\Admin\Http\Controllers\Api\SelfHandoverController::class, 'cancel'])->name('cancel');
+});

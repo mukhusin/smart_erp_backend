@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Core\Notifications\Notice;
+use Modules\Core\Services\Handovers;
 use Modules\Core\Services\AccessService;
 use Modules\Hr\Support\EmployeeFiles;
 use Modules\Hr\Support\LeaveBalances;
@@ -94,6 +95,9 @@ class ManageLeave
             return $leave;
         });
 
+        if (! empty($data['handover_to_user_id']) && $employee->user) {
+            app(Handovers::class)->forLeave($leave, $employee->user, (int) $data['handover_to_user_id']);
+        }
         if (! $this->workflow->start(LeaveRequestProcess::KEY, $leave, $by)) {
             $this->approve($leave->refresh());
         }
@@ -205,6 +209,7 @@ class ManageLeave
             }
             app(ManageAnnualRoster::class)->sync($leave);
         });
+        app(Handovers::class)->syncLeave($leave);
         $this->notify($leave, 'Leave approved', 'Your :type from :from to :to (:days days) is approved.',
             ['type' => $leave->leaveType?->name ?? 'leave', 'from' => $leave->start_date->format('d M Y'), 'to' => $leave->end_date->format('d M Y'), 'days' => $this->num($leave->days)]);
     }
@@ -215,6 +220,7 @@ class ManageLeave
         $leave->update(['status' => $withdrawn ? EmpLeave::CANCELLED : EmpLeave::REJECTED, 'decision_comment' => $withdrawn ? null : $comment, 'decided_at' => now()]);
         $this->clearCalendar($leave);
         app(ManageAnnualRoster::class)->sync($leave);
+        app(Handovers::class)->syncLeave($leave);
         if (! $withdrawn) {
             $this->notify($leave, 'Leave not approved', $comment ? 'Your :type request from :from was not approved. Reason: :reason' : 'Your :type request from :from was not approved.',
                 ['type' => $leave->leaveType?->name, 'from' => $leave->start_date->format('d M Y'), 'reason' => $comment]);
@@ -237,6 +243,7 @@ class ManageLeave
             $leave->update(['status' => EmpLeave::CANCELLED, 'decided_at' => now()]);
             $this->clearCalendar($leave);
             app(ManageAnnualRoster::class)->sync($leave);
+            app(Handovers::class)->syncLeave($leave);
 
             return $leave->refresh();
         }
@@ -280,8 +287,9 @@ class ManageLeave
             if ($leave->status === EmpLeave::APPROVED) {
                 $this->writeCalendar($leave);
             }
+            app(Handovers::class)->syncLeave($leave->refresh());
 
-            return $leave->refresh();
+            return $leave;
         });
     }
 
@@ -307,8 +315,9 @@ class ManageLeave
                 'after' => ['start_date' => $leave->start_date->toDateString(), 'end_date' => $end->toDateString(), 'days' => (float) $days, 'report_date' => $report->toDateString()], 'comment' => $comment,
             ]);
             $this->writeCalendar($leave);
+            app(Handovers::class)->syncLeave($leave->refresh());
 
-            return $leave->refresh();
+            return $leave;
         });
     }
 

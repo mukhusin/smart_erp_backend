@@ -26,7 +26,7 @@ class HandoverController extends Controller
     {
         $query = RoleHandover::with(['role', 'fromUser', 'toUser'])->latest('starts_at');
         if (request('filter.status', 'current') === 'current') {
-            $query->whereNull('revoked_at')->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>', now()));
+            $query->whereIn('status', ['pending', 'approved'])->whereNull('revoked_at')->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>', now()));
         }
 
         return HandoverResource::collection($query->paginate(50));
@@ -37,7 +37,7 @@ class HandoverController extends Controller
      */
     public function store(StoreHandoverRequest $request, AccessService $access)
     {
-        $handover = RoleHandover::create($request->validated() + ['created_by' => $request->user()->id]);
+        $handover = RoleHandover::create(['suspend_giver' => false, ...$request->validated(), 'status' => 'approved', 'source' => 'admin', 'decided_at' => now(), 'created_by' => $request->user()->id]);
         $access->forget();
 
         return (new HandoverResource($handover->load(['role', 'fromUser', 'toUser'])))->response()->setStatusCode(201);

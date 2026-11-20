@@ -13,8 +13,8 @@ use Modules\Core\Support\PermissionCatalog;
 /**
  * The single answer to "may this user do X?" and "which modules can this user open?".
  *
- * permissions(user) = (direct permissions + permissions of assigned roles + permissions of roles
- *                      handed over to the user right now)
+ * permissions(user) = (direct permissions + permissions of assigned roles (less those the user handed over
+ *                      with the giver suspended) + permissions of roles handed over to the user right now)
  *                     limited to modules available to the user.
  * modules(user)     = modules enabled for the company (core always)
  *                     minus modules locked for the user's branch
@@ -142,7 +142,8 @@ class AccessService
             ->where('company_id', $user->company_id)
             ->pluck('role_id');
         $handoverRoleIds = $this->activeHandovers($user)->pluck('role_id');
-        $roleIds = $assignedRoleIds->merge($handoverRoleIds)->unique();
+        $suspended = RoleHandover::withoutCompanyScope()->active()->where('company_id', $user->company_id)->where('from_user_id', $user->id)->where('suspend_giver', true)->pluck('role_id');
+        $roleIds = $assignedRoleIds->diff($suspended)->merge($handoverRoleIds)->unique();
 
         $fromRoles = DB::table(config('permission.table_names.role_has_permissions') . ' as rp')
             ->join(config('permission.table_names.permissions') . ' as p', 'p.id', '=', 'rp.permission_id')

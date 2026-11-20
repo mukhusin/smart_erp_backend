@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\ReportingLine;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Modules\Core\Models\RoleHandover;
 use Modules\Workflow\Models\WorkflowInstance;
 use Modules\Workflow\Models\WorkflowInstanceStep;
 use Modules\Workflow\Models\WorkflowStep;
@@ -40,8 +41,11 @@ class StepApprovers
     {
         $key = "role:$companyId:$roleId:".($sameBranch ? (int) $branchId : '*');
 
-        return $this->memo[$key] ??= User::where('company_id', $companyId)->where('is_active', true)
-            ->whereIn('id', DB::table(config('permission.table_names.model_has_roles'))->where('role_id', $roleId)->where('model_type', (new User)->getMorphClass())->pluck('model_id'))
+        $handovers = RoleHandover::withoutCompanyScope()->active()->where('company_id', $companyId)->where('role_id', $roleId)->get(['from_user_id', 'to_user_id', 'suspend_giver']);
+        $holders = DB::table(config('permission.table_names.model_has_roles'))->where('role_id', $roleId)->where('model_type', (new User)->getMorphClass())->pluck('model_id')
+            ->diff($handovers->where('suspend_giver', true)->pluck('from_user_id'))->merge($handovers->pluck('to_user_id'));
+
+        return $this->memo[$key] ??= User::where('company_id', $companyId)->where('is_active', true)->whereIn('id', $holders)
             ->when($sameBranch, fn ($q) => $q->where('company_branch_id', $branchId))->with('employee')->get();
     }
 

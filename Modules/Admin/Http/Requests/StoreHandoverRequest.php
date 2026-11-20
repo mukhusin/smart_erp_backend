@@ -27,6 +27,8 @@ class StoreHandoverRequest extends FormRequest
             /** Empty = until ended manually. */
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'reason' => ['required', 'string', 'max:500'],
+            /** The person handing over cannot use the role while it is handed over. */
+            'suspend_giver' => ['nullable', 'boolean'],
         ];
     }
 }
