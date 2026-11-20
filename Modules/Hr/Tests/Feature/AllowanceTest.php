@@ -157,6 +157,53 @@ class AllowanceTest extends TestCase
         $this->actingAs($this->user)->getJson('/api/v1/allowance/entries')->assertForbidden();
     }
 
+    public function test_heads_enter_a_days_counts_as_a_batch_sent_for_approval(): void
+    {
+        $theatre = $this->category('Theatre allowance', 'OT', 'case', 'claim');
+        $this->rate($theatre, 5000)->assertCreated();
+        $hr = $this->inCompany(fn () => tap(User::factory()->create(['company_id' => $this->company->id]))->assignRole('hr-officer'));
+        $this->inCompany(fn () => WorkflowTemplate::create(['process' => 'allowance-batch', 'is_active' => true])->steps()->create(['step_order' => 1, 'name' => 'HR', 'approver_type' => 'user', 'user_id' => $hr->id]));
+        $scrub = $this->inCompany(fn () => tap(Employee::create(['employee_no' => 'Scrub', 'fname' => 'Scrub', 'lname' => 'X', 'gender' => 'Male', 'department_id' => $this->ward->id, 'job_position_id' => $this->nursePosition,
+            'emp_type' => 'full_time', 'employment_status' => 'confirmed', 'employment_date' => '2020-01-01']), fn ($e) => EmployeeContract::create(['employee_id' => $e->id,
+            'nature_of_contract_id' => NatureOfContract::where('code', 'STC')->value('id'), 'contract_no' => 'S1', 'basic_salary' => 900000, 'period' => 12, 'start_date' => '2026-01-01', 'end_date' => '2026-12-31', 'status' => 'active', 'is_active' => true])));
+        $this->inCompany(fn () => app(ManageLeave::class)->request($this->nurse, ['leave_type_id' => LeaveType::where('code', 'AL')->value('id'), 'start_date' => '2026-11-10', 'days' => 1], $this->admin, 'hr'));
+
+        $monthly = $this->category('Risk allowance', 'RA', 'month', 'claim');
+        $this->rate($monthly, 30000)->assertCreated();
+        $callOut = $this->category('Call-out allowance', 'CO', 'day', 'claim');
+        $choices = $this->actingAs($this->admin)->getJson('/api/v1/allowance/batches')->assertOk()->json('meta.choices');
+        $this->assertSame([['category_id' => $theatre, 'category' => 'Theatre allowance', 'department_id' => $this->ward->id, 'department' => 'Ward']], $choices, 'only claimed, not monthly, with a rate for the team');
+        $this->postJson('/api/v1/allowance/batches', ['allowance_category_id' => $callOut, 'department_id' => $this->ward->id, 'date' => '2026-11-10'])->assertUnprocessable()->assertJsonValidationErrors(['allowance_category_id' => 'no rate']);
+        $this->postJson('/api/v1/allowance/batches', ['allowance_category_id' => $monthly, 'department_id' => $this->ward->id, 'date' => '2026-11-10'])->assertUnprocessable()->assertJsonValidationErrors(['allowance_category_id']);
+        $new = fn (string $date) => $this->postJson('/api/v1/allowance/batches', ['allowance_category_id' => $theatre, 'department_id' => $this->ward->id, 'date' => $date]);
+        $new('2026-11-20')->assertUnprocessable()->assertJsonValidationErrors(['date']);
+        $id = $new('2026-11-10')->assertCreated()->assertJsonPath('data.status', 'draft')->json('data.id');
+        $new('2026-11-10')->assertUnprocessable()->assertJsonValidationErrors(['date' => 'already']);
+
+        $team = collect($this->getJson("/api/v1/allowance/batches/{$id}/employees")->assertOk()->json('data'))->keyBy('name');
+        $this->assertStringStartsWith('On ', $team['Nurse X']['blocked']);
+        $this->assertSame('Contract does not give allowances', $team['Intern X']['blocked']);
+        $this->assertNull($team['Scrub X']['blocked']);
+        $this->putJson("/api/v1/allowance/batches/{$id}/lines", ['employee_id' => $this->nurse->id, 'items' => 2])->assertUnprocessable()->assertJsonValidationErrors(['employee_id' => 'On ']);
+        $this->postJson("/api/v1/allowance/batches/{$id}/submit")->assertUnprocessable()->assertJsonValidationErrors(['lines']);
+        $this->putJson("/api/v1/allowance/batches/{$id}/lines", ['employee_id' => $scrub->id, 'items' => 4])->assertOk()->assertJsonPath('data.amount', 20000);
+        $this->putJson("/api/v1/allowance/batches/{$id}/lines", ['employee_id' => $scrub->id, 'items' => 3])->assertOk()->assertJsonPath('data.amount', 15000);
+        $this->actingAs($hr)->getJson("/api/v1/allowance/batches/{$id}")->assertOk()->assertJsonPath('data.batch.can_edit', true);
+        $this->actingAs($this->user)->getJson("/api/v1/allowance/batches/{$id}")->assertNotFound();
+
+        $this->actingAs($this->admin)->postJson("/api/v1/allowance/batches/{$id}/submit")->assertOk()->assertJsonPath('data.status', 'pending');
+        $this->putJson("/api/v1/allowance/batches/{$id}/lines", ['employee_id' => $scrub->id, 'items' => 5])->assertUnprocessable();
+        $this->assertSame(0, DailyAllowance::where('employee_id', $scrub->id)->count());
+        $workflow = \App\Models\AllowanceBatch::find($id)->workflow;
+        $this->actingAs($hr)->getJson("/api/v1/workflow/requests/{$workflow->id}")->assertJsonPath('data.lines.0', '1 employees, 3 items, total 15,000.00')->assertJsonPath('data.link', "/allowance/batches/{$id}");
+        $this->getJson("/api/v1/allowance/batches/{$id}")->assertOk()->assertJsonPath('data.lines.0.name', 'Scrub X')->assertJsonPath('data.batch.amount', 15000);
+        $this->postJson("/api/v1/workflow/requests/{$workflow->id}/approve")->assertOk();
+        $this->assertSame('approved', \App\Models\AllowanceBatch::find($id)->status);
+        $entry = DailyAllowance::where('employee_id', $scrub->id)->first();
+        $this->assertSame(['approved', 'batch', 15000.0], [$entry->status, $entry->source, (float) $entry->amount]);
+        $this->actingAs($this->admin)->deleteJson("/api/v1/allowance/batches/{$id}")->assertUnprocessable();
+    }
+
     public function test_activity_allowances_use_a_daily_count_from_the_source_or_entered_by_hand(): void
     {
         Http::fake(function ($request) {

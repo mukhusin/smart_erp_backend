@@ -43,7 +43,7 @@ final class DefaultRoles
             'tasks.use', 'tasks.assign', 'tasks.activities.manage', 'appraisals.use', 'appraisals.review', 'planning.department', 'budgeting.prepare', 'payments.request', 'procurement.request',
         ],
         'section-head' => [
-            'hr.employees.view-section', 'roster.section.view', 'roster.manage', 'attendance.working-hours.section', 'reports.view', 'self-service.use',
+            'hr.employees.view-section', 'roster.section.view', 'roster.manage', 'attendance.working-hours.section', 'allowance.daily.manage', 'reports.view', 'self-service.use',
             'tasks.use', 'tasks.assign', 'appraisals.use', 'appraisals.review',
         ],
         'accountant' => ['accounting.*', 'budgeting.*', 'payments.*', 'receivables.*', 'procurement.view', 'inventory.view', 'self-service.use', 'tasks.use', 'appraisals.use'],

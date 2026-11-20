@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceBatchController;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceEntryController;
 use Modules\Hr\Http\Controllers\Api\Allowance\ActivityCountController;
 use Modules\Hr\Http\Controllers\Api\Allowance\AllowanceSetupController;
@@ -404,7 +405,16 @@ Route::prefix('allowance')->middleware(['auth:sanctum', 'module:allowance'])->na
         Route::post('activity-counts', [ActivityCountController::class, 'store'])->name('activity-counts.store');
         Route::delete('activity-counts/{count}', [ActivityCountController::class, 'destroy'])->name('activity-counts.destroy');
         Route::post('activity-counts/fetch', [ActivityCountController::class, 'fetch'])->middleware('throttle:10,1')->name('activity-counts.fetch');
+        Route::get('batches', [AllowanceBatchController::class, 'index'])->name('batches.index');
+        Route::post('batches', [AllowanceBatchController::class, 'store'])->name('batches.store');
+        Route::put('batches/{batch}', [AllowanceBatchController::class, 'update'])->name('batches.update');
+        Route::delete('batches/{batch}', [AllowanceBatchController::class, 'destroy'])->name('batches.destroy');
+        Route::get('batches/{batch}/employees', [AllowanceBatchController::class, 'employees'])->name('batches.employees');
+        Route::put('batches/{batch}/lines', [AllowanceBatchController::class, 'setLine'])->name('batches.lines.set');
+        Route::delete('batches/{batch}/lines/{line}', [AllowanceBatchController::class, 'removeLine'])->name('batches.lines.destroy');
+        Route::post('batches/{batch}/submit', [AllowanceBatchController::class, 'submit'])->name('batches.submit');
     });
+    Route::get('batches/{batch}', [AllowanceBatchController::class, 'show'])->name('batches.show');
 });
 
 Route::prefix('overtime')->middleware(['auth:sanctum', 'module:overtime'])->name('overtime.')->group(function () {
