@@ -150,6 +150,7 @@ final class PermissionCatalog
         'reports' => [
             'reports.view' => 'View reports',
             'reports.generate' => 'Generate and export reports',
+            'reports.executive' => 'Executive dashboard (statistics of the areas the user can view)',
         ],
         'accounting' => [
             'accounting.view' => 'View accounts, journals, ledger and financial reports',

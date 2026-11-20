@@ -105259,6 +105259,638 @@
                 }
             }
         },
+        "/reports/executive": {
+            "get": {
+                "operationId": "reports.executive",
+                "tags": [
+                    "Reports: Executive dashboard",
+                    "ExecutiveDashboard"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "months": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "hr": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "headcount": {
+                                                            "type": "integer"
+                                                        },
+                                                        "on_leave_today": {
+                                                            "type": "integer"
+                                                        },
+                                                        "contracts_expiring": {
+                                                            "type": "integer"
+                                                        },
+                                                        "joined_year": {
+                                                            "type": "integer"
+                                                        },
+                                                        "left_year": {
+                                                            "type": "integer"
+                                                        },
+                                                        "by_gender": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "by_type": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "by_department": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "joined": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "left": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "headcount",
+                                                        "on_leave_today",
+                                                        "contracts_expiring",
+                                                        "joined_year",
+                                                        "left_year",
+                                                        "by_gender",
+                                                        "by_type",
+                                                        "by_department",
+                                                        "joined",
+                                                        "left"
+                                                    ]
+                                                },
+                                                "procurement": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "requisitions_pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "requisitions_to_source": {
+                                                            "type": "integer"
+                                                        },
+                                                        "orders_pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "open_orders": {
+                                                            "type": "integer"
+                                                        },
+                                                        "open_orders_value": {
+                                                            "type": "number"
+                                                        },
+                                                        "ordered_year": {
+                                                            "type": "number"
+                                                        },
+                                                        "by_month": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "by_status": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "integer"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "top_suppliers": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "requisitions_pending",
+                                                        "requisitions_to_source",
+                                                        "orders_pending",
+                                                        "open_orders",
+                                                        "open_orders_value",
+                                                        "ordered_year",
+                                                        "by_month",
+                                                        "by_status",
+                                                        "top_suppliers"
+                                                    ]
+                                                },
+                                                "inventory": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "stock_value": {
+                                                            "type": "number"
+                                                        },
+                                                        "items_in_stock": {
+                                                            "type": "integer"
+                                                        },
+                                                        "below_reorder": {
+                                                            "type": "integer"
+                                                        },
+                                                        "requisitions_pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "requisitions_to_issue": {
+                                                            "type": "integer"
+                                                        },
+                                                        "by_store": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "stock_value",
+                                                        "items_in_stock",
+                                                        "below_reorder",
+                                                        "requisitions_pending",
+                                                        "requisitions_to_issue",
+                                                        "by_store"
+                                                    ]
+                                                },
+                                                "payments": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "requests_pending": {
+                                                            "type": "integer"
+                                                        },
+                                                        "to_voucher": {
+                                                            "type": "integer"
+                                                        },
+                                                        "to_voucher_value": {
+                                                            "type": "number"
+                                                        },
+                                                        "vouchers_to_pay": {
+                                                            "type": "integer"
+                                                        },
+                                                        "vouchers_to_pay_value": {
+                                                            "type": "number"
+                                                        },
+                                                        "paid_year": {
+                                                            "type": "number"
+                                                        },
+                                                        "by_month": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "imprest_open": {
+                                                            "type": "integer"
+                                                        },
+                                                        "imprest_open_value": {
+                                                            "type": "number"
+                                                        },
+                                                        "imprest_overdue": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "requests_pending",
+                                                        "to_voucher",
+                                                        "to_voucher_value",
+                                                        "vouchers_to_pay",
+                                                        "vouchers_to_pay_value",
+                                                        "paid_year",
+                                                        "by_month",
+                                                        "imprest_open",
+                                                        "imprest_open_value",
+                                                        "imprest_overdue"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "months",
+                                                "hr",
+                                                "procurement",
+                                                "inventory",
+                                                "payments"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/reports/executive/payments": {
+            "get": {
+                "operationId": "reports.executive.payments",
+                "summary": "Payment requests with their stage",
+                "tags": [
+                    "Reports: Executive dashboard",
+                    "PaymentTracker"
+                ],
+                "parameters": [
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "description": "open (default) or all",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "submitted_at or total; - for descending",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "number": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "type": "string"
+                                                    },
+                                                    "department": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "requested_by": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "amount": {
+                                                        "type": "number"
+                                                    },
+                                                    "submitted_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "age_days": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "status_label": {
+                                                        "type": "string"
+                                                    },
+                                                    "stage": {
+                                                        "type": "string"
+                                                    },
+                                                    "waiting_on": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "waiting_days": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "link": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "number",
+                                                    "title",
+                                                    "kind",
+                                                    "department",
+                                                    "requested_by",
+                                                    "amount",
+                                                    "submitted_at",
+                                                    "age_days",
+                                                    "status",
+                                                    "status_label",
+                                                    "stage",
+                                                    "waiting_on",
+                                                    "waiting_days",
+                                                    "link"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "ageing": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "value": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "label",
+                                                            "value"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "last_page",
+                                                "per_page",
+                                                "total",
+                                                "from",
+                                                "to",
+                                                "ageing"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/reports/executive/approvers": {
+            "get": {
+                "operationId": "reports.executive.approvers",
+                "summary": "How fast each approver acts on payment approvals (last 90 days) and what waits for them now",
+                "tags": [
+                    "Reports: Executive dashboard",
+                    "PaymentTracker"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "user_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "acted": {
+                                                        "type": "integer"
+                                                    },
+                                                    "avg_hours": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "slowest_hours": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "waiting": {
+                                                        "type": "integer"
+                                                    },
+                                                    "oldest_days": {
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "user_id",
+                                                    "name",
+                                                    "acted",
+                                                    "avg_hours",
+                                                    "slowest_hours",
+                                                    "waiting",
+                                                    "oldest_days"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/roster/codes": {
             "get": {
                 "operationId": "roster.codes.index",
@@ -121733,6 +122365,7 @@
                                 "appraisals.manage",
                                 "reports.view",
                                 "reports.generate",
+                                "reports.executive",
                                 "accounting.view",
                                 "accounting.journals",
                                 "accounting.reconcile",
@@ -122016,6 +122649,7 @@
                                 "appraisals.manage",
                                 "reports.view",
                                 "reports.generate",
+                                "reports.executive",
                                 "accounting.view",
                                 "accounting.journals",
                                 "accounting.reconcile",
