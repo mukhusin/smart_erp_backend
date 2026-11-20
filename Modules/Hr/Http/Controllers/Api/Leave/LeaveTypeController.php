@@ -18,7 +18,7 @@ class LeaveTypeController extends Controller
     /**
      * List leave types with the number of leave records of each, and the choices for the form.
      *
-     * @response array{data: list<array{id: int, name: string, code: string, kind: string, kind_label: string, gender: string, description: string|null, with_pay: bool, max_days: int, fixed_days: bool, place_rule: string|null, day_count: string, day_count_label: string, limit_per: string, carry_over_days: int|null, notice_days: int, requires_document: bool, employee_types: list<string>|null, color: string|null, is_active: bool, leaves_count: int}>, meta: array{kinds: array<string, string>, day_counts: array<string, string>}}
+     * @response array{data: list<array{id: int, name: string, code: string, kind: string, kind_label: string, gender: string, description: string|null, with_pay: bool, max_days: int, fixed_days: bool, hide_days: bool, place_rule: string|null, day_count: string, day_count_label: string, limit_per: string, carry_over_days: int|null, notice_days: int, requires_document: bool, employee_types: list<string>|null, color: string|null, is_active: bool, leaves_count: int}>, meta: array{kinds: array<string, string>, day_counts: array<string, string>}}
      */
     public function index(): JsonResponse
     {
@@ -31,7 +31,7 @@ class LeaveTypeController extends Controller
     /**
      * Add a leave type.
      *
-     * @response array{data: array{id: int, name: string, code: string, kind: string, kind_label: string, gender: string, description: string|null, with_pay: bool, max_days: int, fixed_days: bool, place_rule: string|null, day_count: string, day_count_label: string, limit_per: string, carry_over_days: int|null, notice_days: int, requires_document: bool, employee_types: list<string>|null, color: string|null, is_active: bool, leaves_count: int}}
+     * @response array{data: array{id: int, name: string, code: string, kind: string, kind_label: string, gender: string, description: string|null, with_pay: bool, max_days: int, fixed_days: bool, hide_days: bool, place_rule: string|null, day_count: string, day_count_label: string, limit_per: string, carry_over_days: int|null, notice_days: int, requires_document: bool, employee_types: list<string>|null, color: string|null, is_active: bool, leaves_count: int}}
      */
     public function store(LeaveTypeRequest $request): JsonResponse
     {
@@ -41,7 +41,7 @@ class LeaveTypeController extends Controller
     /**
      * Update a leave type. Leave already taken keeps its days.
      *
-     * @response array{data: array{id: int, name: string, code: string, kind: string, kind_label: string, gender: string, description: string|null, with_pay: bool, max_days: int, fixed_days: bool, place_rule: string|null, day_count: string, day_count_label: string, limit_per: string, carry_over_days: int|null, notice_days: int, requires_document: bool, employee_types: list<string>|null, color: string|null, is_active: bool, leaves_count: int}}
+     * @response array{data: array{id: int, name: string, code: string, kind: string, kind_label: string, gender: string, description: string|null, with_pay: bool, max_days: int, fixed_days: bool, hide_days: bool, place_rule: string|null, day_count: string, day_count_label: string, limit_per: string, carry_over_days: int|null, notice_days: int, requires_document: bool, employee_types: list<string>|null, color: string|null, is_active: bool, leaves_count: int}}
      */
     public function update(LeaveTypeRequest $request, LeaveType $leaveType): JsonResponse
     {
@@ -64,7 +64,7 @@ class LeaveTypeController extends Controller
         return [
             'id' => $t->id, 'name' => $t->name, 'code' => $t->code, 'kind' => $t->kind, 'kind_label' => LeaveType::KINDS[$t->kind] ?? $t->kind,
             'gender' => $t->gender, 'description' => $t->description, 'with_pay' => (bool) $t->with_pay, 'max_days' => (int) $t->max_days,
-            'fixed_days' => (bool) $t->fixed_days, 'place_rule' => $t->place_rule, 'day_count' => $t->day_count, 'day_count_label' => LeaveType::DAY_COUNTS[$t->day_count] ?? $t->day_count, 'limit_per' => $t->limit_per,
+            'fixed_days' => (bool) $t->fixed_days, 'hide_days' => (bool) $t->hide_days, 'place_rule' => $t->place_rule, 'day_count' => $t->day_count, 'day_count_label' => LeaveType::DAY_COUNTS[$t->day_count] ?? $t->day_count, 'limit_per' => $t->limit_per,
             'carry_over_days' => $t->carry_over_days, 'notice_days' => (int) $t->notice_days, 'requires_document' => (bool) $t->requires_document,
             'employee_types' => $t->employee_types ?: null, 'color' => $t->color, 'is_active' => (bool) $t->is_active, 'leaves_count' => (int) ($t->leaves_count ?? 0),
         ];
@@ -78,7 +78,7 @@ class LeaveTypeController extends Controller
         return [
             'name' => trim($d['name']), 'code' => strtoupper(trim($d['code'])), 'kind' => $d['kind'], 'gender' => $d['gender'], 'description' => $d['description'] ?? null,
             'with_pay' => $d['kind'] === 'unpaid' ? false : (bool) $d['with_pay'], 'max_days' => (int) $d['max_days'], 'day_count' => $d['day_count'],
-            'fixed_days' => $d['limit_per'] === 'request' && (bool) ($d['fixed_days'] ?? false), 'place_rule' => $d['place_rule'] ?? null,
+            'fixed_days' => $d['limit_per'] === 'request' && (bool) ($d['fixed_days'] ?? false), 'place_rule' => $d['place_rule'] ?? null, 'hide_days' => (bool) ($d['hide_days'] ?? false),
             'limit_per' => $d['limit_per'], 'carry_over_days' => $yearly ? ($d['carry_over_days'] ?? null) : null, 'notice_days' => (int) ($d['notice_days'] ?? 0),
             'requires_document' => (bool) ($d['requires_document'] ?? false), 'employee_types' => ($d['employee_types'] ?? []) ?: null,
             'color' => $d['color'] ?? null, 'is_active' => $d['is_active'] ?? true,

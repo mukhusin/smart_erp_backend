@@ -32,6 +32,8 @@ class LeaveTypeRequest extends FormRequest
             'max_days' => ['required', 'integer', 'min:1', 'max:366'],
             /** Every request takes exactly max_days; the employee cannot change it (e.g. compassionate leave). */
             'fixed_days' => ['boolean'],
+            /** Employees do not see the number of days (e.g. unpaid leave); the limit still applies. */
+            'hide_days' => ['boolean'],
             /** outside or within: where the employee must be during the leave, compared with their branch's region. Empty: anywhere. */
             'place_rule' => ['nullable', Rule::in(array_keys(LeaveType::PLACE_RULES))],
             /** working, calendar_no_holidays or calendar. */

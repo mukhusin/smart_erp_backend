@@ -138,6 +138,10 @@ Migrations add `employee_patient_ids`, `uploaded_payrolls` and `uploaded_payroll
    * * * * * php /path/to/smart_erp_backend/artisan schedule:run >> /dev/null 2>&1
    ```
 
+## Leave: hide days from employees (2026-11-20)
+
+`php artisan migrate` adds `leave_types.hide_days` (off). Tick it in Leave types for e.g. unpaid leave.
+
 ## Leave: fixed days and place rule (2026-11-20)
 
 `php artisan migrate` adds `leave_types.fixed_days` and `leave_types.place_rule`. The HRMS import now counts calendar

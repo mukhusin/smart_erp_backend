@@ -60082,6 +60082,24 @@
                                                             },
                                                             "requires_document": {
                                                                 "type": "boolean"
+                                                            },
+                                                            "max_days": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "fixed_days": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "hide_days": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "place_rule": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
@@ -60093,7 +60111,11 @@
                                                             "with_pay",
                                                             "limit_per",
                                                             "notice_days",
-                                                            "requires_document"
+                                                            "requires_document",
+                                                            "max_days",
+                                                            "fixed_days",
+                                                            "hide_days",
+                                                            "place_rule"
                                                         ]
                                                     },
                                                     "leave_type_id": {
@@ -60118,13 +60140,22 @@
                                                         "type": "boolean"
                                                     },
                                                     "entitled": {
-                                                        "type": "number"
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "carried_over": {
-                                                        "type": "number"
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "adjustments": {
-                                                        "type": "number"
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "taken": {
                                                         "type": "number"
@@ -60133,7 +60164,10 @@
                                                         "type": "number"
                                                     },
                                                     "available": {
-                                                        "type": "number"
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "eligible": {
                                                         "type": "boolean"
@@ -62248,6 +62282,9 @@
                                                     "fixed_days": {
                                                         "type": "boolean"
                                                     },
+                                                    "hide_days": {
+                                                        "type": "boolean"
+                                                    },
                                                     "place_rule": {
                                                         "type": [
                                                             "string",
@@ -62308,6 +62345,7 @@
                                                     "with_pay",
                                                     "max_days",
                                                     "fixed_days",
+                                                    "hide_days",
                                                     "place_rule",
                                                     "day_count",
                                                     "day_count_label",
@@ -62421,6 +62459,9 @@
                                                 "fixed_days": {
                                                     "type": "boolean"
                                                 },
+                                                "hide_days": {
+                                                    "type": "boolean"
+                                                },
                                                 "place_rule": {
                                                     "type": [
                                                         "string",
@@ -62481,6 +62522,7 @@
                                                 "with_pay",
                                                 "max_days",
                                                 "fixed_days",
+                                                "hide_days",
                                                 "place_rule",
                                                 "day_count",
                                                 "day_count_label",
@@ -62587,6 +62629,9 @@
                                                 "fixed_days": {
                                                     "type": "boolean"
                                                 },
+                                                "hide_days": {
+                                                    "type": "boolean"
+                                                },
                                                 "place_rule": {
                                                     "type": [
                                                         "string",
@@ -62647,6 +62692,7 @@
                                                 "with_pay",
                                                 "max_days",
                                                 "fixed_days",
+                                                "hide_days",
                                                 "place_rule",
                                                 "day_count",
                                                 "day_count_label",
@@ -116376,6 +116422,10 @@
                     "fixed_days": {
                         "type": "boolean",
                         "description": "Every request takes exactly max_days; the employee cannot change it (e.g. compassionate leave)."
+                    },
+                    "hide_days": {
+                        "type": "boolean",
+                        "description": "Employees do not see the number of days (e.g. unpaid leave); the limit still applies."
                     },
                     "place_rule": {
                         "type": [

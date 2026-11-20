@@ -85,14 +85,17 @@ class LeaveBalanceController extends Controller
     /**
      * My leave balances for a year (default this year): only the leave types I can take.
      *
-     * @response array{data: list<array{leave_type: array{id: int, name: string, code: string, kind: string, color: string|null, with_pay: bool, limit_per: string, notice_days: int, requires_document: bool}, leave_type_id: int, year: int, period_start: string, period_end: string, period_label: string, from_joining: bool, yearly: bool, entitled: float, carried_over: float, adjustments: float, taken: float, pending: float, available: float, eligible: bool, reason: string|null}>, meta: array{year: int}}
+     * @response array{data: list<array{leave_type: array{id: int, name: string, code: string, kind: string, color: string|null, with_pay: bool, limit_per: string, notice_days: int, requires_document: bool, max_days: int|null, fixed_days: bool, hide_days: bool, place_rule: string|null}, leave_type_id: int, year: int, period_start: string, period_end: string, period_label: string, from_joining: bool, yearly: bool, entitled: float|null, carried_over: float|null, adjustments: float|null, taken: float, pending: float, available: float|null, eligible: bool, reason: string|null}>, meta: array{year: int}}
      */
     #[QueryParameter('year', type: 'integer')]
     public function mine(Request $request): JsonResponse
     {
         $year = $this->year($request);
 
-        return response()->json(['data' => $this->rows($this->me($request), $year, true), 'meta' => ['year' => $year ?? app(LeavePeriods::class)->companyYear()]]);
+        $rows = array_map(fn ($r) => ($r['leave_type']['hide_days'] ?? false) ? array_merge($r, ['entitled' => null, 'carried_over' => null, 'adjustments' => null, 'available' => null,
+            'leave_type' => array_merge($r['leave_type'], ['max_days' => null])]) : $r, $this->rows($this->me($request), $year, true));
+
+        return response()->json(['data' => $rows, 'meta' => ['year' => $year ?? app(LeavePeriods::class)->companyYear()]]);
     }
 
     /**
@@ -150,7 +153,7 @@ class LeaveBalanceController extends Controller
         $types = LeaveType::whereIn('id', collect($this->balances()->all($employee, $year))->pluck('leave_type_id'))->get()->keyBy('id');
 
         return collect($this->balances()->all($employee, $year, $onlyEligible))->map(fn ($b) => [
-            'leave_type' => ($t = $types[$b['leave_type_id']]) ? ['id' => $t->id, 'name' => $t->name, 'code' => $t->code, 'kind' => $t->kind, 'color' => $t->color, 'with_pay' => (bool) $t->with_pay, 'limit_per' => $t->limit_per, 'notice_days' => (int) $t->notice_days, 'requires_document' => (bool) $t->requires_document, 'max_days' => (int) $t->max_days, 'fixed_days' => (bool) $t->fixed_days, 'place_rule' => $t->place_rule] : null,
+            'leave_type' => ($t = $types[$b['leave_type_id']]) ? ['id' => $t->id, 'name' => $t->name, 'code' => $t->code, 'kind' => $t->kind, 'color' => $t->color, 'with_pay' => (bool) $t->with_pay, 'limit_per' => $t->limit_per, 'notice_days' => (int) $t->notice_days, 'requires_document' => (bool) $t->requires_document, 'max_days' => (int) $t->max_days, 'fixed_days' => (bool) $t->fixed_days, 'hide_days' => (bool) $t->hide_days, 'place_rule' => $t->place_rule] : null,
         ] + $b)->values()->all();
     }
 

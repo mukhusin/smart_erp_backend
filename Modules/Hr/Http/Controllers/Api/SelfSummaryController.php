@@ -112,7 +112,7 @@ class SelfSummaryController extends Controller
                 'name' => $types[$annualRow['leave_type_id']]->name, 'entitled' => round($annualRow['entitled'] + $annualRow['carried_over'] + $annualRow['adjustments'], 1),
                 'taken' => $annualRow['taken'], 'pending' => $annualRow['pending'], 'available' => $annualRow['available'],
             ] : null,
-            'other_available' => $rows->reject(fn ($r) => $r === $annualRow)->filter(fn ($r) => $r['available'] > 0)
+            'other_available' => $rows->reject(fn ($r) => $r === $annualRow)->filter(fn ($r) => $r['available'] > 0 && ! $types[$r['leave_type_id']]->hide_days)
                 ->map(fn ($r) => ['name' => $types[$r['leave_type_id']]->name, 'available' => $r['available']])->values()->take(4)->all(),
             'pending' => EmpLeave::where('employee_id', $employee->id)->where('status', EmpLeave::PENDING)->count(),
             'on_leave' => $current ? ['type' => $current->leaveType?->name ?? 'Leave', 'until' => CarbonImmutable::parse($current->end_date)->toDateString()] : null,

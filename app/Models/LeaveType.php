@@ -25,12 +25,12 @@ class LeaveType extends Model
     ];
 
     protected $fillable = [
-        'company_id', 'name', 'code', 'kind', 'gender', 'description', 'with_pay', 'max_days', 'fixed_days', 'place_rule', 'day_count', 'limit_per',
+        'company_id', 'name', 'code', 'kind', 'gender', 'description', 'with_pay', 'max_days', 'fixed_days', 'hide_days', 'place_rule', 'day_count', 'limit_per',
         'carry_over_days', 'notice_days', 'requires_document', 'employee_types', 'color', 'is_active',
     ];
 
     protected $casts = [
-        'with_pay' => 'boolean', 'fixed_days' => 'boolean', 'is_active' => 'boolean', 'requires_document' => 'boolean', 'employee_types' => 'array',
+        'with_pay' => 'boolean', 'fixed_days' => 'boolean', 'hide_days' => 'boolean', 'is_active' => 'boolean', 'requires_document' => 'boolean', 'employee_types' => 'array',
         'max_days' => 'integer', 'carry_over_days' => 'integer', 'notice_days' => 'integer',
     ];
 

@@ -150,14 +150,14 @@ class ManageLeave
             throw ValidationException::withMessages(['days' => 'Ask for at least one day.']);
         }
         if (! $type->yearly() && $days > $type->max_days) {
-            throw ValidationException::withMessages(['days' => "{$type->name} is up to {$type->max_days} days each time."]);
+            throw ValidationException::withMessages(['days' => $byEmployee && $type->hide_days ? "This is more {$type->name} than you can ask for at once. Speak to HR." : "{$type->name} is up to {$type->max_days} days each time."]);
         }
         if ($type->yearly()) {
             $year = $this->periods()->yearOf($employee, $type, $start);
             $this->balances()->forget();
             $available = $this->balances()->for($employee, $type, $year)['available'] + ($except && $except->leave_type_id === $type->id && (int) $except->leave_year === $year ? (float) $except->days : 0);
             if ($days > $available) {
-                throw ValidationException::withMessages(['days' => "Only {$this->num($available)} days of {$type->name} are left for ".$this->periods()->label($employee, $type, $year).'.']);
+                throw ValidationException::withMessages(['days' => $byEmployee && $type->hide_days ? "This is more {$type->name} than you have left. Speak to HR." : "Only {$this->num($available)} days of {$type->name} are left for ".$this->periods()->label($employee, $type, $year).'.']);
             }
         }
         $overlap = EmpLeave::with('leaveType')->where('employee_id', $employee->id)->whereIn('status', EmpLeave::OPEN)

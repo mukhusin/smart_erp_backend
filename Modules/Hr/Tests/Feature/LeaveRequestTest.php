@@ -187,4 +187,20 @@ class LeaveRequestTest extends TestCase
         $this->assertEquals(7, $leave->days);
         $this->assertSame('2026-11-26', $leave->end_date->toDateString());
     }
+
+    public function test_hidden_days_are_not_shown_but_still_limit(): void
+    {
+        $this->giveActiveContracts($this->company);
+        $this->inCompany(fn () => LeaveType::where('code', 'UL')->update(['hide_days' => true, 'max_days' => 30, 'notice_days' => 0]));
+        $row = collect($this->actingAs($this->users['asha'])->getJson('/api/v1/self/leave/balances')->assertOk()->json('data'))->firstWhere('leave_type.code', 'UL');
+        $this->assertNull($row['available']);
+        $this->assertNull($row['entitled']);
+        $this->assertNull($row['leave_type']['max_days']);
+        $this->assertTrue($row['leave_type']['hide_days']);
+        $msg = $this->ask(['leave_type_id' => $this->typeId('UL'), 'start_date' => '2026-11-20', 'days' => 40])->assertUnprocessable()->json('errors.days.0');
+        $this->assertStringNotContainsString('30', $msg);
+        $this->assertStringContainsString('Speak to HR', $msg);
+        $this->ask(['leave_type_id' => $this->typeId('UL'), 'start_date' => '2026-11-20', 'days' => 5])->assertCreated();
+        $this->actingAs($this->admin)->getJson('/api/v1/leave/types')->assertOk();
+    }
 }
