@@ -150,7 +150,7 @@ class LeaveBalanceController extends Controller
         $types = LeaveType::whereIn('id', collect($this->balances()->all($employee, $year))->pluck('leave_type_id'))->get()->keyBy('id');
 
         return collect($this->balances()->all($employee, $year, $onlyEligible))->map(fn ($b) => [
-            'leave_type' => ($t = $types[$b['leave_type_id']]) ? ['id' => $t->id, 'name' => $t->name, 'code' => $t->code, 'kind' => $t->kind, 'color' => $t->color, 'with_pay' => (bool) $t->with_pay, 'limit_per' => $t->limit_per, 'notice_days' => (int) $t->notice_days, 'requires_document' => (bool) $t->requires_document] : null,
+            'leave_type' => ($t = $types[$b['leave_type_id']]) ? ['id' => $t->id, 'name' => $t->name, 'code' => $t->code, 'kind' => $t->kind, 'color' => $t->color, 'with_pay' => (bool) $t->with_pay, 'limit_per' => $t->limit_per, 'notice_days' => (int) $t->notice_days, 'requires_document' => (bool) $t->requires_document, 'max_days' => (int) $t->max_days, 'fixed_days' => (bool) $t->fixed_days, 'place_rule' => $t->place_rule] : null,
         ] + $b)->values()->all();
     }
 

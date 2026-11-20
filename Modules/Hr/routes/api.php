@@ -292,6 +292,7 @@ Route::prefix('self')->middleware(['auth:sanctum', 'module:self-service', 'can:s
         Route::get('leave/days', [LeaveBalanceController::class, 'myDays'])->name('leave.days');
         Route::get('leave/plans', [AnnualRosterController::class, 'mine'])->name('leave.plans');
         Route::get('leave/requests', [SelfLeaveController::class, 'index'])->name('leave.index');
+        Route::get('leave/places', [SelfLeaveController::class, 'places'])->name('leave.places');
         Route::post('leave/requests', [SelfLeaveController::class, 'store'])->name('leave.store');
         Route::post('leave/requests/{leave}/withdraw', [SelfLeaveController::class, 'withdraw'])->name('leave.withdraw');
         Route::get('leave/requests/{leave}/files/{file}', [SelfLeaveController::class, 'file'])->name('leave.file');

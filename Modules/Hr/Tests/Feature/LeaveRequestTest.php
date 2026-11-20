@@ -172,4 +172,19 @@ class LeaveRequestTest extends TestCase
         $this->inCompany(fn () => $outsider->assignRole('employee'));
         $this->actingAs($outsider)->getJson("/api/v1/leave/requests/{$id}")->assertNotFound();
     }
+
+    public function test_fixed_days_and_outside_home_region(): void
+    {
+        $this->company->update(['country' => 'Tanzania', 'city' => 'Dar es Salaam']);
+        $this->giveActiveContracts($this->company);
+        $this->inCompany(fn () => LeaveType::where('code', 'CL')->update(['fixed_days' => true, 'max_days' => 7, 'day_count' => 'calendar', 'place_rule' => 'outside']));
+        $this->actingAs($this->users['asha'])->getJson('/api/v1/self/leave/places')->assertOk()->assertJsonPath('data.home', 'Dar es Salaam')->assertJsonCount(31, 'data.regions');
+        $body = ['leave_type_id' => $this->typeId('CL'), 'start_date' => '2026-11-20', 'days' => 3, 'details' => ['deceased_name' => 'Juma', 'relationship' => 'Father', 'death_date' => '2026-11-10']];
+        $this->ask($body + ['leave_address' => 'Kinondoni, Dar es Salaam'])->assertUnprocessable()->assertJsonValidationErrors(['leave_address' => 'outside Dar es Salaam']);
+        $this->ask($body + ['leave_address' => 'Somewhere'])->assertUnprocessable()->assertJsonValidationErrors(['leave_address']);
+        $id = $this->ask($body + ['leave_address' => 'Moshi, Kilimanjaro'])->assertCreated()->json('data.id');
+        $leave = $this->inCompany(fn () => \App\Models\EmpLeave::find($id));
+        $this->assertEquals(7, $leave->days);
+        $this->assertSame('2026-11-26', $leave->end_date->toDateString());
+    }
 }

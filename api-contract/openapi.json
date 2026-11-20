@@ -62245,6 +62245,15 @@
                                                     "max_days": {
                                                         "type": "integer"
                                                     },
+                                                    "fixed_days": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "place_rule": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
                                                     "day_count": {
                                                         "type": "string"
                                                     },
@@ -62298,6 +62307,8 @@
                                                     "description",
                                                     "with_pay",
                                                     "max_days",
+                                                    "fixed_days",
+                                                    "place_rule",
                                                     "day_count",
                                                     "day_count_label",
                                                     "limit_per",
@@ -62407,6 +62418,15 @@
                                                 "max_days": {
                                                     "type": "integer"
                                                 },
+                                                "fixed_days": {
+                                                    "type": "boolean"
+                                                },
+                                                "place_rule": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "day_count": {
                                                     "type": "string"
                                                 },
@@ -62460,6 +62480,8 @@
                                                 "description",
                                                 "with_pay",
                                                 "max_days",
+                                                "fixed_days",
+                                                "place_rule",
                                                 "day_count",
                                                 "day_count_label",
                                                 "limit_per",
@@ -62562,6 +62584,15 @@
                                                 "max_days": {
                                                     "type": "integer"
                                                 },
+                                                "fixed_days": {
+                                                    "type": "boolean"
+                                                },
+                                                "place_rule": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
                                                 "day_count": {
                                                     "type": "string"
                                                 },
@@ -62615,6 +62646,8 @@
                                                 "description",
                                                 "with_pay",
                                                 "max_days",
+                                                "fixed_days",
+                                                "place_rule",
                                                 "day_count",
                                                 "day_count_label",
                                                 "limit_per",
@@ -108197,6 +108230,75 @@
                 }
             }
         },
+        "/self/leave/places": {
+            "get": {
+                "operationId": "self.leave.places",
+                "summary": "Regions and districts to choose where I will be on leave, and my home region (from my branch)",
+                "tags": [
+                    "Self service: My leave",
+                    "SelfLeave"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "home": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "regions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "region": {
+                                                                "type": "string"
+                                                            },
+                                                            "districts": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "region",
+                                                            "districts"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "home",
+                                                "regions"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/self/leave/requests/{leave}/withdraw": {
             "post": {
                 "operationId": "self.leave.withdraw",
@@ -116270,6 +116372,22 @@
                         "description": "Days per year (limit_per = year) or per request (limit_per = request).",
                         "minimum": 1,
                         "maximum": 366
+                    },
+                    "fixed_days": {
+                        "type": "boolean",
+                        "description": "Every request takes exactly max_days; the employee cannot change it (e.g. compassionate leave)."
+                    },
+                    "place_rule": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "outside or within: where the employee must be during the leave, compared with their branch's region. Empty: anywhere.",
+                        "enum": [
+                            "outside",
+                            "within",
+                            null
+                        ]
                     },
                     "day_count": {
                         "type": "string",

@@ -61,6 +61,20 @@ class SelfLeaveController extends Controller
         return EmployeeFiles::response($file->file_path, $file->file_name);
     }
 
+    /**
+     * Regions and districts to choose where I will be on leave, and my home region (from my branch).
+     *
+     * @response array{data: array{home: string|null, regions: list<array{region: string, districts: list<string>}>}}
+     */
+    public function places(Request $request): JsonResponse
+    {
+        $employee = $this->me($request);
+        $regions = \Modules\Core\Support\Places::for(\App\Models\Company::find($employee->company_id)?->country);
+
+        return response()->json(['data' => ['home' => $this->leave->homeRegion($employee),
+            'regions' => collect($regions)->map(fn ($d, $r) => ['region' => $r, 'districts' => $d])->values()]]);
+    }
+
     private function me(Request $request): Employee
     {
         $employee = Employee::where('user_id', $request->user()->id)->first();

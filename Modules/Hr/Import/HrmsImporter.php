@@ -369,7 +369,7 @@ class HrmsImporter
             return [
                 'company_id' => $this->companyId, 'name' => $r->name, 'code' => self::LEAVE_TYPE_CODE[$r->code] ?? $r->code, 'kind' => $kind,
                 'gender' => in_array($gender, ['female', 'male'], true) ? $gender : null, 'with_pay' => (bool) $r->withPay, 'max_days' => $r->max_days,
-                'day_count' => in_array($kind, ['annual', 'sick', 'maternity', 'study'], true) ? 'calendar' : 'working',
+                'day_count' => 'calendar',
                 'limit_per' => in_array($kind, ['annual', 'sick'], true) ? 'year' : 'request', 'is_active' => (bool) $r->isActive, 'deleted_at' => $r->deleted_at,
             ];
         }, match: fn ($r) => isset(self::LEAVE_TYPE_MATCH[$r->code]) ? $this->findBy('leave_types', ['code' => self::LEAVE_TYPE_MATCH[$r->code]]) : null,

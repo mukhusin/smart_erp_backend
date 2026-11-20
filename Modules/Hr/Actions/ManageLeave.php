@@ -60,7 +60,8 @@ class ManageLeave
     {
         $type = LeaveType::findOrFail($data['leave_type_id']);
         $start = Carbon::parse($data['start_date'])->startOfDay();
-        $days = (int) $data['days'];
+        $days = $type->fixed_days && ! $type->yearly() ? (int) $type->max_days : (int) $data['days'];
+        $this->checkPlace($employee, $type, $data['leave_address'] ?? null);
         $end = $this->days()->endDate($employee, $type, $start, $days);
         if (! empty($data['annual_plan_id'])) {
             if (! $type->isAnnual()) {
@@ -98,6 +99,38 @@ class ManageLeave
         }
 
         return $leave->refresh();
+    }
+
+    /** The region the employee works in: their branch's city, else the company's city. */
+    public function homeRegion(Employee $employee): ?string
+    {
+        $employee->loadMissing('branch');
+        $company = \App\Models\Company::find($employee->company_id);
+        $regions = \Modules\Core\Support\Places::for($company?->country);
+
+        return \Modules\Core\Support\Places::regionOf($employee->branch?->city, $regions) ?? \Modules\Core\Support\Places::regionOf($company?->city, $regions);
+    }
+
+    /** Leave that must be taken outside (or within) the employee's home region. */
+    private function checkPlace(Employee $employee, LeaveType $type, ?string $place): void
+    {
+        if (! $type->place_rule || ! $place) {
+            return;
+        }
+        $regions = \Modules\Core\Support\Places::for(\App\Models\Company::find($employee->company_id)?->country);
+        $home = $this->homeRegion($employee);
+        if (! $regions || ! $home) {
+            return;
+        }
+        $region = \Modules\Core\Support\Places::regionOfAnswer($place, $regions);
+        if ($type->place_rule === 'outside' && ($region === null || $region === $home)) {
+            throw ValidationException::withMessages(['leave_address' => $region === $home
+                ? "{$type->name} is for travel outside {$home}: choose another region."
+                : "Choose the region and district where you will be."]);
+        }
+        if ($type->place_rule === 'within' && $region !== $home) {
+            throw ValidationException::withMessages(['leave_address' => "{$type->name} is for within {$home}: choose a place in {$home}."]);
+        }
     }
 
     /** Validates a leave period. `$except` is the leave being changed. */
