@@ -401,6 +401,7 @@ Route::prefix('allowance')->middleware(['auth:sanctum', 'module:allowance'])->na
     Route::middleware('can:allowance.daily.manage')->group(function () {
         Route::post('generate', [AllowanceEntryController::class, 'generate'])->name('generate');
         Route::post('employees/{employee}/claims', [AllowanceEntryController::class, 'claim'])->name('claims.store');
+        Route::post('claims', [AllowanceEntryController::class, 'claimMany'])->name('claims.store-many');
         Route::get('activity-counts', [ActivityCountController::class, 'index'])->name('activity-counts.index');
         Route::post('activity-counts', [ActivityCountController::class, 'store'])->name('activity-counts.store');
         Route::delete('activity-counts/{count}', [ActivityCountController::class, 'destroy'])->name('activity-counts.destroy');

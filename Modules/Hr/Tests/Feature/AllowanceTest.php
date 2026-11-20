@@ -155,6 +155,12 @@ class AllowanceTest extends TestCase
         $this->actingAs($this->admin)->postJson('/api/v1/allowance/generate', ['from' => '2026-11-10', 'to' => '2026-11-10'])->assertOk();
         $this->assertSame('approved', DailyAllowance::find($id)->status, 'claims are not touched when working allowances out again');
         $this->actingAs($this->user)->getJson('/api/v1/allowance/entries')->assertForbidden();
+
+        $many = fn (array $ids) => $this->actingAs($this->admin)->postJson('/api/v1/allowance/claims', ['employee_ids' => $ids, 'allowance_category_id' => $theatre, 'date' => '2026-11-11', 'items' => 2]);
+        $before = DailyAllowance::count();
+        $many([$this->nurse->id, $this->intern->id])->assertUnprocessable()->assertJsonValidationErrors(['employee_ids' => 'Intern X']);
+        $this->assertSame($before, DailyAllowance::count(), 'all or none');
+        $many([$this->nurse->id])->assertCreated()->assertJsonPath('data.0.amount', 10000)->assertJsonPath('data.0.status', 'pending');
     }
 
     public function test_heads_enter_a_days_counts_as_a_batch_sent_for_approval(): void
@@ -173,6 +179,7 @@ class AllowanceTest extends TestCase
         $callOut = $this->category('Call-out allowance', 'CO', 'day', 'claim');
         $choices = $this->actingAs($this->admin)->getJson('/api/v1/allowance/batches')->assertOk()->json('meta.choices');
         $this->assertSame([['category_id' => $theatre, 'category' => 'Theatre allowance', 'department_id' => $this->ward->id, 'department' => 'Ward']], $choices, 'only claimed, not monthly, with a rate for the team');
+        $this->assertSame(['Theatre allowance'], array_column($this->getJson('/api/v1/allowance/entries')->json('meta.claim_categories'), 'name'));
         $this->postJson('/api/v1/allowance/batches', ['allowance_category_id' => $callOut, 'department_id' => $this->ward->id, 'date' => '2026-11-10'])->assertUnprocessable()->assertJsonValidationErrors(['allowance_category_id' => 'no rate']);
         $this->postJson('/api/v1/allowance/batches', ['allowance_category_id' => $monthly, 'department_id' => $this->ward->id, 'date' => '2026-11-10'])->assertUnprocessable()->assertJsonValidationErrors(['allowance_category_id']);
         $new = fn (string $date) => $this->postJson('/api/v1/allowance/batches', ['allowance_category_id' => $theatre, 'department_id' => $this->ward->id, 'date' => $date]);

@@ -39,6 +39,15 @@ class ManageAllowanceBatches
         return AllowanceCategory::where('is_active', true)->where('generation', 'claim')->where('duration', '!=', 'month')->orderBy('category')->get();
     }
 
+    /** Departments and sections the user has employees in. @return Collection<int, Department> */
+    public function teams(User $user): Collection
+    {
+        $ids = $this->scope->apply(Employee::query(), $user)->where('employment_status', '!=', 'terminated')
+            ->get(['department_id', 'section_id'])->flatMap(fn ($e) => [$e->department_id, $e->section_id])->filter()->unique();
+
+        return Department::whereIn('id', $ids)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'parent_id']);
+    }
+
     /**
      * The allowances each team has a rate for (its own, or its department's when it is a section).
      *

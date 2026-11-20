@@ -193,7 +193,7 @@ class ManageAllowances
         if ($category->activity()) {
             throw ValidationException::withMessages(['allowance_category_id' => "{$category->category} is worked out from the daily activity count."]);
         }
-        if ($category->generation === 'assigned') {
+        if ($category->generation === 'assigned' || $category->duration === 'month') {
             throw ValidationException::withMessages(['allowance_category_id' => "{$category->category} is assigned to employees as a monthly amount."]);
         }
         if (! $this->eligible($employee)) {
@@ -218,6 +218,23 @@ class ManageAllowances
         }
 
         return $claim->refresh();
+    }
+
+    /**
+     * The same claim for several employees (e.g. everyone on one theatre list); all are saved or none.
+     *
+     * @param  Collection<int, Employee>  $employees
+     * @return Collection<int, DailyAllowance>
+     */
+    public function claimMany(Collection $employees, array $data, User $by): Collection
+    {
+        return DB::transaction(fn () => $employees->map(function (Employee $e) use ($data, $by) {
+            try {
+                return $this->claim($e, $data, $by);
+            } catch (ValidationException $ex) {
+                throw ValidationException::withMessages(['employee_ids' => $e->full_name.': '.collect($ex->errors())->flatten()->first()]);
+            }
+        })->values());
     }
 
     public function approve(DailyAllowance $claim): void

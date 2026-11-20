@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Modules\Core\Services\AccessService;
+use Modules\Hr\Actions\ManageAllowanceBatches;
 use Modules\Hr\Actions\ManageAllowances;
 use Modules\Hr\Support\EmployeeScope;
 
@@ -60,8 +61,7 @@ class AllowanceEntryController extends Controller
             'entries' => $entries->map(fn ($e) => $this->entry($e))->values(),
             'meta' => [
                 'month' => $month, 'total' => round((float) $approved->sum('amount'), 2), 'can_manage' => app(AccessService::class)->can($request->user(), 'allowance.daily.manage'),
-                'claim_categories' => \App\Models\AllowanceCategory::where('is_active', true)->orderBy('category')->get()->reject->auto()
-                    ->map(fn ($c) => ['id' => $c->id, 'name' => $c->category, 'unit' => $c->duration])->values(),
+                'claim_categories' => $this->claimCategories($request),
             ],
         ]);
     }
@@ -100,6 +100,29 @@ class AllowanceEntryController extends Controller
     }
 
     /**
+     * The same claim for several employees (same allowance, day and count); each goes through approval. All are saved or none.
+     *
+     * @response array{data: list<array{id: int, employee_id: int, category: string, unit: string, date: string, items: float, amount_per_item: float, amount: float, status: string, status_label: string, source: string, description: string|null, waiting_for: string|null, decision_comment: string|null}>}
+     */
+    public function claimMany(Request $request): JsonResponse
+    {
+        $d = $request->validate([
+            'employee_ids' => ['required', 'array', 'min:1', 'max:200'],
+            'employee_ids.*' => ['integer', 'distinct'],
+            'allowance_category_id' => ['required', 'integer'],
+            'date' => ['required', 'date'],
+            /** How many each (e.g. 3 cases). */
+            'items' => ['required', 'numeric', 'min:0.5', 'max:1000'],
+            'description' => ['nullable', 'string', 'max:500'],
+        ]);
+        $employees = app(EmployeeScope::class)->apply(Employee::query(), $request->user())->whereIn('id', $d['employee_ids'])->orderBy('fname')->get();
+        abort_unless($employees->count() === count($d['employee_ids']), 404);
+        $claims = $this->allowances->claimMany($employees, collect($d)->except('employee_ids')->all(), $request->user());
+
+        return response()->json(['data' => $claims->map(fn ($c) => $this->entry($c->load('workflow.steps')))->values()], 201);
+    }
+
+    /**
      * My allowances for a month (default this month).
      *
      * @response array{data: list<array{id: int, employee_id: int, category: string, unit: string, date: string, items: float, amount_per_item: float, amount: float, status: string, status_label: string, source: string, description: string|null, waiting_for: string|null, decision_comment: string|null}>, meta: array{month: string, total: float, categories: list<array{category: string, items: float, amount: float}>}}
@@ -119,6 +142,15 @@ class AllowanceEntryController extends Controller
             'meta' => ['month' => $month, 'total' => round((float) $approved->sum('amount'), 2),
                 'categories' => $approved->groupBy('category')->map(fn ($c, $name) => ['category' => $name, 'items' => (float) $c->sum('items'), 'amount' => round((float) $c->sum('amount'), 2)])->sortBy('category')->values()],
         ]);
+    }
+
+    /** Claimed allowances, not monthly, with a rate for one of the user's teams. */
+    private function claimCategories(Request $request): array
+    {
+        $batches = app(ManageAllowanceBatches::class);
+        $ids = $batches->choices($batches->teams($request->user()))->pluck('category_id')->unique();
+
+        return $batches->categories()->whereIn('id', $ids)->map(fn ($c) => ['id' => $c->id, 'name' => $c->category, 'unit' => $c->duration])->values()->all();
     }
 
     private function entry(DailyAllowance $e): array

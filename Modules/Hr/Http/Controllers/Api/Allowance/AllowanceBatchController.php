@@ -5,8 +5,6 @@ namespace Modules\Hr\Http\Controllers\Api\Allowance;
 use App\Http\Controllers\Controller;
 use App\Models\AllowanceBatch;
 use App\Models\AllowanceBatchLine;
-use App\Models\Department;
-use App\Models\Employee;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,7 +38,7 @@ class AllowanceBatchController extends Controller
         $f = $request->validate(['status' => ['nullable', 'in:draft,pending,approved,rejected'], 'month' => ['nullable', 'date_format:Y-m'], 'search' => ['nullable', 'string', 'max:100'],
             'sort' => ['nullable', 'string', 'max:20'], 'page' => ['nullable', 'integer', 'min:1'], 'per_page' => ['nullable', 'integer', 'min:1', 'max:100']]);
         $user = $request->user();
-        $departments = $this->departments($request);
+        $departments = $this->batches->teams($user);
         $sortParam = $f['sort'] ?? '-date';
         $sort = in_array(ltrim($sortParam, '-'), ['date', 'status', 'amount'], true) ? ltrim($sortParam, '-') : 'date';
         $page = AllowanceBatch::with(['category', 'department', 'creator', 'workflow.steps'])->withCount('lines')->withSum('lines', 'items')->withSum('lines', 'amount')
@@ -178,15 +176,6 @@ class AllowanceBatchController extends Controller
             'items' => round((float) ($b->lines_sum_items ?? 0), 2), 'amount' => round((float) ($b->lines_sum_amount ?? 0), 2), 'created_by' => $b->creator?->display_name,
             'waiting_for' => $b->status === 'pending' ? $b->workflow?->steps?->firstWhere('status', 'pending')?->name : null,
         ];
-    }
-
-    /** Departments and sections the user has employees in. */
-    private function departments(Request $request)
-    {
-        $ids = $this->scope->apply(Employee::query(), $request->user())->where('employment_status', '!=', 'terminated')
-            ->get(['department_id', 'section_id'])->flatMap(fn ($e) => [$e->department_id, $e->section_id])->filter()->unique();
-
-        return Department::whereIn('id', $ids)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'parent_id']);
     }
 
     private function canManage(Request $request, AllowanceBatch $batch): bool
