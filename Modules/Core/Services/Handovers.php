@@ -106,10 +106,10 @@ class Handovers
     public function cancel(RoleHandover $handover, User $by): RoleHandover
     {
         abort_unless($handover->from_user_id === $by->id, 404);
-        if ($handover->emp_leave_id) {
-            throw ValidationException::withMessages(['handover' => 'This handover follows your leave; it ends when the leave ends or is cancelled.']);
-        }
         $state = $handover->state();
+        if ($state === 'pending' && $handover->emp_leave_id) {
+            throw ValidationException::withMessages(['handover' => 'This handover follows your leave request; it starts only if the leave is approved.']);
+        }
         if ($state === 'pending') {
             if ($instance = $handover->workflow()->where('status', 'pending')->first()) {
                 $this->workflow->cancel($instance, $by);

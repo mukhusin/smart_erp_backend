@@ -118,7 +118,7 @@ class SelfHandoverTest extends TestCase
         $leave = $this->inCompany(fn () => app(ManageLeave::class)->request($this->headEmployee, ['leave_type_id' => $annual, 'start_date' => '2026-11-23', 'days' => 3, 'handover_to_user_id' => $this->deputy->id], $this->head, 'hr'));
         $this->assertSame(EmpLeave::APPROVED, $leave->status);
         $this->assertFalse($this->can($this->deputy, 'leave.approve-hod'), 'not before the leave starts');
-        $this->actingAs($this->head)->getJson('/api/v1/self/handovers')->assertJsonPath('data.0.status', 'upcoming')->assertJsonPath('data.0.can_cancel', false);
+        $this->actingAs($this->head)->getJson('/api/v1/self/handovers')->assertJsonPath('data.0.status', 'upcoming')->assertJsonPath('data.0.can_cancel', true);
 
         $this->travelTo('2026-11-24 10:00:00');
         $this->assertTrue($this->can($this->deputy, 'leave.approve-hod'));
@@ -134,8 +134,25 @@ class SelfHandoverTest extends TestCase
         $this->inCompany(fn () => WorkflowTemplate::create(['process' => 'leave-request', 'is_active' => true])->steps()->create(['step_order' => 1, 'name' => 'HR', 'approver_type' => 'user', 'user_id' => $this->hr->id]));
         $annual = $this->inCompany(fn () => LeaveType::where('code', 'AL')->value('id'));
         $leave = $this->inCompany(fn () => app(ManageLeave::class)->request($this->headEmployee, ['leave_type_id' => $annual, 'start_date' => '2026-11-23', 'days' => 3, 'handover_to_user_id' => $this->deputy->id], $this->head, 'hr'));
-        $this->assertSame('pending', $this->inCompany(fn () => RoleHandover::where('emp_leave_id', $leave->id)->value('status')));
+        $pending = $this->inCompany(fn () => RoleHandover::where('emp_leave_id', $leave->id)->first());
+        $this->assertSame('pending', $pending->status);
+        $this->actingAs($this->head)->getJson('/api/v1/self/handovers')->assertJsonPath('data.0.can_cancel', false);
+        $this->postJson("/api/v1/self/handovers/{$pending->id}/cancel")->assertUnprocessable();
         $this->actingAs($this->hr)->postJson("/api/v1/workflow/requests/{$leave->workflow->id}/reject", ['comment' => 'Busy month'])->assertOk();
         $this->assertSame('cancelled', $this->inCompany(fn () => RoleHandover::where('emp_leave_id', $leave->id)->value('status')));
+    }
+
+    public function test_the_employee_takes_a_leave_handover_back_when_returning_early(): void
+    {
+        $annual = $this->inCompany(fn () => LeaveType::where('code', 'AL')->value('id'));
+        $leave = $this->inCompany(fn () => app(ManageLeave::class)->request($this->headEmployee, ['leave_type_id' => $annual, 'start_date' => '2026-11-17', 'days' => 10, 'handover_to_user_id' => $this->deputy->id], $this->head, 'hr'));
+        $this->travelTo('2026-11-20 08:00:00');
+        $this->assertFalse($this->can($this->head, 'leave.approve-hod'));
+        $id = $this->inCompany(fn () => RoleHandover::where('emp_leave_id', $leave->id)->value('id'));
+        $this->actingAs($this->head)->postJson("/api/v1/self/handovers/{$id}/cancel")->assertOk()->assertJsonPath('data.status', 'ended');
+        $this->assertTrue($this->can($this->head, 'leave.approve-hod'), 'back at once, before HR records the return');
+        $this->assertFalse($this->can($this->deputy, 'leave.approve-hod'));
+        $this->inCompany(fn () => app(ManageLeave::class)->recordReturn($leave->refresh(), '2026-11-20', $this->hr, null));
+        $this->assertFalse($this->can($this->deputy, 'leave.approve-hod'), 'recording the return does not bring the handover back');
     }
 }

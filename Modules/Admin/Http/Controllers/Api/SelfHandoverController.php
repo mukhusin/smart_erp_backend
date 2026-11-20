@@ -100,7 +100,7 @@ class SelfHandoverController extends Controller
             'status' => $state, 'status_label' => ['active' => 'In effect', 'upcoming' => 'Upcoming', 'ended' => 'Ended'][$state] ?? (RoleHandover::STATUS_LABELS[$state] ?? $state),
             'source' => $h->source, 'suspend_giver' => (bool) $h->suspend_giver, 'leave_id' => $h->emp_leave_id,
             'waiting_for' => $state === 'pending' ? $h->workflow?->steps?->firstWhere('status', 'pending')?->name : null, 'decision_comment' => $h->decision_comment,
-            'can_cancel' => $given && ! $h->emp_leave_id && in_array($state, ['pending', 'active', 'upcoming'], true),
+            'can_cancel' => $given && (in_array($state, ['active', 'upcoming'], true) || ($state === 'pending' && ! $h->emp_leave_id)),
         ];
     }
 }
