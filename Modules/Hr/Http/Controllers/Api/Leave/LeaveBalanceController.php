@@ -135,12 +135,15 @@ class LeaveBalanceController extends Controller
             'leave_type_id' => ['required', 'integer', Rule::exists('leave_types', 'id')->where('company_id', $employee->company_id)->whereNull('deleted_at')],
             'start_date' => ['required', 'date'],
             'end_date' => ['required_without:days', 'nullable', 'date', 'after_or_equal:start_date'],
-            'days' => ['required_without:end_date', 'nullable', 'integer', 'min:1', 'max:366'],
+            'days' => ['required_without:end_date', 'nullable', 'integer', 'min:1', 'max:'.LeaveType::MAX_REQUEST_DAYS],
         ]);
         $type = LeaveType::findOrFail($data['leave_type_id']);
         $start = Carbon::parse($data['start_date'])->startOfDay();
         $end = ! empty($data['end_date']) ? Carbon::parse($data['end_date'])->startOfDay() : $this->days()->endDate($employee, $type, $start, (int) $data['days']);
         abort_if($start->diffInDays($end) > LeaveDays::MAX_SPAN, 422, 'The period is too long.');
+        if ($start->diffInDays($end) > 62) {
+            return response()->json(['data' => ['start_date' => $start->toDateString(), 'end_date' => $end->toDateString(), 'days' => $this->days()->count($employee, $type, $start, $end), 'breakdown' => []]]);
+        }
         $breakdown = $this->days()->breakdown($employee, $type, $start, $end);
 
         return response()->json(['data' => [

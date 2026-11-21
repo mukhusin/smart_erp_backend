@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
  */
 class LeaveDays
 {
-    public const MAX_SPAN = 400;
+    public const MAX_SPAN = 2600;
 
     public function __construct(private readonly WorkCalendar $calendar) {}
 
@@ -41,6 +41,10 @@ class LeaveDays
 
     public function count(Employee $employee, LeaveType $type, CarbonInterface|string $from, CarbonInterface|string $to): int
     {
+        if ($type->day_count === 'calendar') {
+            return (int) Carbon::parse($from)->startOfDay()->diffInDays(Carbon::parse($to)->startOfDay()) + 1;
+        }
+
         return $this->breakdown($employee, $type, $from, $to)->where('counted', true)->count();
     }
 
@@ -48,7 +52,10 @@ class LeaveDays
     public function endDate(Employee $employee, LeaveType $type, CarbonInterface|string $start, int $days): Carbon
     {
         $start = Carbon::parse($start)->startOfDay();
-        $chunk = max(31, $days * 2);
+        if ($type->day_count === 'calendar') {
+            return $start->copy()->addDays($days - 1);
+        }
+        $chunk = min(max(31, $days * 2), 400);
         $counted = 0;
         for ($from = $start->copy(); $from->diffInDays($start) < self::MAX_SPAN; $from->addDays($chunk)) {
             foreach ($this->calendar->days($employee, $from, $from->copy()->addDays($chunk - 1), ignoreLeave: true) as $day) {

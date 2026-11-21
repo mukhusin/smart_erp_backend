@@ -188,6 +188,18 @@ class LeaveRequestTest extends TestCase
         $this->assertSame('2026-11-26', $leave->end_date->toDateString());
     }
 
+    public function test_study_leave_can_last_years_each_time(): void
+    {
+        $this->giveActiveContracts($this->company);
+        $type = ['name' => 'Study Leave', 'code' => 'STL', 'kind' => 'study', 'gender' => 'all', 'with_pay' => true, 'limit_per' => 'request', 'day_count' => 'calendar', 'max_days' => 1825];
+        $this->actingAs($this->users['hr'])->postJson('/api/v1/leave/types', array_merge($type, ['limit_per' => 'year']))->assertUnprocessable()->assertJsonValidationErrors(['max_days']);
+        $this->postJson('/api/v1/leave/types', $type)->assertCreated();
+        $id = $this->ask(['leave_type_id' => $this->typeId('STL'), 'start_date' => '2027-01-01', 'days' => 1095])->assertCreated()->assertJsonPath('data.end_date', '2029-12-30')->json('data.id');
+        $this->actingAs($this->users['asha'])->getJson('/api/v1/self/leave/days?leave_type_id='.$this->typeId('STL').'&start_date=2027-01-01&days=1095')->assertOk()
+            ->assertJsonPath('data.days', 1095)->assertJsonPath('data.breakdown', []);
+        $this->assertNotNull($id);
+    }
+
     public function test_hidden_days_are_not_shown_but_still_limit(): void
     {
         $this->giveActiveContracts($this->company);
@@ -199,7 +211,7 @@ class LeaveRequestTest extends TestCase
         $this->assertTrue($row['leave_type']['hide_days']);
         $msg = $this->ask(['leave_type_id' => $this->typeId('UL'), 'start_date' => '2026-11-20', 'days' => 40])->assertUnprocessable()->json('errors.days.0');
         $this->assertStringNotContainsString('30', $msg);
-        $this->assertStringContainsString('Speak to HR', $msg);
+        $this->assertStringContainsString('exceeds the leave without pay limit. Please consult HR.', $msg);
         $this->ask(['leave_type_id' => $this->typeId('UL'), 'start_date' => '2026-11-20', 'days' => 5])->assertCreated();
         $this->actingAs($this->admin)->getJson('/api/v1/leave/types')->assertOk();
     }

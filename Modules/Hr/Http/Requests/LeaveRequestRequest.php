@@ -29,7 +29,7 @@ class LeaveRequestRequest extends FormRequest
             'leave_type_id' => ['required', 'integer', Rule::exists('leave_types', 'id')->where('company_id', app(CompanyContext::class)->id())->whereNull('deleted_at')->where('is_active', true)],
             'start_date' => ['required', 'date'],
             /** Days of leave, counted by the leave type's rule; the last day is worked out. */
-            'days' => ['required', 'integer', 'min:1', 'max:366'],
+            'days' => ['required', 'integer', 'min:1', 'max:'.\App\Models\LeaveType::MAX_REQUEST_DAYS],
             /** Why (optional). */
             'description' => ['nullable', 'string', 'max:1000'],
             'leave_address' => [$byEmployee ? 'required' : 'nullable', 'string', 'max:255'],

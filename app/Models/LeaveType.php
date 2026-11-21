@@ -16,6 +16,11 @@ class LeaveType extends Model
         'compassionate' => 'Compassionate leave', 'study' => 'Study leave', 'unpaid' => 'Unpaid leave', 'other' => 'Other',
     ];
 
+    /** Longest leave: a year for yearly balances, five years each time (e.g. study leave). */
+    public const MAX_YEARLY_DAYS = 366;
+
+    public const MAX_REQUEST_DAYS = 1830;
+
     public const PLACE_RULES = ['outside' => 'Outside the home region', 'within' => 'Within the home region'];
 
     public const DAY_COUNTS = [

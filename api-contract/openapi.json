@@ -62870,7 +62870,7 @@
                                     "days": {
                                         "type": "integer",
                                         "minimum": 1,
-                                        "maximum": 366
+                                        "maximum": 1830
                                     },
                                     "comment": {
                                         "type": [
@@ -118181,7 +118181,7 @@
                         "type": "integer",
                         "description": "Days of leave, counted by the leave type's rule; the last day is worked out.",
                         "minimum": 1,
-                        "maximum": 366
+                        "maximum": 1830
                     },
                     "description": {
                         "type": [
@@ -118532,7 +118532,7 @@
                         "type": "integer",
                         "description": "Days per year (limit_per = year) or per request (limit_per = request).",
                         "minimum": 1,
-                        "maximum": 366
+                        "maximum": 1830
                     },
                     "fixed_days": {
                         "type": "boolean",

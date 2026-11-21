@@ -29,7 +29,7 @@ class LeaveTypeRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:500'],
             'with_pay' => ['required', 'boolean'],
             /** Days per year (limit_per = year) or per request (limit_per = request). */
-            'max_days' => ['required', 'integer', 'min:1', 'max:366'],
+            'max_days' => ['required', 'integer', 'min:1', 'max:'.($this->input('limit_per') === 'year' ? LeaveType::MAX_YEARLY_DAYS : LeaveType::MAX_REQUEST_DAYS)],
             /** Every request takes exactly max_days; the employee cannot change it (e.g. compassionate leave). */
             'fixed_days' => ['boolean'],
             /** Employees do not see the number of days (e.g. unpaid leave); the limit still applies. */

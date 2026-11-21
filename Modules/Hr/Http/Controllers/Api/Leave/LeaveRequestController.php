@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EmpLeave;
 use App\Models\EmpLeaveFile;
 use App\Models\Employee;
+use App\Models\LeaveType;
 use Dedoc\Scramble\Attributes\QueryParameter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -91,7 +92,7 @@ class LeaveRequestController extends Controller
     /** Change the first day and the number of days (HR, or the approver of the current step). */
     public function dates(Request $request, EmpLeave $leave): LeaveRequestResource
     {
-        $data = $request->validate(['start_date' => ['required', 'date'], 'days' => ['required', 'integer', 'min:1', 'max:366'], 'comment' => ['nullable', 'string', 'max:500']]);
+        $data = $request->validate(['start_date' => ['required', 'date'], 'days' => ['required', 'integer', 'min:1', 'max:'.LeaveType::MAX_REQUEST_DAYS], 'comment' => ['nullable', 'string', 'max:500']]);
 
         return new LeaveRequestResource($this->leave->changeDates($leave, $data['start_date'], (int) $data['days'], $request->user(), $data['comment'] ?? null)
             ->load(['leaveType', 'files', 'workflow.steps', 'employee.department']));
