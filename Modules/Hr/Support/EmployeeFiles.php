@@ -39,7 +39,7 @@ final class EmployeeFiles
 
     public static function response(?string $path, ?string $name = null): StreamedResponse
     {
-        abort_unless($path && Storage::disk(self::DISK)->exists($path), 404, 'File not found.');
+        abort_unless($path && Storage::disk(self::DISK)->exists($path), 404, __('This file is missing from storage. Please upload it again.'));
 
         return Storage::disk(self::DISK)->response($path, $name ?? basename($path), [
             'Cache-Control' => 'private, max-age=300',

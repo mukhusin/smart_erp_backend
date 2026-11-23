@@ -168,5 +168,6 @@
     "Your payslip for :month is ready. Net pay: :net.": "Hati yako ya mshahara ya :month iko tayari. Mshahara halisi: :net.",
     "Your salary advance of :amount is approved; it is deducted on the next payroll.": "Malipo yako ya awali ya mshahara ya :amount yameidhinishwa; yatakatwa kwenye mshahara unaofuata.",
     "Your salary advance was not approved.": "Malipo yako ya awali ya mshahara hayajaidhinishwa.",
-    "Your salary advance was not approved. Reason: :reason": "Malipo yako ya awali ya mshahara hayajaidhinishwa. Sababu: :reason"
+    "Your salary advance was not approved. Reason: :reason": "Malipo yako ya awali ya mshahara hayajaidhinishwa. Sababu: :reason",
+    "This file is missing from storage. Please upload it again.": "Faili hili halipo kwenye hifadhi. Tafadhali lipakie tena."
 }
