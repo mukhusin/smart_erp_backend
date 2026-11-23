@@ -82,7 +82,7 @@ class ContractDocument
         $date = fn ($d) => $d ? Carbon::parse($d)->format('j F Y') : null;
 
         return app(PdfDocument::class)->view($user, 'pdf.contract', 'Contract of employment', [
-            'values' => $values, 'body' => $this->render($contract), 'jobDescription' => $e->jobPosition?->description,
+            'values' => $values, 'body' => $this->render($contract), 'jobDescription' => $this->jobDescription($e->jobPosition?->description),
             'personal' => [
                 'Department' => trim(($e->department?->name ?? '').($e->section ? ' / '.$e->section->name : '')), 'Surname' => $e->lname,
                 'Other names' => trim("{$e->fname} {$e->mname}"), 'Sex' => $e->gender, 'Date of birth' => $date($e->date_of_birth), 'Place of birth' => $e->place_of_birth,
@@ -97,6 +97,15 @@ class ContractDocument
     public static function clean(?string $html): ?string
     {
         return RichText::clean($html);
+    }
+
+    private function jobDescription(?string $text): ?string
+    {
+        if ($text === null || trim($text) === '') {
+            return null;
+        }
+
+        return $text === strip_tags($text) ? nl2br(e(trim($text))) : RichText::clean($text);
     }
 
     public static function defaultTemplate(): string

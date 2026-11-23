@@ -39,7 +39,7 @@
         <h1>Annex 1: Job description</h1>
         <div class="subtitle">{{ $values['position'] }}</div>
         <div class="contract">
-            @if ($jobDescription) {!! nl2br(e($jobDescription)) !!} @else <p>……………</p> @endif
+            @if ($jobDescription) {!! $jobDescription !!} @else <p>……………</p> @endif
             <p style="font-size: 9px; color: #57606a; margin-top: 10px">The job description gives the kind of duties of this position; it is not the full list. The employee may be asked to do other job-related tasks.</p>
             <p style="margin-top: 14px"><strong>Consent.</strong> I confirm that I have read and understood the job description of my position and will carry it out in good faith.</p>
         </div>
