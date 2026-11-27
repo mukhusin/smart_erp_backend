@@ -197,8 +197,7 @@ class WorkflowEngine
                 && in_array($step->role->name, $this->access->roles($user), true)   // includes handed-over roles
                 && (! $step->same_branch || $user->company_branch_id === $instance->company_branch_id),
             WorkflowStep::APPROVER_DEPARTMENT_HEAD => $instance->department_id !== null
-                && HeadOfDepartment::where('department_id', $instance->department_id)->where('is_active', true)
-                    ->whereHas('employee', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $user->id))->exists(),
+                && app(StepApprovers::class)->departmentHeads($instance)->contains('id', $user->id),
             WorkflowStep::APPROVER_SECTION_HEAD => $this->isSectionHead($user, $instance),
             WorkflowStep::APPROVER_SUPERVISOR => $instance->employee_id !== null
                 && ($boss = app(ReportingLine::class)->supervisorIdOf($instance->employee_id)) !== null

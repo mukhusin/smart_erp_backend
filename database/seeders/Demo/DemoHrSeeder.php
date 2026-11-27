@@ -45,6 +45,10 @@ class DemoHrSeeder
         'Pharmacy' => ['PHA', [], [['Pharmacist', 4], ['Pharmaceutical Technician', 2]]],
     ];
 
+    public const DIRECTORS = [
+        'Finance' => 'dfinance', 'Procurement and Supplies' => 'dfinance', 'Human Resources' => 'dhr', 'Transport' => 'dhr', 'Estates' => 'dhr', 'ICT' => 'dhr', 'Planning' => 'dplanning',
+    ];
+
     public const GRADES = [1 => 650000, 2 => 900000, 3 => 1400000, 4 => 2300000, 5 => 3800000, 6 => 5500000];
 
     public const PEOPLE = [
@@ -250,6 +254,13 @@ class DemoHrSeeder
                 ?? Employee::where('department_id', $dep->id)->where('id', '!=', $headId)->whereNotNull('user_id')->orderBy('id')->first();
             if ($deputy && $name !== 'Internal Audit') {
                 $appoint->appointDeputy($dep, $deputy, 'Acting when the head is away', $this->users['admin']);
+            }
+        }
+        foreach (self::DIRECTORS as $name => $key) {
+            $headId = isset($this->departments[$name]) ? $this->departments[$name]->headOfDepartment()->value('employee_id') : null;
+            $director = $this->users[$key]->employee?->id;
+            if ($headId && $director) {
+                EmpSupervisor::create(['employee_id' => $headId, 'supervisor_id' => $director, 'from_date' => '2026-07-01', 'status' => 'active']);
             }
         }
         foreach (Employee::whereNotNull('section_id')->get() as $e) {

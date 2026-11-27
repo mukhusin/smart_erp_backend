@@ -2,6 +2,7 @@
 
 namespace Modules\Workflow\Services;
 
+use App\Models\EmpSupervisor;
 use App\Models\Employee;
 use App\Models\HeadOfDepartment;
 use App\Models\User;
@@ -12,6 +13,7 @@ use Modules\Core\Models\RoleHandover;
 use Modules\Workflow\Models\WorkflowInstance;
 use Modules\Workflow\Models\WorkflowInstanceStep;
 use Modules\Workflow\Models\WorkflowStep;
+use Spatie\Permission\Models\Role;
 
 /** The people a pending step is waiting for (for trackers; the engine still decides who may act). */
 class StepApprovers
@@ -29,7 +31,7 @@ class StepApprovers
         return match ($step->approver_type) {
             WorkflowStep::APPROVER_USER => User::whereKey($step->user_id)->get(),
             WorkflowStep::APPROVER_ROLE => $this->withRole($instance->company_id, (int) $step->role_id, (bool) $step->same_branch, $instance->company_branch_id),
-            WorkflowStep::APPROVER_DEPARTMENT_HEAD => $this->heads($instance->department_id, null),
+            WorkflowStep::APPROVER_DEPARTMENT_HEAD => $this->departmentHeads($instance),
             WorkflowStep::APPROVER_SECTION_HEAD => $this->sectionHeads($instance),
             WorkflowStep::APPROVER_SUPERVISOR => $this->supervisor($instance),
             default => collect(),
@@ -47,6 +49,25 @@ class StepApprovers
 
         return $this->memo[$key] ??= User::where('company_id', $companyId)->where('is_active', true)->whereIn('id', $holders)
             ->when($sameBranch, fn ($q) => $q->where('company_branch_id', $branchId))->with('employee')->get();
+    }
+
+    /** Heads of the department; when a head raised it, the director they report to (their supervisor, else the director general). */
+    public function departmentHeads(WorkflowInstance $instance): Collection
+    {
+        $heads = $this->heads($instance->department_id, null);
+        $requester = $instance->employee_id ?? Employee::withoutGlobalScopes()->where('user_id', $instance->initiated_by)->value('id');
+        $raisedByHead = $requester && HeadOfDepartment::where('department_id', $instance->department_id)->where('is_active', true)->where('employee_id', $requester)->exists();
+        if (! $raisedByHead) {
+            return $heads;
+        }
+        $boss = EmpSupervisor::where('employee_id', $requester)->where('status', 'active')->latest('id')->value('supervisor_id');
+        $director = $boss ? User::whereIn('id', Employee::withoutGlobalScopes()->whereKey($boss)->pluck('user_id')->filter())->where('is_active', true)->get() : collect();
+        if ($director->isNotEmpty()) {
+            return $director;
+        }
+        $role = Role::where('name', 'director-general')->where('company_id', $instance->company_id)->value('id');
+
+        return $role ? $this->withRole($instance->company_id, (int) $role, false, null) : collect();
     }
 
     /** @return Collection<int, User> */
