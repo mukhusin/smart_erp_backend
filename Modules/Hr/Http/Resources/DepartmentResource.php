@@ -23,6 +23,8 @@ class DepartmentResource extends JsonResource
             /** @var array{id: int, name: string}|null */
             'branch' => $this->branch ? ['id' => $this->branch->id, 'name' => $this->branch->name] : null,
             'description' => $this->description,
+            /** programme, admin, fundraising or null. */
+            'expense_class' => $this->expense_class,
             'is_active' => $this->is_active,
             /** Current employees (not terminated). For a department this includes its sections. */
             'staff_count' => (int) ($this->parent_id ? ($this->section_staff_count ?? 0) : ($this->staff_count ?? 0)),

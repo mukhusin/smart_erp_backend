@@ -18,6 +18,7 @@ final class CompanyFeatures
             ReceivableSetting::current()->claims_enabled ? 'receivables.claims' : null,
             \Modules\Accounting\Models\VatSetting::registered() ? 'vat' : null,
             \App\Models\GratuitySetting::current()->enabled ? 'gratuity' : null,
+            \Modules\Accounting\Models\AccountingSetting::current()->expense_classes ? 'expense-classes' : null,
         ])));
     }
 }

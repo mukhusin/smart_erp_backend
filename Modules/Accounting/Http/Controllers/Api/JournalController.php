@@ -24,11 +24,12 @@ class JournalController extends Controller
     /**
      * Journals, newest first.
      *
-     * @response array{data: list<array{id: int, reference_no: string|null, date: string, description: string, entry_type: string, type_label: string, status: string, status_label: string, total: float, created_by: string|null}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
+     * @response array{data: list<array{id: int, reference_no: string|null, date: string, description: string, entry_type: string, type_label: string, status: string, status_label: string, total: float, created_by: string|null, adjustment: string|null, adjustment_label: string|null, reverse_on: string|null}>, meta: array{current_page: int, last_page: int, per_page: int, total: int, from: int|null, to: int|null}}
      */
     #[QueryParameter('search', description: 'Number or description.', type: 'string')]
     #[QueryParameter('status', type: 'string')]
     #[QueryParameter('entry_type', type: 'string')]
+    #[QueryParameter('adjusting', description: '1 = only adjusting journals.', type: 'boolean')]
     #[QueryParameter('from', type: 'string')]
     #[QueryParameter('to', type: 'string')]
     #[QueryParameter('sort', description: '`date`, `total`, `reference_no`; prefix `-` for descending.', type: 'string', default: '-date')]
@@ -42,6 +43,7 @@ class JournalController extends Controller
             ->when($request->query('search'), fn ($q, $s) => $q->where(fn ($q) => $q->where('reference_no', 'like', "%{$s}%")->orWhere('description', 'like', "%{$s}%")))
             ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
             ->when($request->query('entry_type'), fn ($q, $t) => $q->where('entry_type', $t))
+            ->when($request->boolean('adjusting'), fn ($q) => $q->whereNotNull('adjustment'))
             ->when(\Modules\Audit\Support\Auditors::clamp($request->user(), $request->query('from'), $request->query('to'))[0], fn ($q, $d) => $q->whereDate('date', '>=', $d))
             ->when(\Modules\Audit\Support\Auditors::clamp($request->user(), $request->query('from'), $request->query('to'))[1], fn ($q, $d) => $q->whereDate('date', '<=', $d))
             ->orderBy($sort, str_starts_with((string) $request->query('sort', '-date'), '-') ? 'desc' : 'asc')->orderByDesc('id')
@@ -51,7 +53,8 @@ class JournalController extends Controller
             'data' => collect($page->items())->map(fn (JournalEntry $e) => [
                 'id' => $e->id, 'reference_no' => $e->reference_no, 'date' => $e->date->toDateString(), 'description' => $e->description, 'entry_type' => $e->entry_type,
                 'type_label' => JournalEntry::TYPES[$e->entry_type] ?? $e->entry_type, 'status' => $e->status, 'status_label' => JournalEntry::STATUS_LABELS[$e->status] ?? $e->status,
-                'total' => (float) $e->total, 'created_by' => $e->creator?->display_name,
+                'total' => (float) $e->total, 'created_by' => $e->creator?->display_name, 'adjustment' => $e->adjustment,
+                'adjustment_label' => $e->adjustment ? JournalEntry::ADJUSTMENTS[$e->adjustment] ?? $e->adjustment : null, 'reverse_on' => $e->reverse_on?->toDateString(),
             ])->values(),
             'meta' => ['current_page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'per_page' => $page->perPage(), 'total' => $page->total(), 'from' => $page->firstItem(), 'to' => $page->lastItem()],
         ]);
@@ -60,7 +63,7 @@ class JournalController extends Controller
     /**
      * A journal with its lines, where it came from and what the user can do.
      *
-     * @response array{data: array{id: int, reference_no: string|null, date: string, description: string, entry_type: string, type_label: string, status: string, status_label: string, total: float, period: string|null, created_by: string|null, posted_by: string|null, posted_at: string|null, decision_comment: string|null, waiting_for: string|null, reversal_of: array{id: int, reference_no: string|null}|null, reversed_by: array{id: int, reference_no: string|null}|null, source: array{type: string, id: int}|null, lines: list<array{line_no: int, account: array{id: int, code: string, name: string}|null, department: array{id: int, name: string}|null, fund_source: array{id: int, code: string}|null, activity: array{id: int, title: string}|null, description: string|null, debit: float, credit: float}>, can: array{edit: bool, submit: bool, withdraw: bool, reverse: bool, delete: bool}}}
+     * @response array{data: array{id: int, reference_no: string|null, date: string, description: string, entry_type: string, type_label: string, status: string, status_label: string, total: float, adjustment: string|null, adjustment_label: string|null, reverse_on: string|null, period: string|null, created_by: string|null, posted_by: string|null, posted_at: string|null, decision_comment: string|null, waiting_for: string|null, reversal_of: array{id: int, reference_no: string|null}|null, reversed_by: array{id: int, reference_no: string|null}|null, source: array{type: string, id: int}|null, lines: list<array{line_no: int, account: array{id: int, code: string, name: string}|null, department: array{id: int, name: string}|null, fund_source: array{id: int, code: string}|null, activity: array{id: int, title: string}|null, description: string|null, debit: float, credit: float}>, can: array{edit: bool, submit: bool, withdraw: bool, reverse: bool, delete: bool}}}
      */
     public function show(Request $request, JournalEntry $journal): JsonResponse
     {
@@ -76,6 +79,8 @@ class JournalController extends Controller
             'id' => $journal->id, 'reference_no' => $journal->reference_no, 'date' => $journal->date->toDateString(), 'description' => $journal->description,
             'entry_type' => $journal->entry_type, 'type_label' => JournalEntry::TYPES[$journal->entry_type] ?? $journal->entry_type,
             'status' => $journal->status, 'status_label' => JournalEntry::STATUS_LABELS[$journal->status] ?? $journal->status, 'total' => (float) $journal->total,
+            'adjustment' => $journal->adjustment, 'adjustment_label' => $journal->adjustment ? JournalEntry::ADJUSTMENTS[$journal->adjustment] ?? $journal->adjustment : null,
+            'reverse_on' => $journal->reverse_on?->toDateString(),
             'period' => $journal->period?->name, 'created_by' => $journal->creator?->display_name, 'posted_by' => $journal->poster?->display_name,
             'posted_at' => $journal->posted_at?->toIso8601String(), 'decision_comment' => $journal->decision_comment,
             'waiting_for' => $journal->status === 'pending' ? $journal->workflow?->steps->firstWhere('status', 'pending')?->name : null,

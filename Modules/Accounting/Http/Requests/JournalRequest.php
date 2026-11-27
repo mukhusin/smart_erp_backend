@@ -15,6 +15,10 @@ class JournalRequest extends FormRequest
         return [
             'date' => ['required', 'date'],
             'description' => ['required', 'string', 'max:500'],
+            /** Marks a period-end adjusting entry: accrual, prepayment, deferral or correction. */
+            'adjustment' => ['nullable', Rule::in(array_keys(\Modules\Accounting\Models\JournalEntry::ADJUSTMENTS))],
+            /** Reverse the adjustment automatically on this date, usually the first day of the next month. */
+            'reverse_on' => ['nullable', 'date', 'after:date'],
             'lines' => ['required', 'array', 'min:2', 'max:200'],
             'lines.*.account_id' => ['required', 'integer', Rule::exists('accounts', 'id')->where('company_id', $company)],
             'lines.*.debit' => ['nullable', 'numeric', 'min:0', 'max:999999999999'],

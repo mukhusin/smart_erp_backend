@@ -15,16 +15,14 @@ use Modules\Tasks\Models\TaskActivity;
 /**
  * @tags Accounting: setup
  */
-/**
- * @tags Accounting: setup
- */
 class SettingsController extends Controller
 {
     public function settings(): JsonResponse
     {
         $s = AccountingSetting::current();
 
-        return response()->json(['data' => ['use_gfs' => (bool) $s->use_gfs, 'budget_phasing' => (string) $s->budget_phasing, 'budget_control' => (string) $s->budget_control, 'budget_release' => (string) ($s->budget_release ?: 'period')]]);
+        return response()->json(['data' => ['use_gfs' => (bool) $s->use_gfs, 'budget_phasing' => (string) $s->budget_phasing, 'budget_control' => (string) $s->budget_control, 'budget_release' => (string) ($s->budget_release ?: 'period'),
+            'expense_classes' => (bool) $s->expense_classes, 'programme_target' => $s->programme_target !== null ? (float) $s->programme_target : null]]);
     }
 
     public function updateSettings(AccountingSettingsRequest $request): JsonResponse

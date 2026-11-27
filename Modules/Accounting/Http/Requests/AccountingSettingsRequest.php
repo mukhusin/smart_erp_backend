@@ -19,6 +19,10 @@ class AccountingSettingsRequest extends FormRequest
             'budget_control' => ['required', Rule::in(array_keys(AccountingSetting::CONTROL))],
             /** period: money becomes spendable when finance opens each quarter/month; none: the whole approved budget at once. */
             'budget_release' => ['sometimes', Rule::in(array_keys(AccountingSetting::RELEASE))],
+            /** Class departments as programme, administration or fundraising for the programme expense ratio. */
+            'expense_classes' => ['sometimes', 'boolean'],
+            /** Programme share to aim for, in percent (e.g. 75). */
+            'programme_target' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

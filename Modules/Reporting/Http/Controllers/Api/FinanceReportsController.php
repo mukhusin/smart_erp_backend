@@ -47,6 +47,8 @@ class FinanceReportsController extends Controller
     #[QueryParameter('kind', type: 'string')]
     #[QueryParameter('type', type: 'string')]
     #[QueryParameter('store_id', type: 'integer')]
+    #[QueryParameter('fund_source_id', type: 'integer')]
+    #[QueryParameter('stage', description: 'Trial balance: `adjusted` or `unadjusted`.', type: 'string')]
     public function show(Request $request, string $report, FinanceReports $reports): JsonResponse
     {
         return response()->json(['data' => $reports->run($report, $this->filters($request), $request->user())]);
@@ -76,6 +78,7 @@ class FinanceReportsController extends Controller
             'bank_id' => ['nullable', 'integer'], 'budget_id' => ['nullable', 'integer'], 'plan_id' => ['nullable', 'integer'], 'sheet_id' => ['nullable', 'integer'],
             'provider_id' => ['nullable', 'integer'], 'department_id' => ['nullable', 'integer'], 'group' => ['nullable', 'in:department,account,activity,fund,item'],
             'status' => ['nullable', 'string', 'max:30'], 'kind' => ['nullable', 'string', 'max:30'], 'type' => ['nullable', 'string', 'max:30'], 'store_id' => ['nullable', 'integer'],
+            'fund_source_id' => ['nullable', 'integer'], 'stage' => ['nullable', 'in:adjusted,unadjusted'],
         ]);
     }
 }

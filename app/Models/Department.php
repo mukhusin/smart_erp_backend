@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model {
     use Auditable, BelongsToCompany, SoftDeletes;
-    protected $fillable = ['company_id','company_branch_id','parent_id','work_schedule_id','name','short_name','description','is_active'];
+    protected $fillable = ['company_id','company_branch_id','parent_id','work_schedule_id','name','short_name','description','expense_class','is_active'];
+
+    public const EXPENSE_CLASSES = ['programme' => 'Programme', 'admin' => 'Administration', 'fundraising' => 'Fundraising'];
     protected $casts = ['is_active' => 'boolean'];
     public function branch() { return $this->belongsTo(CompanyBranch::class, 'company_branch_id'); }
     public function workSchedule() { return $this->belongsTo(WorkSchedule::class); }

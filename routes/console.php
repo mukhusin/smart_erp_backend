@@ -50,6 +50,8 @@ Schedule::command('payments:imprest-reminders')->dailyAt('07:00');
 
 Schedule::command('accounting:bank-feeds')->hourly()->withoutOverlapping();
 
+Schedule::command('accounting:reverse-adjustments')->dailyAt('00:45')->withoutOverlapping();
+
 Schedule::command('fleet:daily')->dailyAt('06:15');
 
 Schedule::command('workflow:overdue')->hourly()->withoutOverlapping();

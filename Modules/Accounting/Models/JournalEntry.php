@@ -18,10 +18,15 @@ class JournalEntry extends Model
 
     protected $fillable = [
         'company_id', 'reference_no', 'date', 'fiscal_period_id', 'entry_type', 'source_type', 'source_id', 'description', 'total', 'status',
-        'created_by', 'posted_at', 'posted_by', 'reversal_of_id', 'decision_comment', 'book',
+        'created_by', 'posted_at', 'posted_by', 'reversal_of_id', 'decision_comment', 'book', 'adjustment', 'reverse_on',
     ];
 
-    protected $casts = ['date' => 'date', 'posted_at' => 'datetime', 'total' => 'float'];
+    protected $casts = ['date' => 'date', 'posted_at' => 'datetime', 'total' => 'float', 'reverse_on' => 'date'];
+
+    public const ADJUSTMENTS = ['accrual' => 'Accrual', 'prepayment' => 'Prepayment', 'deferral' => 'Deferral', 'correction' => 'Correction'];
+
+    /** Entry types that are period-end adjustments by nature. */
+    public const ADJUSTING_TYPES = ['depreciation', 'stock_adjustment'];
 
     public function lines()
     {

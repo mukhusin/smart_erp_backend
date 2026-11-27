@@ -46,6 +46,7 @@ class FinanceReports
         'equity-changes' => ['title' => 'Statement of changes in equity', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'cash-flow' => ['title' => 'Cash flow statement', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'income-monthly' => ['title' => 'Income and expenditure by month', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
+        'expense-ratios' => ['title' => 'Expense ratios', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view', 'reports.executive']],
         'ledger-check' => ['title' => 'Ledger integrity check', 'group' => 'Accounting', 'module' => 'accounting', 'permissions' => ['accounting.view']],
         'payables-ageing' => ['title' => 'Aged payables (suppliers)', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
         'supplier-statement' => ['title' => 'Supplier statement', 'group' => 'Accounting', 'module' => 'payments', 'permissions' => ['payments.view', 'payments.vouchers', 'payments.pay', 'payments.manage', 'accounting.view']],
@@ -216,7 +217,8 @@ class FinanceReports
             'financial-position' => [['key' => 'date', 'label' => 'As at', 'type' => 'date', 'default' => $today->toDateString()]],
             'cash-book' => [['key' => 'bank_id', 'label' => 'Bank or cash', 'type' => 'select', 'default' => (string) (CashBankAccount::where('is_active', true)->orderBy('name')->value('id') ?? ''),
                 'options' => $opt(CashBankAccount::orderBy('name')->get())], $from, $to],
-            'trial-balance' => [$from, $to],
+            'trial-balance' => [$from, $to, ['key' => 'stage', 'label' => 'Stage', 'type' => 'select', 'default' => 'adjusted', 'options' => [
+                ['value' => 'adjusted', 'label' => 'Adjusted (all entries)'], ['value' => 'unadjusted', 'label' => 'Unadjusted (before adjusting entries)']]]],
             'equity-changes', 'cash-flow', 'ledger-check' => [$from, $to],
             'tender-register', 'tender-awards', 'spend-by-method', 'special-group-share', 'supplier-performance' => [$from, $to],
             'bid-opening', 'evaluation-summary' => [['key' => 'tender_id', 'label' => 'Tender', 'type' => 'select', 'options' => class_exists(\Modules\Procurement\Models\Tender::class)
@@ -231,6 +233,7 @@ class FinanceReports
             'assets-due-disposal' => [$assetCats],
             'asset-disposals', 'asset-transfers' => [$from, $to],
             'income-monthly' => [$from, $to, $departments],
+            'expense-ratios' => [$from, $to, ['key' => 'fund_source_id', 'label' => 'Fund source', 'type' => 'select', 'options' => $opt(FundSource::where('is_active', true)->orderBy('code')->get())]],
             'payables-ageing', 'supplier-list', 'unpaid-requests', 'unpaid-vouchers', 'imprest-outstanding', 'reconciliation-status' => [],
             'supplier-statement' => [['key' => 'supplier_id', 'label' => 'Supplier', 'type' => 'select', 'options' => class_exists(\Modules\Procurement\Models\Supplier::class)
                 ? $opt(\Modules\Procurement\Models\Supplier::orderBy('name')->get()) : []], $from, $to],
@@ -356,7 +359,10 @@ class FinanceReports
 
     private function reportTrialBalance(array $v): array
     {
-        $sums = $this->lines($v['from'], $v['to'])->where('e.entry_type', '!=', 'closing')->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
+        $sums = $this->lines($v['from'], $v['to'])->where('e.entry_type', '!=', 'closing')
+            ->when(($v['stage'] ?? null) === 'unadjusted', fn ($q) => $q->whereNull('e.adjustment')->whereNotIn('e.entry_type', JournalEntry::ADJUSTING_TYPES)
+                ->whereNotExists(fn ($s) => $s->selectRaw('1')->from('journal_entries as o')->whereColumn('o.id', 'e.reversal_of_id')->whereIn('o.entry_type', JournalEntry::ADJUSTING_TYPES)))
+            ->groupBy('l.account_id')->selectRaw('l.account_id, SUM(l.debit) as d, SUM(l.credit) as c')->get()->keyBy('account_id');
         $rows = Account::whereIn('id', $sums->keys())->orderBy('code')->get()->map(function (Account $a) use ($sums) {
             $net = round((float) $sums[$a->id]->d - (float) $sums[$a->id]->c, 2);
 
@@ -364,7 +370,9 @@ class FinanceReports
         })->filter(fn ($r) => $r['debit'] || $r['credit'])->values();
         $rows->push(['code' => '', 'account' => 'Total', 'type' => '', 'debit' => round($rows->sum('debit'), 2), 'credit' => round($rows->sum('credit'), 2)]);
 
-        return ["{$this->d($v['from'])} to {$this->d($v['to'])}", ['code', 'account', 'type', 'debit', 'credit'], $rows->all()];
+        $stage = ($v['stage'] ?? null) === 'unadjusted' ? ' · before adjusting entries' : '';
+
+        return ["{$this->d($v['from'])} to {$this->d($v['to'])}{$stage}", ['code', 'account', 'type', 'debit', 'credit'], $rows->all()];
     }
 
     private function reportFundStatement(array $v): array
@@ -462,6 +470,34 @@ class FinanceReports
         $rows[] = ['section' => 'Cash and bank at '.$this->d($v['to']), 'account' => '', 'amount' => round($opening + $net, 2)];
 
         return ["{$this->d($v['from'])} to {$this->d($v['to'])} · direct method; set investing and financing accounts in the chart of accounts", ['section', 'account', 'amount'], $rows];
+    }
+
+    private function reportExpenseRatios(array $v): array
+    {
+        $f = app(ExpenseRatios::class)->figures($v['from'], $v['to'], $v['fund_source_id'] ? (int) $v['fund_source_id'] : null);
+        $rows = [
+            ['item' => 'SUMMARY'],
+            ['item' => 'Income', 'amount' => $f['revenue']],
+            ['item' => 'Expenditure', 'amount' => $f['expense'], 'of_revenue' => $f['operating_ratio']],
+            ['item' => 'Surplus / deficit', 'amount' => $f['surplus'], 'of_revenue' => $f['revenue'] ? round($f['surplus'] / $f['revenue'] * 100, 1) : null],
+            ['item' => 'Staff costs (salaries and employer contributions)', 'amount' => $f['staff_cost'], 'share' => $f['staff_ratio'], 'of_revenue' => $f['revenue'] ? round($f['staff_cost'] / $f['revenue'] * 100, 1) : null],
+        ];
+        if ($f['classes'] !== null) {
+            $rows[] = ['item' => 'BY PURPOSE'];
+            foreach ($f['classes'] as $c) {
+                $rows[] = ['item' => $c['label'], 'amount' => $c['amount'], 'share' => $c['share'], 'of_revenue' => $f['revenue'] ? round($c['amount'] / $f['revenue'] * 100, 1) : null];
+            }
+            if ($f['programme_target'] !== null) {
+                $rows[] = ['item' => 'Programme target', 'share' => $f['programme_target']];
+            }
+        }
+        $rows[] = ['item' => 'COST STRUCTURE'];
+        foreach ($f['accounts'] as $a) {
+            $rows[] = ['item' => "{$a['code']} {$a['name']}", 'amount' => $a['amount'], 'share' => $a['share'], 'of_revenue' => $a['of_revenue']];
+        }
+        $fund = $v['fund_source_id'] ? ' · '.FundSource::find($v['fund_source_id'])?->name : '';
+
+        return [$this->d($v['from']).' – '.$this->d($v['to']).$fund, ['item', 'amount', 'share', 'of_revenue'], $rows, ['item' => 'Item', 'share' => '% of expenditure', 'of_revenue' => '% of income']];
     }
 
     private function reportIncomeMonthly(array $v): array

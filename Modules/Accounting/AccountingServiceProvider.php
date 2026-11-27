@@ -13,7 +13,7 @@ class AccountingServiceProvider extends ServiceProvider
     {
         Event::listen(PayrollApproved::class, PostPayroll::class);
         if ($this->app->runningInConsole()) {
-            $this->commands([\Modules\Accounting\Console\BankFeeds::class]);
+            $this->commands([\Modules\Accounting\Console\BankFeeds::class, \Modules\Accounting\Console\ReverseAdjustments::class]);
         }
     }
 }

@@ -30,6 +30,8 @@ class DepartmentRequest extends FormRequest
             'parent_id' => ['nullable', 'integer', Rule::exists('departments', 'id')->where('company_id', $companyId)->whereNull('parent_id')->whereNull('deleted_at'),
                 Rule::notIn(array_filter([$current?->id]))],
             'description' => ['nullable', 'string', 'max:1000'],
+            /** programme, admin or fundraising, for the programme expense ratio. Sections without one follow their department. */
+            'expense_class' => ['nullable', Rule::in(array_keys(Department::EXPENSE_CLASSES))],
             'is_active' => ['boolean'],
         ];
     }

@@ -27,7 +27,8 @@ class ManageJournals
         return DB::transaction(function () use ($data, $by, $entry) {
             $entry ??= new JournalEntry(['created_by' => $by->id, 'entry_type' => 'manual', 'status' => 'draft']);
             $lines = array_values($data['lines']);
-            $entry->fill(['date' => $data['date'], 'description' => $data['description'],
+            $adjustment = $data['adjustment'] ?? null;
+            $entry->fill(['date' => $data['date'], 'description' => $data['description'], 'adjustment' => $adjustment, 'reverse_on' => $adjustment ? ($data['reverse_on'] ?? null) : null,
                 'total' => round(array_sum(array_map(fn ($l) => (float) ($l['debit'] ?? 0), $lines)), 2)])->save();
             $entry->lines()->delete();
             foreach ($lines as $i => $l) {
@@ -65,6 +66,34 @@ class ManageJournals
         $by = $entry->creator ?? auth()->user();
         $this->posting->post($entry->date->toDateString(), $entry->description, $this->lines($entry), $by, 'manual', null, $entry);
         $entry->creator?->notify(new Notice('Journal posted', "Journal {$entry->refresh()->reference_no} is approved and posted.", "/accounting/journals/{$entry->id}", 'journal-check'));
+        if ($entry->reverse_on && $entry->reverse_on->lte(today())) {
+            $this->reverseDue();
+        }
+    }
+
+    /**
+     * Reverses posted adjusting journals whose reversal date has come.
+     *
+     * @return array{reversed: int, failed: list<string>}
+     */
+    public function reverseDue(): array
+    {
+        $done = 0;
+        $failed = [];
+        $due = JournalEntry::where('status', 'posted')->whereNotNull('adjustment')->whereNotNull('reverse_on')->whereDate('reverse_on', '<=', today())
+            ->whereDoesntHave('reversedBy')->with(['lines', 'creator'])->orderBy('reverse_on')->get();
+        foreach ($due as $entry) {
+            try {
+                $by = $entry->creator ?? auth()->user();
+                $reversal = $this->posting->reverse($entry, $entry->reverse_on->toDateString(), $by, 'automatic reversal of '.strtolower(JournalEntry::ADJUSTMENTS[$entry->adjustment] ?? 'adjustment'));
+                $reversal->update(['adjustment' => $entry->adjustment]);
+                $done++;
+            } catch (\Throwable $e) {
+                $failed[] = "{$entry->reference_no}: {$e->getMessage()}";
+            }
+        }
+
+        return ['reversed' => $done, 'failed' => $failed];
     }
 
     public function rejected(JournalEntry $entry, ?string $comment, bool $withdrawn): void

@@ -11,7 +11,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Carbon\CarbonImmutable;
+use Modules\Accounting\Models\FiscalYear;
 use Modules\Core\Services\AccessService;
+use Modules\Reporting\Support\ExpenseRatios;
 use Modules\Inventory\Models\StockBalance;
 use Modules\Inventory\Models\StoreRequisition;
 use Modules\Payments\Models\PaymentRequest;
@@ -29,10 +32,10 @@ class ExecutiveDashboardController extends Controller
 {
     private const LIVE_ORDERS = ['approved', 'partial', 'received', 'closed'];
 
-    public function __construct(private readonly AccessService $access) {}
+    public function __construct(private readonly AccessService $access, private readonly ExpenseRatios $ratios) {}
 
     /**
-     * @response array{data: array{months: list<string>, hr: array{headcount: int, on_leave_today: int, contracts_expiring: int, joined_year: int, left_year: int, by_gender: list<array{label: string, value: int}>, by_type: list<array{label: string, value: int}>, by_department: list<array{label: string, value: int}>, joined: list<int>, left: list<int>}|null, procurement: array{requisitions_pending: int, requisitions_to_source: int, orders_pending: int, open_orders: int, open_orders_value: float, ordered_year: float, by_month: list<float>, by_status: list<array{label: string, value: int}>, top_suppliers: list<array{label: string, value: float}>}|null, inventory: array{stock_value: float, items_in_stock: int, below_reorder: int, requisitions_pending: int, requisitions_to_issue: int, by_store: list<array{label: string, value: float}>}|null, payments: array{requests_pending: int, to_voucher: int, to_voucher_value: float, vouchers_to_pay: int, vouchers_to_pay_value: float, paid_year: float, by_month: list<float>, imprest_open: int, imprest_open_value: float, imprest_overdue: int}|null}}
+     * @response array{data: array{months: list<string>, hr: array{headcount: int, on_leave_today: int, contracts_expiring: int, joined_year: int, left_year: int, by_gender: list<array{label: string, value: int}>, by_type: list<array{label: string, value: int}>, by_department: list<array{label: string, value: int}>, joined: list<int>, left: list<int>}|null, procurement: array{requisitions_pending: int, requisitions_to_source: int, orders_pending: int, open_orders: int, open_orders_value: float, ordered_year: float, by_month: list<float>, by_status: list<array{label: string, value: int}>, top_suppliers: list<array{label: string, value: float}>}|null, inventory: array{stock_value: float, items_in_stock: int, below_reorder: int, requisitions_pending: int, requisitions_to_issue: int, by_store: list<array{label: string, value: float}>}|null, payments: array{requests_pending: int, to_voucher: int, to_voucher_value: float, vouchers_to_pay: int, vouchers_to_pay_value: float, paid_year: float, by_month: list<float>, imprest_open: int, imprest_open_value: float, imprest_overdue: int}|null, ratios: array{from: string, revenue: float, expense: float, operating_ratio: float|null, staff_ratio: float|null, programme_ratio: float|null, programme_target: float|null, classes: list<array{key: string, label: string, amount: float, share: float|null}>|null, top_costs: list<array{label: string, value: float}>, trend: list<array{month: string, revenue: float, expense: float, operating_ratio: float|null, programme_ratio: float|null}>}|null}}
      */
     public function __invoke(Request $request): JsonResponse
     {
@@ -46,6 +49,7 @@ class ExecutiveDashboardController extends Controller
             'procurement' => $this->can($user, 'procurement.view') ? $this->procurement($months, $start) : null,
             'inventory' => $this->can($user, 'inventory.view') ? $this->inventory() : null,
             'payments' => $this->can($user, 'payments.view') ? $this->payments($months, $start) : null,
+            'ratios' => $this->access->canUseModule($user, 'accounting') && ($this->can($user, 'accounting.view') || $this->can($user, 'reports.executive')) ? $this->ratios($start) : null,
         ]]);
     }
 
@@ -112,6 +116,20 @@ class ExecutiveDashboardController extends Controller
             'requisitions_pending' => StoreRequisition::where('status', 'pending')->count(),
             'requisitions_to_issue' => StoreRequisition::whereIn('status', ['approved', 'partial'])->count(),
             'by_store' => $balances->groupBy('store_id')->map(fn ($rows) => ['label' => $rows->first()->store?->name ?? 'Store', 'value' => round((float) $rows->sum('value'), 2)])->sortByDesc('value')->values(),
+        ];
+    }
+
+    private function ratios(Carbon $start): array
+    {
+        $year = FiscalYear::whereDate('start_date', '<=', now())->whereDate('end_date', '>=', now())->first();
+        $from = ($year?->start_date ?? now()->startOfYear())->toDateString();
+        $f = $this->ratios->figures($from, now()->toDateString());
+
+        return [
+            'from' => $from, 'revenue' => $f['revenue'], 'expense' => $f['expense'], 'operating_ratio' => $f['operating_ratio'], 'staff_ratio' => $f['staff_ratio'],
+            'programme_ratio' => $f['programme_ratio'], 'programme_target' => $f['programme_target'], 'classes' => $f['classes'],
+            'top_costs' => array_map(fn ($a) => ['label' => $a['name'], 'value' => $a['amount']], array_slice($f['accounts'], 0, 8)),
+            'trend' => $this->ratios->trend(CarbonImmutable::parse($start), 12),
         ];
     }
 

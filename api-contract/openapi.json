@@ -3516,6 +3516,14 @@
                         }
                     },
                     {
+                        "name": "adjusting",
+                        "in": "query",
+                        "description": "1 = only adjusting journals.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
                         "name": "from",
                         "in": "query",
                         "schema": {
@@ -3603,6 +3611,24 @@
                                                             "string",
                                                             "null"
                                                         ]
+                                                    },
+                                                    "adjustment": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "adjustment_label": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "reverse_on": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -3615,7 +3641,10 @@
                                                     "status",
                                                     "status_label",
                                                     "total",
-                                                    "created_by"
+                                                    "created_by",
+                                                    "adjustment",
+                                                    "adjustment_label",
+                                                    "reverse_on"
                                                 ]
                                             }
                                         },
@@ -3791,6 +3820,24 @@
                                                 },
                                                 "total": {
                                                     "type": "number"
+                                                },
+                                                "adjustment": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "adjustment_label": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "reverse_on": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "period": {
                                                     "type": [
@@ -4035,6 +4082,9 @@
                                                 "status",
                                                 "status_label",
                                                 "total",
+                                                "adjustment",
+                                                "adjustment_label",
+                                                "reverse_on",
                                                 "period",
                                                 "created_by",
                                                 "posted_by",
@@ -6440,13 +6490,24 @@
                                                 },
                                                 "budget_release": {
                                                     "type": "string"
+                                                },
+                                                "expense_classes": {
+                                                    "type": "boolean"
+                                                },
+                                                "programme_target": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "use_gfs",
                                                 "budget_phasing",
                                                 "budget_control",
-                                                "budget_release"
+                                                "budget_release",
+                                                "expense_classes",
+                                                "programme_target"
                                             ]
                                         }
                                     },
@@ -6503,13 +6564,24 @@
                                                 },
                                                 "budget_release": {
                                                     "type": "string"
+                                                },
+                                                "expense_classes": {
+                                                    "type": "boolean"
+                                                },
+                                                "programme_target": {
+                                                    "type": [
+                                                        "number",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "use_gfs",
                                                 "budget_phasing",
                                                 "budget_control",
-                                                "budget_release"
+                                                "budget_release",
+                                                "expense_classes",
+                                                "programme_target"
                                             ]
                                         }
                                     },
@@ -105101,6 +105173,21 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "fund_source_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "stage",
+                        "in": "query",
+                        "description": "Trial balance: `adjusted` or `unadjusted`.",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -105564,6 +105651,145 @@
                                                         "imprest_open_value",
                                                         "imprest_overdue"
                                                     ]
+                                                },
+                                                "ratios": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "from": {
+                                                            "type": "string"
+                                                        },
+                                                        "revenue": {
+                                                            "type": "number"
+                                                        },
+                                                        "expense": {
+                                                            "type": "number"
+                                                        },
+                                                        "operating_ratio": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "staff_ratio": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "programme_ratio": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "programme_target": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "classes": {
+                                                            "type": [
+                                                                "array",
+                                                                "null"
+                                                            ],
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "key": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "amount": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "share": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "key",
+                                                                    "label",
+                                                                    "amount",
+                                                                    "share"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "top_costs": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "label": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "value": {
+                                                                        "type": "number"
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "label",
+                                                                    "value"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "trend": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "month": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "revenue": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "expense": {
+                                                                        "type": "number"
+                                                                    },
+                                                                    "operating_ratio": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "programme_ratio": {
+                                                                        "type": [
+                                                                            "number",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "month",
+                                                                    "revenue",
+                                                                    "expense",
+                                                                    "operating_ratio",
+                                                                    "programme_ratio"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "from",
+                                                        "revenue",
+                                                        "expense",
+                                                        "operating_ratio",
+                                                        "staff_ratio",
+                                                        "programme_ratio",
+                                                        "programme_target",
+                                                        "classes",
+                                                        "top_costs",
+                                                        "trend"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -105571,7 +105797,8 @@
                                                 "hr",
                                                 "procurement",
                                                 "inventory",
-                                                "payments"
+                                                "payments",
+                                                "ratios"
                                             ]
                                         }
                                     },
@@ -113164,6 +113391,19 @@
                             "period",
                             "none"
                         ]
+                    },
+                    "expense_classes": {
+                        "type": "boolean",
+                        "description": "Class departments as programme, administration or fundraising for the programme expense ratio."
+                    },
+                    "programme_target": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Programme share to aim for, in percent (e.g. 75).",
+                        "minimum": 0,
+                        "maximum": 100
                     }
                 },
                 "required": [
@@ -115885,6 +116125,19 @@
                         ],
                         "maxLength": 1000
                     },
+                    "expense_class": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "programme, admin or fundraising, for the programme expense ratio. Sections without one follow their department.",
+                        "enum": [
+                            "programme",
+                            "admin",
+                            "fundraising",
+                            null
+                        ]
+                    },
                     "is_active": {
                         "type": "boolean"
                     }
@@ -115938,6 +116191,13 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "expense_class": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "programme, admin, fundraising or null."
                     },
                     "is_active": {
                         "type": "boolean"
@@ -116113,6 +116373,7 @@
                     "parent_id",
                     "branch",
                     "description",
+                    "expense_class",
                     "is_active",
                     "staff_count",
                     "head"
@@ -118094,6 +118355,28 @@
                     "description": {
                         "type": "string",
                         "maxLength": 500
+                    },
+                    "adjustment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Marks a period-end adjusting entry: accrual, prepayment, deferral or correction.",
+                        "enum": [
+                            "accrual",
+                            "prepayment",
+                            "deferral",
+                            "correction",
+                            null
+                        ]
+                    },
+                    "reverse_on": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Reverse the adjustment automatically on this date, usually the first day of the next month."
                     },
                     "lines": {
                         "type": "array",
